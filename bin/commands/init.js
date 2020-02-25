@@ -1,5 +1,7 @@
 'use strict';
 var fileHelpers = require('../helpers/fileHelpers');
+const Constants = require('../helpers/constants');
+var logger = require("../helpers/logger");
 
 module.exports = function init(args) {
   return createBrowserStackConfig(args)
@@ -19,15 +21,12 @@ function createBrowserStackConfig(args) {
   };
 
   function allDone() {
-    console.log('\n' +
-      'BrowserStack Config File created, you can now run \n' +
-      'browserstack-cypress --config-file run\n'
-    );
+    logger.log(Constants.userMessages.CONFIG_FILE_CREATED);
   }
 
   return fileHelpers.fileExists(config.path, function(exists){
     if (exists) {
-      console.log('file already exists, delete the browserstack.json file manually. skipping...');
+      logger.error(Constants.userMessages.CONFIG_FILE_EXISTS);
     } else {
       fileHelpers.write(config, null, allDone);
     }

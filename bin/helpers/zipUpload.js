@@ -2,6 +2,7 @@ var config = require('./config');
 var request = require('request')
 var fs = require('fs');
 var logger = require("./logger")
+const Constants = require("./constants")
 
 const uploadCypressZip = (bsConfig, filePath) => {
   return new Promise(function (resolve, reject) {
@@ -19,20 +20,24 @@ const uploadCypressZip = (bsConfig, filePath) => {
     }
 
     request.post(options, function (err, resp, body) {
-      let responseData = JSON.parse(body);
-      if (err || responseData["error"]) {
-        reject(err || responseData["error"]);
+      if (err) {
+        reject(err);
       } else {
-        logger.log(`Zip uploaded with url: ${responseData.zip_url}`)
-        // Delete zip file from local storage
-        fs.unlink(filePath, function (err) {
-          if(err) {
-            logger.log("Could not delete local file");
+        try {
+          responseData = JSON.parse(body);
+        } catch (e) {
+          responseData = null
+        }
+        if (resp.statusCode != 200) {
+          if (responseData && responseData["error"]) {
+            reject(responseData["error"]);
           } else {
-            logger.log('File deleted successfully');
+            reject(Constants.userMessages.ZIP_UPLOADER_NOT_REACHABLE);
           }
-          resolve(responseData)
-        });
+        } else {
+          logger.log(`Zip uploaded with url: ${responseData.zip_url}`);
+          resolve(responseData);
+        }
       }
     });
   });
