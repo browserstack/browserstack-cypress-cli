@@ -11,11 +11,19 @@
   "bin": {
     "browserstack-cypress": "bin/runner.js"
   },
-  "devDependencies": {
+  "dependencies": {
     "archiver": "^3.1.1",
     "fs-extra": "^8.1.0",
     "mkdirp": "^1.0.3",
     "request": "^2.88.0",
     "yargs": "^14.2.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/browserstack/browserstack-cypress-cli.git"
+  },
+  "homepage": "https://github.com/browserstack/browserstack-cypress-cli",
+  "bugs": {
+    "url": "https://github.com/browserstack/browserstack-cypress-cli/issues"
   }
 }
