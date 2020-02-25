@@ -1,13 +1,13 @@
 {
   "name": "browserstack-cypress-cli",
   "version": "1.0.0",
-  "description": "",
+  "description": "BrowserStack Cypress CLI for Cypress integration with BrowserStack's remote devices.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "BrowserStack",
+  "license": "MIT",
   "bin": {
     "browserstack-cypress": "bin/runner.js"
   },
