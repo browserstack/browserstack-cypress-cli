@@ -36,7 +36,7 @@ $ browserstack-cypress init
 ```
 This will create a sample browserstack.json file. This file can be used to configure your tests on BrowserStack. Below is the sample file that is generated for your reference.
 
-```JS
+```json
 {
     "auth": {
       "username": "<username>",
