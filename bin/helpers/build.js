@@ -2,6 +2,7 @@ var request = require('request')
 var logger = require("./logger")
 var config = require('./config');
 var capabilityHelper = require("../helpers/capabilityHelper");
+const Constants = require('../helpers/constants');
 
 const createBuild = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
@@ -20,14 +21,29 @@ const createBuild = (bsConfig, zip) => {
   
       request.post(options, function (err, resp, body) {
         if (err) {
-          logger.log("Failed to create the build");
           reject(err)
         } else {
-          build = JSON.parse(body)
+          let build = null
+          try {
+            build = JSON.parse(body)
+          } catch (error) {
+            build = null
+          }
           if (resp.statusCode != 201) {
-            logger.log(`Build creation failed with build error: ${build.message}`);
+            if (build) {
+              logger.error(`${Constants.userMessages.BUILD_FAILED} Error: ${build.message}`);
+            } else {
+              logger.error(Constants.userMessages.BUILD_FAILED);
+            }
+          } else if(resp.statusCode == 299){
+            if(build) {
+              logger.log(build.message);  
+            } else {
+              logger.log(Constants.userMessages.API_DEPRECATED);
+            }
           } else {
-            logger.log(`Build created with build id: ${build.build_id}`);
+            logger.log(build.message)
+            logger.log(`${Constants.userMessages.BUILD_CREATED} with build id: ${build.build_id}`);
           }
           resolve(build);
         }

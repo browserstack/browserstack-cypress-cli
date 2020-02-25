@@ -2,6 +2,7 @@
 
 const yargs = require('yargs')
 var logger = require("./helpers/logger");
+const Constants = require('./helpers/constants');
 
 function checkCommands(yargs, argv, numRequired) {
   if (argv._.length < numRequired) {
@@ -14,18 +15,18 @@ function checkCommands(yargs, argv, numRequired) {
 var argv = yargs
   .usage('usage: $0 <command>')
   .alias('v', 'version')
-  .describe('v', 'show version information')
+  .describe('v', Constants.cliMessages.VERSION.INFO)
   .alias('h', 'help')
   .help('help')
-  .showHelpOnFail(false, "Specify --help for available options")
-  .demand(1, 'Requires init, run or poll argument.')
-  .command('init', 'create a browserstack.json file in the folder specified with the default configuration options.', function(yargs) {
+  .showHelpOnFail(false, Constants.cliMessages.VERSION.HELP)
+  .demand(1, Constants.cliMessages.VERSION.DEMAND)
+  .command('init', Constants.cliMessages.INIT.INFO, function(yargs) {
     argv = yargs
       .usage('usage: $0 init [options]')
       .options('p', {
         alias: 'path',
         default: false,
-        description: 'Init in a specified folder',
+        description: Constants.cliMessages.INIT.DESC,
         type: 'string'
       })
       .help('help')
@@ -36,59 +37,38 @@ var argv = yargs
       return require('./commands/init')(argv);
     }
   })
-  .command('build', 'Check status of your build.', function(yargs) {
+  .command('build', Constants.cliMessages.BUILD.INFO, function(yargs) {
     argv = yargs
       .usage('usage: $0 info <buildId>')
-      .demand(1, 'Requires a build id.')
+      .demand(1, Constants.cliMessages.BUILD.DEMAND)
       .options('cf', {
         alias: 'config-file',
-        describe: 'Path to BrowserStack config',
+        describe: Constants.cliMessages.BUILD.DESC,
         default: '/browserstack.json',
         type: 'string',
         nargs: 1,
         demand: true,
-        demand: 'config file is required'
+        demand: Constants.cliMessages.BUILD.CONFIG_DEMAND
       })
       .help('help')
       .wrap(null)
       .argv
     if (checkCommands(yargs, argv, 1)) {
-      logger.log("Getting information for buildId " + argv._[1]);
+      logger.log(Constants.cliMessages.BUILD.DISPLAY + argv._[1]);
       return require('./commands/info')(argv);
     }
   })
-  .command('delete', 'Delete your build on BrowserStack', function(yargs) {
-    argv = yargs
-      .usage('usage: $0 delete <buildId>')
-      .demand(1, 'Requires a build id.')
-      .options('cf', {
-        alias: 'config-file',
-        describe: 'Path to BrowserStack config',
-        default: '/browserstack.json',
-        type: 'string',
-        nargs: 1,
-        demand: true,
-        demand: 'config file is required'
-      })
-      .help('help')
-      .wrap(null)
-      .argv
-    if (checkCommands(yargs, argv, 1)) {
-      logger.log("Deleting a build with buildId " + argv._[1]);
-      return require('./commands/delete')(argv);
-    }
-  })
-  .command('run', 'Run your tests on BrowserStack.', function(yargs) {
+  .command('run', Constants.cliMessages.RUN.INFO, function(yargs) {
     argv = yargs
       .usage('usage: $0 build')
       .options('cf', {
         alias: 'config-file',
-        describe: 'Path to BrowserStack config',
+        describe: Constants.cliMessages.RUN.DESC,
         default: '/browserstack.json',
         type: 'string',
         nargs: 1,
         demand: true,
-        demand: 'config file is required'
+        demand: Constants.cliMessages.RUN.CONFIG_DEMAND
       })
       .help('help')
       .wrap(null)

@@ -1,11 +1,12 @@
 var logger = require("./logger");
+const Constants = require('./constants');
 
 const caps = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
     let user = bsConfig.auth.username
     let password =  bsConfig.auth.access_key
 
-    if (!user || !password) reject("Incorrect auth params.");
+    if (!user || !password) reject(Constants.validationMessages.INCORRECT_AUTH_PARAMS);
 
     var obj = new Object();
 
@@ -18,7 +19,7 @@ const caps = (bsConfig, zip) => {
       });
     });
     obj.devices = osBrowserArray
-    if (obj.devices.length == 0) reject("Browser list is empty");
+    if (obj.devices.length == 0) reject(Constants.validationMessages.EMPTY_BROWSER_LIST);
     logger.log(`Browser list: ${osBrowserArray.toString()}`);
 
     // Test suite
@@ -27,8 +28,8 @@ const caps = (bsConfig, zip) => {
     logger.log(`Test suite: bs://${obj.test_suite}`);
 
     // Local
-    obj.local = bsConfig.connection_settings.local;
-    if (!obj.local) obj.local = false;
+    obj.local = false;
+    if (bsConfig.connection_settings.local === true) obj.local = true;
     logger.log(`Local is set to: ${obj.local}`);
 
     // Project name
@@ -45,7 +46,7 @@ const caps = (bsConfig, zip) => {
 
     //callback url
     obj.callbackURL = bsConfig.run_settings.callback_url
-    if (obj.callbackURL) logger.log(`callback url is : ${obj.callbackUrl}`);
+    if (obj.callbackURL) logger.log(`callback url is : ${obj.callbackURL}`);
 
     //projectNotifyURL
     obj.projectNotifyURL = bsConfig.run_settings.project_notify_URL
@@ -58,17 +59,17 @@ const caps = (bsConfig, zip) => {
 
 const validate = (bsConfig) => {
   return new Promise(function(resolve, reject){
-    if (!bsConfig) reject("Empty browserstack.json");
+    if (!bsConfig) reject(Constants.validationMessages.EMPTY_BROWSERSTACK_JSON);
 
-    if (!bsConfig.auth) reject("Invalid auth in browserstack.json");
+    if (!bsConfig.auth) reject(Constants.validationMessages.INCORRECT_AUTH_PARAMS);
 
-    if (!bsConfig.browsers || bsConfig.browsers.length === 0) reject("No browsers specified");
+    if (!bsConfig.browsers || bsConfig.browsers.length === 0) reject(Constants.validationMessages.EMPTY_BROWSER_LIST);
 
-    if (!bsConfig.run_settings) reject("Empty run_settings");
+    if (!bsConfig.run_settings) reject(Constants.validationMessages.EMPTY_RUN_SETTINGS);
 
-    if(!bsConfig.run_settings.specs) reject("No spec files specified in run_settings");
+    if(!bsConfig.run_settings.specs || bsConfig.run_settings.specs.length === 0) reject(Constants.validationMessages.EMPTY_SPEC_FILES);
 
-    resolve("browserstack.json file is validated");
+    resolve(Constants.validationMessages.VALIDATED);
   });
 }
 
