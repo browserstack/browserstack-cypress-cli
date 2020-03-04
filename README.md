@@ -14,9 +14,9 @@ You can now run your Cypress tests in BrowserStack using our browserstack-cypres
 
 |       Windows 10    |      OS X Mojave      |    OS X Catalina    |
 |---------------------|:---------------------:|--------------------:|
-| chrome 66.0 to 78.0 |   chrome 66.0 to 78.0 | chrome 66.0 to 78.0 |
+| chrome 66.0 to 79.0 |   chrome 66.0 to 79.0 | chrome 66.0 to 79.0 |
 |     edge 80.0       |       edge 80.0       |      edge 80.0      |
-| firefox 60.0 to 70.0|  firefox 60.0 to 70.0 | firefox 60.0 to 70.0|
+| firefox 60.0 to 72.0|  firefox 60.0 to 72.0 | firefox 60.0 to 72.0|
 
 
 We are actively working on supporting other browsers and will start adding other browsers to this list.
