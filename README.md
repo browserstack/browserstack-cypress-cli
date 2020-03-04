@@ -16,6 +16,7 @@ You can now run your Cypress tests in BrowserStack using our browserstack-cypres
 |---------------------|:---------------------:|--------------------:|
 | chrome 66.0 to 78.0 |   chrome 66.0 to 78.0 | chrome 66.0 to 78.0 |
 |     edge 80.0       |       edge 80.0       |      edge 80.0      |
+| firefox 60.0 to 70.0|  firefox 60.0 to 70.0 | firefox 60.0 to 70.0|
 
 
 We are actively working on supporting other browsers and will start adding other browsers to this list.
@@ -68,7 +69,7 @@ The following table provides a reference for all the options that can be provide
 | username        | These are the BrowserStack credentials that need to be provided to run a test on BrowserStack. You can find this in your [automate dashboard](https://automate.browserstack.com/) | -                                                                                                                             |
 | access_key      | These are the BrowserStack credentials that need to be provided to run a test on BrowserStack. You can find this in your [automate dashboard](https://automate.browserstack.com/) | -                                                                                                                             |
 | os (case-sensitive)              | The operating system in which you want to run your test.                                                                                    | The following three strings are supported."OS X Mojave" , "OS X Catalina", "Windows 10"                                       |
-| browser (case-sensitive)         | The browser in which you want to run your tests on.                                                                                         | Right now only "chrome" and "edge" are supported. We are actively working on supporting other browsers.                                   |
+| browser (case-sensitive)         | The browser in which you want to run your tests on.                                                                                         | Right now only "chrome", "firefox", and "edge" are supported. We are actively working on supporting other browsers.                                   |
 | versions        | A list of browser versions that you need to run your tests on                                                                               | Example: To run on versions 69, 67 and 65 provide ["69", "67", "65"]. Right now edge 80 and all chrome versions from 66 to 78 are supported |
 | specs           | The path to the spec files that need to be run on BrowserStack                                                                              | Takes a list of strings that point to location of the spec files                                                              |
 | project         | Name of the project                                                                                                                         | A string providing the name of the project                                                                                    |
