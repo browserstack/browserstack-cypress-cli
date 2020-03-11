@@ -37,7 +37,8 @@ const archiveSpecs = (runSettings, filePath) => {
   return new Promise(function (resolve, reject) {
     var output = fs.createWriteStream(filePath);
 
-    var basePath = runSettings.base_path
+    var cypressJSONPath = runSettings.cypress + "/cypress.json"
+    var basePath = runSettings.cypress + "/cypress/"
 
     var archive = archiver('zip', {
       zlib: { level: 9 } // Sets the compression level.
@@ -87,6 +88,9 @@ const archiveSpecs = (runSettings, filePath) => {
     fileNames.forEach(function(file) {
       archive.file(basePath + file, { name: file });  
     });
+
+    // Add cypress.json
+    archive.file(cypressJSONPath, { name: "cypress.json" });  
 
     archive.finalize();
   });
