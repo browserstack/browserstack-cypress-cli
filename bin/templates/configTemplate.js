@@ -12,7 +12,19 @@ module.exports = function () {
       }
     ],
     "run_settings": {
-      "specs": ["folder_path_with_files/*.js"],
+      "cypress" : "/Users/sagarganiga/Desktop/Extraa/cypress_npm/",
+      "specs": [
+          "integration/examples/*.js"
+      ],
+      "plugins": [
+          "plugins/*.js"
+      ],
+      "supports": [
+          "support/*.js"
+      ],
+      "fixtures": [
+          "fixtures/*.js"
+      ],
       "project": "project-name",
       "customBuildName": "build-name"
     },
