@@ -12,7 +12,7 @@ module.exports = function () {
       }
     ],
     "run_settings": {
-      "cypress" : "/path_to_cypress_json",
+      "cypress" : "/path/to/cypress_json",
       "specs": [
           "integration/examples/*.js"
       ],

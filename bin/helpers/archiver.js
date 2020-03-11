@@ -1,12 +1,9 @@
 
-var fs = require('fs');
-var archiver = require('archiver');
-var request = require('request')
-var config = require('./config');
-var logger = require("./logger")
-var glob = require("glob")
-const path = require('path');
-
+const fs = require('fs'),
+  archiver = require('archiver'),
+  logger = require("./logger"),
+  glob = require("glob"),
+  path = require('path');
 
 const getFiles = (jsGlobs, basePath, cb) => {
   files = [];
@@ -14,21 +11,13 @@ const getFiles = (jsGlobs, basePath, cb) => {
   jsGlobs.forEach(function (item) {
     logger.log("Adding  " + item + " to zip"); 
     files = glob.sync(basePath + item)
-    // files.forEach(file => {
-    //   fileNames.push(path.relative(basePath, file))
-    // });
-    // shortFiles = files.map(file => path.relative(basePath, file))
-    // archive.append(JSON.stringify({"support": shortFiles}), {name: "cypress_helpers.json"})
   });
 
   files = files.map(file => path.relative(basePath, file))
-
-  console.log(files);
+  
   if (cb){
-    console.log('calling callback');
     cb(files);
   }
-
 
   return files;
 }
