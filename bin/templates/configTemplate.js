@@ -12,7 +12,7 @@ module.exports = function () {
       }
     ],
     "run_settings": {
-      "cypress" : "/Users/sagarganiga/Desktop/Extraa/cypress_npm/",
+      "cypress" : "/path_to_cypress_json",
       "specs": [
           "integration/examples/*.js"
       ],
