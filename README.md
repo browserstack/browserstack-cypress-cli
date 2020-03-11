@@ -26,8 +26,10 @@ We are actively working on supporting other browsers and will start adding other
 
 ### Installing browserstack-cypress
 ```bash
+# Install cypress(ignore if already done)
+$ npm install -g cypress@4.0.2
 # Install dependencies
-$ npm install --save-dev browserstack-cypress-cli
+$ npm install -g browserstack-cypress-cli
 ```
 
 ### Configuring your tests
