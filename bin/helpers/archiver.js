@@ -27,7 +27,9 @@ const archiveSpecs = (runSettings, filePath) => {
     var output = fs.createWriteStream(filePath);
 
     var cypressJSONPath = runSettings.cypress + "/cypress.json"
-    var basePath = runSettings.cypress + "/cypress/"
+    var cypressEnvJSONPath = runSettings.cypress + "/cypress.env.json"
+    var cypressFolderPath = runSettings.cypress + "/cypress"
+    var basePath = runSettings.cypress
 
     var archive = archiver('zip', {
       zlib: { level: 9 } // Sets the compression level.
@@ -57,29 +59,31 @@ const archiveSpecs = (runSettings, filePath) => {
 
     fileNames = [];
 
-    getFiles(runSettings.specs, basePath, (files) => {
-      fileNames = fileNames.concat(files);
-    })
+    // getFiles(runSettings.specs, basePath, (files) => {
+    //   fileNames = fileNames.concat(files);
+    // })
 
-    getFiles(runSettings.supports, basePath, (files) => {
-      archive.append(JSON.stringify({"support": files}), {name: "cypress_helpers.json"})
-      fileNames = fileNames.concat(files);
-    })
+    // getFiles(runSettings.supports, basePath, (files) => {
+    //   archive.append(JSON.stringify({"support": files}), {name: "cypress_helpers.json"})
+    //   fileNames = fileNames.concat(files);
+    // })
 
-    getFiles(runSettings.plugins, basePath, (files) => {
-      fileNames = fileNames.concat(files);
-    })
+    // getFiles(runSettings.plugins, basePath, (files) => {
+    //   fileNames = fileNames.concat(files);
+    // })
 
-    getFiles(runSettings.fixtures, basePath, (files) => {
-      fileNames = fileNames.concat(files);
-    })
+    // getFiles(runSettings.fixtures, basePath, (files) => {
+    //   fileNames = fileNames.concat(files);
+    // })
 
-    fileNames.forEach(function(file) {
-      archive.file(basePath + file, { name: file });  
-    });
+    // fileNames.forEach(function(file) {
+    //   archive.file(basePath + file, { name: file });  
+    // });
 
     // Add cypress.json
     archive.file(cypressJSONPath, { name: "cypress.json" });  
+    archive.file(cypressEnvJSONPath, { name: "cypress.env.json" });
+    archive.directory(cypressFolderPath, false);
 
     archive.finalize();
   });
