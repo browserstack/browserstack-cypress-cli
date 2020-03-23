@@ -26,9 +26,7 @@ const archiveSpecs = (runSettings, filePath) => {
   return new Promise(function (resolve, reject) {
     var output = fs.createWriteStream(filePath);
 
-    var cypressJSONPath = runSettings.cypress + "/cypress.json"
-    var cypressEnvJSONPath = runSettings.cypress + "/cypress.env.json"
-    var cypressFolderPath = runSettings.cypress + "/cypress"
+    var cypressFolderPath = runSettings.cypress
     var basePath = runSettings.cypress
 
     var archive = archiver('zip', {
@@ -81,8 +79,6 @@ const archiveSpecs = (runSettings, filePath) => {
     // });
 
     // Add cypress.json
-    archive.file(cypressJSONPath, { name: "cypress.json" });  
-    archive.file(cypressEnvJSONPath, { name: "cypress.env.json" });
     archive.directory(cypressFolderPath, false);
 
     archive.finalize();

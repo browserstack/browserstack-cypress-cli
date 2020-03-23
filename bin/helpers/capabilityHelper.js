@@ -67,7 +67,7 @@ const validate = (bsConfig) => {
 
     if (!bsConfig.run_settings) reject(Constants.validationMessages.EMPTY_RUN_SETTINGS);
 
-    if(!bsConfig.run_settings.specs || bsConfig.run_settings.specs.length === 0) reject(Constants.validationMessages.EMPTY_SPEC_FILES);
+    if(!bsConfig.run_settings.cypress) reject(Constants.validationMessages.EMPTY_SPEC_FILES);
 
     resolve(Constants.validationMessages.VALIDATED);
   });
