@@ -39,8 +39,8 @@ const cliMessages = {
         DEMAND: "Requires a build id.",
         DESC: "Path to BrowserStack config",
         CONFIG_DEMAND: "config file is required",
-        INFO_MESSAGE: "Getting information for buildId",
-        STOP_MESSAGE: "Stopping build with given buildId"
+        INFO_MESSAGE: "Getting information for buildId ",
+        STOP_MESSAGE: "Stopping build with given buildId "
     },
     RUN: {
         INFO: "Run your tests on BrowserStack.",
