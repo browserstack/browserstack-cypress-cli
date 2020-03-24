@@ -2,6 +2,7 @@ const userMessages = {
     BUILD_FAILED: "Build creation failed.",
     BUILD_CREATED: "Build created",
     BUILD_INFO_FAILED: "Failed to get build info.",
+    BUILD_STOP_FAILED: "Failed to stop build.",
     ZIP_UPLOADER_NOT_REACHABLE: "Could not reach to zip uploader.",
     ZIP_UPLOAD_FAILED: "Zip Upload failed.",
     CONFIG_FILE_CREATED: "BrowserStack Config File created, you can now run browserstack-cypress --config-file run",
@@ -34,10 +35,12 @@ const cliMessages = {
     },
     BUILD: {
         INFO: "Check status of your build.",
+        STOP: "Stop your build.",
         DEMAND: "Requires a build id.",
         DESC: "Path to BrowserStack config",
         CONFIG_DEMAND: "config file is required",
-        DISPLAY: "Getting information for buildId "
+        INFO_MESSAGE: "Getting information for buildId",
+        STOP_MESSAGE: "Stopping build with given buildId"
     },
     RUN: {
         INFO: "Run your tests on BrowserStack.",

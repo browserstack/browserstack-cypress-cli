@@ -10,5 +10,6 @@ config.uploadUrl = hosts[config.env].uploadUrl;
 config.rails_host = hosts[config.env].rails_host;
 config.cypress_v1 = `${config.rails_host}/automate/cypress/v1`;
 config.buildUrl = `${config.cypress_v1}/builds/`;
+config.buildStopUrl = `${config.cypress_v1}/builds/stop/`;
 config.fileName = "tests.zip";
 module.exports = config;
