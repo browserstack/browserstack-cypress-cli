@@ -1,5 +1,6 @@
-var logger = require("./logger");
-const Constants = require('./constants');
+const logger = require("./logger"),
+      Constants = require('./constants'),
+      glob = require("glob");
 
 const caps = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
@@ -69,8 +70,47 @@ const validate = (bsConfig) => {
 
     if(!bsConfig.run_settings.cypress) reject(Constants.validationMessages.EMPTY_SPEC_FILES);
 
+    if(invalidFiles(bsConfig.run_settings.cypress)) reject(Constants.validationMessages.INVALID_EXTENSION);
+
     resolve(Constants.validationMessages.VALIDATED);
   });
+}
+
+const invalidFiles = (testFolder)=> {
+  var options = {
+    dot: true
+  }
+  files  = glob.sync(testFolder + "/**/*", options)
+  var invalidFiles = []
+  files.forEach(file => {
+    if(isHiddenPath(file) || invalidExtension(file)){
+      invalidFiles.push(file)
+    }
+  });
+
+  if(invalidFiles.length > 0) {
+    logger.log("These files are not valid: " + invalidFiles.toString())
+    return true
+  } else {
+    return false
+  }
+}
+
+var isHiddenPath = (path) => {
+  return (/(^|\/)\.[^\/\.]/g).test(path);
+};
+
+var invalidExtension = (file) => {
+  let ext = file.split('.').pop();
+  if (isFile(file) && !["js", "json", "txt"].includes(ext)) {
+    return true;
+  }
+
+  return false;
+}
+
+var isFile = (path) => {
+  return path.split('/').pop().indexOf('.') > -1;
 }
 
 module.exports = {

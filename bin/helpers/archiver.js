@@ -1,33 +1,13 @@
 
 const fs = require('fs'),
   archiver = require('archiver'),
-  logger = require("./logger"),
-  glob = require("glob"),
-  path = require('path');
-
-const getFiles = (jsGlobs, basePath, cb) => {
-  files = [];
-
-  jsGlobs.forEach(function (item) {
-    logger.log("Adding  " + item + " to zip"); 
-    files = glob.sync(basePath + item)
-  });
-
-  files = files.map(file => path.relative(basePath, file))
-  
-  if (cb){
-    cb(files);
-  }
-
-  return files;
-}
+  logger = require("./logger");
 
 const archiveSpecs = (runSettings, filePath) => {
   return new Promise(function (resolve, reject) {
     var output = fs.createWriteStream(filePath);
 
     var cypressFolderPath = runSettings.cypress
-    var basePath = runSettings.cypress
 
     var archive = archiver('zip', {
       zlib: { level: 9 } // Sets the compression level.
@@ -55,30 +35,6 @@ const archiveSpecs = (runSettings, filePath) => {
 
     archive.pipe(output);
 
-    fileNames = [];
-
-    // getFiles(runSettings.specs, basePath, (files) => {
-    //   fileNames = fileNames.concat(files);
-    // })
-
-    // getFiles(runSettings.supports, basePath, (files) => {
-    //   archive.append(JSON.stringify({"support": files}), {name: "cypress_helpers.json"})
-    //   fileNames = fileNames.concat(files);
-    // })
-
-    // getFiles(runSettings.plugins, basePath, (files) => {
-    //   fileNames = fileNames.concat(files);
-    // })
-
-    // getFiles(runSettings.fixtures, basePath, (files) => {
-    //   fileNames = fileNames.concat(files);
-    // })
-
-    // fileNames.forEach(function(file) {
-    //   archive.file(basePath + file, { name: file });  
-    // });
-
-    // Add cypress.json
     archive.directory(cypressFolderPath, false);
 
     archive.finalize();

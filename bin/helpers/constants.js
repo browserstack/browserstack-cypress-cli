@@ -20,7 +20,8 @@ const validationMessages = {
     EMPTY_RUN_SETTINGS: "Empty run settings",
     EMPTY_SPEC_FILES: "No spec files specified in run_settings",
     VALIDATED: "browserstack.json file is validated",
-    NOT_VALID: "browerstack.json is not valid"
+    NOT_VALID: "browerstack.json is not valid",
+    INVALID_EXTENSION: "Invalid files, please remove these files and try again."
 };
 const cliMessages = {
     VERSION: {

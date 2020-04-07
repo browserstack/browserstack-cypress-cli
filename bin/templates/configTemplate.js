@@ -13,18 +13,6 @@ module.exports = function () {
     ],
     "run_settings": {
       "cypress" : "/path/to/cypress_json",
-      "specs": [
-          "integration/examples/*.js"
-      ],
-      "plugins": [
-          "plugins/*.js"
-      ],
-      "supports": [
-          "support/*.js"
-      ],
-      "fixtures": [
-          "fixtures/*.js"
-      ],
       "project": "project-name",
       "customBuildName": "build-name"
     },
