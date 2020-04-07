@@ -1,6 +1,6 @@
 const logger = require("./logger"),
-      Constants = require('./constants'),
-      glob = require("glob");
+  Constants = require('./constants'),
+  glob = require("glob");
 
 const caps = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
