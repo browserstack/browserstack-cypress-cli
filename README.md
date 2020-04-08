@@ -9,14 +9,14 @@
 - [License](#license)
 
 # BrowserStack Cypress CLI
-You can now run your Cypress tests in BrowserStack using our browserstack-cypress-cli. BrowserStack currently supports Cypress 4 and you can start testing on the following browser combinations.
+You can now run your Cypress tests in BrowserStack using our `browserstack-cypress-cli`. BrowserStack currently supports Cypress 4 and you can start testing on the following browser combinations:
 
 
 |       Windows 10    |      OS X Mojave      |    OS X Catalina    |
-|---------------------|:---------------------:|--------------------:|
-| chrome 66.0 to 79.0 |   chrome 66.0 to 79.0 | chrome 66.0 to 79.0 |
-|     edge 80.0       |       edge 80.0       |      edge 80.0      |
-| firefox 60.0 to 72.0|  firefox 60.0 to 72.0 | firefox 60.0 to 72.0|
+|:---------------------:|:---------------------:|:--------------------:|
+| Chrome 66.0 to 79.0 |   Chrome 66.0 to 79.0 | Chrome 66.0 to 79.0 |
+|     Edge 80.0       |       Edge 80.0       |      Edge 80.0      |
+| Firefox 60.0 to 72.0|  Firefox 60.0 to 72.0 | Firefox 60.0 to 72.0|
 
 
 We are actively working on supporting other browsers and will start adding other browsers to this list.
@@ -26,24 +26,26 @@ We are actively working on supporting other browsers and will start adding other
 
 ### Installing browserstack-cypress
 ```bash
-# Install cypress(ignore if already done)
+# Install cypress (ignore if already done)
 $ npm install -g cypress@4.0.2
-# Install dependencies
+
+# Install the BrowserStack Cypress CLI
 $ npm install -g browserstack-cypress-cli
 ```
 
 ### Configuring your tests
 ```bash
-# create a sample configuration file for configurations and capabiltiies
+# create a sample configuration file for configurations and capabilities
 $ browserstack-cypress init
 ```
-This will create a sample browserstack.json file. This file can be used to configure your tests on BrowserStack. Below is the sample file that is generated for your reference.
+
+This will create a sample `browserstack.json` file. This file can be used to configure your test runs on BrowserStack. Below is the sample file that is generated for your reference.
 
 ```json
 {
     "auth": {
-      "username": "<username>",
-      "access_key": "<access-key>"
+      "username": "<your-browserstack-username>",
+      "access_key": "<your-browserstack-access-key>"
     },
     "browsers": [
       {
@@ -53,9 +55,9 @@ This will create a sample browserstack.json file. This file can be used to confi
       }
     ],
     "run_settings": {
-      "specs": ["folder_path_with_files/*.js"],
-      "project": "test",
-      "customBuildName": "cypress build"
+      "cypress_proj_dir": "/path/to/directory-that-contains-<cypress.json>-file",
+      "project": "my first project",
+      "customBuildName": "build 1"
     },
     "connection_settings": {
       "local": false
@@ -63,20 +65,21 @@ This will create a sample browserstack.json file. This file can be used to confi
 }
 ```
 
-The following table provides a reference for all the options that can be provided in browserstack.json shown above.
+The following table provides a reference for all the options that can be provided in `browserstack.json` shown above.
 
 
 | Option          | Description                                                                                                                                 | Possible values                                                                                                               |
 |-----------------|---------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| username        | These are the BrowserStack credentials that need to be provided to run a test on BrowserStack. You can find this in your [automate dashboard](https://automate.browserstack.com/) | -                                                                                                                             |
-| access_key      | These are the BrowserStack credentials that need to be provided to run a test on BrowserStack. You can find this in your [automate dashboard](https://automate.browserstack.com/) | -                                                                                                                             |
-| os (case-sensitive)              | The operating system in which you want to run your test.                                                                                    | The following three strings are supported."OS X Mojave" , "OS X Catalina", "Windows 10"                                       |
-| browser (case-sensitive)         | The browser in which you want to run your tests on.                                                                                         | Right now only "chrome", "firefox", and "edge" are supported. We are actively working on supporting other browsers.                                   |
-| versions        | A list of browser versions that you need to run your tests on                                                                               | Example: To run on versions 69, 67 and 65 provide ["69", "67", "65"]. Right now edge 80 and all chrome versions from 66 to 78 are supported |
-| specs           | The path to the spec files that need to be run on BrowserStack                                                                              | Takes a list of strings that point to location of the spec files                                                              |
-| project         | Name of the project                                                                                                                         | A string providing the name of the project                                                                                    |
-| customBuildName | Helps in providing a custom name for the build                                                                                              | A string providing the name of the build                                                                                      |
-| local(boolean: true/false)           | Helps in testing websites that cannot be accessed in public network                                                                         | Set this to true if you need to test a local website. Set this to false if the website is accessible publically.              |
+| `username`        | This is your BrowserStack username. You can find this in your [Automate dashboard](https://automate.browserstack.com/) | -                                                                                                                             |
+| `access_key`      | This is your BrowserStack access key. You can find this in your [Automate dashboard](https://automate.browserstack.com/) | -                                                                                                                             |
+| `os` <br/> (_case-sensitive_)              | The operating system on which you want to run your test.                                                                                    | `OS X Mojave`, <br/> `OS X Catalina`, and <br/> `Windows 10`                                       |
+| `browser` <br/> (case-sensitive)         | The browser on which you want to run your tests.                                                                                         | `chrome`, <br/> `firefox`, and <br/> `edge`                                   |
+| `versions`        | A list of browser versions that you want to run your tests on. <br/><br/> **Example:** To run on versions 69, 67 and 65 provide `["69", "67", "65"]`                                                                              | Right now edge 80 and all chrome versions from 66 to 78 are supported |
+| `specs` <br/> (_deprecated_)           | This param is deprecated in favour of a more complete `cypress_proj_dir` param. The path to the spec files that need to be run on BrowserStack                                                                              | Takes a list of strings that point to location of the spec files                                                              |
+| `cypress_proj_dir`           | Path to the folder which contains `cypress.json` file. This path will be considered as the root path of the project.                                                                           |-                                                               |
+| `project`         | Name of your project. This will be displayed in your Automate dashboard, and you'll be able to search & filter your tests based on the project name.                                                                                                                         | A string providing the name of the project                                                                                    |
+| `customBuildName` | Helps in providing a custom name for the build. This will be displayed in your Automate dashboard, and you'll be able to search & filter your tests based on the build name.                                                                                              | A string providing the name of the build                                                                                      |
+| `local`           | Helps in testing websites that cannot be accessed in public network. If you set this to `true`, please download the Local binary and establish a local connection first (you can learn how to do so [here](https://www.browserstack.com/local-testing/automate#command-line))                                                                       | Boolean: `true` / `false`. Set this to `true` if you need to test a local website. Set this to `false` if the website is accessible publicly.              |
 
 ### Running the tests
 You can start running your test build using the following command.
@@ -85,7 +88,7 @@ You can start running your test build using the following command.
 $ browserstack-cypress run
 ```
 
-Output :
+Sample output :
 
 ```bash
 [2/20/2020, 2:58:31 PM]  Reading browserstack.json from /browserstack.json
@@ -97,7 +100,9 @@ Output :
 [2/20/2020, 2:58:34 PM]  Test suite: bs://15f90b540b8cbc47929782f35bb7db20fe1c4709
 [2/20/2020, 2:58:34 PM]  Local is set to: false
 [2/20/2020, 2:58:34 PM]  Build name is: cypress build
+[2/20/2020, 2:58:34 PM]  Success
 [2/20/2020, 2:58:36 PM]  Build created with build id: 06f28ce423d10314b32e98bb6f68e10b0d02a49a
+[2/20/2020, 2:58:36 PM]  File deleted successfully.
 ```
 
 ### Getting build information
@@ -175,14 +180,13 @@ Output:
 }
 ```
 
-**Note** that individual version represents a session. It is advised to validate your account's parallel before running multiple versions.
+**Note:** Each browser version represents a session. It is advised to validate your account's parallel limit before running multiple versions.
 
 ### Limitations
 
 - `exec` and `task` are not allowed.
-- `baseUrl` is not supported at the moment.
-- Environment variables and configuration files are not supported yet.
-- While using local, please make sure to create /etc/hosts entry pointing to a URL. The `localhost` is not working at the moment.
+- While using local, please make sure to create `/etc/hosts` entry pointing to some URL, and use that URL in the tests. The `localhost` URI doesn't work at the moment.
+- Installing custom npm packages are not supported at this moment.
 
 # Accessing test results
 
@@ -190,4 +194,4 @@ You can access your test results in [BrowserStack Automate dashboard](https://au
 
 # License
 
-This project is released under MIT License. Please refer the [LICENSE.md](LICENSE.md) for more detail.
+This project is released under MIT License. Please refer the [LICENSE.md](LICENSE.md) for more details.

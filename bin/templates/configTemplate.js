@@ -12,7 +12,7 @@ module.exports = function () {
       }
     ],
     "run_settings": {
-      "specs": ["folder_path_with_files/*.js"],
+      "cypress_proj_dir" : "/path/to/cypress.json",
       "project": "project-name",
       "customBuildName": "build-name"
     },

@@ -1,14 +1,13 @@
 
-var fs = require('fs');
-var archiver = require('archiver');
-var request = require('request')
-var config = require('./config');
-var logger = require("./logger")
+const fs = require('fs'),
+  archiver = require('archiver'),
+  logger = require("./logger");
 
-
-const archiveSpecs = (specs, filePath) => {
+const archiveSpecs = (runSettings, filePath) => {
   return new Promise(function (resolve, reject) {
     var output = fs.createWriteStream(filePath);
+
+    var cypressFolderPath = runSettings.cypress_proj_dir
 
     var archive = archiver('zip', {
       zlib: { level: 9 } // Sets the compression level.
@@ -36,10 +35,7 @@ const archiveSpecs = (specs, filePath) => {
 
     archive.pipe(output);
 
-    specs.forEach(function (item, index) {
-      logger.log("Adding  " + item + " to zip");
-      archive.glob(item);
-    });
+    archive.directory(cypressFolderPath, false);
 
     archive.finalize();
   });
