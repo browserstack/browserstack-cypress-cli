@@ -68,9 +68,9 @@ const validate = (bsConfig) => {
 
     if (!bsConfig.run_settings) reject(Constants.validationMessages.EMPTY_RUN_SETTINGS);
 
-    if(!bsConfig.run_settings.cypress) reject(Constants.validationMessages.EMPTY_SPEC_FILES);
+    if(!bsConfig.run_settings.cypress_proj_dir) reject(Constants.validationMessages.EMPTY_SPEC_FILES);
 
-    if(invalidFiles(bsConfig.run_settings.cypress)) reject(Constants.validationMessages.INVALID_EXTENSION);
+    if(invalidFiles(bsConfig.run_settings.cypress_proj_dir)) reject(Constants.validationMessages.INVALID_EXTENSION);
 
     resolve(Constants.validationMessages.VALIDATED);
   });

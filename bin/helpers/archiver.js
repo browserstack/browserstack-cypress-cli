@@ -7,7 +7,7 @@ const archiveSpecs = (runSettings, filePath) => {
   return new Promise(function (resolve, reject) {
     var output = fs.createWriteStream(filePath);
 
-    var cypressFolderPath = runSettings.cypress
+    var cypressFolderPath = runSettings.cypress_proj_dir
 
     var archive = archiver('zip', {
       zlib: { level: 9 } // Sets the compression level.
