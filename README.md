@@ -109,13 +109,13 @@ Sample output :
 In case you want to get information on the build you can use the following command
 
 ```bash
-browserstack-cypress build <buildId>
+browserstack-cypress build-info <buildId>
 ```
 
 Example
 
 ```bash
-browserstack-cypress build 06f28ce423d10314b32e98bb6f68e10b0d02a49a
+browserstack-cypress build-info 06f28ce423d10314b32e98bb6f68e10b0d02a49a
 ```
 
 Output:
@@ -181,6 +181,30 @@ Output:
 ```
 
 **Note:** Each browser version represents a session. It is advised to validate your account's parallel limit before running multiple versions.
+
+### Stopping a running build
+In case you want to stop a running build, you can use the following command
+
+```bash
+browserstack-cypress build-stop <buildId>
+```
+
+Example
+
+```bash
+browserstack-cypress build-stop 06f28ce423d10314b32e98bb6f68e10b0d02a49a
+```
+
+Output:
+
+```bash
+[3/24/2020, 2:31:11 PM]  Stopping build with given buildId 06f28ce423d10314b32e98bb6f68e10b0d02a49a
+[3/24/2020, 2:31:12 PM]  Reading config from /browserstack.json
+[3/24/2020, 2:31:14 PM]  {
+  "message": "stopped 1 sessions",
+  "stopped_session_count": 1
+}
+```
 
 ### Limitations
 

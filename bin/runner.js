@@ -37,9 +37,9 @@ var argv = yargs
       return require('./commands/init')(argv);
     }
   })
-  .command('build', Constants.cliMessages.BUILD.INFO, function(yargs) {
+  .command('build-info', Constants.cliMessages.BUILD.INFO, function(yargs) {
     argv = yargs
-      .usage('usage: $0 info <buildId>')
+      .usage('usage: $0 <buildId>')
       .demand(1, Constants.cliMessages.BUILD.DEMAND)
       .options('cf', {
         alias: 'config-file',
@@ -54,8 +54,29 @@ var argv = yargs
       .wrap(null)
       .argv
     if (checkCommands(yargs, argv, 1)) {
-      logger.log(Constants.cliMessages.BUILD.DISPLAY + argv._[1]);
+      logger.log(Constants.cliMessages.BUILD.INFO_MESSAGE + argv._[1]);
       return require('./commands/info')(argv);
+    }
+  })
+  .command('build-stop', Constants.cliMessages.BUILD.STOP, function (yargs) {
+    argv = yargs
+      .usage('usage: $0 <buildId>')
+      .demand(1, Constants.cliMessages.BUILD.DEMAND)
+      .options('cf', {
+        alias: 'config-file',
+        describe: Constants.cliMessages.BUILD.DESC,
+        default: '/browserstack.json',
+        type: 'string',
+        nargs: 1,
+        demand: true,
+        demand: Constants.cliMessages.BUILD.CONFIG_DEMAND
+      })
+      .help('help')
+      .wrap(null)
+      .argv
+    if (checkCommands(yargs, argv, 1)) {
+      logger.log(Constants.cliMessages.BUILD.STOP_MESSAGE + argv._[1]);
+      return require('./commands/stop')(argv);
     }
   })
   .command('run', Constants.cliMessages.RUN.INFO, function(yargs) {
