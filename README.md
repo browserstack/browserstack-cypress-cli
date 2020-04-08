@@ -53,7 +53,7 @@ This will create a sample browserstack.json file. This file can be used to confi
       }
     ],
     "run_settings": {
-      "specs": ["folder_path_with_files/*.js"],
+      "cypress": "/path/to/cypress.json",
       "project": "test",
       "customBuildName": "cypress build"
     },
@@ -73,7 +73,7 @@ The following table provides a reference for all the options that can be provide
 | os (case-sensitive)              | The operating system in which you want to run your test.                                                                                    | The following three strings are supported."OS X Mojave" , "OS X Catalina", "Windows 10"                                       |
 | browser (case-sensitive)         | The browser in which you want to run your tests on.                                                                                         | Right now only "chrome", "firefox", and "edge" are supported. We are actively working on supporting other browsers.                                   |
 | versions        | A list of browser versions that you need to run your tests on                                                                               | Example: To run on versions 69, 67 and 65 provide ["69", "67", "65"]. Right now edge 80 and all chrome versions from 66 to 78 are supported |
-| specs           | The path to the spec files that need to be run on BrowserStack                                                                              | Takes a list of strings that point to location of the spec files                                                              |
+| cypress           | The path to the cypress.json files that need to be run on BrowserStack. This will be considered as root of your project.                                                                              |                                                               |
 | project         | Name of the project                                                                                                                         | A string providing the name of the project                                                                                    |
 | customBuildName | Helps in providing a custom name for the build                                                                                              | A string providing the name of the build                                                                                      |
 | local(boolean: true/false)           | Helps in testing websites that cannot be accessed in public network                                                                         | Set this to true if you need to test a local website. Set this to false if the website is accessible publically.              |
@@ -97,7 +97,9 @@ Output :
 [2/20/2020, 2:58:34 PM]  Test suite: bs://15f90b540b8cbc47929782f35bb7db20fe1c4709
 [2/20/2020, 2:58:34 PM]  Local is set to: false
 [2/20/2020, 2:58:34 PM]  Build name is: cypress build
+[2/20/2020, 2:58:34 PM]  Success
 [2/20/2020, 2:58:36 PM]  Build created with build id: 06f28ce423d10314b32e98bb6f68e10b0d02a49a
+[2/20/2020, 2:58:34 PM]  File deleted successfully.
 ```
 
 ### Getting build information
@@ -180,9 +182,8 @@ Output:
 ### Limitations
 
 - `exec` and `task` are not allowed.
-- `baseUrl` is not supported at the moment.
-- Environment variables and configuration files are not supported yet.
 - While using local, please make sure to create /etc/hosts entry pointing to a URL. The `localhost` is not working at the moment.
+- Installing custom npm packages are not supported at this moment.
 
 # Accessing test results
 
