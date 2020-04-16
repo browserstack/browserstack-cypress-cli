@@ -35,7 +35,8 @@ const archiveSpecs = (runSettings, filePath) => {
 
     archive.pipe(output);
 
-    archive.directory(cypressFolderPath, false);
+    let filesToIgnore = [ '*.zip', '*.mp4', '*.png', '*.jpeg', '^.' ]
+    archive.glob('**/*', { ignore: filesToIgnore, cwd:  cypressFolderPath });
 
     archive.finalize();
   });
