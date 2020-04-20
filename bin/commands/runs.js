@@ -45,7 +45,7 @@ function runCypress(args) {
         // Zip Upload failed
         logger.error(err)
         logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED)
-      }).finally(function (params) {
+      }).finally(function () {
         deleteZip();
       });
     }).catch(function (err) {
