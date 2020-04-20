@@ -12,6 +12,16 @@ module.exports = function run(args) {
   return runCypress(args);
 }
 
+function deleteZip() {
+  fs.unlink(config.fileName, function (err) {
+    if(err) {
+      logger.log(Constants.userMessages.ZIP_DELETE_FAILED);
+    } else {
+      logger.log(Constants.userMessages.ZIP_DELETED);
+    }            
+  });
+}
+
 function runCypress(args) {
   let bsConfigPath = process.cwd() + args.cf;
   logger.log(`Reading config from ${args.cf}`);
@@ -30,25 +40,19 @@ function runCypress(args) {
         }).catch(function (err) {
           // Build creation failed
           logger.error(Constants.userMessages.BUILD_FAILED)
-        }).finally(function() {
-          // Delete zip file from local storage
-          fs.unlink(config.fileName, function (err) {
-            if(err) {
-              logger.log(Constants.userMessages.ZIP_DELETE_FAILED);
-            } else {
-              logger.log(Constants.userMessages.ZIP_DELETED);
-            }            
-          });
         });
       }).catch(function (err) {
         // Zip Upload failed
         logger.error(err)
         logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED)
+      }).finally(function (params) {
+        deleteZip();
       });
     }).catch(function (err) {
       // Zipping failed
       logger.error(err)
       logger.error(Constants.userMessages.FAILED_TO_ZIP)
+      deleteZip();
     });
   }).catch(function (err) {
     // browerstack.json is not valid
