@@ -35,7 +35,10 @@ const archiveSpecs = (runSettings, filePath) => {
 
     archive.pipe(output);
 
-    archive.directory(cypressFolderPath, false);
+    let allowedFileTypes = [ 'js', 'json', 'txt', 'ts' ]
+    allowedFileTypes.forEach(fileType => {
+      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: 'node_modules/**' });
+    });
 
     archive.finalize();
   });
