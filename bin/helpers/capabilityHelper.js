@@ -33,6 +33,10 @@ const caps = (bsConfig, zip) => {
     if (bsConfig.connection_settings.local === true) obj.local = true;
     logger.log(`Local is set to: ${obj.local}`);
 
+    // Local Identifier
+    obj.localIdentifier = bsConfig.connection_settings.localIdentifier;
+    if (obj.localIdentifier) logger.log(`Local Identifier is set to: ${obj.localIdentifier}`);
+
     // Project name
     obj.project = bsConfig.run_settings.project
     if (!obj.project) logger.log(`Project name is: ${obj.project}`);

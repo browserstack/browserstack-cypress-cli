@@ -60,7 +60,8 @@ This will create a sample `browserstack.json` file. This file can be used to con
       "customBuildName": "build 1"
     },
     "connection_settings": {
-      "local": false
+      "local": false,
+      "localIdentifier": ""
     }
 }
 ```
@@ -80,6 +81,7 @@ The following table provides a reference for all the options that can be provide
 | `project`         | Name of your project. This will be displayed in your Automate dashboard, and you'll be able to search & filter your tests based on the project name.                                                                                                                         | A string providing the name of the project                                                                                    |
 | `customBuildName` | Helps in providing a custom name for the build. This will be displayed in your Automate dashboard, and you'll be able to search & filter your tests based on the build name.                                                                                              | A string providing the name of the build                                                                                      |
 | `local`           | Helps in testing websites that cannot be accessed in public network. If you set this to `true`, please download the Local binary and establish a local connection first (you can learn how to do so [here](https://www.browserstack.com/local-testing/automate#command-line))                                                                       | Boolean: `true` / `false`. Set this to `true` if you need to test a local website. Set this to `false` if the website is accessible publicly.              |
+| `localIdentifier`           |  Configure the test script to run through a specific connection. To do so, set the value of localIdentifier capability to be a unique connection name.                                                                       | Set this when `local` is set to `true`.              |
 
 ### Running the tests
 You can start running your test build using the following command.
