@@ -61,7 +61,7 @@ This will create a sample `browserstack.json` file. This file can be used to con
     },
     "connection_settings": {
       "local": false,
-      "localIdentifier": ""
+      "localIdentifier": null
     }
 }
 ```
