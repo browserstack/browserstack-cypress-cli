@@ -17,7 +17,8 @@ module.exports = function () {
       "customBuildName": "build-name"
     },
     "connection_settings": {
-      "local": false
+      "local": false,
+      "localIdentifier": null
     }
   }
   var EOL = require('os').EOL
