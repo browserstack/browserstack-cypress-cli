@@ -8,6 +8,7 @@ const archiveSpecs = (runSettings, filePath) => {
     var output = fs.createWriteStream(filePath);
 
     var cypressFolderPath = runSettings.cypress_proj_dir
+    var packageJsonPath = runSettings.package_json_path
 
     var archive = archiver('zip', {
       zlib: { level: 9 } // Sets the compression level.
@@ -37,7 +38,9 @@ const archiveSpecs = (runSettings, filePath) => {
 
     let allowedFileTypes = [ 'js', 'json', 'txt', 'ts' ]
     allowedFileTypes.forEach(fileType => {
-      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: 'node_modules/**' });
+      archive
+        .glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: 'node_modules/**' })
+        .append(packageJsonPath, { name: 'package.json' });
     });
 
     archive.finalize();

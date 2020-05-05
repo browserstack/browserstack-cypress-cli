@@ -12,7 +12,8 @@ module.exports = function () {
       }
     ],
     "run_settings": {
-      "cypress_proj_dir" : "/path/to/cypress.json",
+      "package_json_path": "/path/to/package.json",
+      "cypress_proj_dir" : "/dir/to/cypress.json",
       "project": "project-name",
       "customBuildName": "build-name"
     },
