@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-
-const yargs = require('yargs')
-var logger = require("./helpers/logger");
-const Constants = require('./helpers/constants');
+'use strict';
+const yargs = require('yargs'),
+  logger = require("./helpers/logger").winstonLogger,
+  Constants = require('./helpers/constants');
 
 function checkCommands(yargs, argv, numRequired) {
   if (argv._.length < numRequired) {
@@ -54,7 +54,7 @@ var argv = yargs
       .wrap(null)
       .argv
     if (checkCommands(yargs, argv, 1)) {
-      logger.log(Constants.cliMessages.BUILD.INFO_MESSAGE + argv._[1]);
+      logger.info(Constants.cliMessages.BUILD.INFO_MESSAGE + argv._[1]);
       return require('./commands/info')(argv);
     }
   })
@@ -75,7 +75,7 @@ var argv = yargs
       .wrap(null)
       .argv
     if (checkCommands(yargs, argv, 1)) {
-      logger.log(Constants.cliMessages.BUILD.STOP_MESSAGE + argv._[1]);
+      logger.info(Constants.cliMessages.BUILD.STOP_MESSAGE + argv._[1]);
       return require('./commands/stop')(argv);
     }
   })

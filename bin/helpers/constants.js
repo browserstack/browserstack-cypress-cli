@@ -14,16 +14,18 @@ const userMessages = {
 };
 
 const validationMessages = {
-    INCORRECT_AUTH_PARAMS: "Incorrect auth params.",
-    EMPTY_BROWSER_LIST: "Browser list is empty",
-    EMPTY_TEST_SUITE: "Test suite is empty",
-    EMPTY_BROWSERSTACK_JSON: "Empty browserstack.json",
-    EMPTY_RUN_SETTINGS: "Empty run settings",
-    EMPTY_SPEC_FILES: "No spec files specified in run_settings",
-    VALIDATED: "browserstack.json file is validated",
-    NOT_VALID: "browerstack.json is not valid",
-    INVALID_EXTENSION: "Invalid files, please remove these files and try again."
+  INCORRECT_AUTH_PARAMS: "Incorrect auth params.",
+  EMPTY_BROWSER_LIST: "Browser list is empty",
+  EMPTY_TEST_SUITE: "Test suite is empty",
+  EMPTY_BROWSERSTACK_JSON: "Empty browserstack.json",
+  EMPTY_RUN_SETTINGS: "Empty run settings",
+  EMPTY_SPEC_FILES: "No spec files specified in run_settings",
+  VALIDATED: "browserstack.json file is validated",
+  NOT_VALID: "browerstack.json is not valid",
+  NOT_VALID_JSON: "browerstack.json is not a valid json",
+  INVALID_EXTENSION: "Invalid files, please remove these files and try again.",
 };
+
 const cliMessages = {
     VERSION: {
         INFO: "shows version information",
@@ -50,8 +52,18 @@ const cliMessages = {
     }
 }
 
+const messageTypes = {
+  SUCCESS: "success",
+  ERROR: "error",
+  INFO: "info",
+  WARNING: "warning",
+  UNKNOWN: "unknown",
+  NULL: null
+}
+
 module.exports = Object.freeze({
-    userMessages,
-    cliMessages,
-    validationMessages
-})
+  userMessages,
+  cliMessages,
+  validationMessages,
+  messageTypes,
+});

@@ -1,7 +1,8 @@
+'use strict';
+const fs = require("fs");
 
-const fs = require('fs'),
-  archiver = require('archiver'),
-  logger = require("./logger");
+const archiver = require("archiver"),
+  logger = require("./logger").winstonLogger;
 
 const archiveSpecs = (runSettings, filePath) => {
   return new Promise(function (resolve, reject) {
@@ -15,7 +16,7 @@ const archiveSpecs = (runSettings, filePath) => {
 
     archive.on('warning', function (err) {
       if (err.code === 'ENOENT') {
-        logger.log(err)
+        logger.info(err)
       } else {
         reject(err)
       }
@@ -26,11 +27,11 @@ const archiveSpecs = (runSettings, filePath) => {
     });
 
     output.on('end', function () {
-      logger.log('Data has been drained');
+      logger.info('Data has been drained');
     });
 
     archive.on('error', function (err) {
-      reject(err)
+      reject(err);
     });
 
     archive.pipe(output);

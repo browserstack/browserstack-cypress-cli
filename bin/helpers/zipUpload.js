@@ -1,8 +1,9 @@
-var config = require('./config');
-var request = require('request')
-var fs = require('fs');
-var logger = require("./logger")
-const Constants = require("./constants")
+'use strict';
+const config = require("./config"),
+  request = require("request"),
+  fs = require("fs"),
+  logger = require("./logger").winstonLogger,
+  Constants = require("./constants");
 
 const uploadCypressZip = (bsConfig, filePath) => {
   return new Promise(function (resolve, reject) {
@@ -35,7 +36,7 @@ const uploadCypressZip = (bsConfig, filePath) => {
             reject(Constants.userMessages.ZIP_UPLOADER_NOT_REACHABLE);
           }
         } else {
-          logger.log(`Zip uploaded with url: ${responseData.zip_url}`);
+          logger.info(`Zip uploaded with url: ${responseData.zip_url}`);
           resolve(responseData);
         }
       }

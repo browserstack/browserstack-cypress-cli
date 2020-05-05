@@ -1,8 +1,10 @@
 'use strict';
-var config = require('../helpers/config');
-var request = require('request')
-var logger = require("../helpers/logger");
-var Constant = require("../helpers/constants")
+const request = require('request');
+
+const config = require("../helpers/config"),
+  logger = require("../helpers/logger").winstonLogger,
+  Constants = require("../helpers/constants"),
+  util = require("../helpers/util");
 
 module.exports = function stop(args) {
   return buildStop(args)
@@ -10,46 +12,74 @@ module.exports = function stop(args) {
 
 function buildStop(args) {
   let bsConfigPath = process.cwd() + args.cf;
-  logger.log(`Reading config from ${args.cf}`);
-  var bsConfig = require(bsConfigPath);
 
-  let buildId = args._[1]
+  util.validateBstackJson(bsConfigPath).then(function (bsConfig) {
+    util.setUsageReportingFlag(bsConfig, args.cf.disableUsageReporting);
 
-  let options = {
-    url: config.buildStopUrl + buildId,
-    method: 'POST',
-    auth: {
-      user: bsConfig.auth.username,
-      password: bsConfig.auth.access_key
-    }
-  }
+    let buildId = args._[1];
 
-  request(options, function (err, resp, body) {
-    if (err) {
-      logger.log(Constant.userMessages.BUILD_STOP_FAILED);
-    } else {
-      let build = null
-      try {
-        build = JSON.parse(body)
-      } catch (error) {
-        build = null
+    let options = {
+      url: config.buildStopUrl + buildId,
+      method: 'POST',
+      auth: {
+        user: bsConfig.auth.username,
+        password: bsConfig.auth.access_key
       }
+    }
 
-      if (resp.statusCode != 200) {
-        if (build) {
-          logger.error(`${Constant.userMessages.BUILD_STOP_FAILED} with error: \n${JSON.stringify(build, null, 2)}`);
-        } else {
-          logger.error(Constant.userMessages.BUILD_STOP_FAILED);
-        }
-      } else if (resp.statusCode == 299) {
-        if (build) {
-          logger.log(build.message);
-        } else {
-          logger.log(Constants.userMessages.API_DEPRECATED);
-        }
+    request(options, function (err, resp, body) {
+      let message = null;
+      let messageType = null;
+      let errorCode = null;
+
+      if (err) {
+        message = Constants.userMessages.BUILD_STOP_FAILED;
+        messageType = Constants.messageTypes.ERROR;
+        errorCode = 'api_failed_build_stop';
+
+        logger.info(message);
       } else {
-        logger.log(`${JSON.stringify(build, null, 2)}`)
+        let build = null
+        try {
+          build = JSON.parse(body)
+        } catch (error) {
+          build = null
+        }
+
+        if (resp.statusCode != 200) {
+          messageType = Constants.messageTypes.ERROR;
+          errorCode = 'api_failed_build_stop';
+
+          if (build) {
+            message = `${Constants.userMessages.BUILD_STOP_FAILED} with error: \n${JSON.stringify(build, null, 2)}`;
+            logger.error(message);
+            if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
+          } else {
+            message = Constants.userMessages.BUILD_STOP_FAILED;
+            logger.error(message);
+          }
+        } else if (resp.statusCode == 299) {
+          messageType = Constants.messageTypes.INFO;
+          errorCode = 'api_deprecated';
+
+          if (build) {
+            message = build.message
+            logger.info(message);
+          } else {
+            message = Constants.userMessages.API_DEPRECATED;
+            logger.info(message);
+          }
+        } else {
+          messageType = Constants.messageTypes.SUCCESS;
+          message = `${JSON.stringify(build, null, 2)}`;
+          logger.info(message);
+        }
       }
-    }
+      util.sendUsageReport(bsConfig, args, message, messageType, errorCode);
+    })
+  }).catch(function (err) {
+    logger.error(err);
+    util.setUsageReportingFlag(null, args.cf.disableUsageReporting);
+    util.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, util.getErrorCodeFromErr(err));
   })
 }

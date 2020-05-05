@@ -1,8 +1,10 @@
-var request = require('request')
-var logger = require("./logger")
-var config = require('./config');
-var capabilityHelper = require("../helpers/capabilityHelper");
-const Constants = require('../helpers/constants');
+'use strict';
+const request = require('request');
+
+const logger = require("./logger").winstonLogger,
+  config = require('./config'),
+  capabilityHelper = require("../helpers/capabilityHelper"),
+  Constants = require('../helpers/constants');
 
 const createBuild = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
@@ -37,13 +39,13 @@ const createBuild = (bsConfig, zip) => {
             }
           } else if(resp.statusCode == 299){
             if(build) {
-              logger.log(build.message);  
+              logger.info(build.message);
             } else {
-              logger.log(Constants.userMessages.API_DEPRECATED);
+              logger.info(Constants.userMessages.API_DEPRECATED);
             }
           } else {
-            logger.log(build.message)
-            logger.log(`${Constants.userMessages.BUILD_CREATED} with build id: ${build.build_id}`);
+            logger.info(build.message)
+            logger.info(`${Constants.userMessages.BUILD_CREATED} with build id: ${build.build_id}`);
           }
           resolve(build);
         }
