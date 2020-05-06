@@ -81,10 +81,10 @@ function cli_version_and_path(bsConfig) {
   // 2. check version of Cypress installed globally if not present in project
 
   if (bsConfig) {
-    let _path = path.join(bsConfig.run_settings.cypress_proj_dir, 'node_modules', 'browserstack-cypress-cli');
+    let _path = path.join(bsConfig.run_settings.cypress_proj_dir, 'node_modules', 'browserstack-cypress');
     let version = get_version(_path);
     if (!version) {
-      version = get_version('browserstack-cypress-cli');
+      version = get_version('browserstack-cypress');
 
       if (!version) {
         // return path = null if version is null
@@ -95,7 +95,7 @@ function cli_version_and_path(bsConfig) {
     }
     return [version, _path];
   } else {
-    let version = get_version('browserstack-cypress-cli');
+    let version = get_version('browserstack-cypress');
 
     if (!version) {
       // return path = null if version is null
@@ -105,6 +105,52 @@ function cli_version_and_path(bsConfig) {
   }
 }
 
+function ci_environment() {
+  var env = process.env;
+  // Jenkins
+  if ((typeof env.JENKINS_URL === "string" && env.JENKINS_URL.length > 0) || (typeof env.JENKINS_HOME === "string" && env.JENKINS_HOME.length > 0)) {
+    return "Jenkins";
+  }
+  // CircleCI
+  if (env.CI === "true" && env.CIRCLECI === "true") {
+    return "CircleCI"; 
+  }
+  // Travis CI
+  if (env.CI === "true" && env.TRAVIS === "true") {
+    return "Travis CI";
+  }
+  // Codeship
+  if (env.CI === "true" && env.CI_NAME === "codeship") {
+    return "Codeship";
+  }
+  // Bitbucket
+  if (env.BITBUCKET_BRANCH && env.BITBUCKET_COMMIT) {
+    return "Bitbucket";
+  }
+  // Drone
+  if (env.CI === "true" && env.DRONE === "true") {
+    return "Drone";
+  }
+  // Semaphore
+  if (env.CI === "true" && env.SEMAPHORE === "true") {
+    return "Semaphore";
+  }
+  // GitLab
+  if (env.CI === "true" && env.GITLAB_CI === "true") {
+    return "GitLab";
+  }
+  // Buildkite
+  if (env.CI === "true" && env.BUILDKITE === "true") {
+    return "Buildkite";
+  }
+  // Visual Studio Team Services
+  if (env.TF_BUILD === "True") {
+    return "Visual Studio Team Services";
+  }
+  // if no matches, return null
+  return null;
+}
+
 function isUsageReportingEnabled() {
   return process.env.DISABLE_USAGE_REPORTING;
 }
@@ -112,12 +158,14 @@ function isUsageReportingEnabled() {
 function send(args) {
   if (!isUsageReportingEnabled()) return;
 
-  let [cli_version, cli_path] = cli_version_and_path(args.bsConfig);
+  let bsConfig = args.bstack_config;
+  let [cli_version, cli_path] = cli_version_and_path(bsConfig);
+
+  delete args.bstack_config;
 
   const payload = {
-    api_key: config.usageReportingApiKey,
+    event_type: "cypress_cli_stats",
     data: {
-      event_type: 'cypress_cli_instrumentation',
       os: _os(),
       os_version: os_version(),
       bstack_json_found_in_pwd: bstack_json_found_in_pwd(),
@@ -125,18 +173,22 @@ function send(args) {
       cli_version: cli_version,
       cli_path: cli_path,
       npm_version: npm_version(),
-      local_cypress_version: local_cypress_version(args.bstack_config),
-      timestamp: new Date().getTime(),
-      ...args
-    }
+      local_cypress_version: local_cypress_version(bsConfig),
+      ci_environment: ci_environment(),
+      event_timestamp: new Date().toLocaleString(),
+      ...args,
+    },
   };
 
   const options = {
-    method: 'POST',
+    headers: {
+      "Content-Type": "text/json",
+    },
+    method: "POST",
     url: config.usageReportingUrl,
     body: payload,
-    json: true
-  }
+    json: true,
+  };
 
   fileLogger.info(`Sending ${payload} to ${config.usageReportingUrl}`);
   request(options, function (error, res, body) {
