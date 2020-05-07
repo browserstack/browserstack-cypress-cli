@@ -1,7 +1,7 @@
 'use strict';
-const cp = require('child_process'),
-  os = require('os'),
-  request = require('request'),
+const cp = require("child_process"),
+  os = require("os"),
+  request = require("requestretry"),
   fs = require('fs'),
   path = require('path');
 
@@ -188,19 +188,25 @@ function send(args) {
     url: config.usageReportingUrl,
     body: payload,
     json: true,
+    maxAttempts: 10, // (default) try 3 times
+    retryDelay: 2000, // (default) wait for 2s before trying again
+    retrySrategy: request.RetryStrategies.HTTPOrNetworkError, // (default) retry on 5xx or network errors
   };
 
-  fileLogger.info(`Sending ${payload} to ${config.usageReportingUrl}`);
+  fileLogger.info(`Sending ${JSON.stringify(payload)} to ${config.usageReportingUrl}`);
   request(options, function (error, res, body) {
     if (error) {
       //write err response to file
-      fileLogger.err(JSON.stringify(error));
+      fileLogger.error(JSON.stringify(error));
       return;
     }
-    // write response and body to file
-    fileLogger.info(
-      `statusCode: ${res.statusCode}, body: ${JSON.stringify(body)}`
-    );
+    // write response file
+    let response = {
+      attempts: res.attempts,
+      statusCode: res.statusCode,
+      body: body
+    };
+    fileLogger.info(`${JSON.stringify(response)}`);
   });
 }
 

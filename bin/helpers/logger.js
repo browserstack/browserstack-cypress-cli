@@ -2,9 +2,6 @@ const winston = require('winston'),
   fs = require("fs"),
   path = require("path");
 
-const { format } = winston;
-// const { format } = require("logform");
-
 const logDir = "log"; // directory path for logs
 if (!fs.existsSync(logDir)) {
   // Create the directory if it does not exist
