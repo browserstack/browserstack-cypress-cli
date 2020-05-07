@@ -14,7 +14,7 @@ function buildStop(args) {
   let bsConfigPath = process.cwd() + args.cf;
 
   util.validateBstackJson(bsConfigPath).then(function (bsConfig) {
-    util.setUsageReportingFlag(bsConfig, args.cf.disableUsageReporting);
+    util.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
     let buildId = args._[1];
 
@@ -81,7 +81,7 @@ function buildStop(args) {
     })
   }).catch(function (err) {
     logger.error(err);
-    util.setUsageReportingFlag(null, args.cf.disableUsageReporting);
+    util.setUsageReportingFlag(null, args.disableUsageReporting);
     util.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, util.getErrorCodeFromErr(err));
   })
 }

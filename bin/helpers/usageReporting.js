@@ -170,7 +170,7 @@ function isUsageReportingEnabled() {
 }
 
 function send(args) {
-  if (!isUsageReportingEnabled()) return;
+  if (isUsageReportingEnabled() === "true") return;
 
   let bsConfig = args.bstack_config;
   let cli_details = cli_version_and_path(bsConfig);

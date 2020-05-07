@@ -19,7 +19,8 @@ module.exports = function () {
     "connection_settings": {
       "local": false,
       "localIdentifier": null
-    }
+    },
+    "disable-usage-reporting": false
   }
   var EOL = require('os').EOL
   var file = [
