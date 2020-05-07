@@ -20,6 +20,7 @@ const uploadCypressZip = (bsConfig, filePath) => {
       }
     }
 
+    let responseData = null;
     request.post(options, function (err, resp, body) {
       if (err) {
         reject(err);
