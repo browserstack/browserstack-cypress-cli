@@ -46,28 +46,30 @@ function buildStop(args) {
           build = null
         }
 
-        if (resp.statusCode != 200) {
-          messageType = Constants.messageTypes.ERROR;
-          errorCode = 'api_failed_build_stop';
-
-          if (build) {
-            message = `${Constants.userMessages.BUILD_STOP_FAILED} with error: \n${JSON.stringify(build, null, 2)}`;
-            logger.error(message);
-            if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
-          } else {
-            message = Constants.userMessages.BUILD_STOP_FAILED;
-            logger.error(message);
-          }
-        } else if (resp.statusCode == 299) {
+        if (resp.statusCode == 299) {
           messageType = Constants.messageTypes.INFO;
-          errorCode = 'api_deprecated';
+          errorCode = "api_deprecated";
 
           if (build) {
-            message = build.message
+            message = build.message;
             logger.info(message);
           } else {
             message = Constants.userMessages.API_DEPRECATED;
             logger.info(message);
+          }
+        } else if (resp.statusCode != 200) {
+          messageType = Constants.messageTypes.ERROR;
+          errorCode = "api_failed_build_stop";
+
+          if (build) {
+            message = `${
+              Constants.userMessages.BUILD_STOP_FAILED
+            } with error: \n${JSON.stringify(build, null, 2)}`;
+            logger.error(message);
+            if (build.message === "Unauthorized") errorCode = "api_auth_failed";
+          } else {
+            message = Constants.userMessages.BUILD_STOP_FAILED;
+            logger.error(message);
           }
         } else {
           messageType = Constants.messageTypes.SUCCESS;

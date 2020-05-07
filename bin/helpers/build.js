@@ -31,21 +31,26 @@ const createBuild = (bsConfig, zip) => {
           } catch (error) {
             build = null
           }
-          if (resp.statusCode != 201) {
+
+          if (resp.statusCode == 299) {
             if (build) {
-              logger.error(`${Constants.userMessages.BUILD_FAILED} Error: ${build.message}`);
-            } else {
-              logger.error(Constants.userMessages.BUILD_FAILED);
-            }
-          } else if(resp.statusCode == 299){
-            if(build) {
               logger.info(build.message);
             } else {
               logger.info(Constants.userMessages.API_DEPRECATED);
             }
+          } else if (resp.statusCode != 201) {
+            if (build) {
+              logger.error(
+                `${Constants.userMessages.BUILD_FAILED} Error: ${build.message}`
+              );
+            } else {
+              logger.error(Constants.userMessages.BUILD_FAILED);
+            }
           } else {
-            logger.info(build.message)
-            logger.info(`${Constants.userMessages.BUILD_CREATED} with build id: ${build.build_id}`);
+            logger.info(build.message);
+            logger.info(
+              `${Constants.userMessages.BUILD_CREATED} with build id: ${build.build_id}`
+            );
           }
           resolve(build);
         }

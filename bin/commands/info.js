@@ -46,21 +46,9 @@ function buildInfo(args) {
           build = null;
         }
 
-        if (resp.statusCode != 200) {
-          messageType = Constants.messageTypes.ERROR;
-          errorCode = 'api_failed_build_info';
-
-          if (build) {
-            message = `${Constants.userMessages.BUILD_INFO_FAILED} with error: \n${JSON.stringify(build, null, 2)}`;
-            logger.error(message);
-            if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
-          } else {
-            message = Constants.userMessages.BUILD_INFO_FAILED;
-            logger.error(message);
-          }
-        } else if (resp.statusCode == 299) {
+        if (resp.statusCode == 299) {
           messageType = Constants.messageTypes.INFO;
-          errorCode = 'api_deprecated';
+          errorCode = "api_deprecated";
 
           if (build) {
             message = build.message;
@@ -69,9 +57,27 @@ function buildInfo(args) {
             message = Constants.userMessages.API_DEPRECATED;
             logger.info(message);
           }
+        } else if (resp.statusCode != 200) {
+          messageType = Constants.messageTypes.ERROR;
+          errorCode = "api_failed_build_info";
+
+          if (build) {
+            message = `${
+              Constants.userMessages.BUILD_INFO_FAILED
+            } with error: \n${JSON.stringify(build, null, 2)}`;
+            logger.error(message);
+            if (build.message === "Unauthorized") errorCode = "api_auth_failed";
+          } else {
+            message = Constants.userMessages.BUILD_INFO_FAILED;
+            logger.error(message);
+          }
         } else {
           messageType = Constants.messageTypes.SUCCESS;
-          message = `Build info for build id: \n ${JSON.stringify(build, null, 2)}`;
+          message = `Build info for build id: \n ${JSON.stringify(
+            build,
+            null,
+            2
+          )}`;
           logger.info(message);
         }
       }

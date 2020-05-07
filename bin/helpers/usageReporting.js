@@ -88,20 +88,34 @@ function cli_version_and_path(bsConfig) {
 
       if (!version) {
         // return path = null if version is null
-        return [null, null];
+        return {
+          version: null,
+          path: null
+        };
       }
-      _path = npm_global_path();
-      return [version, _path];
+      return {
+        version: version,
+        path: npm_global_path(),
+      };
     }
-    return [version, _path];
+    return {
+      version: version,
+      path: _path,
+    };
   } else {
     let version = get_version('browserstack-cypress');
 
     if (!version) {
       // return path = null if version is null
-      return [null, null];
+      return {
+        version: null,
+        path: null,
+      };
     }
-    return [version, npm_global_path()];
+    return {
+      version: version,
+      path: npm_global_path(),
+    };
   }
 }
 
@@ -159,7 +173,7 @@ function send(args) {
   if (!isUsageReportingEnabled()) return;
 
   let bsConfig = args.bstack_config;
-  let [cli_version, cli_path] = cli_version_and_path(bsConfig);
+  let cli_details = cli_version_and_path(bsConfig);
 
   delete args.bstack_config;
 
@@ -170,8 +184,8 @@ function send(args) {
       os_version: os_version(),
       bstack_json_found_in_pwd: bstack_json_found_in_pwd(),
       cypress_json_found_in_pwd: cypress_json_found_in_pwd(),
-      cli_version: cli_version,
-      cli_path: cli_path,
+      cli_version: cli_details.version,
+      cli_path: cli_details.path,
       npm_version: npm_version(),
       local_cypress_version: local_cypress_version(bsConfig),
       ci_environment: ci_environment(),
