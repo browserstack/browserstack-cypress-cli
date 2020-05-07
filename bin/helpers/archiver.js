@@ -16,14 +16,14 @@ const archiveSpecs = (runSettings, filePath) => {
 
     archive.on('warning', function (err) {
       if (err.code === 'ENOENT') {
-        logger.info(err)
+        logger.info(err);
       } else {
-        reject(err)
+        reject(err);
       }
     });
 
     output.on('close', function () {
-      resolve("Zipping completed")
+      resolve("Zipping completed");
     });
 
     output.on('end', function () {

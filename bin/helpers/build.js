@@ -1,8 +1,7 @@
 'use strict';
 const request = require('request');
 
-const logger = require("./logger").winstonLogger,
-  config = require('./config'),
+const config = require('./config'),
   capabilityHelper = require("../helpers/capabilityHelper"),
   Constants = require('../helpers/constants');
 
@@ -23,34 +22,29 @@ const createBuild = (bsConfig, zip) => {
   
       request.post(options, function (err, resp, body) {
         if (err) {
-          reject(err)
+          reject(err);
         } else {
-          let build = null
+          let build = null;
           try {
-            build = JSON.parse(body)
+            build = JSON.parse(body);
           } catch (error) {
-            build = null
+            build = null;
           }
 
           if (resp.statusCode == 299) {
             if (build) {
-              logger.info(build.message);
+              resolve(build.message);
             } else {
-              logger.info(Constants.userMessages.API_DEPRECATED);
+              reject(Constants.userMessages.API_DEPRECATED);
             }
           } else if (resp.statusCode != 201) {
             if (build) {
-              logger.error(
-                `${Constants.userMessages.BUILD_FAILED} Error: ${build.message}`
-              );
+              reject(`${Constants.userMessages.BUILD_FAILED} Error: ${build.message}`);
             } else {
-              logger.error(Constants.userMessages.BUILD_FAILED);
+              reject(Constants.userMessages.BUILD_FAILED);
             }
           } else {
-            logger.info(build.message);
-            logger.info(
-              `${Constants.userMessages.BUILD_CREATED} with build id: ${build.build_id}`
-            );
+            resolve(`${build.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${build.build_id}`);
           }
           resolve(build);
         }

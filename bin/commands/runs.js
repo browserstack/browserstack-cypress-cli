@@ -41,12 +41,14 @@ function runCypress(args) {
         zipUploader.zipUpload(bsConfig, config.fileName).then(function (zip) {
 
           // Create build
-          build.createBuild(bsConfig, zip).then(function (data) {
+          build.createBuild(bsConfig, zip).then(function (message) {
+            logger.info(message);
+            util.sendUsageReport(bsConfig, args, message, Constants.messageTypes.SUCCESS, null);
             return;
           }).catch(function (err) {
             // Build creation failed
-            logger.error(Constants.userMessages.BUILD_FAILED)
-            util.sendUsageReport(bsConfig, args, Constants.userMessages.BUILD_FAILED, Constants.messageTypes.ERROR, 'build_failed');
+            logger.error(err);
+            util.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'build_failed');
           });
         }).catch(function (err) {
           // Zip Upload failed
