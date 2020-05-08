@@ -12,7 +12,6 @@ module.exports = function () {
       }
     ],
     "run_settings": {
-      "package_json_path": "/path/to/package.json",
       "cypress_proj_dir" : "/dir/to/cypress.json",
       "project": "project-name",
       "customBuildName": "build-name"
@@ -20,6 +19,8 @@ module.exports = function () {
     "connection_settings": {
       "local": false,
       "localIdentifier": null
+    },
+    "cypress_dependencies": {
     }
   }
   var EOL = require('os').EOL
