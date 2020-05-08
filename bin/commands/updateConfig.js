@@ -1,6 +1,4 @@
 'use strict';
-var config = require('../helpers/config');
-var request = require('request')
 var logger = require("../helpers/logger");
 var Constants = require("../helpers/constants")
 var fileHelpers = require('../helpers/fileHelpers');
