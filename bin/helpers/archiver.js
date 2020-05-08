@@ -3,12 +3,11 @@ const fs = require('fs'),
   archiver = require('archiver'),
   logger = require("./logger");
 
-const archiveSpecs = (runSettings, filePath) => {
+const archiveSpecs = (bsConfig, filePath) => {
   return new Promise(function (resolve, reject) {
     var output = fs.createWriteStream(filePath);
 
-    var cypressFolderPath = runSettings.cypress_proj_dir
-    var packageJsonPath = runSettings.package_json_path
+    var cypressFolderPath = bsConfig.run_settings.cypress_proj_dir
 
     var archive = archiver('zip', {
       zlib: { level: 9 } // Sets the compression level.
@@ -36,11 +35,13 @@ const archiveSpecs = (runSettings, filePath) => {
 
     archive.pipe(output);
 
+    var packageJSON = JSON.stringify({devDependencies: bsConfig.npm_dependencies}, null, 4);
+
     let allowedFileTypes = [ 'js', 'json', 'txt', 'ts' ]
     allowedFileTypes.forEach(fileType => {
       archive
         .glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: 'node_modules/**' })
-        .append(packageJsonPath, { name: 'package.json' });
+        .append(packageJSON, { name: 'package.json' });
     });
 
     archive.finalize();

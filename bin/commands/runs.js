@@ -18,7 +18,7 @@ function deleteZip() {
       logger.log(Constants.userMessages.ZIP_DELETE_FAILED);
     } else {
       logger.log(Constants.userMessages.ZIP_DELETED);
-    }            
+    }
   });
 }
 
@@ -31,7 +31,7 @@ function runCypress(args) {
   capabilityHelper.validate(bsConfig).then(function (validated) {
     logger.log(validated);
     // Archive the spec files
-    archiver.archive(bsConfig.run_settings, config.fileName).then(function (data) {
+    archiver.archive(bsConfig, config.fileName).then(function (data) {
       // Uploaded zip file
       zipUploader.zipUpload(bsConfig, config.fileName).then(function (zip) {
         // Create build
