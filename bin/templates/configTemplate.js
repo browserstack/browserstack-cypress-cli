@@ -20,7 +20,7 @@ module.exports = function () {
       "local": false,
       "localIdentifier": null
     },
-    "cypress_dependencies": {
+    "npm_dependencies": {
     }
   }
   var EOL = require('os').EOL
