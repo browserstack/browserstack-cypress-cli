@@ -12,6 +12,7 @@ allows you to run your Cypress tests on BrowserStack.
     -   [Configure Test Runs](#configure-test-runs)
     -   [Configure Connection Settings](#configure-connection-settings)
     -   [Disable Usage Reporting](#disable-usage-reporting)
+    -   [Deprecated Options](#deprecated-options)
 -   [CLI Arguments & Flags](#cli-arguments--flags)
     -   [Run the Tests](#run-the-tests)
     -   [Get the Build Information](#get-the-build-information)
@@ -218,6 +219,18 @@ Example:
   "disable_usage_reporting": "false"
 }
 ```
+
+### Deprecated Options
+
+The following options are deprecated in favour of the new improved options to
+make your testing better, flexible and have a consistent way of specifying
+options.
+
+| Deprecated option | New favoured option | Remarks                       |
+| ----------------- | ------------------- | ----------------------------- |
+| `specs`           | `cypress_proj_dir`  | Used in `run_settings`        |
+| `customBuildName` | `custom_build_name` | Used in `run_settings`        |
+| `localIdentifier` | `local_identifier`  | Used in `connection_settings` |
 
 ## CLI Arguments & Flags
 
