@@ -17,6 +17,7 @@ allows you to run your Cypress tests on BrowserStack.
     -   [Run the Tests](#run-the-tests)
     -   [Get the Build Information](#get-the-build-information)
     -   [Stop a Running Build](#stop-a-running-build)
+    -   [Disable CLI Usage Reporting](#disable-cli-usage-reporting)
 -   [Limitations](#limitations)
 -   [License](#license)
 
@@ -277,7 +278,7 @@ In case you want to get information on the build you can use the following
 command
 
 ```bash
-browserstack-cypress build-info <buildId>
+$ browserstack-cypress build-info <buildId>
 ```
 
 By default, the CLI uses the `browserstack.json` in the directory where the
@@ -295,7 +296,7 @@ $ browserstack-cypress --config-file <path-to-browserstack.json> build-info <bui
 Example
 
 ```bash
-browserstack-cypress build-info 06f28ce423d10314b32e98bb6f68e10b0d02a49a
+$ browserstack-cypress build-info 06f28ce423d10314b32e98bb6f68e10b0d02a49a
 ```
 
 Sample output:
@@ -368,7 +369,7 @@ your account's parallel limit before running multiple versions.
 In case you want to stop a running build, you can use the following command
 
 ```bash
-browserstack-cypress build-stop <buildId>
+$ browserstack-cypress build-stop <buildId>
 ```
 
 By default, the CLI uses the `browserstack.json` in the directory where the
@@ -386,7 +387,7 @@ $ browserstack-cypress --config-file <path-to-browserstack.json> build-stop <bui
 Example
 
 ```bash
-browserstack-cypress build-stop 06f28ce423d10314b32e98bb6f68e10b0d02a49a
+$ browserstack-cypress build-stop 06f28ce423d10314b32e98bb6f68e10b0d02a49a
 ```
 
 Sample output:
@@ -398,6 +399,19 @@ Sample output:
   "message": "stopped 1 sessions",
   "stopped_session_count": 1
 }
+```
+
+### Disable CLI Usage Reporting
+
+The CLI collects anonymized usage data including the command-line arguments
+used, system details and errors that you get so that we can improve the way
+you run your Cypress tests on BrowserStack. Usage reporting is enabled by
+default - you can disable usage reporting by using the
+`--disable-usage-reporting` flag. You can also do this by setting the
+`disable_usage_reporting` option to `"true"` in `browserstack.json`.
+
+```bash
+$ browserstack-cypress --disable-usage-reporting <your-commands>
 ```
 
 ## Limitations
