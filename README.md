@@ -81,8 +81,8 @@ specified folder.
     ],
     "run_settings": {
       "cypress_proj_dir": "/path/to/directory-that-contains-<cypress.json>-file",
-      "project": "my first project",
-      "custom_build_name": "build 1",
+      "project_name": "my first project",
+      "build_name": "build 1",
       "npm_dependencies": [
         "npm-package-you-need-to-run-tests-1",
         "npm-package-you-need-to-run-tests-2@1.0.0"
@@ -153,12 +153,12 @@ Example:
 You can use `run_settings` option to specify the settings to run your tests on
 BrowserStack.
 
-| Option              | Description                                                                                                      | Possible values |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------- |
-| `cypress_proj_dir`  | Path to the folder which contains `cypress.json` file.                                                           | -               |
-| `project`           | Name of your project. You'll be able to search & filter your tests on the dashboard using this.                  | -               |
-| `custom_build_name` | Name of your build / CI run. You'll be able to search & filter your tests on the dashboard using this. username. | -               |
-| `npm_dependencies`  | A list  of NPM packages to be able to run your Cypress tests.                                                    | -               |
+| Option             | Description                                                                                                      | Possible values |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------- | --------------- |
+| `cypress_proj_dir` | Path to the folder which contains `cypress.json` file.                                                           | -               |
+| `project_name`     | Name of your project. You'll be able to search & filter your tests on the dashboard using this.                  | -               |
+| `build_name`       | Name of your build / CI run. You'll be able to search & filter your tests on the dashboard using this. username. | -               |
+| `npm_dependencies` | A list  of NPM packages to be able to run your Cypress tests.                                                    | -               |
 
 Example:
 
@@ -166,8 +166,8 @@ Example:
 {
   "run_settings": {
     "cypress_proj_dir": "/path/to/directory-that-contains-<cypress.json>-file",
-    "project": "my first project",
-    "custom_build_name": "build 1",
+    "project_name": "my first project",
+    "build_name": "build 1",
     "npm_dependencies": [
       "npm-package-you-need-to-run-tests-1",
       "npm-package-you-need-to-run-tests-2@1.0.0"
@@ -230,7 +230,8 @@ options.
 | Deprecated option | New favoured option | Remarks                       |
 | ----------------- | ------------------- | ----------------------------- |
 | `specs`           | `cypress_proj_dir`  | Used in `run_settings`        |
-| `customBuildName` | `custom_build_name` | Used in `run_settings`        |
+| `project`         | `project_name`      | Used in `run_settings`        |
+| `customBuildName` | `build_name`        | Used in `run_settings`        |
 | `localIdentifier` | `local_identifier`  | Used in `connection_settings` |
 
 ## CLI Arguments & Flags
