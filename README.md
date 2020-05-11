@@ -12,10 +12,10 @@ allows you to run your Cypress tests on BrowserStack.
     -   [Configure Test Runs](#configure-test-runs)
     -   [Configure Connection Settings](#configure-connection-settings)
     -   [Disable Usage Reporting](#disable-usage-reporting)
--   [CLI Arguments & Flags](#cli-arguments-flags)
-    -   [Running the Tests](#running-the-tests)
-    -   [Getting the Build Information](#getting-the-build-information)
-    -   [Stopping a Running Build](#stopping-a-running-build)
+-   [CLI Arguments & Flags](#cli-arguments--flags)
+    -   [Run the Tests](#run-the-tests)
+    -   [Get the Build Information](#get-the-build-information)
+    -   [Stop a Running Build](#stop-a-running-build)
 -   [Limitations](#limitations)
 -   [License](#license)
 
@@ -59,6 +59,10 @@ You can access the test results on the [BrowserStack Automate dashboard](https:/
 The `init` command will create a sample `browserstack.json` file. This file can
 be used to configure your test runs on BrowserStack. Below is the sample file
 that is generated for your reference.
+
+You can also specify `--path <path-to-folder-where-you-need-init-to-run>` flag
+along with the `init` command to generate `browserstack.json` file in the
+specified folder.
 
 ```json
 {
@@ -217,12 +221,24 @@ Example:
 
 ## CLI Arguments & Flags
 
-### Running the Tests
+### Run the Tests
 
 You can start running your test build using the following command.
 
 ```bash
 $ browserstack-cypress run
+```
+
+By default, the CLI uses the `browserstack.json` in the directory where the
+`run` command is issued. If you need to use a different config file, or are
+running from a different directory, you can use the `--cf` or the `--config-file`
+option while using `run`. For example,
+
+```bash
+$ browserstack-cypress --cf <path-to-browserstack.json> run
+
+# Or
+$ browserstack-cypress --config-file <path-to-browserstack.json> run
 ```
 
 Sample output :
@@ -242,12 +258,25 @@ Sample output :
 [2/20/2020, 2:58:36 PM]  File deleted successfully.
 ```
 
-### Getting the Build Information
+### Get the Build Information
 
-In case you want to get information on the build you can use the following command
+In case you want to get information on the build you can use the following
+command
 
 ```bash
 browserstack-cypress build-info <buildId>
+```
+
+By default, the CLI uses the `browserstack.json` in the directory where the
+`build-info` command is issued. If you need to use a different config file, or
+are running the command from a different directory, you can use the `--cf` or
+the `--config-file` option while using `build-info`. For example,
+
+```bash
+$ browserstack-cypress --cf <path-to-browserstack.json> build-info <buildId>
+
+# Or
+$ browserstack-cypress --config-file <path-to-browserstack.json> build-info <buildId>
 ```
 
 Example
@@ -318,14 +347,27 @@ Sample output:
 }
 ```
 
-**Note:** Each browser version represents a session. It is advised to validate your account's parallel limit before running multiple versions.
+**Note:** Each browser version represents a session. It is advised to validate
+your account's parallel limit before running multiple versions.
 
-### Stopping a Running Build
+### Stop a Running Build
 
 In case you want to stop a running build, you can use the following command
 
 ```bash
 browserstack-cypress build-stop <buildId>
+```
+
+By default, the CLI uses the `browserstack.json` in the directory where the
+`build-stop` command is issued. If you need to use a different config file, or
+are running the command from a different directory, you can use the `--cf` or
+the `--config-file` option while using `build-stop`. For example,
+
+```bash
+$ browserstack-cypress --cf <path-to-browserstack.json> build-stop <buildId>
+
+# Or
+$ browserstack-cypress --config-file <path-to-browserstack.json> build-stop <buildId>
 ```
 
 Example
@@ -355,4 +397,5 @@ Sample output:
 
 ## License
 
-This project is released under MIT License. Please refer the [LICENSE.md](LICENSE.md) for more details.
+This project is released under MIT License. Please refer the
+[LICENSE.md](LICENSE.md) for more details.
