@@ -39,10 +39,9 @@ const archiveSpecs = (bsConfig, filePath) => {
 
     let allowedFileTypes = [ 'js', 'json', 'txt', 'ts' ]
     allowedFileTypes.forEach(fileType => {
-      archive
-        .glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: 'node_modules/**' })
-        .append(packageJSON, { name: 'package.json' });
+      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: 'node_modules/**' })
     });
+    archive.append(packageJSON, { name: 'package.json' });
 
     archive.finalize();
   });
