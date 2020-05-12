@@ -1,4 +1,6 @@
 'use strict';
+const os = require("os");
+
 const usageReporting =  require('./usageReporting'),
   logger = require('./logger').winstonLogger,
   Constants = require('./constants');
@@ -69,5 +71,5 @@ exports.setUsageReportingFlag = (bsConfig, disableUsageReporting) => {
 }
 
 exports.getUserAgent = () => {
-  return `BStack-Cypress-CLI`;
+  return `BStack-Cypress-CLI/1.x (${os.arch()}/${os.platform()}/${os.release()})`;
 }
