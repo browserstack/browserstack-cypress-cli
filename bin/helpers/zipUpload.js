@@ -20,7 +20,7 @@ const uploadCypressZip = (bsConfig, filePath) => {
         filename: 'tests'
       },
       headers: {
-        "User-Agent": util.getUserAgent,
+        "User-Agent": util.getUserAgent(),
       }
     }
 

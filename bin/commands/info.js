@@ -26,7 +26,7 @@ function buildInfo(args) {
         password: bsConfig.auth.access_key,
       },
       headers: {
-        "User-Agent": util.getUserAgent,
+        "User-Agent": util.getUserAgent(),
       },
     };
 
