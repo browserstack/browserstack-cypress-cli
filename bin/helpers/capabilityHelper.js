@@ -45,10 +45,6 @@ const caps = (bsConfig, zip) => {
     obj.project = bsConfig.run_settings.project || bsConfig.run_settings.project_name;
     if (!obj.project) logger.log(`Project name is: ${obj.project}`);
 
-    // Base url
-    obj.base_url = bsConfig.run_settings.baseUrl
-    if (obj.base_url) logger.log(`Base url is : ${obj.base_url}`);
-
     // Build name
     obj.customBuildName = bsConfig.run_settings.customBuildName || bsConfig.run_settings.build_name;
     if (obj.customBuildName) logger.log(`Build name is: ${obj.customBuildName}`);
