@@ -61,8 +61,8 @@ exports.sendUsageReport = (bsConfig, args, message, message_type, error_code) =>
 }
 
 exports.setUsageReportingFlag = (bsConfig, disableUsageReporting) => {
-  if (disableUsageReporting === undefined && bsConfig && bsConfig['disable-usage-reporting'] != undefined) {
-    process.env.DISABLE_USAGE_REPORTING = bsConfig['disable-usage-reporting'];
+  if (disableUsageReporting === undefined && bsConfig && bsConfig['disable_usage_reporting'] != undefined) {
+    process.env.DISABLE_USAGE_REPORTING = bsConfig['disable_usage_reporting'];
   } else {
     process.env.DISABLE_USAGE_REPORTING = disableUsageReporting;
   }

@@ -20,7 +20,7 @@ module.exports = function () {
       "local": false,
       "localIdentifier": null
     },
-    "disable-usage-reporting": false
+    "disable_usage_reporting": false
   }
   var EOL = require('os').EOL
   var file = [
