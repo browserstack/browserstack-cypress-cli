@@ -83,10 +83,10 @@ specified folder.
       "cypress_proj_dir": "/path/to/directory-that-contains-<cypress.json>-file",
       "project_name": "my first project",
       "build_name": "build 1",
-      "npm_dependencies": [
-        "npm-package-you-need-to-run-tests-1",
-        "npm-package-you-need-to-run-tests-2@1.0.0"
-      ]
+      "npm_dependencies": {
+        "npm-package-you-need-to-run-tests-1": "^1.2.1",
+        "npm-package-you-need-to-run-tests-2": "^7.1.6-beta.13",
+      }
     },
     "connection_settings": {
       "local": false,
@@ -158,7 +158,7 @@ BrowserStack.
 | `cypress_proj_dir` | Path to the folder which contains `cypress.json` file.                                                           | -               |
 | `project_name`     | Name of your project. You'll be able to search & filter your tests on the dashboard using this.                  | -               |
 | `build_name`       | Name of your build / CI run. You'll be able to search & filter your tests on the dashboard using this. username. | -               |
-| `npm_dependencies` | A list  of NPM packages to be able to run your Cypress tests.                                                    | -               |
+| `npm_dependencies` | A list  of NPM packages that are required to run your Cypress tests along with their version numbers.            | -               |
 
 Example:
 
@@ -168,10 +168,10 @@ Example:
     "cypress_proj_dir": "/path/to/directory-that-contains-<cypress.json>-file",
     "project_name": "my first project",
     "build_name": "build 1",
-    "npm_dependencies": [
-      "npm-package-you-need-to-run-tests-1",
-      "npm-package-you-need-to-run-tests-2@1.0.0"
-    ]
+    "npm_dependencies": {
+      "npm-package-you-need-to-run-tests-1": "^1.2.1",
+      "npm-package-you-need-to-run-tests-2": "^7.1.6-beta.13",
+    }
   }
 }
 ```
