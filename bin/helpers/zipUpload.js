@@ -3,7 +3,8 @@ const config = require("./config"),
   request = require("request"),
   fs = require("fs"),
   logger = require("./logger").winstonLogger,
-  Constants = require("./constants");
+  Constants = require("./constants"),
+  util = require("./util");
 
 const uploadCypressZip = (bsConfig, filePath) => {
   return new Promise(function (resolve, reject) {
@@ -17,6 +18,9 @@ const uploadCypressZip = (bsConfig, filePath) => {
         file: fs.createReadStream(filePath),
         filetype: 'zip',
         filename: 'tests'
+      },
+      headers: {
+        "User-Agent": util.getUserAgent,
       }
     }
 

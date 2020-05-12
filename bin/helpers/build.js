@@ -3,7 +3,8 @@ const request = require('request');
 
 const config = require('./config'),
   capabilityHelper = require("../helpers/capabilityHelper"),
-  Constants = require('../helpers/constants');
+  Constants = require('../helpers/constants'),
+  util =require('../helpers/util');
 
 const createBuild = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
@@ -15,7 +16,8 @@ const createBuild = (bsConfig, zip) => {
           password: bsConfig.auth.access_key
         },
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          "User-Agent": util.getUserAgent(),
         },
         body: data
       }

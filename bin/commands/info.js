@@ -20,12 +20,15 @@ function buildInfo(args) {
 
     let options = {
       url: config.buildUrl + buildId,
-      method: 'GET',
+      method: "GET",
       auth: {
         user: bsConfig.auth.username,
-        password: bsConfig.auth.access_key
-      }
-    }
+        password: bsConfig.auth.access_key,
+      },
+      headers: {
+        "User-Agent": util.getUserAgent,
+      },
+    };
 
     request(options, function (err, resp, body) {
       let message = null;

@@ -20,12 +20,15 @@ function buildStop(args) {
 
     let options = {
       url: config.buildStopUrl + buildId,
-      method: 'POST',
+      method: "POST",
       auth: {
         user: bsConfig.auth.username,
-        password: bsConfig.auth.access_key
-      }
-    }
+        password: bsConfig.auth.access_key,
+      },
+      headers: {
+        "User-Agent": util.getUserAgent(),
+      },
+    };
 
     request(options, function (err, resp, body) {
       let message = null;

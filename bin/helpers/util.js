@@ -67,3 +67,7 @@ exports.setUsageReportingFlag = (bsConfig, disableUsageReporting) => {
     process.env.DISABLE_USAGE_REPORTING = disableUsageReporting;
   }
 }
+
+exports.getUserAgent = () => {
+  return `BStack-Cypress-CLI`;
+}
