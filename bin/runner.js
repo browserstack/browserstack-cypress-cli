@@ -37,26 +37,6 @@ var argv = yargs
       return require('./commands/init')(argv);
     }
   })
-  .command('update-config', Constants.cliMessages.UPDATE_CONFIG.INFO, function(yargs) {
-    argv = yargs
-      .usage('usage: $0 update-config')
-      .options('cf', {
-        alias: 'config-file',
-        describe: Constants.cliMessages.UPDATE_CONFIG.CONFIG_DEMAND_DESC,
-        default: '/browserstack.json',
-        type: 'string',
-        nargs: 1,
-        demand: true,
-        demand: Constants.cliMessages.UPDATE_CONFIG.CONFIG_DEMAND
-      })
-      .help('help')
-      .wrap(null)
-      .argv
-
-    if (checkCommands(yargs, argv, 1)) {
-      return require('./commands/updateConfig')(argv);
-    }
-  })
   .command('build-info', Constants.cliMessages.BUILD.INFO, function(yargs) {
     argv = yargs
       .usage('usage: $0 <buildId>')

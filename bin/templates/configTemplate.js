@@ -14,14 +14,14 @@ module.exports = function () {
     "run_settings": {
       "cypress_proj_dir" : "/dir/to/cypress.json",
       "project": "project-name",
-      "customBuildName": "build-name"
+      "customBuildName": "build-name",
+      "npm_dependencies": {
+      }
     },
     "connection_settings": {
       "local": false,
       "localIdentifier": null
     },
-    "npm_dependencies": {
-    }
   }
   var EOL = require('os').EOL
   var file = [
