@@ -21,7 +21,7 @@ module.exports = function () {
     "connection_settings": {
       "local": false,
       "localIdentifier": null
-    },
+    }
   }
   var EOL = require('os').EOL
   var file = [
