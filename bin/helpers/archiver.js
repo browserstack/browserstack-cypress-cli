@@ -39,7 +39,7 @@ const archiveSpecs = (runSettings, filePath) => {
 
     let allowedFileTypes = [ 'js', 'json', 'txt', 'ts' ]
     allowedFileTypes.forEach(fileType => {
-      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: 'node_modules/**' });
+      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: ['node_modules/**', 'package-lock.json'] });
     });
     archive.append(packageJSON, { name: 'package.json' });
 
