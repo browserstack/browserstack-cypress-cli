@@ -47,11 +47,6 @@ const cliMessages = {
         INFO: "Run your tests on BrowserStack.",
         DESC: "Path to BrowserStack config",
         CONFIG_DEMAND: "config file is required"
-    },
-    UPDATE_CONFIG: {
-        INFO: "Updates the browserstack.json with the latest version",
-        CONFIG_DEMAND_DESC: "Path to BrowserStack config",
-        CONFIG_DEMAND: "config file is required"
     }
 }
 
