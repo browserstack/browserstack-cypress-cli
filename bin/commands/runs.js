@@ -1,15 +1,4 @@
 'use strict';
-<<<<<<< HEAD
-var archiver = require("../helpers/archiver");
-var zipUploader = require("../helpers/zipUpload");
-var build = require("../helpers/build");
-var logger = require("../helpers/logger");
-var config = require('../helpers/config');
-var capabilityHelper = require("../helpers/capabilityHelper");
-var fs = require('fs');
-const Constants = require('../helpers/constants');
-const fileHelpers = require('../helpers/fileHelpers');
-=======
 const fs = require('fs');
 
 const archiver = require("../helpers/archiver"),
@@ -20,7 +9,6 @@ const archiver = require("../helpers/archiver"),
   capabilityHelper = require("../helpers/capabilityHelper"),
   Constants = require("../helpers/constants"),
   util = require("../helpers/util");
->>>>>>> 11a63ce498033cc6a3814730eb9300f28f8c007a
 
 module.exports = function run(args) {
   return runCypress(args);
