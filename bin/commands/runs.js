@@ -1,4 +1,5 @@
 'use strict';
+<<<<<<< HEAD
 var archiver = require("../helpers/archiver");
 var zipUploader = require("../helpers/zipUpload");
 var build = require("../helpers/build");
@@ -8,6 +9,18 @@ var capabilityHelper = require("../helpers/capabilityHelper");
 var fs = require('fs');
 const Constants = require('../helpers/constants');
 const fileHelpers = require('../helpers/fileHelpers');
+=======
+const fs = require('fs');
+
+const archiver = require("../helpers/archiver"),
+  zipUploader = require("../helpers/zipUpload"),
+  build = require("../helpers/build"),
+  logger = require("../helpers/logger").winstonLogger,
+  config = require("../helpers/config"),
+  capabilityHelper = require("../helpers/capabilityHelper"),
+  Constants = require("../helpers/constants"),
+  util = require("../helpers/util");
+>>>>>>> 11a63ce498033cc6a3814730eb9300f28f8c007a
 
 module.exports = function run(args) {
   return runCypress(args);
@@ -16,54 +29,69 @@ module.exports = function run(args) {
 function deleteZip() {
   fs.unlink(config.fileName, function (err) {
     if(err) {
-      logger.log(Constants.userMessages.ZIP_DELETE_FAILED);
+      logger.info(Constants.userMessages.ZIP_DELETE_FAILED);
     } else {
-      logger.log(Constants.userMessages.ZIP_DELETED);
+      logger.info(Constants.userMessages.ZIP_DELETED);
     }
   });
 }
 
 function runCypress(args) {
   let bsConfigPath = process.cwd() + args.cf;
-  logger.log(`Reading config from ${args.cf}`);
-  fileHelpers.fileExists(bsConfigPath, (configExists) => {
-    if (configExists) {
-      var bsConfig = require(bsConfigPath);
 
-      // Validate browserstack.json
-      capabilityHelper.validate(bsConfig).then(function (validated) {
-        logger.log(validated);
-        // Archive the spec files
-        archiver.archive(bsConfig.run_settings, config.fileName).then(function (data) {
-          // Uploaded zip file
-          zipUploader.zipUpload(bsConfig, config.fileName).then(function (zip) {
-            // Create build
-            build.createBuild(bsConfig, zip).then(function (data) {
-              return;
-            }).catch(function (err) {
-              // Build creation failed
-              logger.error(Constants.userMessages.BUILD_FAILED)
-            });
+  util.validateBstackJson(bsConfigPath).then(function (bsConfig) {
+    util.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
+
+    // Validate browserstack.json values
+    capabilityHelper.validate(bsConfig).then(function (validated) {
+      logger.info(validated);
+
+      // Archive the spec files
+      archiver.archive(bsConfig.run_settings, config.fileName).then(function (data) {
+
+        // Uploaded zip file
+        zipUploader.zipUpload(bsConfig, config.fileName).then(function (zip) {
+
+          // Create build
+          build.createBuild(bsConfig, zip).then(function (message) {
+            logger.info(message);
+            util.sendUsageReport(bsConfig, args, message, Constants.messageTypes.SUCCESS, null);
+            return;
           }).catch(function (err) {
-            // Zip Upload failed
-            logger.error(err)
-            logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED)
-          }).finally(function () {
-            deleteZip();
+            // Build creation failed
+            logger.error(err);
+            util.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'build_failed');
           });
         }).catch(function (err) {
-          // Zipping failed
+          // Zip Upload failed
           logger.error(err)
-          logger.error(Constants.userMessages.FAILED_TO_ZIP)
+          logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED)
+          util.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed');
+        }).finally(function () {
           deleteZip();
         });
       }).catch(function (err) {
-        // browerstack.json is not valid
-        logger.error(err)
-        logger.error(Constants.validationMessages.NOT_VALID)
+        // Zipping failed
+        logger.error(err);
+        logger.error(Constants.userMessages.FAILED_TO_ZIP);
+        util.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.FAILED_TO_ZIP}`, Constants.messageTypes.ERROR, 'zip_creation_failed');
+        try {
+          deleteZip();
+        } catch (err) {
+          util.sendUsageReport(bsConfig, args, Constants.userMessages.ZIP_DELETE_FAILED, Constants.messageTypes.ERROR, 'zip_deletion_failed');
+        }
       });
-    } else {
-      logger.error('Could not find browserstack.json, you can create it by running `browserstack-cypress init`');
-    }
-  });
+    }).catch(function (err) {
+      // browerstack.json is not valid
+      logger.error(err);
+      logger.error(Constants.validationMessages.NOT_VALID);
+
+      let error_code = util.getErrorCodeFromMsg(err);
+      util.sendUsageReport(bsConfig, args, `${err}\n${Constants.validationMessages.NOT_VALID}`, Constants.messageTypes.ERROR, error_code);
+    });
+  }).catch(function (err) {
+    logger.error(err);
+    util.setUsageReportingFlag(null, args.disableUsageReporting);
+    util.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, util.getErrorCodeFromErr(err));
+  })
 }
