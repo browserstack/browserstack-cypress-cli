@@ -34,23 +34,19 @@ const caps = (bsConfig, zip) => {
 
     // Local Identifier
     obj.localIdentifier = null;
-    if (obj.local === true && bsConfig.connection_settings.localIdentifier)
+    if (obj.local === true && (bsConfig.connection_settings.localIdentifier || bsConfig.connection_settings.local_identifier))
     {
-      obj.localIdentifier = bsConfig.connection_settings.localIdentifier;
-      logger.info(`Local Identifier is set to: ${obj.localIdentifier}`);
+      obj.localIdentifier = bsConfig.connection_settings.localIdentifier || bsConfig.connection_settings.local_identifier;
+      logger.log(`Local Identifier is set to: ${obj.localIdentifier}`);
     }
 
     // Project name
-    obj.project = bsConfig.run_settings.project
-    if (!obj.project) logger.info(`Project name is: ${obj.project}`);
-
-    // Base url
-    obj.base_url = bsConfig.run_settings.baseUrl
-    if (obj.base_url) logger.info(`Base url is : ${obj.base_url}`);
+    obj.project = bsConfig.run_settings.project || bsConfig.run_settings.project_name;
+    if (!obj.project) logger.log(`Project name is: ${obj.project}`);
 
     // Build name
-    obj.customBuildName = bsConfig.run_settings.customBuildName
-    if (obj.customBuildName) logger.info(`Build name is: ${obj.customBuildName}`);
+    obj.customBuildName = bsConfig.run_settings.customBuildName || bsConfig.run_settings.build_name;
+    if (obj.customBuildName) logger.log(`Build name is: ${obj.customBuildName}`);
 
     //callback url
     obj.callbackURL = bsConfig.run_settings.callback_url
