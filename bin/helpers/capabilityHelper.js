@@ -1,6 +1,5 @@
-const logger = require("./logger"),
-  Constants = require('./constants'),
-  glob = require("glob");
+const logger = require("./logger").winstonLogger,
+  Constants = require("./constants");
 
 const caps = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
@@ -21,17 +20,17 @@ const caps = (bsConfig, zip) => {
     });
     obj.devices = osBrowserArray
     if (obj.devices.length == 0) reject(Constants.validationMessages.EMPTY_BROWSER_LIST);
-    logger.log(`Browser list: ${osBrowserArray.toString()}`);
+    logger.info(`Browser list: ${osBrowserArray.toString()}`);
 
     // Test suite
     obj.test_suite = zip.zip_url.split("://")[1]
     if (!obj.test_suite || 0 === obj.test_suite.length) reject("Test suite is empty");
-    logger.log(`Test suite: bs://${obj.test_suite}`);
+    logger.info(`Test suite: bs://${obj.test_suite}`);
 
     // Local
     obj.local = false;
     if (bsConfig.connection_settings.local === true) obj.local = true;
-    logger.log(`Local is set to: ${obj.local}`);
+    logger.info(`Local is set to: ${obj.local}`);
 
     // Local Identifier
     obj.localIdentifier = null;
@@ -51,11 +50,11 @@ const caps = (bsConfig, zip) => {
 
     //callback url
     obj.callbackURL = bsConfig.run_settings.callback_url
-    if (obj.callbackURL) logger.log(`callback url is : ${obj.callbackURL}`);
+    if (obj.callbackURL) logger.info(`callback url is : ${obj.callbackURL}`);
 
     //projectNotifyURL
     obj.projectNotifyURL = bsConfig.run_settings.project_notify_URL
-    if (obj.projectNotifyURL) logger.log(`Project notify URL is: ${obj.projectNotifyURL}`);
+    if (obj.projectNotifyURL) logger.info(`Project notify URL is: ${obj.projectNotifyURL}`);
 
     var data = JSON.stringify(obj);
     resolve(data);

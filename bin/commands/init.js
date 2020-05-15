@@ -1,7 +1,8 @@
 'use strict';
-var fileHelpers = require('../helpers/fileHelpers');
-const Constants = require('../helpers/constants');
-var logger = require("../helpers/logger");
+const fileHelpers = require("../helpers/fileHelpers"),
+  Constants = require("../helpers/constants"),
+  logger = require("../helpers/logger").winstonLogger,
+  util = require("../helpers/util");
 
 module.exports = function init(args) {
   return createBrowserStackConfig(args)
@@ -21,12 +22,16 @@ function createBrowserStackConfig(args) {
   };
 
   function allDone() {
-    logger.log(Constants.userMessages.CONFIG_FILE_CREATED);
+    let message = Constants.userMessages.CONFIG_FILE_CREATED
+    logger.info(message);
+    util.sendUsageReport(null, args, message, Constants.messageTypes.SUCCESS, null);
   }
 
   return fileHelpers.fileExists(config.path, function(exists){
     if (exists) {
-      logger.error(Constants.userMessages.CONFIG_FILE_EXISTS);
+      let message = Constants.userMessages.CONFIG_FILE_EXISTS;
+      logger.error(message);
+      util.sendUsageReport(null, args, message, Constants.messageTypes.ERROR, 'bstack_json_already_exists');
     } else {
       fileHelpers.write(config, null, allDone);
     }

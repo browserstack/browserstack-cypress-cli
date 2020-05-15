@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-
-const yargs = require('yargs')
-var logger = require("./helpers/logger");
-const Constants = require('./helpers/constants');
+'use strict';
+const yargs = require('yargs'),
+  logger = require("./helpers/logger").winstonLogger,
+  Constants = require('./helpers/constants');
 
 function checkCommands(yargs, argv, numRequired) {
   if (argv._.length < numRequired) {
@@ -22,16 +22,22 @@ var argv = yargs
   .demand(1, Constants.cliMessages.VERSION.DEMAND)
   .command('init', Constants.cliMessages.INIT.INFO, function(yargs) {
     argv = yargs
-      .usage('usage: $0 init [options]')
-      .options('p', {
-        alias: 'path',
-        default: false,
-        description: Constants.cliMessages.INIT.DESC,
-        type: 'string'
+      .usage("usage: $0 init [options]")
+      .options({
+        'p': {
+          alias: "path",
+          default: false,
+          description: Constants.cliMessages.INIT.DESC,
+          type: "string",
+        },
+        'disable-usage-reporting': {
+          default: undefined,
+          description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
+          type: "boolean"
+        },
       })
-      .help('help')
-      .wrap(null)
-      .argv
+      .help("help")
+      .wrap(null).argv;
 
     if (checkCommands(yargs, argv, 1)) {
       return require('./commands/init')(argv);
@@ -41,20 +47,27 @@ var argv = yargs
     argv = yargs
       .usage('usage: $0 <buildId>')
       .demand(1, Constants.cliMessages.BUILD.DEMAND)
-      .options('cf', {
-        alias: 'config-file',
-        describe: Constants.cliMessages.BUILD.DESC,
-        default: '/browserstack.json',
-        type: 'string',
-        nargs: 1,
-        demand: true,
-        demand: Constants.cliMessages.BUILD.CONFIG_DEMAND
+      .options({
+        'cf': {
+          alias: 'config-file',
+          describe: Constants.cliMessages.BUILD.DESC,
+          default: '/browserstack.json',
+          type: 'string',
+          nargs: 1,
+          demand: true,
+          demand: Constants.cliMessages.BUILD.CONFIG_DEMAND
+        },
+        'disable-usage-reporting': {
+          default: undefined,
+          description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
+          type: "boolean"
+        },
       })
       .help('help')
       .wrap(null)
       .argv
     if (checkCommands(yargs, argv, 1)) {
-      logger.log(Constants.cliMessages.BUILD.INFO_MESSAGE + argv._[1]);
+      logger.info(Constants.cliMessages.BUILD.INFO_MESSAGE + argv._[1]);
       return require('./commands/info')(argv);
     }
   })
@@ -62,34 +75,48 @@ var argv = yargs
     argv = yargs
       .usage('usage: $0 <buildId>')
       .demand(1, Constants.cliMessages.BUILD.DEMAND)
-      .options('cf', {
-        alias: 'config-file',
-        describe: Constants.cliMessages.BUILD.DESC,
-        default: '/browserstack.json',
-        type: 'string',
-        nargs: 1,
-        demand: true,
-        demand: Constants.cliMessages.BUILD.CONFIG_DEMAND
+      .options({
+        'cf': {
+          alias: 'config-file',
+          describe: Constants.cliMessages.BUILD.DESC,
+          default: '/browserstack.json',
+          type: 'string',
+          nargs: 1,
+          demand: true,
+          demand: Constants.cliMessages.BUILD.CONFIG_DEMAND
+        },
+        'disable-usage-reporting': {
+          default: undefined,
+          description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
+          type: "boolean"
+        },
       })
       .help('help')
       .wrap(null)
       .argv
     if (checkCommands(yargs, argv, 1)) {
-      logger.log(Constants.cliMessages.BUILD.STOP_MESSAGE + argv._[1]);
+      logger.info(Constants.cliMessages.BUILD.STOP_MESSAGE + argv._[1]);
       return require('./commands/stop')(argv);
     }
   })
   .command('run', Constants.cliMessages.RUN.INFO, function(yargs) {
     argv = yargs
       .usage('usage: $0 build')
-      .options('cf', {
-        alias: 'config-file',
-        describe: Constants.cliMessages.RUN.DESC,
-        default: '/browserstack.json',
-        type: 'string',
-        nargs: 1,
-        demand: true,
-        demand: Constants.cliMessages.RUN.CONFIG_DEMAND
+      .options({
+        'cf': {
+          alias: 'config-file',
+          describe: Constants.cliMessages.RUN.DESC,
+          default: '/browserstack.json',
+          type: 'string',
+          nargs: 1,
+          demand: true,
+          demand: Constants.cliMessages.RUN.CONFIG_DEMAND
+        },
+        'disable-usage-reporting': {
+          default: undefined,
+          description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
+          type: "boolean"
+        },
       })
       .help('help')
       .wrap(null)

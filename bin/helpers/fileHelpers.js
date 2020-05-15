@@ -1,7 +1,9 @@
 'use strict';
-var fs = require('fs-extra');
-var path = require('path');
-var mkdirp = require('mkdirp')
+const fs = require('fs-extra'),
+  path = require('path'),
+  mkdirp = require('mkdirp');
+
+const logger = require('./logger').winstonLogger;
 
 exports.isEmpty = function(path, cb) {
   fs.readdir(path, function(err, files) {
@@ -33,7 +35,7 @@ exports.isFile = function(path, cb) {
 exports.mkdir = function(dir, cb) {
   mkdirp(dir, '0755', function(err) {
     if (err) throw err;
-    console.log('Creating directory: ./' + path.relative(process.cwd(), dir))
+    logger.info("Creating directory: ./" + path.relative(process.cwd(), dir));
     cb && cb()
   })
 }
@@ -41,7 +43,7 @@ exports.mkdir = function(dir, cb) {
 exports.write = function(f, message, cb) {
   message = message || 'Creating';
   fs.writeFile(f.path, f.file, function() {
-    console.log(message + ' file: ./' + path.relative(process.cwd(), f.path));
+    logger.info(message + " file: ./" + path.relative(process.cwd(), f.path));
     cb && cb()
   });
 }
