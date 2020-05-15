@@ -13,12 +13,12 @@ module.exports = function () {
     ],
     "run_settings": {
       "cypress_proj_dir" : "/path/to/cypress.json",
-      "project": "project-name",
-      "customBuildName": "build-name"
+      "project_name": "project-name",
+      "build_name": "build-name"
     },
     "connection_settings": {
       "local": false,
-      "localIdentifier": null
+      "local_identifier": null
     }
   }
   var EOL = require('os').EOL
