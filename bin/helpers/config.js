@@ -11,7 +11,7 @@ config.rails_host = hosts[config.env].rails_host;
 config.cypress_v1 = `${config.rails_host}/automate/cypress/v1`;
 config.buildUrl = `${config.cypress_v1}/builds/`;
 config.buildStopUrl = `${config.cypress_v1}/builds/stop/`;
-config.usageReportingUrl = `http://127.0.0.1:8000/send_event_cy_internal`;
+config.usageReportingUrl = `https://eds.browserstack.com:443/send_event_cy_internal`;
 config.fileName = "tests.zip";
 
 module.exports = config;
