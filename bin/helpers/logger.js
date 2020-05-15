@@ -1,12 +1,32 @@
-function log(message) {
-  var timestamp = '[' + new Date().toLocaleString() + '] ';
-  console.log(timestamp + " " + message);
+const winston = require('winston'),
+  fs = require("fs"),
+  path = require("path");
+
+const logDir = "log"; // directory path for logs
+if (!fs.existsSync(logDir)) {
+  // Create the directory if it does not exist
+  fs.mkdirSync(logDir);
 }
 
-function error(message) {
-  var timestamp = '[' + new Date().toLocaleString() + '] ';
-  console.log(timestamp + " [ERROR] " + message);
-}
+const winstonLoggerParams = {
+  transports: [
+    new winston.transports.Console({
+      colorize: true,
+      timestamp: function () {
+        return `[${new Date().toLocaleString()}]`;
+      },
+      prettyPrint: true,
+    }),
+  ],
+};
 
-exports.log = log
-exports.error = error
+const winstonFileLoggerParams = {
+  transports: [
+    new winston.transports.File({
+      filename: path.join(logDir, "/usage.log"),
+    }),
+  ],
+};
+
+exports.winstonLogger = new winston.Logger(winstonLoggerParams);
+exports.fileLogger = new winston.Logger(winstonFileLoggerParams);

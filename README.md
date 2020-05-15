@@ -1,46 +1,70 @@
-- [BrowserStack Cypress CLI](#browserstack-cypress-cli)
-  - [Using BrowserStack-Cypress CLI:](#using-browserstack-cypress-cli)
-    - [Installing browserstack-cypress](#installing-browserstack-cypress)
-    - [Configuring your tests](#configuring-your-tests)
-    - [Running the tests](#running-the-tests)
-    - [Getting build information](#getting-build-information)
-    - [Stopping a running build](#stopping-a-running-build)
-    - [Limitations](#limitations)
-- [Accessing test results](#accessing-test-results)
-- [License](#license)
-
 # BrowserStack Cypress CLI
-You can now run your Cypress tests in BrowserStack using our `browserstack-cypress-cli`. BrowserStack currently supports Cypress 4 and you can start testing on the following browser combinations:
 
+[![npm version](https://badge.fury.io/js/browserstack-cypress-cli.svg)](https://badge.fury.io/js/browserstack-cypress-cli)
 
-|       Windows 10    |      OS X Mojave      |    OS X Catalina    |
-|:---------------------:|:---------------------:|:--------------------:|
-| Chrome 66.0 to 79.0 |   Chrome 66.0 to 79.0 | Chrome 66.0 to 79.0 |
-|     Edge 80.0       |       Edge 80.0       |      Edge 80.0      |
-| Firefox 60.0 to 72.0|  Firefox 60.0 to 72.0 | Firefox 60.0 to 72.0|
+The `browserstack-cypress-cli` is BrowserStack's command-line interface (CLI) which
+allows you to run your Cypress tests on BrowserStack.
 
+-   [Quick Start](#quick-start)
+-   [Configuration Options](#configuration-options)
+    -   [Authentication](#authentication)
+    -   [Specify Browsers](#specify-browsers)
+    -   [Configure Test Runs](#configure-test-runs)
+    -   [Configure Connection Settings](#configure-connection-settings)
+    -   [Disable Usage Reporting](#disable-usage-reporting)
+    -   [Deprecated Options](#deprecated-options)
+-   [CLI Arguments & Flags](#cli-arguments--flags)
+    -   [Run the Tests](#run-the-tests)
+    -   [Get the Build Information](#get-the-build-information)
+    -   [Stop a Running Build](#stop-a-running-build)
+    -   [Disable CLI Usage Reporting](#disable-cli-usage-reporting)
+-   [Limitations](#limitations)
+-   [License](#license)
 
-We are actively working on supporting other browsers and will start adding other browsers to this list.
+## Quick Start
 
-## Using BrowserStack-Cypress CLI:
+First, install the CLI:
 
-
-### Installing browserstack-cypress
 ```bash
-# Install cypress (ignore if already done)
-$ npm install -g cypress@4.0.2
-
 # Install the BrowserStack Cypress CLI
 $ npm install -g browserstack-cypress-cli
 ```
 
-### Configuring your tests
+Note that we run tests that are written using Cypress 4.0 and above. Update to
+a newer version if you are using an older version of Cypress and update your
+tests if required.
+
+Next, set up your BrowserStack credentials and configure the browsers that you
+want to run your tests on. Use the `init` command to generate a sample
+`browserstack.json` file, or alternatively create one from scratch.
+
 ```bash
-# create a sample configuration file for configurations and capabilities
+# Create a sample configuration file for configurations and capabilities
 $ browserstack-cypress init
 ```
 
-This will create a sample `browserstack.json` file. This file can be used to configure your test runs on BrowserStack. Below is the sample file that is generated for your reference.
+Fill in the `auth`, `browsers`, `run_settings` values to be able to run your
+tests. Refer to the [configuration options](#configuration-options) to  learn
+more about all the options you can use in `browserstack.json` and the possible
+values.
+
+Then, run your tests on BrowserStack:
+
+```bash
+$ browserstack-cypress run
+```
+
+You can access the test results on the [BrowserStack Automate dashboard](https://automate.browserstack.com/).
+
+## Configuration Options
+
+The `init` command will create a sample `browserstack.json` file. This file can
+be used to configure your test runs on BrowserStack. Below is the sample file
+that is generated for your reference.
+
+You can also specify `--path <path-to-folder-where-you-need-init-to-run>` flag
+along with the `init` command to generate `browserstack.json` file in the
+specified folder.
 
 ```json
 {
@@ -57,38 +81,170 @@ This will create a sample `browserstack.json` file. This file can be used to con
     ],
     "run_settings": {
       "cypress_proj_dir": "/path/to/directory-that-contains-<cypress.json>-file",
-      "project": "my first project",
-      "customBuildName": "build 1"
+      "project_name": "my first project",
+      "build_name": "build 1"
     },
     "connection_settings": {
       "local": false,
-      "localIdentifier": null
-    }
+      "local_identifier": null
+    },
+    "disable_usage_reporting": "false"
 }
 ```
 
-The following table provides a reference for all the options that can be provided in `browserstack.json` shown above.
+Here are all the options that you can provide in the `browserstack.json`:
 
+### Authentication
 
-| Option          | Description                                                                                                                                 | Possible values                                                                                                               |
-|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| `username`        | This is your BrowserStack username. You can find this in your [Automate dashboard](https://automate.browserstack.com/) | -                                                                                                                             |
-| `access_key`      | This is your BrowserStack access key. You can find this in your [Automate dashboard](https://automate.browserstack.com/) | -                                                                                                                             |
-| `os` <br/> (_case-sensitive_)              | The operating system on which you want to run your test.                                                                                    | `OS X Mojave`, <br/> `OS X Catalina`, and <br/> `Windows 10`                                       |
-| `browser` <br/> (case-sensitive)         | The browser on which you want to run your tests.                                                                                         | `chrome`, <br/> `firefox`, and <br/> `edge`                                   |
-| `versions`        | A list of browser versions that you want to run your tests on. <br/><br/> **Example:** To run on versions 69, 67 and 65 provide `["69", "67", "65"]`                                                                              | Right now edge 80 and all chrome versions from 66 to 78 are supported |
-| `specs` <br/> (_deprecated_)           | This param is deprecated in favour of a more complete `cypress_proj_dir` param. The path to the spec files that need to be run on BrowserStack                                                                              | Takes a list of strings that point to location of the spec files                                                              |
-| `cypress_proj_dir`           | Path to the folder which contains `cypress.json` file. This path will be considered as the root path of the project.                                                                           |-                                                               |
-| `project`         | Name of your project. This will be displayed in your Automate dashboard, and you'll be able to search & filter your tests based on the project name.                                                                                                                         | A string providing the name of the project                                                                                    |
-| `customBuildName` | Helps in providing a custom name for the build. This will be displayed in your Automate dashboard, and you'll be able to search & filter your tests based on the build name.                                                                                              | A string providing the name of the build                                                                                      |
-| `local`           | Helps in testing websites that cannot be accessed in public network. If you set this to `true`, please download the Local binary and establish a local connection first (you can learn how to do so [here](https://www.browserstack.com/local-testing/automate#command-line))                                                                       | Boolean: `true` / `false`. Set this to `true` if you need to test a local website. Set this to `false` if the website is accessible publicly.              |
-| `localIdentifier`           |  The BrowserStack Local tunnel that should be used to resolve requests. This is applicable only when you start a Local binary with a local identifier. Your tests might fail if you use an invalid local identifier. This option will be ignored if `local` option is set to `false`.                                                                       | A string if a tunnel identified by the Local identifier should be used (should be same as the one used to start the Local binary). Set this to `null` (default value) to resolve requests using Local without a Local identifier.              |
+You can use the `auth` option to specify your username and access keys. You
+can find them in your [Automate dashboard](https://automate.browserstack.com/)
 
-### Running the tests
+| Option       | Description                   | Possible values |
+| ------------ | ----------------------------- | --------------- |
+| `username`   | Your BrowserStack username.   | -               |
+| `access_key` | Your BrowserStack access key. | -               |
+
+Example:
+
+```json
+{
+  "auth": {
+    "username": "<your-browserstack-username>",
+    "access_key": "<your-browserstack-access-key>"
+  }
+}
+```
+
+### Specify Browsers
+
+You can use the `browsers` option to specify the list of OS, browser and browser
+versions. Each browser combination should contain the following details:
+
+| Option     | Description                                    | Possible values                                                |
+| ---------- | ---------------------------------------------- | -------------------------------------------------------------- |
+| `os`       | Operating system you want to run the tests on. | `Windows 10`, `OS X Mojave` and `OS X Catalina`                |
+| `browser`  | Browser you want to run the tests on.          | `chrome`, `firefox` and `edge`                                 |
+| `versions` | A list of supported browser versions.          | Chrome: `66` to `80` <br/>Firefox: `60` to `72`<br/>Edge: `80` |
+
+Example:
+
+```json
+{
+  "browsers": [{
+      "os": "Windows 10",
+      "browser": "chrome",
+      "versions": ["69", "66"]
+    },
+    {
+      "os": "OS X Mojave",
+      "browser": "firefox",
+      "versions": ["69", "66"]
+    }
+  ]
+}
+```
+
+### Configure Test Runs
+
+You can use `run_settings` option to specify the settings to run your tests on
+BrowserStack.
+
+| Option             | Description                                                                                                      | Possible values |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------- | --------------- |
+| `cypress_proj_dir` | Path to the folder which contains `cypress.json` file.                                                           | -               |
+| `project_name`     | Name of your project. You'll be able to search & filter your tests on the dashboard using this.                  | -               |
+| `build_name`       | Name of your build / CI run. You'll be able to search & filter your tests on the dashboard using this. username. | -               |
+
+Example:
+
+```json
+{
+  "run_settings": {
+    "cypress_proj_dir": "/path/to/directory-that-contains-<cypress.json>-file",
+    "project_name": "my first project",
+    "build_name": "build 1"
+  }
+}
+```
+
+### Configure Connection Settings
+
+You can use the `connection_settings` option to specify the Local connection
+settings. This helps you in testing websites that cannot be accessed on the
+public network. You can download the Local Testing binary and establish a local
+connection first before you run the tests (you can learn how to do so
+[here](https://www.browserstack.com/local-testing/automate#command-line))
+
+| Option             | Description                                                            | Possible values |
+| ------------------ | ---------------------------------------------------------------------- | --------------- |
+| `local`            | Helps in testing private web applications.                             | -               |
+| `local_identifier` | The BrowserStack Local tunnel that should be used to resolve requests. | -               |
+
+Note that the `local_identifier` is applicable only when you start a Local
+binary with a local identifier. Your tests might fail if you use an invalid
+local identifier. This option will be ignored if `local` option is set to
+`false`.
+
+Example:
+
+```json
+{
+  "connection_settings": {
+    "local": false,
+    "local_identifier": null
+  }
+}
+```
+
+### Disable Usage Reporting
+
+The CLI collects anonymized usage data including the command-line arguments
+used, system details and errors that you get so that we can improve the way
+you run your Cypress tests on BrowserStack. Usage reporting is enabled by
+default - you can disable usage reporting by using the `disable_usage_reporting`
+option as follows:
+
+Example:
+
+```json
+{
+  "disable_usage_reporting": "false"
+}
+```
+
+### Deprecated Options
+
+The following options are deprecated in favour of the new improved options to
+make your testing better, flexible and have a consistent way of specifying
+options.
+
+| Deprecated option | New favoured option | Remarks                       |
+| ----------------- | ------------------- | ----------------------------- |
+| `specs`           | `cypress_proj_dir`  | Used in `run_settings`        |
+| `project`         | `project_name`      | Used in `run_settings`        |
+| `customBuildName` | `build_name`        | Used in `run_settings`        |
+| `localIdentifier` | `local_identifier`  | Used in `connection_settings` |
+
+## CLI Arguments & Flags
+
+### Run the Tests
+
 You can start running your test build using the following command.
 
 ```bash
 $ browserstack-cypress run
+```
+
+By default, the CLI uses the `browserstack.json` in the directory where the
+`run` command is issued. If you need to use a different config file, or are
+running from a different directory, you can use the `--cf` or the `--config-file`
+option while using `run`. For example,
+
+```bash
+$ browserstack-cypress --cf <path-to-browserstack.json> run
+
+# Or
+$ browserstack-cypress --config-file <path-to-browserstack.json> run
 ```
 
 Sample output :
@@ -108,20 +264,34 @@ Sample output :
 [2/20/2020, 2:58:36 PM]  File deleted successfully.
 ```
 
-### Getting build information
-In case you want to get information on the build you can use the following command
+### Get the Build Information
+
+In case you want to get information on the build you can use the following
+command
 
 ```bash
-browserstack-cypress build-info <buildId>
+$ browserstack-cypress build-info <buildId>
+```
+
+By default, the CLI uses the `browserstack.json` in the directory where the
+`build-info` command is issued. If you need to use a different config file, or
+are running the command from a different directory, you can use the `--cf` or
+the `--config-file` option while using `build-info`. For example,
+
+```bash
+$ browserstack-cypress --cf <path-to-browserstack.json> build-info <buildId>
+
+# Or
+$ browserstack-cypress --config-file <path-to-browserstack.json> build-info <buildId>
 ```
 
 Example
 
 ```bash
-browserstack-cypress build-info 06f28ce423d10314b32e98bb6f68e10b0d02a49a
+$ browserstack-cypress build-info 06f28ce423d10314b32e98bb6f68e10b0d02a49a
 ```
 
-Output:
+Sample output:
 
 ```bash
 [2/20/2020, 3:01:52 PM]  Getting information for buildId 06f28ce423d10314b32e98bb6f68e10b0d02a49a
@@ -183,22 +353,36 @@ Output:
 }
 ```
 
-**Note:** Each browser version represents a session. It is advised to validate your account's parallel limit before running multiple versions.
+**Note:** Each browser version represents a session. It is advised to validate
+your account's parallel limit before running multiple versions.
 
-### Stopping a running build
+### Stop a Running Build
+
 In case you want to stop a running build, you can use the following command
 
 ```bash
-browserstack-cypress build-stop <buildId>
+$ browserstack-cypress build-stop <buildId>
+```
+
+By default, the CLI uses the `browserstack.json` in the directory where the
+`build-stop` command is issued. If you need to use a different config file, or
+are running the command from a different directory, you can use the `--cf` or
+the `--config-file` option while using `build-stop`. For example,
+
+```bash
+$ browserstack-cypress --cf <path-to-browserstack.json> build-stop <buildId>
+
+# Or
+$ browserstack-cypress --config-file <path-to-browserstack.json> build-stop <buildId>
 ```
 
 Example
 
 ```bash
-browserstack-cypress build-stop 06f28ce423d10314b32e98bb6f68e10b0d02a49a
+$ browserstack-cypress build-stop 06f28ce423d10314b32e98bb6f68e10b0d02a49a
 ```
 
-Output:
+Sample output:
 
 ```bash
 [3/24/2020, 2:31:11 PM]  Stopping build with given buildId 06f28ce423d10314b32e98bb6f68e10b0d02a49a
@@ -209,16 +393,29 @@ Output:
 }
 ```
 
-### Limitations
+### Disable CLI Usage Reporting
 
-- `exec` and `task` are not allowed.
-- While using local, please make sure to create `/etc/hosts` entry pointing to some URL, and use that URL in the tests. The `localhost` URI doesn't work at the moment.
-- Installing custom npm packages are not supported at this moment.
+The CLI collects anonymized usage data including the command-line arguments
+used, system details and errors that you get so that we can improve the way
+you run your Cypress tests on BrowserStack. Usage reporting is enabled by
+default - you can disable usage reporting by using the
+`--disable-usage-reporting` flag. You can also do this by setting the
+`disable_usage_reporting` option to `"true"` in `browserstack.json`.
 
-# Accessing test results
+```bash
+$ browserstack-cypress --disable-usage-reporting <your-commands>
+```
 
-You can access your test results in [BrowserStack Automate dashboard](https://automate.browserstack.com/). The dashboard provides test details along with video, console logs and screenshots to help you debug any issues.
+## Limitations
 
-# License
+-   `exec` and `task` are not allowed.
+-   While using local, please make sure to create `/etc/hosts` entry pointing to
+    some URL, and use that URL in the tests. The `localhost` URI doesn't work at
+    the moment. You can use `http://bs-local.com` instead, to replace `localhost`
+-   Installing npm packages that your tests might require to run the tests are
+    not supported at this moment.
 
-This project is released under MIT License. Please refer the [LICENSE.md](LICENSE.md) for more details.
+## License
+
+This project is released under MIT License. Please refer the
+[LICENSE.md](LICENSE.md) for more details.

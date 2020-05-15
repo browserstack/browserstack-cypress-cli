@@ -12,16 +12,17 @@ module.exports = function () {
       }
     ],
     "run_settings": {
-      "cypress_proj_dir" : "/dir/to/cypress.json",
-      "project": "project-name",
-      "customBuildName": "build-name",
+      "cypress_proj_dir" : "/path/to/cypress.json",
+      "project_name": "project-name",
+      "build_name": "build-name",
       "npm_dependencies": {
       }
     },
     "connection_settings": {
       "local": false,
-      "localIdentifier": null
-    }
+      "local_identifier": null
+    },
+    "disable_usage_reporting": false
   }
   var EOL = require('os').EOL
   var file = [
