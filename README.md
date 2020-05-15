@@ -213,7 +213,7 @@ Output:
 
 - `exec` and `task` are not allowed.
 - While using local, please make sure to create `/etc/hosts` entry pointing to some URL, and use that URL in the tests. The `localhost` URI doesn't work at the moment.
-- Installing custom npm packages are not supported on Mac OS X at this moment.
+- Installing custom npm packages are not supported at this moment.
 
 # Accessing test results
 
