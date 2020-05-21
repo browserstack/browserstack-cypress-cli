@@ -78,8 +78,8 @@ specified folder.
     "browsers": [
       {
         "browser": "chrome",
-        "os": "OS X Catalina",
-        "versions": ["69","66"]
+        "os": "Windows 10",
+        "versions": ["79","78"]
       }
     ],
     "run_settings": {
@@ -140,10 +140,10 @@ Example:
   "browsers": [{
       "os": "Windows 10",
       "browser": "chrome",
-      "versions": ["69", "66"]
+      "versions": ["79", "78"]
     },
     {
-      "os": "OS X Mojave",
+      "os": "Windows 10",
       "browser": "firefox",
       "versions": ["69", "66"]
     }
