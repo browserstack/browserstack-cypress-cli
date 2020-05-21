@@ -8,7 +8,7 @@ const archiveSpecs = (runSettings, filePath) => {
   return new Promise(function (resolve, reject) {
     var output = fs.createWriteStream(filePath);
 
-    var cypressFolderPath = runSettings.cypress_proj_dir
+    var cypressFolderPath = runSettings.cypress_proj_dir;
 
     var archive = archiver('zip', {
       zlib: { level: 9 } // Sets the compression level.
@@ -36,10 +36,16 @@ const archiveSpecs = (runSettings, filePath) => {
 
     archive.pipe(output);
 
+
     let allowedFileTypes = [ 'js', 'json', 'txt', 'ts' ]
     allowedFileTypes.forEach(fileType => {
-      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: 'node_modules/**' });
+      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: ['node_modules/**', 'package-lock.json', 'package.json', 'browserstack-package.json'] });
     });
+
+    if (typeof runSettings.npm_dependencies === 'object') {
+      var packageJSON = JSON.stringify({devDependencies: runSettings.npm_dependencies}, null, 4);
+      archive.append(packageJSON, { name: 'browserstack-package.json' });
+    }
 
     archive.finalize();
   });

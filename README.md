@@ -104,7 +104,7 @@ Here are all the options that you can provide in the `browserstack.json`:
 ### Authentication
 
 You can use the `auth` option to specify your username and access keys. You
-can find them in your [Automate dashboard](https://automate.browserstack.com/)                                                                        
+can find them in your [Automate dashboard](https://automate.browserstack.com/)
 
 | Option       | Description                   | Possible values |
 | ------------ | ----------------------------- | --------------- |
