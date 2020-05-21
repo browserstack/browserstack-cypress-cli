@@ -48,6 +48,9 @@ tests. Refer to the [configuration options](#configuration-options) to  learn
 more about all the options you can use in `browserstack.json` and the possible
 values.
 
+Make sure you specify the npm packages that your tests need to run using the
+`npm_dependencies` option in `run_settings`.
+
 Then, run your tests on BrowserStack:
 
 ```bash
@@ -82,7 +85,11 @@ specified folder.
     "run_settings": {
       "cypress_proj_dir": "/path/to/directory-that-contains-<cypress.json>-file",
       "project_name": "my first project",
-      "build_name": "build 1"
+      "build_name": "build 1",
+      "npm_dependencies": {
+        "npm-package-you-need-to-run-tests-1": "^1.2.1",
+        "npm-package-you-need-to-run-tests-2": "^7.1.6-beta.13",
+      }
     },
     "connection_settings": {
       "local": false,
@@ -120,11 +127,11 @@ Example:
 You can use the `browsers` option to specify the list of OS, browser and browser
 versions. Each browser combination should contain the following details:
 
-| Option     | Description                                    | Possible values                                                |
-| ---------- | ---------------------------------------------- | -------------------------------------------------------------- |
-| `os`       | Operating system you want to run the tests on. | `Windows 10`, `OS X Mojave` and `OS X Catalina`                |
-| `browser`  | Browser you want to run the tests on.          | `chrome`, `firefox` and `edge`                                 |
-| `versions` | A list of supported browser versions.          | Chrome: `66` to `80` <br/>Firefox: `60` to `72`<br/>Edge: `80` |
+| Option     | Description                                    | Possible values                                                       |
+| ---------- | ---------------------------------------------- | --------------------------------------------------------------------- |
+| `os`       | Operating system you want to run the tests on. | `Windows 10`                                                          |
+| `browser`  | Browser you want to run the tests on.          | `chrome`, `firefox` and `edge`                                        |
+| `versions` | A list of supported browser versions.          | Chrome: `66` to `81` <br/>Firefox: `60` to `75`<br/>Edge: `80` & `81` |
 
 Example:
 
@@ -154,6 +161,7 @@ BrowserStack.
 | `cypress_proj_dir` | Path to the folder which contains `cypress.json` file.                                                           | -               |
 | `project_name`     | Name of your project. You'll be able to search & filter your tests on the dashboard using this.                  | -               |
 | `build_name`       | Name of your build / CI run. You'll be able to search & filter your tests on the dashboard using this. username. | -               |
+| `npm_dependencies` | A list  of NPM packages that are required to run your Cypress tests along with their version numbers.            | -               |
 
 Example:
 
@@ -162,7 +170,11 @@ Example:
   "run_settings": {
     "cypress_proj_dir": "/path/to/directory-that-contains-<cypress.json>-file",
     "project_name": "my first project",
-    "build_name": "build 1"
+    "build_name": "build 1",
+    "npm_dependencies": {
+      "npm-package-you-need-to-run-tests-1": "^1.2.1",
+      "npm-package-you-need-to-run-tests-2": "^7.1.6-beta.13",
+    }
   }
 }
 ```
@@ -412,8 +424,8 @@ $ browserstack-cypress --disable-usage-reporting <your-commands>
 -   While using local, please make sure to create `/etc/hosts` entry pointing to
     some URL, and use that URL in the tests. The `localhost` URI doesn't work at
     the moment. You can use `http://bs-local.com` instead, to replace `localhost`
--   Installing npm packages that your tests might require to run the tests are
-    not supported at this moment.
+-   Installing npm packages using `npm_dependencies` is not supported for tests
+    running on macOS.
 
 ## License
 
