@@ -2,6 +2,10 @@
 
 [![npm version](https://badge.fury.io/js/browserstack-cypress-cli.svg)](https://badge.fury.io/js/browserstack-cypress-cli)
 
+> **Note**: Running Cypress tests on BrowserStack is currently in private alpha. We will be launching a public beta very soon.
+>
+>  If you are an existing Automate user, please write to your BrowserStack account manager or to support@browserstack.com  for more details about getting the access to the private alpha.
+
 The `browserstack-cypress-cli` is BrowserStack's command-line interface (CLI) which
 allows you to run your Cypress tests on BrowserStack.
 
