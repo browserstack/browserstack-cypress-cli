@@ -5,40 +5,40 @@ const fs = require('fs-extra'),
 
 const logger = require('./logger').winstonLogger;
 
-exports.isEmpty = function(path, cb) {
-  fs.readdir(path, function(err, files) {
-    if (err && 'ENOENT' != err.code) throw err;
-    cb(!files || !files.length);
-  });
-}
+// exports.isEmpty = function(path, cb) {
+//   fs.readdir(path, function(err, files) {
+//     if (err && 'ENOENT' != err.code) throw err;
+//     cb(!files || !files.length);
+//   });
+// }
 
-exports.isDirectory = function(path, cb) {
-  fs.stat(path, function(err, stats) {
-    if (err && 'ENOENT' != err.code) throw err;
-    if (err) {
-      return cb(false)
-    }
-    cb(stats.isDirectory())
-  })
-}
+// exports.isDirectory = function(path, cb) {
+//   fs.stat(path, function(err, stats) {
+//     if (err && 'ENOENT' != err.code) throw err;
+//     if (err) {
+//       return cb(false)
+//     }
+//     cb(stats.isDirectory())
+//   })
+// }
 
-exports.isFile = function(path, cb) {
-  fs.stat(path, function(err, stats) {
-    if (err && 'ENOENT' != err.code) throw err;
-    if (err) {
-      return cb(false)
-    }
-    cb(stats.isFile())
-  })
-}
+// exports.isFile = function(path, cb) {
+//   fs.stat(path, function(err, stats) {
+//     if (err && 'ENOENT' != err.code) throw err;
+//     if (err) {
+//       return cb(false)
+//     }
+//     cb(stats.isFile())
+//   })
+// }
 
-exports.mkdir = function(dir, cb) {
-  mkdirp(dir, '0755', function(err) {
-    if (err) throw err;
-    logger.info("Creating directory: ./" + path.relative(process.cwd(), dir));
-    cb && cb()
-  })
-}
+// exports.mkdir = function(dir, cb) {
+//   mkdirp(dir, '0755', function(err) {
+//     if (err) throw err;
+//     logger.info("Creating directory: ./" + path.relative(process.cwd(), dir));
+//     cb && cb()
+//   })
+// }
 
 exports.write = function(f, message, cb) {
   message = message || 'Creating';

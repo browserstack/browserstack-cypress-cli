@@ -53,6 +53,7 @@ exports.getErrorCodeFromErr = (err) => {
 }
 
 exports.sendUsageReport = (bsConfig, args, message, message_type, error_code) => {
+  console.log("okay")
   usageReporting.send({
     cli_args: args,
     message: message,
