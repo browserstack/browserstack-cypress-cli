@@ -316,7 +316,7 @@ describe("buildStop", () => {
 
       return stop(args)
         .then(function (_bsConfig) {
-          chai.assert.isNotOk(error, "Promise error");
+          chai.assert.fail("Promise error");
         })
         .catch((error) => {
           sinon.assert.calledOnceWithExactly(

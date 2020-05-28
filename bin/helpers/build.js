@@ -21,7 +21,7 @@ const createBuild = (bsConfig, zip) => {
         },
         body: data
       }
-  
+
       request.post(options, function (err, resp, body) {
         if (err) {
           reject(err);

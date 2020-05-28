@@ -3,6 +3,9 @@ const sampleBsConfig = {
     username: "random-username",
     access_key: "random-access-key",
   },
+  run_settings: {
+    cypress_proj_dir: "random path"
+  }
 };
 
 const initSampleArgs = {
@@ -91,6 +94,10 @@ const buildStopSampleBody = {
   stopped_session_count: 1,
 };
 
+const sampleCapsData = {
+
+}
+
 module.exports = Object.freeze({
   sampleBsConfig,
   initSampleArgs,
@@ -98,4 +105,5 @@ module.exports = Object.freeze({
   buildInfoSampleBody,
   buildStopSampleArgs,
   buildStopSampleBody,
+  sampleCapsData,
 });

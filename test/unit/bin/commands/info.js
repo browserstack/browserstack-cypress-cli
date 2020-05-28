@@ -304,7 +304,7 @@ describe("buildInfo", () => {
 
       return info(args)
         .then(function (_bsConfig) {
-          chai.assert.isNotOk(error, "Promise error");
+          chai.assert.fail("Promise error");
         }).catch((error) => {
           sinon.assert.calledOnceWithExactly(sendUsageReportStub, null, args, "reject error", Constants.messageTypes.ERROR, "random-error");
         });

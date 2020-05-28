@@ -1,45 +1,82 @@
-"use strict";
-const path = require("path");
-
 const chai = require("chai"),
+  sinon = require("sinon"),
   expect = chai.expect,
   chaiAsPromised = require("chai-as-promised");
 
-const fileHelpers = require("../../../../bin/helpers/fileHelpers"),
-  constant = require("../../../../bin/helpers/constants"),
-  logger = require("../../../../bin/helpers/logger").winstonLogger;
+const logger = require("../../../../bin/helpers/logger").winstonLogger,
+  proxyquire = require("proxyquire").noCallThru();
 
 chai.use(chaiAsPromised);
 logger.transports["console.info"].silent = true;
 
 describe("fileHelpers", () => {
-  // describe("isEmpty", () => {
-  //   beforeEach(function() {
-      
-  //   });
+  var sandbox;
 
-  //   it("return true if directory is empty", () => {
-  //     expect(fileHelpers.isEmpty()).to.be.eql(true);
-  //   });
-  // });
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+  });
 
-  // describe("isDirectory", () => {
-  //   beforeEach(function () {});
+  afterEach(() => {
+    sandbox.restore();
+    sinon.restore();
+  });
 
-  //   it("return true if path is directory", () => {
-  //     expect(fileHelpers.isDirectory(path.join(process.cwd(), 'test', 'test_files'))).to.be.eql(true);
-  //   });
+  it("callback fn is executed after file write", () => {
+    let dataMock = 0;
 
-  //   it("return false if path is not a directory", () => {
-  //     expect(fileHelpers.isDirectory(path.join(process.cwd(), 'test', 'test_files', 'dummy_bstack.json'))).to.be.eql(false);
-  //   });
-  // });
+    let callbackStub = sandbox.stub().callsFake(() => {
+      dataMock = 1;
+    });
+    let writeFileStub = sandbox.stub().callsFake(() => {
+      callbackStub();
+    });
 
-  // describe("fileExists", () => {
-  //   beforeEach(function () {});
+    const fileHelpers = proxyquire("../../../../bin/helpers/fileHelpers", {
+      "fs-extra": {
+        writeFile: writeFileStub,
+      },
+    });
 
-  //   it("return true if directory is empty", () => {
-  //     expect(fileHelpers.fileExists(path.join(process.cwd(), 'test', 'test_files', 'dummy_bstack.json'), function() {})).to.be.eql(true);
-  //   });
-  // });
+    fileHelpers.write("./random_path", "writing successful", callbackStub);
+    sinon.assert.calledOnce(writeFileStub);
+    expect(dataMock).to.eql(1);
+  });
+
+  it("callback fn is executed after fileExists returns error", () => {
+    let dataMock = undefined;
+
+    let callbackStub = sandbox.stub().callsFake((val) => {
+      dataMock = val;
+    });
+    let accessStub = sandbox.stub().yields(new Error("random error"));
+
+    const fileHelpers = proxyquire("../../../../bin/helpers/fileHelpers", {
+      "fs-extra": {
+        access: accessStub,
+      },
+    });
+
+    fileHelpers.fileExists("./random_path", callbackStub);
+    sinon.assert.calledOnce(accessStub);
+    expect(dataMock).to.eql(false);
+  });
+
+  it("callback fn is executed after fileExists returns true", () => {
+    let dataMock = undefined;
+
+    let callbackStub = sandbox.stub().callsFake((val) => {
+      dataMock = val;
+    });
+    let accessStub = sandbox.stub().yields();
+
+    const fileHelpers = proxyquire("../../../../bin/helpers/fileHelpers", {
+      "fs-extra": {
+        access: accessStub,
+      },
+    });
+
+    fileHelpers.fileExists("./random_path", callbackStub);
+    sinon.assert.calledOnce(accessStub);
+    expect(dataMock).to.eql(true);
+  });
 });

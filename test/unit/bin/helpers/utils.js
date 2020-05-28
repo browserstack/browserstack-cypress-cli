@@ -12,7 +12,7 @@ const utils = require('../../../../bin/helpers/utils'),
 chai.use(chaiAsPromised);
 logger.transports["console.info"].silent = true;
 
-describe("Util", () => {
+describe("utils", () => {
   describe("getErrorCodeFromMsg", () => {
     it("should return null for errMsg which isn't present in the list", () => {
       expect(utils.getErrorCodeFromMsg("random_value")).to.be.null;
