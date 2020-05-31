@@ -2,6 +2,12 @@
 
 [![npm version](https://badge.fury.io/js/browserstack-cypress-cli.svg)](https://badge.fury.io/js/browserstack-cypress-cli)
 
+> **Note**: Running Cypress tests on BrowserStack is in private alpha. We will be launching a public beta very soon.
+>
+> As such, if you don't have an email from us confirming your access to the Cypress integration, you won't be able to run your Cypress tests on our platform just yet.
+>
+> We are actively working on including more users in the private alpha. If you are an existing Automate user, please write to your BrowserStack account manager or to support@browserstack.com to get early access to the platform before the public beta.
+
 The `browserstack-cypress-cli` is BrowserStack's command-line interface (CLI) which
 allows you to run your Cypress tests on BrowserStack.
 
@@ -48,6 +54,9 @@ tests. Refer to the [configuration options](#configuration-options) to  learn
 more about all the options you can use in `browserstack.json` and the possible
 values.
 
+Make sure you specify the npm packages that your tests need to run using the
+`npm_dependencies` option in `run_settings`.
+
 Then, run your tests on BrowserStack:
 
 ```bash
@@ -75,14 +84,18 @@ specified folder.
     "browsers": [
       {
         "browser": "chrome",
-        "os": "OS X Catalina",
-        "versions": ["69","66"]
+        "os": "Windows 10",
+        "versions": ["79","78"]
       }
     ],
     "run_settings": {
       "cypress_proj_dir": "/path/to/directory-that-contains-<cypress.json>-file",
       "project_name": "my first project",
-      "build_name": "build 1"
+      "build_name": "build 1",
+      "npm_dependencies": {
+        "npm-package-you-need-to-run-tests-1": "^1.2.1",
+        "npm-package-you-need-to-run-tests-2": "^7.1.6-beta.13",
+      }
     },
     "connection_settings": {
       "local": false,
@@ -97,7 +110,7 @@ Here are all the options that you can provide in the `browserstack.json`:
 ### Authentication
 
 You can use the `auth` option to specify your username and access keys. You
-can find them in your [Automate dashboard](https://automate.browserstack.com/)                                                                        
+can find them in your [Automate dashboard](https://automate.browserstack.com/)
 
 | Option       | Description                   | Possible values |
 | ------------ | ----------------------------- | --------------- |
@@ -120,11 +133,11 @@ Example:
 You can use the `browsers` option to specify the list of OS, browser and browser
 versions. Each browser combination should contain the following details:
 
-| Option     | Description                                    | Possible values                                                |
-| ---------- | ---------------------------------------------- | -------------------------------------------------------------- |
-| `os`       | Operating system you want to run the tests on. | `Windows 10`, `OS X Mojave` and `OS X Catalina`                |
-| `browser`  | Browser you want to run the tests on.          | `chrome`, `firefox` and `edge`                                 |
-| `versions` | A list of supported browser versions.          | Chrome: `66` to `80` <br/>Firefox: `60` to `72`<br/>Edge: `80` |
+| Option     | Description                                    | Possible values                                                       |
+| ---------- | ---------------------------------------------- | --------------------------------------------------------------------- |
+| `os`       | Operating system you want to run the tests on. | `Windows 10`                                                          |
+| `browser`  | Browser you want to run the tests on.          | `chrome`, `firefox` and `edge`                                        |
+| `versions` | A list of supported browser versions.          | Chrome: `66` to `81` <br/>Firefox: `60` to `75`<br/>Edge: `80` & `81` |
 
 Example:
 
@@ -133,10 +146,10 @@ Example:
   "browsers": [{
       "os": "Windows 10",
       "browser": "chrome",
-      "versions": ["69", "66"]
+      "versions": ["79", "78"]
     },
     {
-      "os": "OS X Mojave",
+      "os": "Windows 10",
       "browser": "firefox",
       "versions": ["69", "66"]
     }
@@ -154,6 +167,7 @@ BrowserStack.
 | `cypress_proj_dir` | Path to the folder which contains `cypress.json` file.                                                           | -               |
 | `project_name`     | Name of your project. You'll be able to search & filter your tests on the dashboard using this.                  | -               |
 | `build_name`       | Name of your build / CI run. You'll be able to search & filter your tests on the dashboard using this. username. | -               |
+| `npm_dependencies` | A list  of NPM packages that are required to run your Cypress tests along with their version numbers.            | -               |
 
 Example:
 
@@ -162,7 +176,11 @@ Example:
   "run_settings": {
     "cypress_proj_dir": "/path/to/directory-that-contains-<cypress.json>-file",
     "project_name": "my first project",
-    "build_name": "build 1"
+    "build_name": "build 1",
+    "npm_dependencies": {
+      "npm-package-you-need-to-run-tests-1": "^1.2.1",
+      "npm-package-you-need-to-run-tests-2": "^7.1.6-beta.13",
+    }
   }
 }
 ```
@@ -412,8 +430,8 @@ $ browserstack-cypress --disable-usage-reporting <your-commands>
 -   While using local, please make sure to create `/etc/hosts` entry pointing to
     some URL, and use that URL in the tests. The `localhost` URI doesn't work at
     the moment. You can use `http://bs-local.com` instead, to replace `localhost`
--   Installing npm packages that your tests might require to run the tests are
-    not supported at this moment.
+-   Installing npm packages using `npm_dependencies` is not supported for tests
+    running on macOS.
 
 ## License
 

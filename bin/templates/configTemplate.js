@@ -14,7 +14,9 @@ module.exports = function () {
     "run_settings": {
       "cypress_proj_dir" : "/path/to/cypress.json",
       "project_name": "project-name",
-      "build_name": "build-name"
+      "build_name": "build-name",
+      "npm_dependencies": {
+      }
     },
     "connection_settings": {
       "local": false,
