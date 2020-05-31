@@ -98,6 +98,16 @@ const sampleCapsData = {
 
 }
 
+const runSampleArgs = {
+  _: ["run"],
+  cf: "/browserstack.json",
+  "config-file": "/browserstack.json",
+  configFile: "/browserstack.json",
+  "disable-usage-reporting": undefined,
+  disableUsageReporting: undefined,
+  $0: "browserstack-cypress",
+};
+
 module.exports = Object.freeze({
   sampleBsConfig,
   initSampleArgs,
@@ -106,4 +116,5 @@ module.exports = Object.freeze({
   buildStopSampleArgs,
   buildStopSampleBody,
   sampleCapsData,
+  runSampleArgs,
 });

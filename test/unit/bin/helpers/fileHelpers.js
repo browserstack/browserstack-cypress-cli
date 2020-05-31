@@ -1,6 +1,7 @@
 const chai = require("chai"),
   sinon = require("sinon"),
   expect = chai.expect,
+  assert = chai.assert,
   chaiAsPromised = require("chai-as-promised");
 
 const logger = require("../../../../bin/helpers/logger").winstonLogger,
@@ -78,5 +79,33 @@ describe("fileHelpers", () => {
     fileHelpers.fileExists("./random_path", callbackStub);
     sinon.assert.calledOnce(accessStub);
     expect(dataMock).to.eql(true);
+  });
+
+  it("deleteZip returns 0 on success", () => {
+    let unlinkStub = sandbox.stub().yields();
+
+    const fileHelpers = proxyquire("../../../../bin/helpers/fileHelpers", {
+      "fs-extra": {
+        unlink: unlinkStub,
+      },
+    });
+
+    let result = fileHelpers.deleteZip();
+    sinon.assert.calledOnce(unlinkStub);
+    assert.equal(result, 0);
+  });
+
+  it("deleteZip returns 1 on failure", () => {
+    let unlinkStub = sandbox.stub().yields(new Error("random-error"));
+
+    const fileHelpers = proxyquire("../../../../bin/helpers/fileHelpers", {
+      "fs-extra": {
+        unlink: unlinkStub,
+      },
+    });
+
+    let result = fileHelpers.deleteZip();
+    sinon.assert.calledOnce(unlinkStub);
+    assert.equal(result, 1);
   });
 });

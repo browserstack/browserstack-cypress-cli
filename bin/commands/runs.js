@@ -1,6 +1,4 @@
 'use strict';
-const fs = require('fs');
-
 const archiver = require("../helpers/archiver"),
   zipUploader = require("../helpers/zipUpload"),
   build = require("../helpers/build"),
@@ -8,40 +6,27 @@ const archiver = require("../helpers/archiver"),
   config = require("../helpers/config"),
   capabilityHelper = require("../helpers/capabilityHelper"),
   Constants = require("../helpers/constants"),
-  utils = require("../helpers/utils");
+  utils = require("../helpers/utils"),
+  fileHelpers = require("../helpers/fileHelpers");
 
 module.exports = function run(args) {
-  return runCypress(args);
-}
-
-function deleteZip() {
-  fs.unlink(config.fileName, function (err) {
-    if(err) {
-      logger.info(Constants.userMessages.ZIP_DELETE_FAILED);
-    } else {
-      logger.info(Constants.userMessages.ZIP_DELETED);
-    }
-  });
-}
-
-function runCypress(args) {
   let bsConfigPath = process.cwd() + args.cf;
 
-  utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
+  return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
     // Validate browserstack.json values
-    capabilityHelper.validate(bsConfig).then(function (validated) {
+    return capabilityHelper.validate(bsConfig).then(function (validated) {
       logger.info(validated);
 
       // Archive the spec files
-      archiver.archive(bsConfig.run_settings, config.fileName).then(function (data) {
+      return archiver.archive(bsConfig.run_settings, config.fileName).then(function (data) {
 
         // Uploaded zip file
-        zipUploader.zipUpload(bsConfig, config.fileName).then(function (zip) {
+        return zipUploader.zipUpload(bsConfig, config.fileName).then(function (zip) {
 
           // Create build
-          build.createBuild(bsConfig, zip).then(function (message) {
+          return build.createBuild(bsConfig, zip).then(function (message) {
             logger.info(message);
             utils.sendUsageReport(bsConfig, args, message, Constants.messageTypes.SUCCESS, null);
             return;
@@ -52,11 +37,11 @@ function runCypress(args) {
           });
         }).catch(function (err) {
           // Zip Upload failed
-          logger.error(err)
-          logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED)
+          logger.error(err);
+          logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED);
           utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed');
         }).finally(function () {
-          deleteZip();
+          fileHelpers.deleteZip();
         });
       }).catch(function (err) {
         // Zipping failed
@@ -64,7 +49,7 @@ function runCypress(args) {
         logger.error(Constants.userMessages.FAILED_TO_ZIP);
         utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.FAILED_TO_ZIP}`, Constants.messageTypes.ERROR, 'zip_creation_failed');
         try {
-          deleteZip();
+          fileHelpers.deleteZip();
         } catch (err) {
           utils.sendUsageReport(bsConfig, args, Constants.userMessages.ZIP_DELETE_FAILED, Constants.messageTypes.ERROR, 'zip_deletion_failed');
         }
@@ -81,5 +66,5 @@ function runCypress(args) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
     utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err));
-  })
+  });
 }

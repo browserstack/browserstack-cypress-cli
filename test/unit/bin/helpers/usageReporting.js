@@ -6,7 +6,7 @@ const chai = require("chai"),
   assert = chai.assert,
   sinon = require("sinon"),
   chaiAsPromised = require("chai-as-promised"),
-  rewire = require("rewire");;
+  rewire = require("rewire");
 
 const logger = require("../../../../bin/helpers/logger").winstonLogger,
   testObjects = require("../../support/fixtures/testObjects");

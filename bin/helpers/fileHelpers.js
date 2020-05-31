@@ -2,7 +2,9 @@
 const fs = require('fs-extra'),
   path = require('path');
 
-const logger = require('./logger').winstonLogger;
+const logger = require("./logger").winstonLogger,
+  Constants = require("../helpers/constants"),
+  config = require("../helpers/config");
 
 exports.write = function(f, message, cb) {
   message = message || 'Creating';
@@ -20,4 +22,16 @@ exports.fileExists = function(filePath, cb) {
     }
   })
   cb && cb(exists);
+}
+
+exports.deleteZip = () => {
+  return fs.unlink(config.fileName, function (err) {
+    if (err) {
+      logger.info(Constants.userMessages.ZIP_DELETE_FAILED);
+      return 1;
+    } else {
+      logger.info(Constants.userMessages.ZIP_DELETED);
+      return 0;
+    }
+  });
 }
