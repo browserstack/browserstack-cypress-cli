@@ -14,15 +14,15 @@ exports.write = function(f, message, cb) {
   });
 }
 
-exports.fileExists = function(filePath, cb) {
-  let exists = true;
+exports.fileExists = function (filePath, cb) {
   fs.access(filePath, fs.F_OK, (err) => {
+    let exists = true;
     if (err) {
       exists = false;
     }
-  })
-  cb && cb(exists);
-}
+    cb && cb(exists);
+  });
+};
 
 exports.deleteZip = () => {
   return fs.unlink(config.fileName, function (err) {
