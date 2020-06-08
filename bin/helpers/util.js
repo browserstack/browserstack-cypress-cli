@@ -75,13 +75,13 @@ exports.isUndefined = value => (value === undefined || value === null);
 exports.isFloat = value => (Number(value) && Number(value) % 1 !== 0);
 
 exports.setParallels = (bsConfig, args) => {
-  if (args.parallels !== undefined && !Number.isNaN(args.parallels)) {
+  if (args.parallels !== undefined && !isNaN(args.parallels)) {
     bsConfig['run_settings']['parallels'] = args.parallels;
   }
 }
 
 exports.isParallelValid = (value) => {
-  return !(Number.isNaN(value) || this.isFloat(value) || Number.isNaN(parseInt(value)) || parseInt(value, 10) === 0 || parseInt(value, 10) < -1);
+  return this.isUndefined(value) || !(isNaN(value) || this.isFloat(value) || parseInt(value, 10) === 0 || parseInt(value, 10) < -1);
 }
 
 exports.getUserAgent = () => {
