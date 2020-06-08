@@ -34,9 +34,6 @@ function runCypress(args) {
     capabilityHelper.validate(bsConfig).then(function (validated) {
       logger.info(validated);
 
-      // accept the number of parallels
-      util.setParallels(bsConfig, args);
-
       // Archive the spec files
       archiver.archive(bsConfig.run_settings, config.fileName).then(function (data) {
 

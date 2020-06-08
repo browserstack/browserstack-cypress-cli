@@ -56,9 +56,6 @@ const caps = (bsConfig, zip) => {
     obj.projectNotifyURL = bsConfig.run_settings.project_notify_URL
     if (obj.projectNotifyURL) logger.info(`Project notify URL is: ${obj.projectNotifyURL}`);
 
-    obj.parallels = bsConfig.run_settings.parallels;
-    if (obj.parallels) logger.info(`Parallels specified are: ${obj.parallels}`);
-
     var data = JSON.stringify(obj);
     resolve(data);
   })

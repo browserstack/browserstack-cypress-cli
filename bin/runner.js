@@ -101,7 +101,7 @@ var argv = yargs
   })
   .command('run', Constants.cliMessages.RUN.INFO, function(yargs) {
     argv = yargs
-      .usage('usage: $0 run <options>')
+      .usage('usage: $0 build')
       .options({
         'cf': {
           alias: 'config-file',
@@ -117,12 +117,6 @@ var argv = yargs
           description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
           type: "boolean"
         },
-        'p': {
-          alias: 'parallels',
-          describe: Constants.cliMessages.RUN.PARALLEL_DESC,
-          type: "number",
-          default: undefined
-        }
       })
       .help('help')
       .wrap(null)

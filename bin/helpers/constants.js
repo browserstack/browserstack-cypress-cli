@@ -46,7 +46,6 @@ const cliMessages = {
         STOP_MESSAGE: "Stopping build with given buildId "
     },
     RUN: {
-        PARALLEL_DESC: "Maximum number of parallels to run",
         INFO: "Run your tests on BrowserStack.",
         DESC: "Path to BrowserStack config",
         CONFIG_DEMAND: "config file is required"
