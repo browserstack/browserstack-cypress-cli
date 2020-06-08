@@ -78,7 +78,7 @@ const validate = (bsConfig, args) => {
 
     if (!args.parallels) {
       if (Number.isNaN(bsConfig.run_settings.parallels) || (parseInt(bsConfig.run_settings.parallels, 10) < 0 && parseInt(bsConfig.run_settings.parallels, 10) != -1))
-        reject(Constants.validationMessages.INVALID_PARALLES_CONFIGURATION)
+        reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION)
     };
 
     resolve(Constants.validationMessages.VALIDATED);

@@ -24,7 +24,7 @@ const validationMessages = {
   NOT_VALID: "browerstack.json is not valid",
   NOT_VALID_JSON: "browerstack.json is not a valid json",
   INVALID_EXTENSION: "Invalid files, please remove these files and try again.",
-  INVALID_PARALLES_CONFIGURATION: "Invalid type of parallel, accepted values are positive or -1",
+  INVALID_PARALLELS_CONFIGURATION: "Invalid type of parallel, accepted values are positive or -1",
 };
 
 const cliMessages = {
