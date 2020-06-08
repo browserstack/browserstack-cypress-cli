@@ -1,5 +1,6 @@
 const logger = require("./logger").winstonLogger,
-  Constants = require("./constants");
+  Constants = require("./constants"),
+  Util = require("./util");
 
 const caps = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
@@ -57,7 +58,7 @@ const caps = (bsConfig, zip) => {
     if (obj.projectNotifyURL) logger.info(`Project notify URL is: ${obj.projectNotifyURL}`);
 
     obj.parallels = bsConfig.run_settings.parallels;
-    if (obj.parallels) logger.info(`Parallels specified are: ${obj.parallels}`);
+    if (obj.parallels) logger.info(`Parallels limit specified: ${obj.parallels}`);
 
     var data = JSON.stringify(obj);
     resolve(data);
@@ -77,10 +78,10 @@ const validate = (bsConfig, args) => {
     if(!bsConfig.run_settings.cypress_proj_dir) reject(Constants.validationMessages.EMPTY_SPEC_FILES);
 
     // validate parallels specified in browserstack.json if parallels are not specified via arguments
-    if (!args.parallels && !Util.isParallelValid(bsConfig.run_settings.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
+    if (Util.isUndefined(args.parallels) && !Util.isParallelValid(bsConfig.run_settings.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
 
-    // if parallels specified via arguments validate both parallels specifed in browserstack.json and parallels specified in arguments
-    if (args.parallels && !Util.isParallelValid(args.parallels) && !Util.isParallelValid(bsConfig.run_settings.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
+    // if parallels specified via arguments validate only parallels specified in arguments
+    if (!Util.isUndefined(args.parallels) && !Util.isParallelValid(args.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
 
     resolve(Constants.validationMessages.VALIDATED);
   });
