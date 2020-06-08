@@ -76,10 +76,11 @@ const validate = (bsConfig, args) => {
 
     if(!bsConfig.run_settings.cypress_proj_dir) reject(Constants.validationMessages.EMPTY_SPEC_FILES);
 
-    if (!args.parallels) {
-      if (Number.isNaN(bsConfig.run_settings.parallels) || (parseInt(bsConfig.run_settings.parallels, 10) < 0 && parseInt(bsConfig.run_settings.parallels, 10) != -1))
-        reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION)
-    };
+    // validate parallels specified in browserstack.json if parallels are not specified via arguments
+    if (!args.parallels && !Util.isParallelValid(bsConfig.run_settings.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
+
+    // if parallels specified via arguments validate both parallels specifed in browserstack.json and parallels specified in arguments
+    if (args.parallels && !Util.isParallelValid(args.parallels) && !Util.isParallelValid(bsConfig.run_settings.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
 
     resolve(Constants.validationMessages.VALIDATED);
   });

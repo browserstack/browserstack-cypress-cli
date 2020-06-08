@@ -71,9 +71,13 @@ exports.setUsageReportingFlag = (bsConfig, disableUsageReporting) => {
 }
 
 exports.setParallels = (bsConfig, args) => {
-  if ((args.parallels !== undefined && !Number.isNaN(args.parallels))) {
+  if (args.parallels !== undefined && !Number.isNaN(args.parallels)) {
     bsConfig['run_settings']['parallels'] = args.parallels;
   }
+}
+
+exports.isParallelValid = (value) => {
+  return !(Number.isNaN(value) || Number.isNaN(parseInt(value)) || parseInt(value, 10) === 0 || parseInt(value, 10) <= -1);
 }
 
 exports.getUserAgent = () => {
