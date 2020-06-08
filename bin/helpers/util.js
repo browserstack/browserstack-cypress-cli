@@ -77,7 +77,7 @@ exports.setParallels = (bsConfig, args) => {
 }
 
 exports.isParallelValid = (value) => {
-  return !(Number.isNaN(value) || Number.isNaN(parseInt(value)) || parseInt(value, 10) === 0 || parseInt(value, 10) <= -1);
+  return !(Number.isNaN(value) || Number.isNaN(parseInt(value)) || parseInt(value, 10) === 0 || parseInt(value, 10) < -1);
 }
 
 exports.getUserAgent = () => {
