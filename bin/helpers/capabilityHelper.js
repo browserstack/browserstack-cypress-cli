@@ -56,12 +56,15 @@ const caps = (bsConfig, zip) => {
     obj.projectNotifyURL = bsConfig.run_settings.project_notify_URL
     if (obj.projectNotifyURL) logger.info(`Project notify URL is: ${obj.projectNotifyURL}`);
 
+    obj.parallels = bsConfig.run_settings.parallels;
+    if (obj.parallels) logger.info(`Parallels specified are: ${obj.parallels}`);
+
     var data = JSON.stringify(obj);
     resolve(data);
   })
 }
 
-const validate = (bsConfig) => {
+const validate = (bsConfig, args) => {
   return new Promise(function(resolve, reject){
     if (!bsConfig) reject(Constants.validationMessages.EMPTY_BROWSERSTACK_JSON);
 
@@ -72,6 +75,11 @@ const validate = (bsConfig) => {
     if (!bsConfig.run_settings) reject(Constants.validationMessages.EMPTY_RUN_SETTINGS);
 
     if(!bsConfig.run_settings.cypress_proj_dir) reject(Constants.validationMessages.EMPTY_SPEC_FILES);
+
+    if (!args.parallels) {
+      if (Number.isNaN(bsConfig.run_settings.parallels) || (parseInt(bsConfig.run_settings.parallels, 10) < 0 && parseInt(bsConfig.run_settings.parallels, 10) != -1))
+        reject(Constants.validationMessages.INVALID_PARALLES_CONFIGURATION)
+    };
 
     resolve(Constants.validationMessages.VALIDATED);
   });

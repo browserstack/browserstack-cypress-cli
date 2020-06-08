@@ -24,6 +24,7 @@ const validationMessages = {
   NOT_VALID: "browerstack.json is not valid",
   NOT_VALID_JSON: "browerstack.json is not a valid json",
   INVALID_EXTENSION: "Invalid files, please remove these files and try again.",
+  INVALID_PARALLES_CONFIGURATION: "Invalid type of parallel, accepted values are positive or -1",
 };
 
 const cliMessages = {
@@ -46,6 +47,7 @@ const cliMessages = {
         STOP_MESSAGE: "Stopping build with given buildId "
     },
     RUN: {
+        PARALLEL_DESC: "Maximum number of parallels to run",
         INFO: "Run your tests on BrowserStack.",
         DESC: "Path to BrowserStack config",
         CONFIG_DEMAND: "config file is required"

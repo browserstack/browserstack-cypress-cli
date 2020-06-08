@@ -31,8 +31,11 @@ function runCypress(args) {
     util.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
     // Validate browserstack.json values
-    capabilityHelper.validate(bsConfig).then(function (validated) {
+    capabilityHelper.validate(bsConfig, args).then(function (validated) {
       logger.info(validated);
+
+      // accept the number of parallels
+      util.setParallels(bsConfig, args);
 
       // Archive the spec files
       archiver.archive(bsConfig.run_settings, config.fileName).then(function (data) {
