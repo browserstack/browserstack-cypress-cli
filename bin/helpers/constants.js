@@ -24,6 +24,7 @@ const validationMessages = {
   NOT_VALID: "browerstack.json is not valid",
   NOT_VALID_JSON: "browerstack.json is not a valid json",
   INVALID_EXTENSION: "Invalid files, please remove these files and try again.",
+  CYPRESS_JSON_NOT_FOUND: "cypress.json file is not found at cypress_proj_dir path"
 };
 
 const cliMessages = {

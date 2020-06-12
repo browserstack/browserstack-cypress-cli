@@ -1,5 +1,7 @@
 const logger = require("./logger").winstonLogger,
-  Constants = require("./constants");
+  Constants = require("./constants"),
+  fs = require('fs'),
+  path = require('path');
 
 const caps = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
@@ -90,6 +92,8 @@ const validate = (bsConfig) => {
     if (!bsConfig.run_settings) reject(Constants.validationMessages.EMPTY_RUN_SETTINGS);
 
     if(!bsConfig.run_settings.cypress_proj_dir) reject(Constants.validationMessages.EMPTY_SPEC_FILES);
+
+    if (!fs.existsSync(path.join(process.cwd(), bsConfig.run_settings.cypress_proj_dir, 'cypress.json'))) reject(Constants.validationMessages.EMPTY_CYPRESS_JSON);
 
     resolve(Constants.validationMessages.VALIDATED);
   });
