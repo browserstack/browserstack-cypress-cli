@@ -93,7 +93,8 @@ const validate = (bsConfig) => {
 
     if(!bsConfig.run_settings.cypress_proj_dir) reject(Constants.validationMessages.EMPTY_SPEC_FILES);
 
-    if (!fs.existsSync(path.join(process.cwd(), bsConfig.run_settings.cypress_proj_dir, 'cypress.json'))) reject(Constants.validationMessages.EMPTY_CYPRESS_JSON);
+    var cypressProjectDir = path.join(process.cwd(), bsConfig.run_settings.cypress_proj_dir)
+    if (!fs.existsSync(path.join(cypressProjectDir, 'cypress.json'))) reject(Constants.validationMessages.CYPRESS_JSON_NOT_FOUND + cypressProjectDir);
 
     resolve(Constants.validationMessages.VALIDATED);
   });
