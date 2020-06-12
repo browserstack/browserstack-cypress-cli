@@ -4,7 +4,7 @@ const request = require('request');
 const config = require('./config'),
   capabilityHelper = require("../helpers/capabilityHelper"),
   Constants = require('../helpers/constants'),
-  util =require('../helpers/util');
+  utils =require('../helpers/utils');
 
 const createBuild = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
@@ -17,11 +17,11 @@ const createBuild = (bsConfig, zip) => {
         },
         headers: {
           'Content-Type': 'application/json',
-          "User-Agent": util.getUserAgent(),
+          "User-Agent": utils.getUserAgent(),
         },
         body: data
       }
-  
+
       request.post(options, function (err, resp, body) {
         if (err) {
           reject(err);

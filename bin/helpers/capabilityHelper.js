@@ -3,8 +3,13 @@ const logger = require("./logger").winstonLogger,
 
 const caps = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
-    let user = bsConfig.auth.username
-    let password =  bsConfig.auth.access_key
+    let user = undefined;
+    let password = undefined;
+
+    if (bsConfig.auth) {
+      user = bsConfig.auth.username;
+      password = bsConfig.auth.access_key;
+    }
 
     if (!user || !password) reject(Constants.validationMessages.INCORRECT_AUTH_PARAMS);
 
@@ -12,24 +17,29 @@ const caps = (bsConfig, zip) => {
 
     // Browser list
     let osBrowserArray = [];
-    bsConfig.browsers.forEach(element => {
-      osBrowser = element.os + "-" + element.browser
-      element.versions.forEach(version => {
-        osBrowserArray.push(osBrowser + version);
+    if (bsConfig.browsers) {
+      bsConfig.browsers.forEach((element) => {
+        osBrowser = element.os + "-" + element.browser;
+        element.versions.forEach((version) => {
+          osBrowserArray.push(osBrowser + version);
+        });
       });
-    });
-    obj.devices = osBrowserArray
+    }
+    obj.devices = osBrowserArray;
     if (obj.devices.length == 0) reject(Constants.validationMessages.EMPTY_BROWSER_LIST);
     logger.info(`Browser list: ${osBrowserArray.toString()}`);
 
     // Test suite
-    obj.test_suite = zip.zip_url.split("://")[1]
-    if (!obj.test_suite || 0 === obj.test_suite.length) reject("Test suite is empty");
+    if (zip.zip_url && zip.zip_url.split("://")[1].length !== 0) {
+      obj.test_suite = zip.zip_url.split("://")[1];
+    } else {
+      reject("Test suite is empty");
+    }
     logger.info(`Test suite: bs://${obj.test_suite}`);
 
     // Local
     obj.local = false;
-    if (bsConfig.connection_settings.local === true) obj.local = true;
+    if (bsConfig.connection_settings && bsConfig.connection_settings.local === true) obj.local = true;
     logger.info(`Local is set to: ${obj.local}`);
 
     // Local Identifier
@@ -41,19 +51,27 @@ const caps = (bsConfig, zip) => {
     }
 
     // Project name
-    obj.project = bsConfig.run_settings.project || bsConfig.run_settings.project_name;
-    if (!obj.project) logger.log(`Project name is: ${obj.project}`);
-
+    obj.project = "project-name";
     // Build name
-    obj.customBuildName = bsConfig.run_settings.customBuildName || bsConfig.run_settings.build_name;
+    obj.customBuildName = "build-name";
+    //callback url
+    obj.callbackURL = null;
+    //projectNotifyURL
+    obj.projectNotifyURL = null;
+
+    if (bsConfig.run_settings) {
+      obj.project = bsConfig.run_settings.project || bsConfig.run_settings.project_name;
+      obj.customBuildName = bsConfig.run_settings.customBuildName || bsConfig.run_settings.build_name;
+      obj.callbackURL = bsConfig.run_settings.callback_url;
+      obj.projectNotifyURL = bsConfig.run_settings.project_notify_URL;
+    }
+
+    if (obj.project) logger.log(`Project name is: ${obj.project}`);
+
     if (obj.customBuildName) logger.log(`Build name is: ${obj.customBuildName}`);
 
-    //callback url
-    obj.callbackURL = bsConfig.run_settings.callback_url
     if (obj.callbackURL) logger.info(`callback url is : ${obj.callbackURL}`);
 
-    //projectNotifyURL
-    obj.projectNotifyURL = bsConfig.run_settings.project_notify_URL
     if (obj.projectNotifyURL) logger.info(`Project notify URL is: ${obj.projectNotifyURL}`);
 
     var data = JSON.stringify(obj);

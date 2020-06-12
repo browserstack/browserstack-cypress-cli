@@ -4,7 +4,7 @@ const config = require("./config"),
   fs = require("fs"),
   logger = require("./logger").winstonLogger,
   Constants = require("./constants"),
-  util = require("./util");
+  utils = require("./utils");
 
 const uploadCypressZip = (bsConfig, filePath) => {
   return new Promise(function (resolve, reject) {
@@ -20,7 +20,7 @@ const uploadCypressZip = (bsConfig, filePath) => {
         filename: 'tests'
       },
       headers: {
-        "User-Agent": util.getUserAgent(),
+        "User-Agent": utils.getUserAgent(),
       }
     }
 
