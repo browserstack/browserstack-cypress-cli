@@ -20,7 +20,7 @@ module.exports = function run(args) {
       logger.info(validated);
 
       // accept the number of parallels
-      util.setParallels(bsConfig, args);
+      utils.setParallels(bsConfig, args);
 
       // Archive the spec files
       return archiver.archive(bsConfig.run_settings, config.fileName).then(function (data) {
