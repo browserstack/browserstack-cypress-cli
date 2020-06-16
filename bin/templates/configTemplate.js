@@ -15,7 +15,7 @@ module.exports = function () {
       "cypress_proj_dir" : "/path/to/cypress.json",
       "project_name": "project-name",
       "build_name": "build-name",
-      "parallels": "number of parallels to run",
+      "parallels": "Here goes the number of parallels you want to run",
       "npm_dependencies": {
       }
     },
