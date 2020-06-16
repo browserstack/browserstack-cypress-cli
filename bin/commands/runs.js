@@ -16,11 +16,7 @@ module.exports = function run(args) {
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
     // Validate browserstack.json values
-<<<<<<< HEAD
-    capabilityHelper.validate(bsConfig, args).then(function (validated) {
-=======
     return capabilityHelper.validate(bsConfig).then(function (validated) {
->>>>>>> f095146de37ef938646c7144ff45f904b3645b99
       logger.info(validated);
 
       // accept the number of parallels
