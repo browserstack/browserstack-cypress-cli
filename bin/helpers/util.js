@@ -70,6 +70,20 @@ exports.setUsageReportingFlag = (bsConfig, disableUsageReporting) => {
   }
 }
 
+exports.setParallels = (bsConfig, args) => {
+  if ((args.parallels !== undefined && !isNaN(args.parallels)) && bsConfig && (bsConfig['run_settings']['parallels'] === undefined || bsConfig['run_settings']['parallels'])) {
+    bsConfig['run_settings']['parallels'] = args.parallels;
+  }
+}
+
+exports.isUndefined = value => (value === undefined || value === null || value === '');
+
+exports.isFloat = value => (Number(value) && Number(value) % 1 !== 0);
+
+exports.isParallelValid = (value) => {
+  return this.isUndefined(value) || !(isNaN(value) || this.isFloat(value) || parseInt(value, 10) === 0 || parseInt(value, 10) < -1);
+}
+
 exports.getUserAgent = () => {
   return `BStack-Cypress-CLI/1.x (${os.arch()}/${os.platform()}/${os.release()})`;
 }

@@ -1,5 +1,6 @@
 const logger = require("./logger").winstonLogger,
-  Constants = require("./constants");
+  Constants = require("./constants"),
+  Util = require("./util");
 
 const caps = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
@@ -61,7 +62,7 @@ const caps = (bsConfig, zip) => {
   })
 }
 
-const validate = (bsConfig) => {
+const validate = (bsConfig, args) => {
   return new Promise(function(resolve, reject){
     if (!bsConfig) reject(Constants.validationMessages.EMPTY_BROWSERSTACK_JSON);
 
@@ -71,7 +72,15 @@ const validate = (bsConfig) => {
 
     if (!bsConfig.run_settings) reject(Constants.validationMessages.EMPTY_RUN_SETTINGS);
 
-    if(!bsConfig.run_settings.cypress_proj_dir) reject(Constants.validationMessages.EMPTY_SPEC_FILES);
+    if (!bsConfig.run_settings.cypress_proj_dir) reject(Constants.validationMessages.EMPTY_SPEC_FILES);
+
+    // validate parallels specified in browserstack.json if parallels are not specified via arguments
+    if (Util.isUndefined(args.parallels) && !Util.isParallelValid(bsConfig.run_settings.parallels)) {
+      reject(Constants.validationMessages.INVALID_PARALLES_CONFIGURATION);
+    }
+    // if parallels specified via arguments validate both parallels specifed in browserstack.json and parallels specified in arguments
+    if (!Util.isUndefined(args.parallels) && !Util.isParallelValid(args.parallels)) reject(Constants.validationMessages.INVALID_PARALLES_CONFIGURATION);
+
 
     resolve(Constants.validationMessages.VALIDATED);
   });

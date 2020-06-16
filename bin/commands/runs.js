@@ -31,7 +31,7 @@ function runCypress(args) {
     util.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
     // Validate browserstack.json values
-    capabilityHelper.validate(bsConfig).then(function (validated) {
+    capabilityHelper.validate(bsConfig, args).then(function (validated) {
       logger.info(validated);
 
       // Archive the spec files
