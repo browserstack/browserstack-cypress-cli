@@ -76,7 +76,7 @@ exports.setParallels = (bsConfig, args) => {
   }
 }
 
-exports.isUndefined = value => (value === undefined || value === null || value === '');
+exports.isUndefined = value => (value === undefined || value === null);
 
 exports.isFloat = value => (Number(value) && Number(value) % 1 !== 0);
 

@@ -27,6 +27,91 @@ describe("utils", () => {
     });
   });
 
+  describe("isParallelValid", () => {
+    it("should return false for a float value", () => {
+      expect(utils.isParallelValid(1.2)).to.be.equal(false);
+      expect(utils.isParallelValid("7.3")).to.be.equal(false);
+      expect(utils.isParallelValid(7.33333)).to.be.equal(false);
+      expect(utils.isParallelValid("1.2.2.2")).to.be.equal(false);
+      expect(utils.isParallelValid("1.456789")).to.be.equal(false);
+    });
+    
+    it("should return false for a string which is not a number", () => {
+      expect(utils.isParallelValid("cypress")).to.be.equal(false);
+      expect(utils.isParallelValid("browserstack")).to.be.equal(false);
+    });
+
+    it("should return false for any negative value less than -1 or zero", () => {
+      expect(utils.isParallelValid(-200)).to.be.equal(false);
+      expect(utils.isParallelValid("-200")).to.be.equal(false);
+      expect(utils.isParallelValid(-1000)).to.be.equal(false);
+      expect(utils.isParallelValid("0")).to.be.equal(false);
+      expect(utils.isParallelValid(0)).to.be.equal(false);
+    });
+
+    it("should return true for any positive value or -1", () => {
+      expect(utils.isParallelValid(5)).to.be.equal(true);
+      expect(utils.isParallelValid("5")).to.be.equal(true);
+      expect(utils.isParallelValid(10)).to.be.equal(true);
+      expect(utils.isParallelValid("-1")).to.be.equal(true);
+      expect(utils.isParallelValid(-1)).to.be.equal(true);
+    });
+
+    it("should return true for undefined", () => {
+      expect(utils.isParallelValid(undefined)).to.be.equal(true);
+    });
+  });
+
+  describe("isFloat", () => {
+    it("should return true for a float value", () => {
+      expect(utils.isFloat(1.2333)).to.be.equal(true);
+      expect(utils.isFloat(-1.2333567)).to.be.equal(true);
+      expect(utils.isFloat(0.123456)).to.be.equal(true);
+    });
+
+    it("should return false for a non float value", () => {
+      expect(utils.isFloat(100)).to.be.equal(false);
+      expect(utils.isFloat(-1000)).to.be.equal(false);
+      expect(utils.isFloat(333)).to.be.equal(false);
+    });
+  });
+
+  describe("isUndefined", () => {
+    it("should return true for a undefined value", () => {
+      expect(utils.isUndefined(undefined)).to.be.equal(true);
+      expect(utils.isUndefined(null)).to.be.equal(true);
+    });
+
+    it("should return false for a defined value", () => {
+      expect(utils.isUndefined(1.234)).to.be.equal(false);
+      expect(utils.isUndefined("1.234")).to.be.equal(false);
+      expect(utils.isUndefined(100)).to.be.equal(false);
+      expect(utils.isUndefined(-1)).to.be.equal(false);
+    });
+  });
+
+  describe("setParallels", () => {
+    it("should set bsconfig parallels equal to value provided in args", () => {
+      let bsConfig = {
+        "run_settings": {
+          "parallels": 10,
+        }
+      };
+      utils.setParallels(bsConfig, {parallels: 100});
+      expect(bsConfig['run_settings']['parallels']).to.be.eq(100);
+    });
+
+    it("should retain bsconfig parallels if args is undefined", () => {
+      let bsConfig = {
+        "run_settings": {
+          "parallels": 10,
+        }
+      };
+      utils.setParallels(bsConfig, {parallels: undefined});
+      expect(bsConfig['run_settings']['parallels']).to.be.eq(10);
+    });
+  });
+
   describe("getErrorCodeFromErr", () => {
     it("should return bstack_json_invalid_unknown if err.Code is not present in the list", () => {
       expect(utils.getErrorCodeFromErr("random_value")).to.be.eq("bstack_json_invalid_unknown");
