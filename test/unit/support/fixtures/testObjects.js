@@ -104,6 +104,8 @@ const runSampleArgs = {
   "config-file": "/browserstack.json",
   configFile: "/browserstack.json",
   "disable-usage-reporting": undefined,
+  p: undefined,
+  "parallels": undefined,
   disableUsageReporting: undefined,
   $0: "browserstack-cypress",
 };

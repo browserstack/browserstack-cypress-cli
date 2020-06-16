@@ -134,6 +134,7 @@ describe("runs", () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
+      setParallelsStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -158,6 +159,7 @@ describe("runs", () => {
         "../helpers/utils": {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
+          setParallels: setParallelsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
         },
         "../helpers/capabilityHelper": {
@@ -180,6 +182,7 @@ describe("runs", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
+          sinon.assert.calledOnce(setParallelsStub)
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(archiverStub);
@@ -203,6 +206,7 @@ describe("runs", () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
       validateBstackJsonStub = sandbox.stub();
+      setParallelsStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -227,6 +231,7 @@ describe("runs", () => {
         "../helpers/utils": {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
+          setParallels: setParallelsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
         },
         "../helpers/capabilityHelper": {
@@ -253,6 +258,7 @@ describe("runs", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
+          sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(archiverStub);
@@ -280,6 +286,7 @@ describe("runs", () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
       validateBstackJsonStub = sandbox.stub();
+      setParallelsStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -305,6 +312,7 @@ describe("runs", () => {
         "../helpers/utils": {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
+          setParallels: setParallelsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
         },
         "../helpers/capabilityHelper": {
@@ -339,6 +347,7 @@ describe("runs", () => {
         .catch((error) => {
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
+          sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(archiverStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(zipUploadStub);
@@ -368,6 +377,7 @@ describe("runs", () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
       validateBstackJsonStub = sandbox.stub();
+      setParallelsStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -394,6 +404,7 @@ describe("runs", () => {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          setParallels: setParallelsStub,
         },
         "../helpers/capabilityHelper": {
           validate: capabilityValidatorStub,
@@ -427,6 +438,7 @@ describe("runs", () => {
         .catch((error) => {
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
+          sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(archiverStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(zipUploadStub);
