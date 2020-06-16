@@ -95,6 +95,13 @@ const validate = (bsConfig) => {
 
     if (!fs.existsSync(path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json'))) reject(Constants.validationMessages.CYPRESS_JSON_NOT_FOUND + bsConfig.run_settings.cypress_proj_dir);
 
+    try{
+      let cypressJson = fs.readFileSync(path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json'))
+      JSON.parse(cypressJson)
+    }catch(error){
+      reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
+    }
+    
     resolve(Constants.validationMessages.VALIDATED);
   });
 }
