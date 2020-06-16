@@ -11,6 +11,7 @@ if (!fs.existsSync(logDir)) {
 const winstonLoggerParams = {
   transports: [
     new winston.transports.Console({
+      name: 'console.info',
       colorize: true,
       timestamp: function () {
         return `[${new Date().toLocaleString()}]`;

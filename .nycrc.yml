@@ -1,0 +1,13 @@
+---
+
+# cover all files (even if a file isn't touched by any test)
+all: true
+
+# check coverage percentage and fail test if below threshold
+check-coverage: true
+
+# thresholds
+branches: 80
+lines: 80
+functions: 75
+statements: 80
