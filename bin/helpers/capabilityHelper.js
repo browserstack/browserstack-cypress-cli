@@ -76,7 +76,7 @@ const caps = (bsConfig, zip) => {
     if (obj.projectNotifyURL) logger.info(`Project notify URL is: ${obj.projectNotifyURL}`);
 
     obj.parallels = bsConfig.run_settings.parallels;
-    if (obj.parallels) logger.info(`Parallels specified are: ${obj.parallels}`);
+    if (obj.parallels) logger.info(`Parallels limit specified: ${obj.parallels}`);
 
     var data = JSON.stringify(obj);
     resolve(data);
@@ -97,15 +97,15 @@ const validate = (bsConfig, args) => {
 
     // validate parallels specified in browserstack.json if parallels are not specified via arguments
     if (Utils.isUndefined(args.parallels) && !Utils.isParallelValid(bsConfig.run_settings.parallels)) {
-      reject(Constants.validationMessages.INVALID_PARALLES_CONFIGURATION);
+      reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
     }
     // if parallels specified via arguments validate both parallels specifed in browserstack.json and parallels specified in arguments
-    if (!Utils.isUndefined(args.parallels) && !Utils.isParallelValid(args.parallels)) reject(Constants.validationMessages.INVALID_PARALLES_CONFIGURATION);
+    if (!Utils.isUndefined(args.parallels) && !Utils.isParallelValid(args.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
 
 
     if (!args.parallels) {
       if (Number.isNaN(bsConfig.run_settings.parallels) || (parseInt(bsConfig.run_settings.parallels, 10) < 0 && parseInt(bsConfig.run_settings.parallels, 10) != -1))
-        reject(Constants.validationMessages.INVALID_PARALLES_CONFIGURATION)
+        reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION)
     };
 
     resolve(Constants.validationMessages.VALIDATED);
