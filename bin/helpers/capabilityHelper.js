@@ -1,6 +1,8 @@
 const logger = require("./logger").winstonLogger,
   Constants = require("./constants"),
-  Utils = require("./utils");
+  Utils = require("./utils"),
+  fs = require('fs'),
+  path = require('path');
 
 const caps = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
@@ -101,6 +103,15 @@ const validate = (bsConfig, args) => {
     // if parallels specified via arguments validate only arguments
     if (!Utils.isUndefined(args) && !Utils.isUndefined(args.parallels) && !Utils.isParallelValid(args.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
 
+    if (!fs.existsSync(path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json'))) reject(Constants.validationMessages.CYPRESS_JSON_NOT_FOUND + bsConfig.run_settings.cypress_proj_dir);
+
+    try{
+      let cypressJson = fs.readFileSync(path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json'))
+      JSON.parse(cypressJson)
+    }catch(error){
+      reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
+    }
+    
     resolve(Constants.validationMessages.VALIDATED);
   });
 }
