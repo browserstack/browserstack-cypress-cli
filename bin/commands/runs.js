@@ -60,7 +60,12 @@ module.exports = function run(args) {
     }).catch(function (err) {
       // browerstack.json is not valid
       logger.error(err);
-      logger.error(Constants.validationMessages.NOT_VALID);
+
+      // display browserstack.json is not valid only if validation of browserstack.json field has failed, otherwise display just the error message
+      // If paralles specified in arguments are invalid do not display browserstack.json is invalid message
+      if (!(err === Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION && !utils.isUndefined(args.parallels))) {
+        logger.error(Constants.validationMessages.NOT_VALID);
+      }
 
       let error_code = utils.getErrorCodeFromMsg(err);
       utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.validationMessages.NOT_VALID}`, Constants.messageTypes.ERROR, error_code);
