@@ -25,6 +25,8 @@ const validationMessages = {
   NOT_VALID_JSON: "browerstack.json is not a valid json",
   INVALID_EXTENSION: "Invalid files, please remove these files and try again.",
   INVALID_PARALLELS_CONFIGURATION: "Invalid value specified for parallels to use. Maximum parallels to use should be a number greater than 0.",
+  CYPRESS_JSON_NOT_FOUND: "cypress.json file is not found at cypress_proj_dir path ",
+  INVALID_CYPRESS_JSON: "cypress.json is not a valid json"
 };
 
 const cliMessages = {
