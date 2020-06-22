@@ -1,5 +1,7 @@
 const chai = require("chai"),
-  chaiAsPromised = require("chai-as-promised");
+  chaiAsPromised = require("chai-as-promised"),
+  fs = require('fs'),
+  sinon = require('sinon');
 
 const capabilityHelper = require("../../../../bin/helpers/capabilityHelper"),
   Constants = require("../../../../bin/helpers/constants"),
@@ -253,6 +255,10 @@ describe("capabilityHelper.js", () => {
 
     describe("validate parallels specified in bsconfig and arguments", () => {
       beforeEach(() => {
+        //Stub for cypress json validation
+        sinon.stub(fs, 'existsSync').returns(true);
+        sinon.stub(fs, 'readFileSync').returns("{}");
+
         bsConfig = {
           auth: {},
           browsers: [
@@ -266,6 +272,11 @@ describe("capabilityHelper.js", () => {
             cypress_proj_dir: "random path"
           },
         };
+      });
+
+      afterEach(() => {
+        fs.existsSync.restore();
+        fs.readFileSync.restore();
       });
 
       it("validate parallels present in arguments (not a number) when specified (valid) in bsconfig run_settings", () => {
