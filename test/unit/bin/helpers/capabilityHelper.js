@@ -1,5 +1,7 @@
 const chai = require("chai"),
-  chaiAsPromised = require("chai-as-promised");
+  chaiAsPromised = require("chai-as-promised"),
+  fs = require('fs'),
+  sinon = require('sinon');
 
 const capabilityHelper = require("../../../../bin/helpers/capabilityHelper"),
   Constants = require("../../../../bin/helpers/constants"),
@@ -250,10 +252,259 @@ describe("capabilityHelper.js", () => {
   });
 
   describe("validate", () => {
+
+    describe("validate parallels specified in bsconfig and arguments", () => {
+      beforeEach(() => {
+        //Stub for cypress json validation
+        sinon.stub(fs, 'existsSync').returns(true);
+        sinon.stub(fs, 'readFileSync').returns("{}");
+
+        bsConfig = {
+          auth: {},
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            cypress_proj_dir: "random path"
+          },
+        };
+      });
+
+      afterEach(() => {
+        fs.existsSync.restore();
+        fs.readFileSync.restore();
+      });
+
+      it("validate parallels present in arguments (not a number) when specified (valid) in bsconfig run_settings", () => {
+        bsConfig.run_settings.parallels = 10;
+        return capabilityHelper
+          .validate(bsConfig, { parallels: 'cypress' })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
+          });
+      });
+
+      it("validate parallels present in arguments (float) when specified (valid) in bsconfig run_settings", () => {
+        bsConfig.run_settings.parallels = 10;
+        return capabilityHelper
+          .validate(bsConfig, { parallels: '1.234' })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
+          });
+      });
+
+      it("validate parallels present in arguments (negative value < -1) when specified (valid) in bsconfig run_settings", () => {
+        bsConfig.run_settings.parallels = 10;
+        return capabilityHelper
+          .validate(bsConfig, { parallels: -200 })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
+          });
+      });
+
+      it("validate parallels present in arguments (zero) when specified (valid) in bsconfig run_settings", () => {
+        bsConfig.run_settings.parallels = 10;
+        return capabilityHelper
+          .validate(bsConfig, { parallels: 0 })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
+          });
+      });
+
+      it("validate parallels present in arguments (not a number) when not specified in bsconfig run_settings", () => {
+        return capabilityHelper
+          .validate(bsConfig, { parallels: 'cypress' })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
+          });
+      });
+
+      it("validate parallels present in arguments (float) when not specified in bsconfig run_settings", () => {
+        return capabilityHelper
+          .validate(bsConfig, { parallels: '1.234' })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
+          });
+      });
+
+      it("validate parallels present in arguments (negative value < -1) when not specified in bsconfig run_settings", () => {
+        return capabilityHelper
+          .validate(bsConfig, { parallels: -200 })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
+          });
+      });
+
+      it("validate parallels present in arguments (zero) when specified not in bsconfig run_settings", () => {
+        return capabilityHelper
+          .validate(bsConfig, { parallels: 0 })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
+          });
+      });
+
+      it("validate parallels present in bsconfig run settings (not a number) when not specified in arguments", () => {
+
+        bsConfig.run_settings.parallels = "cypress";
+         
+        return capabilityHelper
+          .validate(bsConfig, { parallels: undefined })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
+          });
+      });
+
+      it("validate parallels present in bsconfig run settings (float) when not specified in arguments", () => {
+        bsConfig.run_settings.parallels = "1.234";
+
+        return capabilityHelper
+          .validate(bsConfig, { parallels: undefined })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
+          });
+      });
+
+      it("validate parallels present in bsconfig run settings (negative value < -1) when not specified in arguments", () => {
+        bsConfig.run_settings.parallels = -200;
+
+        return capabilityHelper
+          .validate(bsConfig, { parallels: undefined })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
+          });
+      });
+
+      it("validate parallels present in bsconfig run settings (zero value) when not specified in arguments", () => {
+        bsConfig.run_settings.parallels = -200;
+
+        return capabilityHelper
+          .validate(bsConfig, { parallels: undefined })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
+          });
+      });
+
+      it("should return true for valid parallels (positive) present in bsconfig if arguments are undefined", () => {
+        bsConfig.run_settings.parallels = 10;
+
+        return capabilityHelper
+          .validate(bsConfig, { parallels: undefined })
+          .then(function (data) {
+            chai.assert.equal(data, Constants.validationMessages.VALIDATED);
+          })
+          .catch((error) => {
+            chai.assert.fail("Promise error");
+          });
+      });
+
+      it("should return true for valid parallels (-1) present in bsconfig if arguments are undefined", () => {
+        bsConfig.run_settings.parallels = -1;
+
+        return capabilityHelper
+          .validate(bsConfig, { parallels: undefined })
+          .then(function (data) {
+            chai.assert.equal(data, Constants.validationMessages.VALIDATED);
+          })
+          .catch((error) => {
+            chai.assert.fail("Promise error");
+          });
+      });
+
+      it("should return true for valid parallels (positive) present in arguments if bsconfig parallels are undefined", () => {
+
+        return capabilityHelper
+          .validate(bsConfig, { parallels: 200 })
+          .then(function (data) {
+            chai.assert.equal(data, Constants.validationMessages.VALIDATED);
+          })
+          .catch((error) => {
+            chai.assert.fail("Promise error");
+          });
+      });
+
+      it("should return true for valid parallels (-1) present in arguments if bsconfig parallels are undefined", () => {
+
+        return capabilityHelper
+          .validate(bsConfig, { parallels: -1 })
+          .then(function (data) {
+            chai.assert.equal(data, Constants.validationMessages.VALIDATED);
+          })
+          .catch((error) => {
+            chai.assert.fail("Promise error");
+          });
+      });
+
+      it("should return true for valid parallels (-1) present in arguments even if bsconfig parallels are not valid", () => {
+        bsConfig.run_settings.parallels = "not valid";
+
+        return capabilityHelper
+          .validate(bsConfig, { parallels: -1 })
+          .then(function (data) {
+            chai.assert.equal(data, Constants.validationMessages.VALIDATED);
+          })
+          .catch((error) => {
+            chai.assert.fail("Promise error");
+          });
+      });
+
+      it("should return true for valid parallels (-1) present in arguments if bsconfig parallels are also valid", () => {
+        bsConfig.run_settings.parallels = "10";
+
+        return capabilityHelper
+          .validate(bsConfig, { parallels: -1 })
+          .then(function (data) {
+            chai.assert.equal(data, Constants.validationMessages.VALIDATED);
+          })
+          .catch((error) => {
+            chai.assert.fail("Promise error");
+          });
+      });
+    });
+
     it("validate bsConfig", () => {
       let bsConfig = undefined;
       return capabilityHelper
-        .validate(bsConfig)
+        .validate(bsConfig, {parallels: undefined})
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -265,7 +516,7 @@ describe("capabilityHelper.js", () => {
     it("validate bsConfig.auth", () => {
       bsConfig = {};
       return capabilityHelper
-        .validate(bsConfig)
+        .validate(bsConfig, {parallels: undefined})
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -283,7 +534,7 @@ describe("capabilityHelper.js", () => {
         browsers: [],
       };
       return capabilityHelper
-        .validate(bsConfig)
+        .validate(bsConfig, {parallels: undefined})
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -307,7 +558,7 @@ describe("capabilityHelper.js", () => {
         ],
       };
       return capabilityHelper
-        .validate(bsConfig)
+        .validate(bsConfig, {parallels: undefined})
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -333,7 +584,7 @@ describe("capabilityHelper.js", () => {
       };
 
       return capabilityHelper
-        .validate(bsConfig)
+        .validate(bsConfig, {parallels: undefined})
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -360,7 +611,7 @@ describe("capabilityHelper.js", () => {
         },
       };
       capabilityHelper
-        .validate(bsConfig)
+        .validate(bsConfig, {parallels: undefined})
         .then(function (data) {
           chai.assert.equal(data, Constants.validationMessages.VALIDATED);
         })
