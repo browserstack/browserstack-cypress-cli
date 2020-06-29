@@ -10,6 +10,12 @@ module.exports = function info(args) {
   let bsConfigPath = process.cwd() + args.cf;
 
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
+    // accept the username from command line if provided
+    utils.setUsername(bsConfig, args);
+
+    // accept the access key from command line if provided
+    utils.setAccessKey(bsConfig, args);
+
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
     let buildId = args._[1];

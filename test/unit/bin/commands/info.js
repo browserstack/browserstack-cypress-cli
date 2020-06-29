@@ -22,6 +22,8 @@ describe("buildInfo", () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
@@ -45,6 +47,8 @@ describe("buildInfo", () => {
 
       const info = proxyquire("../../../../bin/commands/info", {
         "../helpers/utils": {
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -77,6 +81,8 @@ describe("buildInfo", () => {
 
       const info = proxyquire("../../../../bin/commands/info", {
         "../helpers/utils": {
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -103,6 +109,8 @@ describe("buildInfo", () => {
   describe("Handle statusCode != 200", () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
@@ -128,6 +136,8 @@ describe("buildInfo", () => {
 
       const info = proxyquire("../../../../bin/commands/info", {
         "../helpers/utils": {
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -166,6 +176,8 @@ describe("buildInfo", () => {
 
       const info = proxyquire("../../../../bin/commands/info", {
         "../helpers/utils": {
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -199,6 +211,8 @@ describe("buildInfo", () => {
 
       const info = proxyquire("../../../../bin/commands/info", {
         "../helpers/utils": {
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -227,6 +241,8 @@ describe("buildInfo", () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
@@ -250,6 +266,8 @@ describe("buildInfo", () => {
 
       const info = proxyquire("../../../../bin/commands/info", {
         "../helpers/utils": {
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -277,6 +295,8 @@ describe("buildInfo", () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -293,6 +313,8 @@ describe("buildInfo", () => {
     it("send usage report if validateBstackJson fails", () => {
       const info = proxyquire("../../../../bin/commands/info", {
         "../helpers/utils": {
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
