@@ -64,7 +64,7 @@ const caps = (bsConfig, zip) => {
 
     if (bsConfig.run_settings) {
       obj.project = bsConfig.run_settings.project || bsConfig.run_settings.project_name;
-      obj.customBuildName = bsConfig.run_settings.customBuildName || bsConfig.run_settings.build_name;
+      obj.customBuildName = bsConfig.run_settings.build_name || bsConfig.run_settings.customBuildName;
       obj.callbackURL = bsConfig.run_settings.callback_url;
       obj.projectNotifyURL = bsConfig.run_settings.build_callback_url;
       obj.parallels = bsConfig.run_settings.parallels;
