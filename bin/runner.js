@@ -62,6 +62,18 @@ var argv = yargs
           description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
           type: "boolean"
         },
+        'u': {
+          alias: 'username',
+          describe: Constants.cliMessages.COMMON.USERNAME,
+          type: "string",
+          default: undefined
+        },
+        'k': {
+          alias: 'key',
+          describe: Constants.cliMessages.COMMON.ACCESS_KEY,
+          type: "string",
+          default: undefined
+        },
       })
       .help('help')
       .wrap(null)
@@ -89,6 +101,18 @@ var argv = yargs
           default: undefined,
           description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
           type: "boolean"
+        },
+        'u': {
+          alias: 'username',
+          describe: Constants.cliMessages.COMMON.USERNAME,
+          type: "string",
+          default: undefined
+        },
+        'k': {
+          alias: 'key',
+          describe: Constants.cliMessages.COMMON.ACCESS_KEY,
+          type: "string",
+          default: undefined
         },
       })
       .help('help')
@@ -121,6 +145,24 @@ var argv = yargs
           alias: 'parallels',
           describe: Constants.cliMessages.RUN.PARALLEL_DESC,
           type: "number",
+          default: undefined
+        },
+        'u': {
+          alias: 'username',
+          describe: Constants.cliMessages.COMMON.USERNAME,
+          type: "string",
+          default: undefined
+        },
+        'k': {
+          alias: 'key',
+          describe: Constants.cliMessages.COMMON.ACCESS_KEY,
+          type: "string",
+          default: undefined
+        },
+        'b': {
+          alias: 'build-name',
+          describe: Constants.cliMessages.RUN.BUILD_NAME,
+          type: "string",
           default: undefined
         }
       })

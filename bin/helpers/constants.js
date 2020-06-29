@@ -52,10 +52,13 @@ const cliMessages = {
         PARALLEL_DESC: "The maximum number of parallels to use to run your test suite",
         INFO: "Run your tests on BrowserStack.",
         DESC: "Path to BrowserStack config",
-        CONFIG_DEMAND: "config file is required"
+        CONFIG_DEMAND: "config file is required",
+        BUILD_NAME: "The build name you want to use to name your test runs"
     },
     COMMON: {
-      DISABLE_USAGE_REPORTING: "Disable usage reporting"
+      DISABLE_USAGE_REPORTING: "Disable usage reporting",
+      USERNAME: "Your BrowserStack username",
+      ACCESS_KEY: "Your BrowserStack access key"
     }
 }
 
