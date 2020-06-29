@@ -75,6 +75,8 @@ describe("runs", () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
       validateBstackJsonStub = sandbox.stub();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -99,6 +101,8 @@ describe("runs", () => {
           getErrorCodeFromMsg: getErrorCodeFromMsgStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub
         },
         "../helpers/capabilityHelper": {
           validate: capabilityValidatorStub,
@@ -135,6 +139,8 @@ describe("runs", () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
       setParallelsStub = sandbox.stub();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -160,6 +166,8 @@ describe("runs", () => {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
           setParallels: setParallelsStub,
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
         },
         "../helpers/capabilityHelper": {
@@ -207,6 +215,8 @@ describe("runs", () => {
       sandbox = sinon.createSandbox();
       validateBstackJsonStub = sandbox.stub();
       setParallelsStub = sandbox.stub();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -232,6 +242,8 @@ describe("runs", () => {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
           setParallels: setParallelsStub,
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
         },
         "../helpers/capabilityHelper": {
@@ -287,6 +299,8 @@ describe("runs", () => {
       sandbox = sinon.createSandbox();
       validateBstackJsonStub = sandbox.stub();
       setParallelsStub = sandbox.stub();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -313,6 +327,8 @@ describe("runs", () => {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
           setParallels: setParallelsStub,
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
         },
         "../helpers/capabilityHelper": {
@@ -378,6 +394,8 @@ describe("runs", () => {
       sandbox = sinon.createSandbox();
       validateBstackJsonStub = sandbox.stub();
       setParallelsStub = sandbox.stub();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -403,6 +421,8 @@ describe("runs", () => {
         "../helpers/utils": {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           setParallels: setParallelsStub,
         },
