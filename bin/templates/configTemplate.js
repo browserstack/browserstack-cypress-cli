@@ -1,8 +1,8 @@
 module.exports = function () {
   var config = {
     "auth": {
-      "username": "<username>",
-      "access_key": "<access-key>"
+      "username": "<Your BrowserStack username>",
+      "access_key": "<Your BrowserStack access key>"
     },
     "browsers": [
       {
@@ -12,7 +12,7 @@ module.exports = function () {
       }
     ],
     "run_settings": {
-      "cypress_proj_dir" : "/path/to/cypress.json",
+      "cypress_proj_dir" : "/path/to/directory-that-contains-<cypress.json>-file",
       "project_name": "project-name",
       "build_name": "build-name",
       "parallels": "Here goes the number of parallels you want to run",
