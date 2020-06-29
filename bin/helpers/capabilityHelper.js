@@ -66,7 +66,7 @@ const caps = (bsConfig, zip) => {
       obj.project = bsConfig.run_settings.project || bsConfig.run_settings.project_name;
       obj.customBuildName = bsConfig.run_settings.customBuildName || bsConfig.run_settings.build_name;
       obj.callbackURL = bsConfig.run_settings.callback_url;
-      obj.projectNotifyURL = bsConfig.run_settings.project_notify_URL;
+      obj.projectNotifyURL = bsConfig.run_settings.build_callback_url;
       obj.parallels = bsConfig.run_settings.parallels;
     }
 
@@ -99,7 +99,7 @@ const validate = (bsConfig, args) => {
 
     // validate parallels specified in browserstack.json if parallels are not specified via arguments
     if (!Utils.isUndefined(args) && Utils.isUndefined(args.parallels) && !Utils.isParallelValid(bsConfig.run_settings.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
-  
+
     // if parallels specified via arguments validate only arguments
     if (!Utils.isUndefined(args) && !Utils.isUndefined(args.parallels) && !Utils.isParallelValid(args.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
 
@@ -111,7 +111,7 @@ const validate = (bsConfig, args) => {
     }catch(error){
       reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
     }
-    
+
     resolve(Constants.validationMessages.VALIDATED);
   });
 }

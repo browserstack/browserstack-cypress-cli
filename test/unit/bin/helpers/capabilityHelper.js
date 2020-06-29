@@ -233,7 +233,7 @@ describe("capabilityHelper.js", () => {
           project_name: "sample project",
           build_name: "sample build",
           callback_url: "random url",
-          project_notify_URL: "random url",
+          build_callback_url: "random url",
         },
       };
       return capabilityHelper
@@ -374,7 +374,7 @@ describe("capabilityHelper.js", () => {
       it("validate parallels present in bsconfig run settings (not a number) when not specified in arguments", () => {
 
         bsConfig.run_settings.parallels = "cypress";
-         
+
         return capabilityHelper
           .validate(bsConfig, { parallels: undefined })
           .then(function (data) {

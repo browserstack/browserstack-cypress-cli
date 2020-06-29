@@ -76,6 +76,18 @@ exports.setParallels = (bsConfig, args) => {
   }
 }
 
+exports.setUsername = (bsConfig, args) => {
+  if (!this.isUndefined(args.username)) {
+    bsConfig['auth']['username'] = args.username;
+  }
+}
+
+exports.setAccessKey = (bsConfig, args) => {
+  if (!this.isUndefined(args.key)) {
+    bsConfig['auth']['access_key'] = args.key;
+  }
+}
+
 exports.isUndefined = value => (value === undefined || value === null);
 
 exports.isFloat = value => (Number(value) && Number(value) % 1 !== 0);
