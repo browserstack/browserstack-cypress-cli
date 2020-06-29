@@ -21,6 +21,9 @@ module.exports = function run(args) {
     // accept the access key from command line if provided
     utils.setAccessKey(bsConfig, args);
 
+    // accept the build name from command line if provided
+    utils.setBuildName(bsConfig, args);
+
     // Validate browserstack.json values and parallels specified via arguments
     return capabilityHelper.validate(bsConfig, args).then(function (validated) {
       logger.info(validated);

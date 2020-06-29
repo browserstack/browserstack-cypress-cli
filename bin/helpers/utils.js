@@ -88,6 +88,12 @@ exports.setAccessKey = (bsConfig, args) => {
   }
 }
 
+exports.setBuildName = (bsConfig, args) => {
+  if (!this.isUndefined(args['build-name'])) {
+    bsConfig['run_settings']['build_name'] = args['build-name'];
+  }
+}
+
 exports.isUndefined = value => (value === undefined || value === null);
 
 exports.isFloat = value => (Number(value) && Number(value) % 1 !== 0);
