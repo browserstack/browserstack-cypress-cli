@@ -233,7 +233,7 @@ describe("capabilityHelper.js", () => {
           project_name: "sample project",
           build_name: "sample build",
           callback_url: "random url",
-          build_callback_url: "random url",
+          project_notify_URL: "random url",
         },
       };
       return capabilityHelper
