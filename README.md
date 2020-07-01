@@ -2,7 +2,7 @@
 
 [![npm version](https://badge.fury.io/js/browserstack-cypress-cli.svg)](https://badge.fury.io/js/browserstack-cypress-cli)
 
-> **Note**: Running Cypress tests on BrowserStack is now in public beta. Learn more [here](https://browserstack.com/cypress)
+> **Note**: Running Cypress tests on BrowserStack is now in public beta. Learn more [here](https://browserstack.com/automate/cypress)
 >
 > If you are looking for a getting started guide, and a more up-to date documentation, check out the [BrowserStack Cypress documentation](https://browserstack.com/docs/automate/cypress)
 
