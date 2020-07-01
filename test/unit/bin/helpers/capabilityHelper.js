@@ -374,7 +374,7 @@ describe("capabilityHelper.js", () => {
       it("validate parallels present in bsconfig run settings (not a number) when not specified in arguments", () => {
 
         bsConfig.run_settings.parallels = "cypress";
-         
+
         return capabilityHelper
           .validate(bsConfig, { parallels: undefined })
           .then(function (data) {

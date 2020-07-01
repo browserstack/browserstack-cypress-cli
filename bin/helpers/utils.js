@@ -76,6 +76,24 @@ exports.setParallels = (bsConfig, args) => {
   }
 }
 
+exports.setUsername = (bsConfig, args) => {
+  if (!this.isUndefined(args.username)) {
+    bsConfig['auth']['username'] = args.username;
+  }
+}
+
+exports.setAccessKey = (bsConfig, args) => {
+  if (!this.isUndefined(args.key)) {
+    bsConfig['auth']['access_key'] = args.key;
+  }
+}
+
+exports.setBuildName = (bsConfig, args) => {
+  if (!this.isUndefined(args['build-name'])) {
+    bsConfig['run_settings']['build_name'] = args['build-name'];
+  }
+}
+
 exports.isUndefined = value => (value === undefined || value === null);
 
 exports.isFloat = value => (Number(value) && Number(value) % 1 !== 0);
@@ -85,5 +103,5 @@ exports.isParallelValid = (value) => {
 }
 
 exports.getUserAgent = () => {
-  return `BStack-Cypress-CLI/1.x (${os.arch()}/${os.platform()}/${os.release()})`;
+  return `BStack-Cypress-CLI/1.2.0 (${os.arch()}/${os.platform()}/${os.release()})`;
 }
