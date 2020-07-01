@@ -48,7 +48,7 @@ After you specify the required run settings, you can run your tests on BrowserSt
 $ browserstack-cypress run
 ```
 
-After the tests are successfully submitted, you can access the test results on the [BrowserStack Automate dashboard](https://automate.browserstack.com)
+After the tests are successfully submitted, you can access the test results on the [BrowserStack Automate dashboard](https://automate.browserstack.com/dashboard/v2)
 
 To learn more about the different options the CLI supports - like running tests in parallel, running  tests on `localhost` URLs etc., refer to the [BrowserStack Cypress documentation](https://browserstack.com/docs/automate/cypress)
 
