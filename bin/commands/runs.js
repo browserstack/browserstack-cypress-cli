@@ -40,6 +40,9 @@ module.exports = function run(args) {
           });
         }).catch(function (err) {
           // Zip Upload failed
+          if (err === Constants.userMessages.INTERNAL_SERVER_ERROR) {
+            err = Constants.userMessages.TESTING_TIME_EXPIRED;
+          }
           logger.error(err);
           logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED);
           utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed');
