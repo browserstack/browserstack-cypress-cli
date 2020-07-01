@@ -85,5 +85,5 @@ exports.isParallelValid = (value) => {
 }
 
 exports.getUserAgent = () => {
-  return `BStack-Cypress-CLI/1.x (${os.arch()}/${os.platform()}/${os.release()})`;
+  return `BStack-Cypress-CLI/1.2.0 (${os.arch()}/${os.platform()}/${os.release()})`;
 }
