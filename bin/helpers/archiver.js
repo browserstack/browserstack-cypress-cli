@@ -36,7 +36,7 @@ const archiveSpecs = (runSettings, filePath) => {
 
     archive.pipe(output);
 
-    let allowedFileTypes = [ 'js', 'json', 'txt', 'ts', 'feature' ];
+    let allowedFileTypes = [ 'js', 'json', 'txt', 'ts', 'feature', 'features' ];
     allowedFileTypes.forEach(fileType => {
       archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: ['node_modules/**', 'package-lock.json', 'package.json', 'browserstack-package.json'] });
     });
