@@ -17,6 +17,8 @@ module.exports = function () {
       "build_name": "build-name",
       "parallels": "Here goes the number of parallels you want to run",
       "npm_dependencies": {
+      },
+      "package_config_options": {
       }
     },
     "connection_settings": {
