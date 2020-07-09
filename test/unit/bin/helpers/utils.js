@@ -200,4 +200,26 @@ describe("utils", () => {
       expect(process.env.DISABLE_USAGE_REPORTING).to.be.eq("true");
     });
   });
+
+  describe("isAbsolute", () => {
+    it("should return true when path is absolute", () => {
+      expect(utils.isAbsolute("/Absolute/Path")).to.be.true;
+    });
+
+    it("should return false when path is relative", () => {
+      expect(utils.isAbsolute("../Relative/Path")).to.be.false;
+    });
+  });
+
+  describe("getConfigPath", () => {
+    it("should return given path, when path is absolute", () => {
+      expect(utils.getConfigPath("/Absolute/Path")).to.be.eq("/Absolute/Path");
+    });
+
+    it("should return path joined with current dir path, when path is relative", () => {
+      let configPath = "../Relative/Path"
+      expect(utils.getConfigPath(configPath)).to.be.eq(path.join(process.cwd(), configPath));
+    });
+
+  });
 });

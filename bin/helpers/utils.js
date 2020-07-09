@@ -112,6 +112,5 @@ exports.isAbsolute  = (configPath) => {
 }
 
 exports.getConfigPath = (configPath) => {
-  console.log(configPath)
   return this.isAbsolute(configPath) ? configPath : path.join(process.cwd(), configPath);
 }
