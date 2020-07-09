@@ -1,5 +1,6 @@
 'use strict';
 const os = require("os");
+const path = require("path");
 
 const usageReporting =  require('./usageReporting'),
   logger = require('./logger').winstonLogger,
@@ -104,4 +105,13 @@ exports.isParallelValid = (value) => {
 
 exports.getUserAgent = () => {
   return `BStack-Cypress-CLI/1.2.0 (${os.arch()}/${os.platform()}/${os.release()})`;
+}
+
+exports.isAbsolute  = (configPath) => {
+  return path.isAbsolute(configPath)
+}
+
+exports.getConfigPath = (configPath) => {
+  console.log(configPath)
+  return this.isAbsolute(configPath) ? configPath : path.join(process.cwd(), configPath);
 }

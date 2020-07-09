@@ -7,7 +7,7 @@ const config = require("../helpers/config"),
   utils = require("../helpers/utils");
 
 module.exports = function info(args) {
-  let bsConfigPath = process.cwd() + args.cf;
+  let bsConfigPath = utils.getConfigPath(args.cf);
 
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
     // accept the username from command line if provided
