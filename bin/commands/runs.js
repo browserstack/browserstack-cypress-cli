@@ -38,9 +38,12 @@ module.exports = function run(args) {
         return zipUploader.zipUpload(bsConfig, config.fileName).then(function (zip) {
 
           // Create build
-          return build.createBuild(bsConfig, zip).then(function (message) {
+          return build.createBuild(bsConfig, zip).then(function (data) {
+            let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
+            let dashboardLink = `Visit the Automate dashboard for test reporting: ${config.dashboardUrl}${data.build_id}`;
             logger.info(message);
-            utils.sendUsageReport(bsConfig, args, message, Constants.messageTypes.SUCCESS, null);
+            logger.info(dashboardLink);
+            utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
             return;
           }).catch(function (err) {
             // Build creation failed
