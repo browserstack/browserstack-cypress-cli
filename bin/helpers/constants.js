@@ -10,7 +10,8 @@ const userMessages = {
     ZIP_DELETE_FAILED: "Could not delete local file.",
     ZIP_DELETED: "Zip file deleted successfully.",
     API_DEPRECATED: "This version of API is deprecated, please use latest version of API.",
-    FAILED_TO_ZIP: "Failed to zip files."
+    FAILED_TO_ZIP: "Failed to zip files.",
+    VISIT_DASHBOARD: "Visit the Automate dashboard for test reporting:"
 };
 
 const validationMessages = {

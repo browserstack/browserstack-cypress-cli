@@ -40,7 +40,7 @@ module.exports = function run(args) {
           // Create build
           return build.createBuild(bsConfig, zip).then(function (data) {
             let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
-            let dashboardLink = `Visit the Automate dashboard for test reporting: ${config.dashboardUrl}${data.build_id}`;
+            let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${config.dashboardUrl}${data.build_id}`;
             logger.info(message);
             logger.info(dashboardLink);
             utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);

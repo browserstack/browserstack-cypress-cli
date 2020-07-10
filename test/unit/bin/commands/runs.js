@@ -426,7 +426,7 @@ describe("runs", () => {
       let messageType = Constants.messageTypes.SUCCESS;
       let errorCode = null;
       let message = `Success! ${Constants.userMessages.BUILD_CREATED} with build id: random_build_id`;
-      let dashboardLink = `Visit the Automate dashboard for test reporting: ${dashboardUrl}random_build_id`;
+      let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${dashboardUrl}random_build_id`;
 
       const runs = proxyquire("../../../../bin/commands/runs", {
         "../helpers/utils": {
