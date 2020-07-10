@@ -114,3 +114,9 @@ exports.isAbsolute  = (configPath) => {
 exports.getConfigPath = (configPath) => {
   return this.isAbsolute(configPath) ? configPath : path.join(process.cwd(), configPath);
 }
+
+exports.configCreated = (args) => {
+  let message = Constants.userMessages.CONFIG_FILE_CREATED
+  logger.info(message);
+  this.sendUsageReport(null, args, message, Constants.messageTypes.SUCCESS, null);
+}

@@ -17,6 +17,7 @@ describe("init", () => {
 
   before(() => {
     sandbox = sinon.createSandbox();
+    configCreatedStub = sandbox.stub()
     sendUsageReportStub = sandbox.stub().callsFake(function () {
       return "end";
     });
@@ -55,6 +56,7 @@ describe("init", () => {
       const init = proxyquire("../../../../bin/commands/init", {
         "../helpers/utils": {
           sendUsageReport: sendUsageReportStub,
+          configCreated: configCreatedStub
         },
         "../helpers/fileHelpers": {
           fileExists: fileExistsStub,

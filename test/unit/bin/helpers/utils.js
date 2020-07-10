@@ -3,11 +3,13 @@ const path = require('path');
 
 const chai = require("chai"),
   expect = chai.expect,
+  sinon = require('sinon'),
   chaiAsPromised = require("chai-as-promised");
 
 const utils = require('../../../../bin/helpers/utils'),
   constant = require('../../../../bin/helpers/constants'),
-  logger = require('../../../../bin/helpers/logger').winstonLogger;
+  logger = require('../../../../bin/helpers/logger').winstonLogger,
+  testObjects = require("../../support/fixtures/testObjects");
 
 chai.use(chaiAsPromised);
 logger.transports["console.info"].silent = true;
@@ -35,7 +37,7 @@ describe("utils", () => {
       expect(utils.isParallelValid("1.2.2.2")).to.be.equal(false);
       expect(utils.isParallelValid("1.456789")).to.be.equal(false);
     });
-    
+
     it("should return false for a string which is not a number", () => {
       expect(utils.isParallelValid("cypress")).to.be.equal(false);
       expect(utils.isParallelValid("browserstack")).to.be.equal(false);
@@ -220,6 +222,18 @@ describe("utils", () => {
       let configPath = "../Relative/Path"
       expect(utils.getConfigPath(configPath)).to.be.eq(path.join(process.cwd(), configPath));
     });
+  });
 
+  describe("configCreated", () => {
+    let args = testObjects.initSampleArgs;
+
+    it("should call sendUsageReport", () => {
+      sandbox = sinon.createSandbox();
+      sendUsageReportStub = sandbox.stub(utils, "sendUsageReport").callsFake(function () {
+        return "end";
+      });
+      utils.configCreated(args);
+      sinon.assert.calledOnce(sendUsageReportStub);
+    });
   });
 });
