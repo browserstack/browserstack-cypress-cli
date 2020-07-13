@@ -7,7 +7,7 @@ const userMessages = {
     ZIP_UPLOAD_FAILED: "Zip Upload failed.",
     CONFIG_FILE_CREATED: "BrowserStack Config File created, you can now run browserstack-cypress --config-file run",
     CONFIG_FILE_EXISTS: "File already exists, delete the browserstack.json file manually. skipping...",
-    DIR_NOT_FOUND: "Given path does not exist. Failed to create browserstack.json.",
+    DIR_NOT_FOUND: "Given path does not exist. Failed to create browserstack.json in %s",
     ZIP_DELETE_FAILED: "Could not delete local file.",
     ZIP_DELETED: "Zip file deleted successfully.",
     API_DEPRECATED: "This version of API is deprecated, please use latest version of API.",

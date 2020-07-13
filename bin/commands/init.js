@@ -2,7 +2,9 @@
 const fileHelpers = require("../helpers/fileHelpers"),
   Constants = require("../helpers/constants"),
   logger = require("../helpers/logger").winstonLogger,
-  utils = require("../helpers/utils");
+  utils = require("../helpers/utils"),
+  util = require("util"),
+  path = require('path');
 
 module.exports = function init(args) {
   if (args.p) {
@@ -34,7 +36,7 @@ module.exports = function init(args) {
         }
       });
     } else {
-      let message = Constants.userMessages.DIR_NOT_FOUND;
+      let message = util.format(Constants.userMessages.DIR_NOT_FOUND, path.dirname(config.path));
       logger.error(message);
       utils.sendUsageReport(null, args, message, Constants.messageTypes.ERROR, 'path_to_init_not_found');
     }
