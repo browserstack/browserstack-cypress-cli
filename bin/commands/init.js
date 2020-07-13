@@ -22,7 +22,7 @@ module.exports = function init(args) {
       logger.error(message);
       utils.sendUsageReport(null, args, message, Constants.messageTypes.ERROR, 'bstack_json_already_exists');
     } else {
-      fileHelpers.write(config, null, utils.configCreated(args));
+      fileHelpers.write(config, null, args, utils.configCreated);
     }
   });
 }
