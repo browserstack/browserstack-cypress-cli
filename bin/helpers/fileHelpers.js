@@ -35,3 +35,11 @@ exports.deleteZip = () => {
     }
   });
 }
+
+exports.dirExists = function (filePath, cb) {
+  let exists = false;
+  if (fs.existsSync(path.dirname(filePath), cb)) {
+    exists = true;
+  }
+  cb && cb(exists);
+}

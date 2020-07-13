@@ -22,13 +22,21 @@ module.exports = function init(args) {
     utils.sendUsageReport(null, args, message, Constants.messageTypes.SUCCESS, null);
   }
 
-  return fileHelpers.fileExists(config.path, function(exists){
-    if (exists) {
-      let message = Constants.userMessages.CONFIG_FILE_EXISTS;
-      logger.error(message);
-      utils.sendUsageReport(null, args, message, Constants.messageTypes.ERROR, 'bstack_json_already_exists');
+  return fileHelpers.dirExists(config.path, function(dirExists){
+    if (dirExists) {
+      fileHelpers.fileExists(config.path, function(exists){
+        if (exists) {
+          let message = Constants.userMessages.CONFIG_FILE_EXISTS;
+          logger.error(message);
+          utils.sendUsageReport(null, args, message, Constants.messageTypes.ERROR, 'bstack_json_already_exists');
+        } else {
+          fileHelpers.write(config, null, allDone);
+        }
+      });
     } else {
-      fileHelpers.write(config, null, allDone);
+      let message = Constants.userMessages.DIR_NOT_FOUND;
+      logger.error(message);
+      utils.sendUsageReport(null, args, message, Constants.messageTypes.ERROR, 'path_to_init_not_found');
     }
   });
 }
