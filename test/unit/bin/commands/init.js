@@ -1,6 +1,7 @@
 const chai = require("chai"),
   sinon = require("sinon"),
-  chaiAsPromised = require("chai-as-promised");
+  chaiAsPromised = require("chai-as-promised"),
+  util = require("util");
 
 const Constants = require("../../../../bin/helpers/constants"),
   logger = require("../../../../bin/helpers/logger").winstonLogger,
@@ -32,6 +33,9 @@ describe("init", () => {
     it("fail if given path is not present", () => {
       dirExistsStub = sandbox.stub().yields(false);
       writeStub = sandbox.stub();
+      formatStub = sandbox.stub().callsFake(function (args) {
+        return args;
+      });
 
       const init = proxyquire("../../../../bin/commands/init", {
         "../helpers/utils": {
@@ -41,6 +45,9 @@ describe("init", () => {
           dirExists: dirExistsStub,
           write: writeStub,
         },
+        "util": {
+          format: formatStub
+        }
       });
 
       init(args);

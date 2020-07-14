@@ -8,7 +8,7 @@ const fileHelpers = require("../helpers/fileHelpers"),
 
 module.exports = function init(args) {
   if (args.p) {
-    var path_to_bsconf = args.p + "/browserstack.json";
+    var path_to_bsconf = path.join(args.p + "/browserstack.json");
   } else {
     var path_to_bsconf = "./browserstack.json";
   }
