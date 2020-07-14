@@ -6,11 +6,11 @@ const logger = require("./logger").winstonLogger,
   Constants = require("../helpers/constants"),
   config = require("../helpers/config");
 
-exports.write = function(f, message, cb) {
+exports.write = function(f, message, args, cb) {
   message = message || 'Creating';
   fs.writeFile(f.path, f.file, function() {
-    logger.info(message + " file: ./" + path.relative(process.cwd(), f.path));
-    cb && cb()
+    logger.info(message + " file: " + f.path);
+    cb && cb(args)
   });
 }
 

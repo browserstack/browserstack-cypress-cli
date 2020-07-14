@@ -18,12 +18,6 @@ module.exports = function init(args) {
     path: path_to_bsconf
   };
 
-  function allDone() {
-    let message = Constants.userMessages.CONFIG_FILE_CREATED
-    logger.info(message);
-    utils.sendUsageReport(null, args, message, Constants.messageTypes.SUCCESS, null);
-  }
-
   return fileHelpers.dirExists(config.path, function(dirExists){
     if (dirExists) {
       fileHelpers.fileExists(config.path, function(exists){
@@ -32,7 +26,7 @@ module.exports = function init(args) {
           logger.error(message);
           utils.sendUsageReport(null, args, message, Constants.messageTypes.ERROR, 'bstack_json_already_exists');
         } else {
-          fileHelpers.write(config, null, allDone);
+          fileHelpers.write(config, null, args, utils.configCreated);
         }
       });
     } else {
