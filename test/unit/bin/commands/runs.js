@@ -409,6 +409,7 @@ describe("runs", () => {
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
       });
+      dashboardUrl = "dashboard-url";
       capabilityValidatorStub = sandbox.stub();
       archiverStub = sandbox.stub();
       zipUploadStub = sandbox.stub();
@@ -422,9 +423,10 @@ describe("runs", () => {
     });
 
     it("send error report", () => {
-      let message = "build created";
       let messageType = Constants.messageTypes.SUCCESS;
       let errorCode = null;
+      let message = `Success! ${Constants.userMessages.BUILD_CREATED} with build id: random_build_id`;
+      let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${dashboardUrl}random_build_id`;
 
       const runs = proxyquire("../../../../bin/commands/runs", {
         "../helpers/utils": {
@@ -451,6 +453,9 @@ describe("runs", () => {
         "../helpers/build": {
           createBuild: createBuildStub,
         },
+        "../helpers/config": {
+          dashboardUrl: dashboardUrl,
+        },
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -459,7 +464,7 @@ describe("runs", () => {
       );
       archiverStub.returns(Promise.resolve("Zipping completed"));
       zipUploadStub.returns(Promise.resolve("zip uploaded"));
-      createBuildStub.returns(Promise.resolve("build created"));
+      createBuildStub.returns(Promise.resolve({ message: 'Success', build_id: 'random_build_id' }));
 
       return runs(args)
         .then(function (_bsConfig) {
@@ -478,7 +483,7 @@ describe("runs", () => {
             sendUsageReportStub,
             bsConfig,
             args,
-            message,
+            `${message}\n${dashboardLink}`,
             messageType,
             errorCode
           );

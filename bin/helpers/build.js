@@ -4,7 +4,7 @@ const request = require('request');
 const config = require('./config'),
   capabilityHelper = require("../helpers/capabilityHelper"),
   Constants = require('../helpers/constants'),
-  utils =require('../helpers/utils');
+  utils = require('../helpers/utils');
 
 const createBuild = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
@@ -46,7 +46,7 @@ const createBuild = (bsConfig, zip) => {
               reject(Constants.userMessages.BUILD_FAILED);
             }
           } else {
-            resolve(`${build.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${build.build_id}`);
+            resolve(build);
           }
           resolve(build);
         }

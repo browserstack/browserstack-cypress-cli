@@ -11,6 +11,7 @@ config.rails_host = hosts[config.env].rails_host;
 config.cypress_v1 = `${config.rails_host}/automate/cypress/v1`;
 config.buildUrl = `${config.cypress_v1}/builds/`;
 config.buildStopUrl = `${config.cypress_v1}/builds/stop/`;
+config.dashboardUrl = `https://automate.browserstack.com/dashboard/v2/builds/`;
 config.usageReportingUrl = `https://eds.browserstack.com:443/send_event_cy_internal`;
 config.fileName = "tests.zip";
 

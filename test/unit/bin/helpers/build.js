@@ -176,13 +176,12 @@ describe("build", () => {
   it("build created successfuly", () => {
     let build_id = "random build id";
     let build_message = "success"
+    let requestData = { message: build_message, build_id: build_id };
     let requestStub = sandbox
       .stub(request, "post")
-      .yields(
-        null,
-        { statusCode: 201 },
-        JSON.stringify({ message: build_message, build_id: build_id })
-      );
+      .yields(null, { statusCode: 201 }, JSON.stringify(requestData));
+
+    let dashboardUrl = "dashboard-url";
 
     const build = proxyquire("../../../../bin/helpers/build", {
       "../helpers/utils": {
@@ -190,6 +189,9 @@ describe("build", () => {
       },
       "../helpers/capabilityHelper": {
         caps: capsStub,
+      },
+      "./config": {
+        dashboardUrl: dashboardUrl,
       },
       request: { post: requestStub },
     });
@@ -199,7 +201,7 @@ describe("build", () => {
       .then(function (data) {
         sinon.assert.calledOnce(requestStub);
         sinon.assert.calledOnce(getUserAgentStub);
-        chai.assert.equal(data, `${build_message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${build_id}`);
+        chai.assert.equal(data, `${requestData}`);
       })
       .catch((error) => {
         chai.assert.isNotOk(error, "Promise error");
