@@ -21,6 +21,7 @@ describe("runs", () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
       validateBstackJsonStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -44,6 +45,7 @@ describe("runs", () => {
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          getConfigPath: getConfigPathStub
         },
       });
 
@@ -54,6 +56,8 @@ describe("runs", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
+          sinon.assert.calledOnce(getConfigPathStub);
+          sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(getErrorCodeFromErrStub);
@@ -78,6 +82,7 @@ describe("runs", () => {
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -104,7 +109,8 @@ describe("runs", () => {
           setUsageReportingFlag: setUsageReportingFlagStub,
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
-          setBuildName: setBuildNameStub
+          setBuildName: setBuildNameStub,
+          getConfigPath: getConfigPathStub
         },
         "../helpers/capabilityHelper": {
           validate: capabilityValidatorStub,
@@ -119,6 +125,8 @@ describe("runs", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
+          sinon.assert.calledOnce(getConfigPathStub);
+          sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
@@ -143,6 +151,7 @@ describe("runs", () => {
       setParallelsStub = sandbox.stub();
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
@@ -173,6 +182,7 @@ describe("runs", () => {
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          getConfigPath: getConfigPathStub
         },
         "../helpers/capabilityHelper": {
           validate: capabilityValidatorStub,
@@ -194,6 +204,8 @@ describe("runs", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
+          sinon.assert.calledOnce(getConfigPathStub);
+          sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(setParallelsStub)
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
@@ -222,6 +234,7 @@ describe("runs", () => {
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -251,6 +264,7 @@ describe("runs", () => {
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          getConfigPath: getConfigPathStub
         },
         "../helpers/capabilityHelper": {
           validate: capabilityValidatorStub,
@@ -276,6 +290,8 @@ describe("runs", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
+          sinon.assert.calledOnce(getConfigPathStub);
+          sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
@@ -308,6 +324,7 @@ describe("runs", () => {
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -338,6 +355,7 @@ describe("runs", () => {
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          getConfigPath: getConfigPathStub
         },
         "../helpers/capabilityHelper": {
           validate: capabilityValidatorStub,
@@ -369,6 +387,8 @@ describe("runs", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
+          sinon.assert.calledOnce(getConfigPathStub);
+          sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(setParallelsStub);
@@ -405,6 +425,7 @@ describe("runs", () => {
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -437,6 +458,7 @@ describe("runs", () => {
           setBuildName: setBuildNameStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           setParallels: setParallelsStub,
+          getConfigPath: getConfigPathStub
         },
         "../helpers/capabilityHelper": {
           validate: capabilityValidatorStub,
@@ -471,6 +493,8 @@ describe("runs", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
+          sinon.assert.calledOnce(getConfigPathStub);
+          sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(setParallelsStub);

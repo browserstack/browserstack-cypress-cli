@@ -25,6 +25,7 @@ describe("buildStop", () => {
       validateBstackJsonStub = sandbox.stub();
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -56,6 +57,7 @@ describe("buildStop", () => {
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { post: requestStub },
       });
@@ -91,6 +93,7 @@ describe("buildStop", () => {
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { post: requestStub },
       });
@@ -115,6 +118,7 @@ describe("buildStop", () => {
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -146,6 +150,7 @@ describe("buildStop", () => {
           setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { post: requestStub },
       });
@@ -188,6 +193,7 @@ describe("buildStop", () => {
           setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { post: requestStub },
       });
@@ -225,6 +231,7 @@ describe("buildStop", () => {
           setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { post: requestStub },
       });
@@ -251,6 +258,7 @@ describe("buildStop", () => {
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -282,6 +290,7 @@ describe("buildStop", () => {
           setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { post: requestStub },
       });
@@ -308,6 +317,7 @@ describe("buildStop", () => {
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -329,6 +339,7 @@ describe("buildStop", () => {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          getConfigPath: getConfigPathStub
         },
       });
 

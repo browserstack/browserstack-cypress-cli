@@ -19,9 +19,9 @@ const initSampleArgs = {
 
 const buildInfoSampleArgs = {
   _: ["build-info", "f3c94f7203792d03a75be3912d19354fe0961e53"],
-  cf: "/browserstack.json",
-  "config-file": "/browserstack.json",
-  configFile: "/browserstack.json",
+  cf: "browserstack.json",
+  "config-file": "browserstack.json",
+  configFile: "browserstack.json",
   "disable-usage-reporting": undefined,
   disableUsageReporting: undefined,
   $0: "browserstack-cypress",
@@ -81,9 +81,9 @@ const buildInfoSampleBody = {
 
 const buildStopSampleArgs = {
   _: ["build-stop", "f3c94f7203792d03a75be3912d19354fe0961e53"],
-  cf: "/browserstack.json",
-  "config-file": "/browserstack.json",
-  configFile: "/browserstack.json",
+  cf: "browserstack.json",
+  "config-file": "browserstack.json",
+  configFile: "browserstack.json",
   "disable-usage-reporting": undefined,
   disableUsageReporting: undefined,
   $0: "browserstack-cypress",
@@ -100,9 +100,9 @@ const sampleCapsData = {
 
 const runSampleArgs = {
   _: ["run"],
-  cf: "/browserstack.json",
-  "config-file": "/browserstack.json",
-  configFile: "/browserstack.json",
+  cf: "browserstack.json",
+  "config-file": "browserstack.json",
+  configFile: "browserstack.json",
   "disable-usage-reporting": undefined,
   p: undefined,
   "parallels": undefined,

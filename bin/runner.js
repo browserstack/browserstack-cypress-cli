@@ -51,7 +51,7 @@ var argv = yargs
         'cf': {
           alias: 'config-file',
           describe: Constants.cliMessages.BUILD.DESC,
-          default: '/browserstack.json',
+          default: 'browserstack.json',
           type: 'string',
           nargs: 1,
           demand: true,
@@ -91,7 +91,7 @@ var argv = yargs
         'cf': {
           alias: 'config-file',
           describe: Constants.cliMessages.BUILD.DESC,
-          default: '/browserstack.json',
+          default: 'browserstack.json',
           type: 'string',
           nargs: 1,
           demand: true,
@@ -130,7 +130,7 @@ var argv = yargs
         'cf': {
           alias: 'config-file',
           describe: Constants.cliMessages.RUN.DESC,
-          default: '/browserstack.json',
+          default: 'browserstack.json',
           type: 'string',
           nargs: 1,
           demand: true,

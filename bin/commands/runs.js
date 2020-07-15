@@ -10,7 +10,7 @@ const archiver = require("../helpers/archiver"),
   fileHelpers = require("../helpers/fileHelpers");
 
 module.exports = function run(args) {
-  let bsConfigPath = process.cwd() + args.cf;
+  let bsConfigPath = utils.getConfigPath(args.cf);
 
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
