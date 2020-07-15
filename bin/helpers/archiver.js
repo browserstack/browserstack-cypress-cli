@@ -36,14 +36,24 @@ const archiveSpecs = (runSettings, filePath) => {
 
     archive.pipe(output);
 
-    let allowedFileTypes = [ 'js', 'json', 'txt', 'ts' ];
+    let allowedFileTypes = [ 'js', 'json', 'txt', 'ts', 'feature', 'features' ];
     allowedFileTypes.forEach(fileType => {
       archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: ['node_modules/**', 'package-lock.json', 'package.json', 'browserstack-package.json'] });
     });
 
+    let packageJSON = {};
+
+    if (typeof runSettings.package_config_options === 'object') {
+      Object.assign(packageJSON, runSettings.package_config_options);
+    }
+
     if (typeof runSettings.npm_dependencies === 'object') {
-      var packageJSON = JSON.stringify({devDependencies: runSettings.npm_dependencies}, null, 4);
-      archive.append(packageJSON, { name: 'browserstack-package.json' });
+      Object.assign(packageJSON, {devDependencies: runSettings.npm_dependencies});
+    }
+
+    if (Object.keys(packageJSON).length > 0) {
+      let packageJSONString = JSON.stringify(packageJSON, null, 4);
+      archive.append(packageJSONString, { name: 'browserstack-package.json' });
     }
 
     archive.finalize();
