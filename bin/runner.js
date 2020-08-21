@@ -51,7 +51,7 @@ var argv = yargs
         'cf': {
           alias: 'config-file',
           describe: Constants.cliMessages.BUILD.DESC,
-          default: '/browserstack.json',
+          default: 'browserstack.json',
           type: 'string',
           nargs: 1,
           demand: true,
@@ -61,6 +61,18 @@ var argv = yargs
           default: undefined,
           description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
           type: "boolean"
+        },
+        'u': {
+          alias: 'username',
+          describe: Constants.cliMessages.COMMON.USERNAME,
+          type: "string",
+          default: undefined
+        },
+        'k': {
+          alias: 'key',
+          describe: Constants.cliMessages.COMMON.ACCESS_KEY,
+          type: "string",
+          default: undefined
         },
       })
       .help('help')
@@ -79,7 +91,7 @@ var argv = yargs
         'cf': {
           alias: 'config-file',
           describe: Constants.cliMessages.BUILD.DESC,
-          default: '/browserstack.json',
+          default: 'browserstack.json',
           type: 'string',
           nargs: 1,
           demand: true,
@@ -89,6 +101,18 @@ var argv = yargs
           default: undefined,
           description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
           type: "boolean"
+        },
+        'u': {
+          alias: 'username',
+          describe: Constants.cliMessages.COMMON.USERNAME,
+          type: "string",
+          default: undefined
+        },
+        'k': {
+          alias: 'key',
+          describe: Constants.cliMessages.COMMON.ACCESS_KEY,
+          type: "string",
+          default: undefined
         },
       })
       .help('help')
@@ -101,12 +125,12 @@ var argv = yargs
   })
   .command('run', Constants.cliMessages.RUN.INFO, function(yargs) {
     argv = yargs
-      .usage('usage: $0 build')
+      .usage('usage: $0 run <options>')
       .options({
         'cf': {
           alias: 'config-file',
           describe: Constants.cliMessages.RUN.DESC,
-          default: '/browserstack.json',
+          default: 'browserstack.json',
           type: 'string',
           nargs: 1,
           demand: true,
@@ -117,6 +141,30 @@ var argv = yargs
           description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
           type: "boolean"
         },
+        'p': {
+          alias: 'parallels',
+          describe: Constants.cliMessages.RUN.PARALLEL_DESC,
+          type: "number",
+          default: undefined
+        },
+        'u': {
+          alias: 'username',
+          describe: Constants.cliMessages.COMMON.USERNAME,
+          type: "string",
+          default: undefined
+        },
+        'k': {
+          alias: 'key',
+          describe: Constants.cliMessages.COMMON.ACCESS_KEY,
+          type: "string",
+          default: undefined
+        },
+        'b': {
+          alias: 'build-name',
+          describe: Constants.cliMessages.RUN.BUILD_NAME,
+          type: "string",
+          default: undefined
+        }
       })
       .help('help')
       .wrap(null)

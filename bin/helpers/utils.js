@@ -1,5 +1,6 @@
 'use strict';
 const os = require("os");
+const path = require("path");
 
 const usageReporting =  require('./usageReporting'),
   logger = require('./logger').winstonLogger,
@@ -70,6 +71,52 @@ exports.setUsageReportingFlag = (bsConfig, disableUsageReporting) => {
   }
 }
 
+exports.setParallels = (bsConfig, args) => {
+  if (!this.isUndefined(args.parallels)) {
+    bsConfig['run_settings']['parallels'] = args.parallels;
+  }
+}
+
+exports.setUsername = (bsConfig, args) => {
+  if (!this.isUndefined(args.username)) {
+    bsConfig['auth']['username'] = args.username;
+  }
+}
+
+exports.setAccessKey = (bsConfig, args) => {
+  if (!this.isUndefined(args.key)) {
+    bsConfig['auth']['access_key'] = args.key;
+  }
+}
+
+exports.setBuildName = (bsConfig, args) => {
+  if (!this.isUndefined(args['build-name'])) {
+    bsConfig['run_settings']['build_name'] = args['build-name'];
+  }
+}
+
+exports.isUndefined = value => (value === undefined || value === null);
+
+exports.isFloat = value => (Number(value) && Number(value) % 1 !== 0);
+
+exports.isParallelValid = (value) => {
+  return this.isUndefined(value) || !(isNaN(value) || this.isFloat(value) || parseInt(value, 10) === 0 || parseInt(value, 10) < -1);
+}
+
 exports.getUserAgent = () => {
-  return `BStack-Cypress-CLI/1.x (${os.arch()}/${os.platform()}/${os.release()})`;
+  return `BStack-Cypress-CLI/1.3.0 (${os.arch()}/${os.platform()}/${os.release()})`;
+}
+
+exports.isAbsolute  = (configPath) => {
+  return path.isAbsolute(configPath)
+}
+
+exports.getConfigPath = (configPath) => {
+  return this.isAbsolute(configPath) ? configPath : path.join(process.cwd(), configPath);
+}
+
+exports.configCreated = (args) => {
+  let message = Constants.userMessages.CONFIG_FILE_CREATED
+  logger.info(message);
+  this.sendUsageReport(null, args, message, Constants.messageTypes.SUCCESS, null);
 }

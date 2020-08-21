@@ -22,7 +22,10 @@ describe("buildInfo", () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -45,11 +48,14 @@ describe("buildInfo", () => {
 
       const info = proxyquire("../../../../bin/commands/info", {
         "../helpers/utils": {
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { get: requestStub },
       });
@@ -59,6 +65,7 @@ describe("buildInfo", () => {
       return info(args)
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
+          sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
         }).catch((error) => {
@@ -77,11 +84,14 @@ describe("buildInfo", () => {
 
       const info = proxyquire("../../../../bin/commands/info", {
         "../helpers/utils": {
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { get: requestStub },
       });
@@ -92,6 +102,7 @@ describe("buildInfo", () => {
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
+          sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
         })
         .catch((error) => {
@@ -103,7 +114,10 @@ describe("buildInfo", () => {
   describe("Handle statusCode != 200", () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -128,11 +142,14 @@ describe("buildInfo", () => {
 
       const info = proxyquire("../../../../bin/commands/info", {
         "../helpers/utils": {
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { get: requestStub },
       });
@@ -143,6 +160,7 @@ describe("buildInfo", () => {
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
+          sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
         })
         .catch((error) => {
@@ -166,11 +184,14 @@ describe("buildInfo", () => {
 
       const info = proxyquire("../../../../bin/commands/info", {
         "../helpers/utils": {
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { get: requestStub },
       });
@@ -181,6 +202,7 @@ describe("buildInfo", () => {
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
+          sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
         })
         .catch((error) => {
@@ -199,11 +221,14 @@ describe("buildInfo", () => {
 
       const info = proxyquire("../../../../bin/commands/info", {
         "../helpers/utils": {
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { get: requestStub },
       });
@@ -214,6 +239,7 @@ describe("buildInfo", () => {
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
+          sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
         })
         .catch((error) => {
@@ -227,7 +253,10 @@ describe("buildInfo", () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -250,11 +279,14 @@ describe("buildInfo", () => {
 
       const info = proxyquire("../../../../bin/commands/info", {
         "../helpers/utils": {
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { get: requestStub },
       });
@@ -265,6 +297,7 @@ describe("buildInfo", () => {
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
+          sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
         }).catch((error) => {
           chai.assert.isNotOk(error,'Promise error');
@@ -277,6 +310,9 @@ describe("buildInfo", () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -293,10 +329,13 @@ describe("buildInfo", () => {
     it("send usage report if validateBstackJson fails", () => {
       const info = proxyquire("../../../../bin/commands/info", {
         "../helpers/utils": {
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          getConfigPath: getConfigPathStub
         },
       });
 

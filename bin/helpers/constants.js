@@ -7,10 +7,12 @@ const userMessages = {
     ZIP_UPLOAD_FAILED: "Zip Upload failed.",
     CONFIG_FILE_CREATED: "BrowserStack Config File created, you can now run browserstack-cypress --config-file run",
     CONFIG_FILE_EXISTS: "File already exists, delete the browserstack.json file manually. skipping...",
+    DIR_NOT_FOUND: "Given path does not exist. Failed to create browserstack.json in %s",
     ZIP_DELETE_FAILED: "Could not delete local file.",
     ZIP_DELETED: "Zip file deleted successfully.",
     API_DEPRECATED: "This version of API is deprecated, please use latest version of API.",
-    FAILED_TO_ZIP: "Failed to zip files."
+    FAILED_TO_ZIP: "Failed to zip files.",
+    VISIT_DASHBOARD: "Visit the Automate dashboard for test reporting:"
 };
 
 const validationMessages = {
@@ -24,6 +26,9 @@ const validationMessages = {
   NOT_VALID: "browerstack.json is not valid",
   NOT_VALID_JSON: "browerstack.json is not a valid json",
   INVALID_EXTENSION: "Invalid files, please remove these files and try again.",
+  INVALID_PARALLELS_CONFIGURATION: "Invalid value specified for parallels to use. Maximum parallels to use should be a number greater than 0.",
+  CYPRESS_JSON_NOT_FOUND: "cypress.json file is not found at cypress_proj_dir path ",
+  INVALID_CYPRESS_JSON: "cypress.json is not a valid json"
 };
 
 const cliMessages = {
@@ -46,12 +51,16 @@ const cliMessages = {
         STOP_MESSAGE: "Stopping build with given buildId "
     },
     RUN: {
+        PARALLEL_DESC: "The maximum number of parallels to use to run your test suite",
         INFO: "Run your tests on BrowserStack.",
         DESC: "Path to BrowserStack config",
-        CONFIG_DEMAND: "config file is required"
+        CONFIG_DEMAND: "config file is required",
+        BUILD_NAME: "The build name you want to use to name your test runs"
     },
     COMMON: {
-      DISABLE_USAGE_REPORTING: "Disable usage reporting"
+      DISABLE_USAGE_REPORTING: "Disable usage reporting",
+      USERNAME: "Your BrowserStack username",
+      ACCESS_KEY: "Your BrowserStack access key"
     }
 }
 

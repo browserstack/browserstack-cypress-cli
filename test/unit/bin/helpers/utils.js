@@ -3,11 +3,13 @@ const path = require('path');
 
 const chai = require("chai"),
   expect = chai.expect,
+  sinon = require('sinon'),
   chaiAsPromised = require("chai-as-promised");
 
 const utils = require('../../../../bin/helpers/utils'),
   constant = require('../../../../bin/helpers/constants'),
-  logger = require('../../../../bin/helpers/logger').winstonLogger;
+  logger = require('../../../../bin/helpers/logger').winstonLogger,
+  testObjects = require("../../support/fixtures/testObjects");
 
 chai.use(chaiAsPromised);
 logger.transports["console.info"].silent = true;
@@ -24,6 +26,91 @@ describe("utils", () => {
       expect(utils.getErrorCodeFromMsg(constant.validationMessages.EMPTY_BROWSER_LIST)).to.eq("bstack_json_invalid_no_browsers");
       expect(utils.getErrorCodeFromMsg(constant.validationMessages.EMPTY_RUN_SETTINGS)).to.eq("bstack_json_invalid_no_run_settings");
       expect(utils.getErrorCodeFromMsg(constant.validationMessages.EMPTY_SPEC_FILES)).to.eq("bstack_json_invalid_values");
+    });
+  });
+
+  describe("isParallelValid", () => {
+    it("should return false for a float value", () => {
+      expect(utils.isParallelValid(1.2)).to.be.equal(false);
+      expect(utils.isParallelValid("7.3")).to.be.equal(false);
+      expect(utils.isParallelValid(7.33333)).to.be.equal(false);
+      expect(utils.isParallelValid("1.2.2.2")).to.be.equal(false);
+      expect(utils.isParallelValid("1.456789")).to.be.equal(false);
+    });
+
+    it("should return false for a string which is not a number", () => {
+      expect(utils.isParallelValid("cypress")).to.be.equal(false);
+      expect(utils.isParallelValid("browserstack")).to.be.equal(false);
+    });
+
+    it("should return false for any negative value less than -1 or zero", () => {
+      expect(utils.isParallelValid(-200)).to.be.equal(false);
+      expect(utils.isParallelValid("-200")).to.be.equal(false);
+      expect(utils.isParallelValid(-1000)).to.be.equal(false);
+      expect(utils.isParallelValid("0")).to.be.equal(false);
+      expect(utils.isParallelValid(0)).to.be.equal(false);
+    });
+
+    it("should return true for any positive value or -1", () => {
+      expect(utils.isParallelValid(5)).to.be.equal(true);
+      expect(utils.isParallelValid("5")).to.be.equal(true);
+      expect(utils.isParallelValid(10)).to.be.equal(true);
+      expect(utils.isParallelValid("-1")).to.be.equal(true);
+      expect(utils.isParallelValid(-1)).to.be.equal(true);
+    });
+
+    it("should return true for undefined", () => {
+      expect(utils.isParallelValid(undefined)).to.be.equal(true);
+    });
+  });
+
+  describe("isFloat", () => {
+    it("should return true for a float value", () => {
+      expect(utils.isFloat(1.2333)).to.be.equal(true);
+      expect(utils.isFloat(-1.2333567)).to.be.equal(true);
+      expect(utils.isFloat(0.123456)).to.be.equal(true);
+    });
+
+    it("should return false for a non float value", () => {
+      expect(utils.isFloat(100)).to.be.equal(false);
+      expect(utils.isFloat(-1000)).to.be.equal(false);
+      expect(utils.isFloat(333)).to.be.equal(false);
+    });
+  });
+
+  describe("isUndefined", () => {
+    it("should return true for a undefined value", () => {
+      expect(utils.isUndefined(undefined)).to.be.equal(true);
+      expect(utils.isUndefined(null)).to.be.equal(true);
+    });
+
+    it("should return false for a defined value", () => {
+      expect(utils.isUndefined(1.234)).to.be.equal(false);
+      expect(utils.isUndefined("1.234")).to.be.equal(false);
+      expect(utils.isUndefined(100)).to.be.equal(false);
+      expect(utils.isUndefined(-1)).to.be.equal(false);
+    });
+  });
+
+  describe("setParallels", () => {
+    it("should set bsconfig parallels equal to value provided in args", () => {
+      let bsConfig = {
+        "run_settings": {
+          "parallels": 10,
+        }
+      };
+      utils.setParallels(bsConfig, {parallels: 100});
+      expect(bsConfig['run_settings']['parallels']).to.be.eq(100);
+    });
+
+    it("should retain bsconfig parallels if args is undefined", () => {
+      let bsConfig = {
+        "run_settings": {
+          "parallels": 10,
+        }
+      };
+      utils.setParallels(bsConfig, {parallels: undefined});
+      expect(bsConfig['run_settings']['parallels']).to.be.eq(10);
     });
   });
 
@@ -113,6 +200,40 @@ describe("utils", () => {
       };
       utils.setUsageReportingFlag(bsConfig, true);
       expect(process.env.DISABLE_USAGE_REPORTING).to.be.eq("true");
+    });
+  });
+
+  describe("isAbsolute", () => {
+    it("should return true when path is absolute", () => {
+      expect(utils.isAbsolute("/Absolute/Path")).to.be.true;
+    });
+
+    it("should return false when path is relative", () => {
+      expect(utils.isAbsolute("../Relative/Path")).to.be.false;
+    });
+  });
+
+  describe("getConfigPath", () => {
+    it("should return given path, when path is absolute", () => {
+      expect(utils.getConfigPath("/Absolute/Path")).to.be.eq("/Absolute/Path");
+    });
+
+    it("should return path joined with current dir path, when path is relative", () => {
+      let configPath = "../Relative/Path"
+      expect(utils.getConfigPath(configPath)).to.be.eq(path.join(process.cwd(), configPath));
+    });
+  });
+
+  describe("configCreated", () => {
+    let args = testObjects.initSampleArgs;
+
+    it("should call sendUsageReport", () => {
+      sandbox = sinon.createSandbox();
+      sendUsageReportStub = sandbox.stub(utils, "sendUsageReport").callsFake(function () {
+        return "end";
+      });
+      utils.configCreated(args);
+      sinon.assert.calledOnce(sendUsageReportStub);
     });
   });
 });

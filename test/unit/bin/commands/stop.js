@@ -23,6 +23,9 @@ describe("buildStop", () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
       validateBstackJsonStub = sandbox.stub();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -48,10 +51,13 @@ describe("buildStop", () => {
       const stop = proxyquire("../../../../bin/commands/stop", {
         "../helpers/utils": {
           validateBstackJson: validateBstackJsonStub,
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { post: requestStub },
       });
@@ -82,9 +88,12 @@ describe("buildStop", () => {
         "../helpers/utils": {
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { post: requestStub },
       });
@@ -106,7 +115,10 @@ describe("buildStop", () => {
   describe("Handle statusCode != 200", () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -134,8 +146,11 @@ describe("buildStop", () => {
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { post: requestStub },
       });
@@ -174,8 +189,11 @@ describe("buildStop", () => {
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { post: requestStub },
       });
@@ -209,8 +227,11 @@ describe("buildStop", () => {
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { post: requestStub },
       });
@@ -234,7 +255,10 @@ describe("buildStop", () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -262,8 +286,11 @@ describe("buildStop", () => {
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getUserAgent: getUserAgentStub,
+          getConfigPath: getConfigPathStub
         },
         request: { post: requestStub },
       });
@@ -287,7 +314,10 @@ describe("buildStop", () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
+      setUsernameStub = sandbox.stub();
+      setAccessKeyStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
+      getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -306,7 +336,10 @@ describe("buildStop", () => {
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
+          setUsername: setUsernameStub,
+          setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          getConfigPath: getConfigPathStub
         },
       });
 

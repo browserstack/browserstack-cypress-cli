@@ -38,7 +38,7 @@ describe("fileHelpers", () => {
       },
     });
 
-    fileHelpers.write("./random_path", "writing successful", callbackStub);
+    fileHelpers.write("./random_path", "writing successful", {}, callbackStub);
     sinon.assert.calledOnce(writeFileStub);
     expect(dataMock).to.eql(1);
   });

@@ -10,14 +10,26 @@ const archiver = require("../helpers/archiver"),
   fileHelpers = require("../helpers/fileHelpers");
 
 module.exports = function run(args) {
-  let bsConfigPath = process.cwd() + args.cf;
+  let bsConfigPath = utils.getConfigPath(args.cf);
 
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
-    // Validate browserstack.json values
-    return capabilityHelper.validate(bsConfig).then(function (validated) {
+    // accept the username from command line if provided
+    utils.setUsername(bsConfig, args);
+
+    // accept the access key from command line if provided
+    utils.setAccessKey(bsConfig, args);
+
+    // accept the build name from command line if provided
+    utils.setBuildName(bsConfig, args);
+
+    // Validate browserstack.json values and parallels specified via arguments
+    return capabilityHelper.validate(bsConfig, args).then(function (validated) {
       logger.info(validated);
+
+      // accept the number of parallels
+      utils.setParallels(bsConfig, args);
 
       // Archive the spec files
       return archiver.archive(bsConfig.run_settings, config.fileName).then(function (data) {
@@ -26,9 +38,12 @@ module.exports = function run(args) {
         return zipUploader.zipUpload(bsConfig, config.fileName).then(function (zip) {
 
           // Create build
-          return build.createBuild(bsConfig, zip).then(function (message) {
+          return build.createBuild(bsConfig, zip).then(function (data) {
+            let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
+            let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${config.dashboardUrl}${data.build_id}`;
             logger.info(message);
-            utils.sendUsageReport(bsConfig, args, message, Constants.messageTypes.SUCCESS, null);
+            logger.info(dashboardLink);
+            utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
             return;
           }).catch(function (err) {
             // Build creation failed
@@ -57,7 +72,12 @@ module.exports = function run(args) {
     }).catch(function (err) {
       // browerstack.json is not valid
       logger.error(err);
-      logger.error(Constants.validationMessages.NOT_VALID);
+
+      // display browserstack.json is not valid only if validation of browserstack.json field has failed, otherwise display just the error message
+      // If parallels specified in arguments are invalid do not display browserstack.json is invalid message
+      if (!(err === Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION && !utils.isUndefined(args.parallels))) {
+        logger.error(Constants.validationMessages.NOT_VALID);
+      }
 
       let error_code = utils.getErrorCodeFromMsg(err);
       utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.validationMessages.NOT_VALID}`, Constants.messageTypes.ERROR, error_code);
