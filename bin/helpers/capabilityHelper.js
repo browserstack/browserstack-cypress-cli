@@ -47,8 +47,7 @@ const caps = (bsConfig, zip) => {
 
     // Local Identifier
     obj.localIdentifier = null;
-    if (obj.local === true && (bsConfig.connection_settings.localIdentifier || bsConfig.connection_settings.local_identifier))
-    {
+    if (obj.local === true && (bsConfig.connection_settings.localIdentifier || bsConfig.connection_settings.local_identifier)) {
       obj.localIdentifier = bsConfig.connection_settings.localIdentifier || bsConfig.connection_settings.local_identifier;
       logger.log(`Local Identifier is set to: ${obj.localIdentifier}`);
     }
@@ -70,6 +69,8 @@ const caps = (bsConfig, zip) => {
       obj.parallels = bsConfig.run_settings.parallels;
     }
 
+    if(obj.parallels === Constants.constants.DEFAULT_PARALLEL_MESSAGE) obj.parallels = undefined
+    
     if (obj.project) logger.log(`Project name is: ${obj.project}`);
 
     if (obj.customBuildName) logger.log(`Build name is: ${obj.customBuildName}`);
@@ -86,10 +87,12 @@ const caps = (bsConfig, zip) => {
 }
 
 const validate = (bsConfig, args) => {
-  return new Promise(function(resolve, reject){
+  return new Promise(function (resolve, reject) {
     if (!bsConfig) reject(Constants.validationMessages.EMPTY_BROWSERSTACK_JSON);
 
     if (!bsConfig.auth) reject(Constants.validationMessages.INCORRECT_AUTH_PARAMS);
+
+    if( bsConfig.auth.username == "<Your BrowserStack username>" || bsConfig.auth.access_key == "<Your BrowserStack access key>" ) reject(Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS);
 
     if (!bsConfig.browsers || bsConfig.browsers.length === 0) reject(Constants.validationMessages.EMPTY_BROWSER_LIST);
 
@@ -105,10 +108,16 @@ const validate = (bsConfig, args) => {
 
     if (!fs.existsSync(path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json'))) reject(Constants.validationMessages.CYPRESS_JSON_NOT_FOUND + bsConfig.run_settings.cypress_proj_dir);
 
-    try{
-      let cypressJson = fs.readFileSync(path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json'))
-      JSON.parse(cypressJson)
-    }catch(error){
+    try {
+      let cypressJson = fs.readFileSync(path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json'));
+      cypressJson = JSON.parse(cypressJson);
+      // Cypress Json Base Url & Local true check
+      if (!Utils.isUndefined(cypressJson.baseUrl) && cypressJson.baseUrl.includes("localhost")) reject(Constants.validationMessages.LOCAL_NOT_SET);
+      
+      // Detect if the user is not using the right directory structure, and throw an error
+      if (!Utils.isUndefined(cypressJson.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypress_proj_dir,cypressJson.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
+
+    } catch (error) {
       reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
     }
 
