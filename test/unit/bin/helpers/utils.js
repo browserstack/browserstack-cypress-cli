@@ -236,4 +236,18 @@ describe("utils", () => {
       sinon.assert.calledOnce(sendUsageReportStub);
     });
   });
+
+  describe("isCypressProjDirValid", () => {
+    it("should return true when cypressDir and cypressProjDir is same", () =>{
+      expect(utils.isCypressProjDirValid("/absolute/path","/absolute/path")).to.be.true;
+    });
+
+    it("should return true when cypressProjDir is child directory of cypressDir", () =>{
+      expect(utils.isCypressProjDirValid("/absolute/path","/absolute/path/childpath")).to.be.true;
+    });
+
+    it("should return false when cypressProjDir is not child directory of cypressDir", () =>{
+      expect(utils.isCypressProjDirValid("/absolute/path","/absolute")).to.be.false;
+    });
+  });
 });

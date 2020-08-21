@@ -140,8 +140,8 @@ exports.isCypressProjDirValid = (cypressDir, cypressProjDir) => {
   // Getting absolute path
   cypressDir = path.resolve(cypressDir);
   cypressProjDir = path.resolve(cypressProjDir);
-
   if(cypressProjDir === cypressDir) return true;
-  let parentTokens = cypressDir.split('/').filter(i => i.length)
-  return parentTokens.every((t, i) => cypressProjDir.split('/')[i] === t)
+  let parentTokens = cypressDir.split('/').filter(i => i.length);
+  let childTokens = cypressProjDir.split('/').filter(i => i.length);
+  return parentTokens.every((t, i) => childTokens[i] === t);
 }
