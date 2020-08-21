@@ -528,6 +528,26 @@ describe("capabilityHelper.js", () => {
         });
     });
 
+    it("validate default bsConfig.auth", () => {
+      bsConfig = {
+        auth: {
+          username: "<Your BrowserStack username>",
+          access_key: "<Your BrowserStack access key>"
+        }
+      };
+      return capabilityHelper
+        .validate(bsConfig, {parallels: undefined})
+        .then(function (data) {
+          chai.assert.fail("Promise error");
+        })
+        .catch((error) => {
+          chai.assert.equal(
+            error,
+            Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS
+          );
+        });
+    });
+
     it("validate bsConfig.browsers", () => {
       let bsConfig = {
         auth: {},

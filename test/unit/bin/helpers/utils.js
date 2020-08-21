@@ -26,6 +26,11 @@ describe("utils", () => {
       expect(utils.getErrorCodeFromMsg(constant.validationMessages.EMPTY_BROWSER_LIST)).to.eq("bstack_json_invalid_no_browsers");
       expect(utils.getErrorCodeFromMsg(constant.validationMessages.EMPTY_RUN_SETTINGS)).to.eq("bstack_json_invalid_no_run_settings");
       expect(utils.getErrorCodeFromMsg(constant.validationMessages.EMPTY_SPEC_FILES)).to.eq("bstack_json_invalid_values");
+      expect(utils.getErrorCodeFromMsg(constant.validationMessages.INVALID_DEFAULT_AUTH_PARAMS)).to.eq("bstack_json_default_auth_keys");
+      expect(utils.getErrorCodeFromMsg(constant.validationMessages.INVALID_PARALLELS_CONFIGURATION)).to.eq("invalid_parallels_specified");
+      expect(utils.getErrorCodeFromMsg(constant.validationMessages.LOCAL_NOT_SET)).to.eq("cypress_json_base_url_no_local");
+      expect(utils.getErrorCodeFromMsg(constant.validationMessages.INCORRECT_DIRECTORY_STRUCTURE)).to.eq("invalid_directory_structure");
+      expect(utils.getErrorCodeFromMsg("Please use --config-file <path to browserstack.json>.")).to.eq("bstack_json_path_invalid");
     });
   });
 
