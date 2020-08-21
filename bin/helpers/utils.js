@@ -145,3 +145,7 @@ exports.isCypressProjDirValid = (cypressDir, cypressProjDir) => {
   let childTokens = cypressProjDir.split('/').filter(i => i.length);
   return parentTokens.every((t, i) => childTokens[i] === t);
 }
+
+exports.getLocalFlag = (connectionSettings) => {
+  return !this.isUndefined(connectionSettings) && !this.isUndefined(connectionSettings.local) && connectionSettings.local
+}

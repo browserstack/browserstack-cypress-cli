@@ -255,4 +255,22 @@ describe("utils", () => {
       expect(utils.isCypressProjDirValid("/absolute/path","/absolute")).to.be.false;
     });
   });
+
+  describe("getLocalFlag", () => {
+    it("should return false if connectionSettings is undefined", () => {
+      expect(utils.getLocalFlag(undefined)).to.be.false;
+    });
+
+    it("should return false if connectionSettings.local is undefined", () => {
+      expect(utils.getLocalFlag({})).to.be.false;
+    });
+
+    it("should return false if connectionSettings.local is false", () => {
+      expect(utils.getLocalFlag({"local": false})).to.be.false;
+    });
+
+    it("should return true if connectionSettings.local is true", () => {
+      expect(utils.getLocalFlag({"local": true})).to.be.true;
+    });
+  });
 });

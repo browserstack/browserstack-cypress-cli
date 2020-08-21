@@ -112,7 +112,7 @@ const validate = (bsConfig, args) => {
       let cypressJson = fs.readFileSync(path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json'));
       cypressJson = JSON.parse(cypressJson);
       // Cypress Json Base Url & Local true check
-      if (!Utils.isUndefined(cypressJson.baseUrl) && cypressJson.baseUrl.includes("localhost")) reject(Constants.validationMessages.LOCAL_NOT_SET);
+      if (!Utils.isUndefined(cypressJson.baseUrl) && cypressJson.baseUrl.includes("localhost") && !Utils.getLocalFlag(bsConfig.connection_settings)) reject(Constants.validationMessages.LOCAL_NOT_SET);
       
       // Detect if the user is not using the right directory structure, and throw an error
       if (!Utils.isUndefined(cypressJson.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypress_proj_dir,cypressJson.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);

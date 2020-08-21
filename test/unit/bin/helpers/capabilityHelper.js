@@ -504,7 +504,7 @@ describe("capabilityHelper.js", () => {
     it("validate bsConfig", () => {
       let bsConfig = undefined;
       return capabilityHelper
-        .validate(bsConfig, {parallels: undefined})
+        .validate(bsConfig, { parallels: undefined })
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -516,7 +516,7 @@ describe("capabilityHelper.js", () => {
     it("validate bsConfig.auth", () => {
       bsConfig = {};
       return capabilityHelper
-        .validate(bsConfig, {parallels: undefined})
+        .validate(bsConfig, { parallels: undefined })
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -536,7 +536,7 @@ describe("capabilityHelper.js", () => {
         }
       };
       return capabilityHelper
-        .validate(bsConfig, {parallels: undefined})
+        .validate(bsConfig, { parallels: undefined })
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -554,7 +554,7 @@ describe("capabilityHelper.js", () => {
         browsers: [],
       };
       return capabilityHelper
-        .validate(bsConfig, {parallels: undefined})
+        .validate(bsConfig, { parallels: undefined })
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -578,7 +578,7 @@ describe("capabilityHelper.js", () => {
         ],
       };
       return capabilityHelper
-        .validate(bsConfig, {parallels: undefined})
+        .validate(bsConfig, { parallels: undefined })
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -604,7 +604,7 @@ describe("capabilityHelper.js", () => {
       };
 
       return capabilityHelper
-        .validate(bsConfig, {parallels: undefined})
+        .validate(bsConfig, { parallels: undefined })
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -631,13 +631,107 @@ describe("capabilityHelper.js", () => {
         },
       };
       capabilityHelper
-        .validate(bsConfig, {parallels: undefined})
+        .validate(bsConfig, { parallels: undefined })
         .then(function (data) {
           chai.assert.equal(data, Constants.validationMessages.VALIDATED);
         })
         .catch((error) => {
           chai.assert.fail("Promise error");
         });
+    });
+    describe("validate cypress.json", () => {
+      beforeEach(() => {
+        bsConfig = {
+          auth: {},
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            cypress_proj_dir: "random path"
+          },
+        };
+      });
+      it("validate cypress json is present", () => {
+        //Stub for cypress json validation
+        sinon.stub(fs, 'existsSync').returns(false);
+
+        return capabilityHelper
+          .validate(bsConfig, { parallels: undefined })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(
+              error,
+              Constants.validationMessages.CYPRESS_JSON_NOT_FOUND + "random path"
+            );
+            fs.existsSync.restore();
+          });
+      });
+
+      it("validate cypress json is valid", () => {
+        //Stub for cypress json validation
+        sinon.stub(fs, 'existsSync').returns(true);
+        sinon.stub(fs, 'readFileSync').returns("{invalid}");
+
+        return capabilityHelper
+          .validate(bsConfig, { parallels: undefined })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(
+              error,
+              Constants.validationMessages.INVALID_CYPRESS_JSON
+            );
+            fs.existsSync.restore();
+            fs.readFileSync.restore();
+          });
+      });
+
+      it("validate baseUrl is set to localhost and local is not set to true", () => {
+        //Stub for cypress json validation
+        sinon.stub(fs, 'existsSync').returns(true);
+        sinon.stub(fs, 'readFileSync').returns('{ "baseUrl": "http://localhost:3000"}');
+
+        return capabilityHelper
+          .validate(bsConfig, { parallels: undefined })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(
+              error,
+              Constants.validationMessages.LOCAL_NOT_SET
+            );
+            fs.existsSync.restore();
+            fs.readFileSync.restore();
+          });
+      });
+
+      it("validate integrationFolder is set and is accessible from cypress_proj_dir", () => {
+        //Stub for cypress json validation
+        sinon.stub(fs, 'existsSync').returns(true);
+        sinon.stub(fs, 'readFileSync').returns('{ "integrationFolder": "/absolute/path"}');
+
+        return capabilityHelper
+          .validate(bsConfig, { parallels: undefined })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(
+              error,
+              Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE
+            );
+            fs.existsSync.restore();
+            fs.readFileSync.restore();
+          });
+      });
     });
   });
 });
