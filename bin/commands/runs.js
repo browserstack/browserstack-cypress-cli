@@ -24,6 +24,12 @@ module.exports = function run(args) {
     // accept the build name from command line if provided
     utils.setBuildName(bsConfig, args);
 
+    // accept the specs list from command line if provided
+    utils.setUserSpecs(bsConfig, args);
+
+    // accept the env list from command line and set it
+    utils.setTestEnvs(bsConfig, args);
+
     // Validate browserstack.json values and parallels specified via arguments
     return capabilityHelper.validate(bsConfig, args).then(function (validated) {
       logger.info(validated);

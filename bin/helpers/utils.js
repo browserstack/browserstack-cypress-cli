@@ -95,6 +95,21 @@ exports.setBuildName = (bsConfig, args) => {
   }
 }
 
+exports.setUserSpecs = (bsConfig, args) => {
+  if (!this.isUndefined(args.specs)) {
+    bsConfig['run_settings']['specs'] = args.specs;
+  }
+}
+
+// env option must be set only from args
+exports.setTestEnvs = (bsConfig, args) => {
+  if (!this.isUndefined(args.env)) {
+    bsConfig['run_settings']['env'] = args.env;
+  } else {
+    bsConfig['run_settings']['env'] = null;
+  }
+}
+
 exports.isUndefined = value => (value === undefined || value === null);
 
 exports.isFloat = value => (Number(value) && Number(value) % 1 !== 0);
