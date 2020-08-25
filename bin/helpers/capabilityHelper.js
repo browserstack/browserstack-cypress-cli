@@ -98,7 +98,7 @@ const validate = (bsConfig, args) => {
 
     if (!bsConfig.run_settings) reject(Constants.validationMessages.EMPTY_RUN_SETTINGS);
 
-    if (!bsConfig.run_settings.cypress_proj_dir) reject(Constants.validationMessages.EMPTY_SPEC_FILES);
+    if (!bsConfig.run_settings.cypress_proj_dir) reject(Constants.validationMessages.EMPTY_CYPRESS_PROJ_DIR);
 
     // validate parallels specified in browserstack.json if parallels are not specified via arguments
     if (!Utils.isUndefined(args) && Utils.isUndefined(args.parallels) && !Utils.isParallelValid(bsConfig.run_settings.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);

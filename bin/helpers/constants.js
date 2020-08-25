@@ -23,7 +23,7 @@ const validationMessages = {
   EMPTY_TEST_SUITE: "Test suite is empty",
   EMPTY_BROWSERSTACK_JSON: "Empty browserstack.json",
   EMPTY_RUN_SETTINGS: "Empty run settings",
-  EMPTY_SPEC_FILES: "No spec files specified in run_settings",
+  EMPTY_CYPRESS_PROJ_DIR: "cypress_proj_dir is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/sample-tutorial to learn more.",
   VALIDATED: "browserstack.json file is validated",
   NOT_VALID: "browerstack.json is not valid",
   NOT_VALID_JSON: "browerstack.json is not a valid json",

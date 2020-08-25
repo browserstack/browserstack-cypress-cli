@@ -611,7 +611,7 @@ describe("capabilityHelper.js", () => {
         .catch((error) => {
           chai.assert.equal(
             error,
-            Constants.validationMessages.EMPTY_SPEC_FILES
+            Constants.validationMessages.EMPTY_CYPRESS_PROJ_DIR
           );
         });
     });

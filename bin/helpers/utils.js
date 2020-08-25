@@ -34,8 +34,8 @@ exports.getErrorCodeFromMsg = (errMsg) => {
     case Constants.validationMessages.EMPTY_RUN_SETTINGS:
       errorCode = "bstack_json_invalid_no_run_settings";
       break;
-    case Constants.validationMessages.EMPTY_SPEC_FILES:
-      errorCode = "bstack_json_invalid_values";
+    case Constants.validationMessages.EMPTY_CYPRESS_PROJ_DIR:
+      errorCode = "bstack_json_invalid_no_cypress_proj_dir";
       break;
     case Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS:
       errorCode = "bstack_json_default_auth_keys";

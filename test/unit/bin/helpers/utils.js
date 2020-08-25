@@ -25,7 +25,7 @@ describe("utils", () => {
       expect(utils.getErrorCodeFromMsg(constant.validationMessages.INCORRECT_AUTH_PARAMS)).to.eq("bstack_json_invalid_missing_keys");
       expect(utils.getErrorCodeFromMsg(constant.validationMessages.EMPTY_BROWSER_LIST)).to.eq("bstack_json_invalid_no_browsers");
       expect(utils.getErrorCodeFromMsg(constant.validationMessages.EMPTY_RUN_SETTINGS)).to.eq("bstack_json_invalid_no_run_settings");
-      expect(utils.getErrorCodeFromMsg(constant.validationMessages.EMPTY_SPEC_FILES)).to.eq("bstack_json_invalid_values");
+      expect(utils.getErrorCodeFromMsg(constant.validationMessages.EMPTY_CYPRESS_PROJ_DIR)).to.eq("bstack_json_invalid_no_cypress_proj_dir");
       expect(utils.getErrorCodeFromMsg(constant.validationMessages.INVALID_DEFAULT_AUTH_PARAMS)).to.eq("bstack_json_default_auth_keys");
       expect(utils.getErrorCodeFromMsg(constant.validationMessages.INVALID_PARALLELS_CONFIGURATION)).to.eq("invalid_parallels_specified");
       expect(utils.getErrorCodeFromMsg(constant.validationMessages.LOCAL_NOT_SET)).to.eq("cypress_json_base_url_no_local");
