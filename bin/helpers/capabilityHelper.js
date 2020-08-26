@@ -70,7 +70,7 @@ const caps = (bsConfig, zip) => {
       obj.parallels = bsConfig.run_settings.parallels;
 
       if (!Utils.isUndefined(bsConfig.run_settings.specs)){
-        obj.specs = bsConfig.run_settings.specs;
+        obj.specs = bsConfig.run_settings.specs.join(",");
       }
 
       if (!Utils.isUndefined(bsConfig.run_settings.env)){
