@@ -436,6 +436,7 @@ describe("runs", () => {
       zipUploadStub = sandbox.stub();
       createBuildStub = sandbox.stub();
       deleteZipStub = sandbox.stub();
+      exportResultsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -458,7 +459,8 @@ describe("runs", () => {
           setBuildName: setBuildNameStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           setParallels: setParallelsStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
+          exportResults: exportResultsStub
         },
         "../helpers/capabilityHelper": {
           validate: capabilityValidatorStub,

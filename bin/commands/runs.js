@@ -41,6 +41,7 @@ module.exports = function run(args) {
           return build.createBuild(bsConfig, zip).then(function (data) {
             let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
             let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${config.dashboardUrl}${data.build_id}`;
+            utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
             logger.info(message);
             logger.info(dashboardLink);
             utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
