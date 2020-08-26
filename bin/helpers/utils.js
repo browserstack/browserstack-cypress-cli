@@ -96,7 +96,7 @@ exports.setBuildName = (bsConfig, args) => {
 }
 
 exports.setUserSpecs = (bsConfig, args) => {
-  if (!this.isUndefined(args.specs)) {
+  if (!this.isUndefined(args.specs) && args.specs.length > 0 && !this.isUndefined(args.specs[0])) {
     bsConfig['run_settings']['specs'] = args.specs;
   }
 }
