@@ -4,7 +4,8 @@ const path = require('path');
 const chai = require("chai"),
   expect = chai.expect,
   sinon = require('sinon'),
-  chaiAsPromised = require("chai-as-promised");
+  chaiAsPromised = require("chai-as-promised"),
+  fs = require('fs');
 
 const utils = require('../../../../bin/helpers/utils'),
   constant = require('../../../../bin/helpers/constants'),
@@ -235,5 +236,25 @@ describe("utils", () => {
       utils.configCreated(args);
       sinon.assert.calledOnce(sendUsageReportStub);
     });
+  });
+
+  describe("exportResults", () => {
+
+    it("should export results to log/build_results.txt", () => {
+      sinon.stub(fs, 'writeFileSync').returns(true);
+      utils.exportResults("build_id", "build_url");
+      fs.writeFileSync.restore();
+    });
+
+    it("should log warning if write to log/build_results.txt fails", () => {
+      let writeFileSyncStub = sinon.stub(fs, 'writeFileSync');
+      let loggerWarnStub = sinon.stub(logger, "warn");
+      writeFileSyncStub.yields(new Error("Write Failed"));
+      utils.exportResults("build_id", "build_url");
+      sinon.assert.calledOnce(writeFileSyncStub);
+      sinon.assert.calledTwice(loggerWarnStub);
+      fs.writeFileSync.restore();
+    });
+
   });
 });

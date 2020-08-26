@@ -504,6 +504,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(zipUploadStub);
           sinon.assert.calledOnce(createBuildStub);
+          sinon.assert.calledOnce(exportResultsStub);
 
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
