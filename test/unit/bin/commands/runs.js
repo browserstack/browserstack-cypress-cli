@@ -112,6 +112,8 @@ describe("runs", () => {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
+          setUserSpecs: setUserSpecsStub,
+          setTestEnvs: setTestEnvsStub,
           getConfigPath: getConfigPathStub
         },
         "../helpers/capabilityHelper": {
@@ -185,6 +187,8 @@ describe("runs", () => {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
+          setUserSpecs: setUserSpecsStub,
+          setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub
         },
@@ -269,6 +273,8 @@ describe("runs", () => {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
+          setUserSpecs: setUserSpecsStub,
+          setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub
         },
@@ -362,6 +368,8 @@ describe("runs", () => {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
+          setUserSpecs: setUserSpecsStub,
+          setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub
         },
@@ -466,6 +474,8 @@ describe("runs", () => {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
+          setUserSpecs: setUserSpecsStub,
+          setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           setParallels: setParallelsStub,
           getConfigPath: getConfigPathStub

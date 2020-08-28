@@ -249,6 +249,136 @@ describe("capabilityHelper.js", () => {
           chai.assert.fail("Promise error");
         });
     });
+
+    context("specs and env from run_setting", () => {
+      it("sets specs list is present", () => {
+        let specsList = "spec1,spec2";
+        let zip_url = "bs://<random>";
+        let bsConfig = {
+          auth: {
+            username: "random",
+            access_key: "random",
+          },
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            specs: specsList
+          },
+        };
+
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: zip_url })
+          .then(function (data) {
+            let parsed_data = JSON.parse(data);
+            chai.assert.equal(parsed_data.specs, specsList);
+            chai.assert.equal(parsed_data.env, undefined);
+          })
+          .catch((error) => {
+            chai.assert.fail("Promise error");
+          });
+      });
+
+      it("sets env list is present", () => {
+        let envList = "env1=value1,env2=value2";
+        let zip_url = "bs://<random>";
+        let bsConfig = {
+          auth: {
+            username: "random",
+            access_key: "random",
+          },
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            env: envList
+          },
+        };
+
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: zip_url })
+          .then(function (data) {
+            let parsed_data = JSON.parse(data);
+            chai.assert.equal(parsed_data.env, envList);
+            chai.assert.equal(parsed_data.specs, undefined);
+          })
+          .catch((error) => {
+            chai.assert.fail("Promise error");
+          });
+      });
+
+      it("sets both specs and env list is present", () => {
+        let specsList = "spec1,spec2";
+        let envList = "env1=value1,env2=value2";
+        let zip_url = "bs://<random>";
+        let bsConfig = {
+          auth: {
+            username: "random",
+            access_key: "random",
+          },
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            specs: specsList,
+            env: envList
+          },
+        };
+
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: zip_url })
+          .then(function (data) {
+            let parsed_data = JSON.parse(data);
+            chai.assert.equal(parsed_data.specs, specsList);
+            chai.assert.equal(parsed_data.env, envList);
+          })
+          .catch((error) => {
+            chai.assert.fail("Promise error");
+          });
+      });
+
+      it("both specs and env list is not present", () => {
+        let zip_url = "bs://<random>";
+        let bsConfig = {
+          auth: {
+            username: "random",
+            access_key: "random",
+          },
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+          },
+        };
+
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: zip_url })
+          .then(function (data) {
+            let parsed_data = JSON.parse(data);
+            chai.assert.equal(parsed_data.specs, undefined);
+            chai.assert.equal(parsed_data.env, undefined);
+          })
+          .catch((error) => {
+            chai.assert.fail("Promise error");
+          });
+      });
+    });
   });
 
   describe("validate", () => {
