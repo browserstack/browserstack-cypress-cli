@@ -95,18 +95,29 @@ exports.setBuildName = (bsConfig, args) => {
   }
 }
 
+// specs can be passed from bstack configuration file
+// specs can be passed via command line args as a string
+// command line args takes precedence over config
 exports.setUserSpecs = (bsConfig, args) => {
-  if (!this.isUndefined(args.specs) && args.specs.length > 0 && !this.isUndefined(args.specs[0])) {
-    bsConfig['run_settings']['specs'] = args.specs;
+  let bsConfigSpecs = bsConfig.run_settings.specs;
+
+  if (!this.isUndefined(args.specs)) {
+    bsConfig.run_settings.specs = args.specs.split(/\s{0,},\s+/).join(',');
+  } else if (!this.isUndefined(bsConfigSpecs) && Array.isArray(bsConfigSpecs)) {
+    bsConfig.run_settings.specs = bsConfigSpecs.join(',');
+  } else if (!this.isUndefined(bsConfigSpecs) && typeof(bsConfigSpecs) == "string") {
+    bsConfig.run_settings.specs = bsConfigSpecs.split(/\s{0,},\s+/).join(',');
+  } else {
+    bsConfig.run_settings.specs = null;
   }
 }
 
-// env option must be set only from args
+// env option must be set only from command line args as a string
 exports.setTestEnvs = (bsConfig, args) => {
   if (!this.isUndefined(args.env)) {
-    bsConfig['run_settings']['env'] = args.env;
+    bsConfig.run_settings.env = args.env.split(/\s{0,},\s+/).join(',');
   } else {
-    bsConfig['run_settings']['env'] = null;
+    bsConfig.run_settings.env = null;
   }
 }
 

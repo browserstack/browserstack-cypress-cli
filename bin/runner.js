@@ -168,12 +168,12 @@ var argv = yargs
         's': {
           alias: ['specs', 'spec'],
           describe: Constants.cliMessages.RUN.SPECS_DESCRIPTION,
-          type: "array",
+          type: "string",
           default: undefined
         },
         'env': {
           describe: Constants.cliMessages.RUN.ENV_DESCRIPTION,
-          type: "array",
+          type: "string",
           default: undefined
         }
       })
