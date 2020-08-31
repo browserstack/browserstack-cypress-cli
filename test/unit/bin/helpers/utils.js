@@ -257,4 +257,14 @@ describe("utils", () => {
     });
 
   });
+
+  describe("deleteResults", () => {
+
+    it("should delete log/build_results.txt", () => {
+      sinon.stub(fs, 'unlink').returns(true);
+      utils.deleteResults();
+      fs.unlink.restore();
+    });
+
+  });
 });

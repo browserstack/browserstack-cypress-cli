@@ -11,6 +11,8 @@ const archiver = require("../helpers/archiver"),
 
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
+  //Delete build_results.txt from log folder if already present.
+  utils.deleteResults();
 
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);

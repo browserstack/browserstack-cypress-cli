@@ -131,3 +131,8 @@ exports.exportResults = (buildId, buildUrl) => {
     }
   });
 }
+
+exports.deleteResults = () => {
+  fs.unlink("log/build_results.txt", function (err){
+  });
+}
