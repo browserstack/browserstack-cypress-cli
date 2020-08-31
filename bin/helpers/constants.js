@@ -12,7 +12,8 @@ const userMessages = {
     ZIP_DELETED: "Zip file deleted successfully.",
     API_DEPRECATED: "This version of API is deprecated, please use latest version of API.",
     FAILED_TO_ZIP: "Failed to zip files.",
-    VISIT_DASHBOARD: "Visit the Automate dashboard for test reporting:"
+    VISIT_DASHBOARD: "Visit the Automate dashboard for test reporting:",
+    CONFLICTING_INIT_ARGUMENTS: "Conflicting arguments given. You can use --path only with a file name, and not with a file path."
 };
 
 const validationMessages = {
