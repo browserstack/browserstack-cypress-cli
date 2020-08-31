@@ -102,11 +102,11 @@ exports.setUserSpecs = (bsConfig, args) => {
   let bsConfigSpecs = bsConfig.run_settings.specs;
 
   if (!this.isUndefined(args.specs)) {
-    bsConfig.run_settings.specs = args.specs.split(/\s{0,},\s+/).join(',');
+    bsConfig.run_settings.specs = this.fixCommaSeparatedString(args.specs);
   } else if (!this.isUndefined(bsConfigSpecs) && Array.isArray(bsConfigSpecs)) {
     bsConfig.run_settings.specs = bsConfigSpecs.join(',');
   } else if (!this.isUndefined(bsConfigSpecs) && typeof(bsConfigSpecs) == "string") {
-    bsConfig.run_settings.specs = bsConfigSpecs.split(/\s{0,},\s+/).join(',');
+    bsConfig.run_settings.specs = this.fixCommaSeparatedString(bsConfigSpecs);
   } else {
     bsConfig.run_settings.specs = null;
   }
@@ -115,10 +115,14 @@ exports.setUserSpecs = (bsConfig, args) => {
 // env option must be set only from command line args as a string
 exports.setTestEnvs = (bsConfig, args) => {
   if (!this.isUndefined(args.env)) {
-    bsConfig.run_settings.env = args.env.split(/\s{0,},\s+/).join(',');
+    bsConfig.run_settings.env = this.fixCommaSeparatedString(args.env);
   } else {
     bsConfig.run_settings.env = null;
   }
+}
+
+exports.fixCommaSeparatedString = (string) => {
+  return string.split(/\s{0,},\s+/).join(',');
 }
 
 exports.isUndefined = value => (value === undefined || value === null);

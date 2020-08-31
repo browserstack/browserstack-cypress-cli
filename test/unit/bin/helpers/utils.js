@@ -421,4 +421,24 @@ describe("utils", () => {
       expect(bsConfig.run_settings.env).to.be.eq(null);
     });
   });
+
+  describe("fixCommaSeparatedString", () => {
+    it("string with spaces after comma", () => {
+      let commaString = "string1, string2";
+      let result = utils.fixCommaSeparatedString(commaString);
+      expect(result).to.be.eq('string1,string2');
+    });
+
+    it("string with spaces around comma", () => {
+      let commaString = "string1 , string2";
+      let result = utils.fixCommaSeparatedString(commaString);
+      expect(result).to.be.eq('string1,string2');
+    });
+
+    it("string with 2 spaces around comma", () => {
+      let commaString = "string1  ,  string2";
+      let result = utils.fixCommaSeparatedString(commaString);
+      expect(result).to.be.eq('string1,string2');
+    });
+  });
 });
