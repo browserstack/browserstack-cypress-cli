@@ -139,7 +139,7 @@ var argv = yargs
         'ccf': {
           alias: 'cypress-config-file',
           describe: Constants.cliMessages.RUN.CYPRESS_DESC,
-          default: 'cypress.json',
+          default: './cypress.json',
           type: 'string',
           nargs: 1,
           demand: true,
