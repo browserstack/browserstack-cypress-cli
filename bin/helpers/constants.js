@@ -54,9 +54,9 @@ const cliMessages = {
         PARALLEL_DESC: "The maximum number of parallels to use to run your test suite",
         INFO: "Run your tests on BrowserStack.",
         DESC: "Path to BrowserStack config",
-        CYPRESS_DESC: "Path to cypress config file",
+        CYPRESS_DESC: "Path to Cypress config file",
         CONFIG_DEMAND: "config file is required",
-        CYPRESS_CONFIG_DEMAND: "cypress config file is required",
+        CYPRESS_CONFIG_DEMAND: "Cypress config file is required",
         BUILD_NAME: "The build name you want to use to name your test runs"
     },
     COMMON: {
