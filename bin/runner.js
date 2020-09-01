@@ -136,6 +136,15 @@ var argv = yargs
           demand: true,
           demand: Constants.cliMessages.RUN.CONFIG_DEMAND
         },
+        'ccf': {
+          alias: 'cypress-config-file',
+          describe: Constants.cliMessages.RUN.CYPRESS_DESC,
+          default: 'cypress.json',
+          type: 'string',
+          nargs: 1,
+          demand: true,
+          demand: Constants.cliMessages.RUN.CYPRESS_CONFIG_DEMAND
+        },
         'disable-usage-reporting': {
           default: undefined,
           description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
