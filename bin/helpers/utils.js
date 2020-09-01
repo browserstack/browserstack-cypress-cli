@@ -95,6 +95,26 @@ exports.setBuildName = (bsConfig, args) => {
   }
 }
 
+exports.searchForOption = (option) => {
+  return (process.argv.indexOf(option) > -1);
+}
+
+exports.verifyCypressConfigFileOption = () => {
+  let ccfOptionsSet = (this.searchForOption('-ccf') || this.searchForOption('--ccf'));
+  let cypressConfigFileSet = (this.searchForOption('-cypress-config-file') || this.searchForOption('--cypress-config-file'));
+  let cypressConfigOptionsSet = (this.searchForOption('-cypressConfigFile') || this.searchForOption('--cypressConfigFile'));
+  return (ccfOptionsSet || cypressConfigFileSet || cypressConfigOptionsSet);
+}
+
+exports.setCypressConfigFilename = (bsConfig, args) => {
+  let userPassedCypessConfigFile = this.verifyCypressConfigFileOption();
+
+  if (userPassedCypessConfigFile || this.isUndefined(bsConfig.run_settings.cypress_config_file)) {
+    bsConfig.run_settings.cypress_config_filename = path.basename(args.cypressConfigFile);
+    bsConfig.run_settings.cypress_config_file = args.cypressConfigFile;
+  }
+}
+
 exports.isUndefined = value => (value === undefined || value === null);
 
 exports.isFloat = value => (Number(value) && Number(value) % 1 !== 0);
