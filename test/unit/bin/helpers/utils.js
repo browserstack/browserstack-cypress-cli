@@ -344,6 +344,17 @@ describe("utils", () => {
       utils.setLocal(bsConfig);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
     });
+
+    it("should set local to true in bsConfig if process.env.BROWSERSTACK_LOCAL is set to true & local is not set in bsConfig", () => {
+      let bsConfig = {
+        connection_settings: {
+        }
+      }
+      process.env.BROWSERSTACK_LOCAL = true;
+      utils.setLocal(bsConfig);
+      expect(bsConfig.connection_settings.local).to.be.eq(true);
+    });
+
   });
 
   describe("setLocalIdentifier", () => {
@@ -368,6 +379,16 @@ describe("utils", () => {
       let bsConfig = {
         connection_settings: {
           local_identifier: "test"
+        }
+      }
+      process.env.BROWSERSTACK_LOCAL_IDENTIFIER = "local_identifier";
+      utils.setLocalIdentifier(bsConfig);
+      expect(bsConfig.connection_settings.local_identifier).to.be.eq("local_identifier");
+    });
+
+    it("should set local identifier in connection_settings in bsConfig if process.env.BROWSERSTACK_LOCAL_IDENTIFIER is present & not set in bsConfig", () => {
+      let bsConfig = {
+        connection_settings: {
         }
       }
       process.env.BROWSERSTACK_LOCAL_IDENTIFIER = "local_identifier";

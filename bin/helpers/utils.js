@@ -173,7 +173,7 @@ exports.getLocalFlag = (connectionSettings) => {
 }
 
 exports.setLocal = (bsConfig) => {
-  if(!this.isUndefined(process.env.BROWSERSTACK_LOCAL) && !this.isUndefined(bsConfig.connection_settings)){
+  if(!this.isUndefined(process.env.BROWSERSTACK_LOCAL)){
     let local = false;
     if(String(process.env.BROWSERSTACK_LOCAL).toLowerCase() === "true") local = true;
     bsConfig['connection_settings']['local'] = local;
@@ -182,7 +182,7 @@ exports.setLocal = (bsConfig) => {
 }
 
 exports.setLocalIdentifier = (bsConfig) => {
-  if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL_IDENTIFIER) && !this.isUndefined(bsConfig.connection_settings)){
+  if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL_IDENTIFIER)){
     bsConfig['connection_settings']['local_identifier'] = process.env.BROWSERSTACK_LOCAL_IDENTIFIER;
     logger.info("Reading local identifier from the environment variable BROWSERSTACK_LOCAL_IDENTIFIER");
   }
