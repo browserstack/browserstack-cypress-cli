@@ -4,7 +4,8 @@ const chai = require("chai"),
   sinon = require("sinon"),
   chaiAsPromised = require("chai-as-promised"),
   rewire = require("rewire"),
-  util = require("util");
+  util = require("util"),
+  path = require('path');
 
 const Constants = require("../../../../bin/helpers/constants"),
   logger = require("../../../../bin/helpers/logger").winstonLogger,
@@ -44,7 +45,7 @@ describe("init", () => {
         $0: "browserstack-cypress",
       };
 
-      assert(get_path(args), '/sample-path/filename.json');
+      expect(get_path(args)).to.be.eql('/sample-path/filename.json');
     });
 
     it("filename passed, -path not passed", () => {
@@ -55,7 +56,15 @@ describe("init", () => {
         $0: "browserstack-cypress",
       };
 
-      assert(get_path(args), 'filename.json');
+      let args2 = {
+        _: ["init", "~/filename.json"],
+        p: false,
+        path: false,
+        $0: "browserstack-cypress",
+      };
+
+      expect(get_path(args)).to.be.eql(path.join(process.cwd(), 'filename.json'));
+      expect(get_path(args2)).to.be.eql('~/filename.json');
     });
 
     it("filepath passed, -path passed", () => {
@@ -84,7 +93,7 @@ describe("init", () => {
         $0: "browserstack-cypress",
       };
 
-      assert(get_path(args), '/sample-path/browserstack.json');
+      expect(get_path(args)).to.be.eql('/sample-path/browserstack.json');
     });
 
     it("filename not passed, -path  not passed", () => {
@@ -95,7 +104,7 @@ describe("init", () => {
         $0: "browserstack-cypress",
       };
 
-      assert(get_path(args), 'browserstack.json');
+      expect(get_path(args)).to.be.eql(path.join(process.cwd(), 'browserstack.json'));
     });
   });
 

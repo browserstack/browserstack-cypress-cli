@@ -21,6 +21,11 @@ function get_path(args) {
   } else if (args.p) {
     return path.join(args.p, "browserstack.json");
   } else if (args._.length > 1) {
+    let filename = args._[1];
+    if (filename !== path.basename(filename)) {
+      // filename is an absolute path
+      return filename; 
+    }
     return path.join(process.cwd(), args._[1]);
   }
 
