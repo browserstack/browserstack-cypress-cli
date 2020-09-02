@@ -175,6 +175,11 @@ var argv = yargs
           describe: Constants.cliMessages.RUN.ENV_DESCRIPTION,
           type: "string",
           default: undefined
+        },
+        'disable-npm-warning': {
+          default: false,
+          description: Constants.cliMessages.COMMON.NO_NPM_WARNING,
+          type: "boolean"
         }
       })
       .help('help')
