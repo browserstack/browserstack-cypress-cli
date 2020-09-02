@@ -14,7 +14,7 @@ exports.validateBstackJson = (bsConfigPath) => {
       resolve(bsConfig);
     }
     catch (e) {
-      reject(e);
+      reject("Couldn't find the browserstack.json file at \""+ bsConfigPath +"\". Please use --config-file <path to browserstack.json>.");
     }
   });
 }
@@ -34,9 +34,24 @@ exports.getErrorCodeFromMsg = (errMsg) => {
     case Constants.validationMessages.EMPTY_RUN_SETTINGS:
       errorCode = "bstack_json_invalid_no_run_settings";
       break;
-    case Constants.validationMessages.EMPTY_SPEC_FILES:
-      errorCode = "bstack_json_invalid_values";
+    case Constants.validationMessages.EMPTY_CYPRESS_PROJ_DIR:
+      errorCode = "bstack_json_invalid_no_cypress_proj_dir";
       break;
+    case Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS:
+      errorCode = "bstack_json_default_auth_keys";
+      break;
+    case Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION:
+      errorCode = "invalid_parallels_specified";
+      break;
+    case Constants.validationMessages.LOCAL_NOT_SET:
+      errorCode = "cypress_json_base_url_no_local";
+      break;
+    case Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE:
+      errorCode = "invalid_directory_structure";
+      break;
+  }
+  if(errMsg.includes("Please use --config-file <path to browserstack.json>.")){
+    errorCode = "bstack_json_path_invalid";
   }
   return errorCode;
 }
@@ -120,7 +135,7 @@ exports.isUndefined = value => (value === undefined || value === null);
 exports.isFloat = value => (Number(value) && Number(value) % 1 !== 0);
 
 exports.isParallelValid = (value) => {
-  return this.isUndefined(value) || !(isNaN(value) || this.isFloat(value) || parseInt(value, 10) === 0 || parseInt(value, 10) < -1);
+  return this.isUndefined(value) || !(isNaN(value) || this.isFloat(value) || parseInt(value, 10) === 0 || parseInt(value, 10) < -1 ) || value === Constants.constants.DEFAULT_PARALLEL_MESSAGE;
 }
 
 exports.getUserAgent = () => {
@@ -139,4 +154,18 @@ exports.configCreated = (args) => {
   let message = Constants.userMessages.CONFIG_FILE_CREATED
   logger.info(message);
   this.sendUsageReport(null, args, message, Constants.messageTypes.SUCCESS, null);
+}
+
+exports.isCypressProjDirValid = (cypressDir, cypressProjDir) => {
+  // Getting absolute path
+  cypressDir = path.resolve(cypressDir);
+  cypressProjDir = path.resolve(cypressProjDir);
+  if(cypressProjDir === cypressDir) return true;
+  let parentTokens = cypressDir.split('/').filter(i => i.length);
+  let childTokens = cypressProjDir.split('/').filter(i => i.length);
+  return parentTokens.every((t, i) => childTokens[i] === t);
+}
+
+exports.getLocalFlag = (connectionSettings) => {
+  return !this.isUndefined(connectionSettings) && !this.isUndefined(connectionSettings.local) && connectionSettings.local
 }
