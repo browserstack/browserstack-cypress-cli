@@ -44,6 +44,12 @@ module.exports = function run(args) {
             let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
             let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${config.dashboardUrl}${data.build_id}`;
             utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
+            if ((utils.isUndefined(bsConfig.run_settings.parallels) && utils.isUndefined(args.parallels)) || (!utils.isUndefined(bsConfig.run_settings.parallels) && bsConfig.run_settings.parallels == Constants.constants.DEFAULT_PARALLEL_MESSAGE)) {
+              logger.warn(Constants.userMessages.NO_PARALLELS);
+            }
+
+            if(!args.disableNpmWarning && bsConfig.run_settings.npm_dependencies  && Object.keys(bsConfig.run_settings.npm_dependencies).length <= 0) logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES);
+    
             logger.info(message);
             logger.info(dashboardLink);
             utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);

@@ -452,6 +452,7 @@ describe("runs", () => {
       deleteZipStub = sandbox.stub();
       exportResultsStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
+      isUndefinedStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -476,7 +477,8 @@ describe("runs", () => {
           setParallels: setParallelsStub,
           getConfigPath: getConfigPathStub,
           exportResults: exportResultsStub,
-          deleteResults: deleteResultsStub
+          deleteResults: deleteResultsStub,
+          isUndefined: isUndefinedStub
         },
         "../helpers/capabilityHelper": {
           validate: capabilityValidatorStub,
