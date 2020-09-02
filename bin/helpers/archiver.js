@@ -2,13 +2,14 @@
 const fs = require("fs");
 
 const archiver = require("archiver"),
-  logger = require("./logger").winstonLogger;
+  logger = require("./logger").winstonLogger,
+  path = require('path');
 
 const archiveSpecs = (runSettings, filePath) => {
   return new Promise(function (resolve, reject) {
     var output = fs.createWriteStream(filePath);
 
-    var cypressFolderPath = runSettings.cypress_proj_dir;
+    var cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
 
     var archive = archiver('zip', {
       zlib: { level: 9 } // Sets the compression level.
@@ -38,7 +39,7 @@ const archiveSpecs = (runSettings, filePath) => {
 
     let allowedFileTypes = [ 'js', 'json', 'txt', 'ts', 'feature', 'features' ];
     allowedFileTypes.forEach(fileType => {
-      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: ['node_modules/**', 'package-lock.json', 'package.json', 'browserstack-package.json'] });
+      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: ['node_modules/**', 'package-lock.json', 'package.json', 'browserstack-package.json', 'cypress.json'] });
     });
 
     let packageJSON = {};
@@ -54,6 +55,13 @@ const archiveSpecs = (runSettings, filePath) => {
     if (Object.keys(packageJSON).length > 0) {
       let packageJSONString = JSON.stringify(packageJSON, null, 4);
       archive.append(packageJSONString, { name: 'browserstack-package.json' });
+    }
+
+    // do not add cypress.json if arg provided is false
+    if (runSettings.cypress_config_file && runSettings.cypress_config_filename !== 'false') {
+      let cypressJSON = JSON.parse(fs.readFileSync(runSettings.cypressConfigFilePath));
+      let cypressJSONString = JSON.stringify(cypressJSON, null, 4);
+      archive.append(cypressJSONString, { name: 'cypress.json' });
     }
 
     archive.finalize();

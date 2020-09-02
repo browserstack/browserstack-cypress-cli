@@ -122,12 +122,15 @@ exports.verifyCypressConfigFileOption = () => {
 }
 
 exports.setCypressConfigFilename = (bsConfig, args) => {
-  let userPassedCypessConfigFile = this.verifyCypressConfigFileOption();
+  let userProvidedCypessConfigFile = this.verifyCypressConfigFileOption();
 
-  if (userPassedCypessConfigFile || this.isUndefined(bsConfig.run_settings.cypress_config_file)) {
+  if (userProvidedCypessConfigFile || this.isUndefined(bsConfig.run_settings.cypress_config_file)) {
     bsConfig.run_settings.cypress_config_filename = path.basename(args.cypressConfigFile);
     bsConfig.run_settings.cypress_config_file = args.cypressConfigFile;
+    bsConfig.run_settings.userProvidedCypessConfigFile = userProvidedCypessConfigFile;
   }
+
+  bsConfig.run_settings.cypressConfigFilePath = userProvidedCypessConfigFile ? bsConfig.run_settings.cypress_config_file : path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json');
 }
 
 exports.isUndefined = value => (value === undefined || value === null);
