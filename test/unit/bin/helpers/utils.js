@@ -273,4 +273,162 @@ describe("utils", () => {
       expect(utils.getLocalFlag({"local": true})).to.be.true;
     });
   });
+  
+  describe("setLocal", () => {
+    beforeEach(function () {
+      delete process.env.BROWSERSTACK_LOCAL;
+    });
+
+    afterEach(function () {
+      delete process.env.BROWSERSTACK_LOCAL;
+    });
+
+    it("should not change local in bsConfig if process.env.BROWSERSTACK_LOCAL is undefined", () => {
+      let bsConfig = {
+        connection_settings: {
+          local: true
+        }
+      }
+      utils.setLocal(bsConfig);
+      expect(bsConfig.connection_settings.local).to.be.eq(true);
+    });
+
+    it("should change local to false in bsConfig if process.env.BROWSERSTACK_LOCAL is set to false", () => {
+      let bsConfig = {
+        connection_settings: {
+          local: true
+        }
+      }
+      process.env.BROWSERSTACK_LOCAL = false;
+      utils.setLocal(bsConfig);
+      expect(bsConfig.connection_settings.local).to.be.eq(false);
+    });
+
+    it("should change local to true in bsConfig if process.env.BROWSERSTACK_LOCAL is set to true", () => {
+      let bsConfig = {
+        connection_settings: {
+          local: false
+        }
+      }
+      process.env.BROWSERSTACK_LOCAL = true;
+      utils.setLocal(bsConfig);
+      expect(bsConfig.connection_settings.local).to.be.eq(true);
+    });
+  });
+
+  describe("setLocalIdentifier", () => {
+    beforeEach(function () {
+      delete process.env.BROWSERSTACK_LOCAL_IDENTIFIER;
+    });
+
+    afterEach(function () {
+      delete process.env.BROWSERSTACK_LOCAL_IDENTIFIER;
+    });
+    it("should not change local identifier in bsConfig if process.env.BROWSERSTACK_LOCAL_IDENTIFIER is undefined", () => {
+      let bsConfig = {
+        connection_settings: {
+          local_identifier: "local_identifier"
+        }
+      }
+      utils.setLocalIdentifier(bsConfig);
+      expect(bsConfig.connection_settings.local_identifier).to.be.eq("local_identifier");
+    });
+
+    it("should change local identifier to local_identifier in bsConfig if process.env.BROWSERSTACK_LOCAL_IDENTIFIER is set to local_identifier", () => {
+      let bsConfig = {
+        connection_settings: {
+          local_identifier: "test"
+        }
+      }
+      process.env.BROWSERSTACK_LOCAL_IDENTIFIER = "local_identifier";
+      utils.setLocalIdentifier(bsConfig);
+      expect(bsConfig.connection_settings.local_identifier).to.be.eq("local_identifier");
+    });
+
+  });
+
+  describe("setUsername", () => {
+
+    beforeEach(function () {
+      delete process.env.BROWSERSTACK_USERNAME;
+    });
+
+    afterEach(function () {
+      delete process.env.BROWSERSTACK_USERNAME;
+    });
+
+    it("should set username if args.username is present", () =>{
+      let bsConfig = {
+        auth: {
+          username: "test"
+        }
+      }
+      utils.setUsername(bsConfig,{username: "username"});
+      expect(bsConfig.auth.username).to.be.eq("username");
+    });
+
+    it("should set username if process.env.BROWSERSTACK_USERNAME is present and args.username is not present", () =>{
+      let bsConfig = {
+        auth: {
+          username: "test"
+        }
+      }
+      process.env.BROWSERSTACK_USERNAME = "username"
+      utils.setUsername(bsConfig,{});
+      expect(bsConfig.auth.username).to.be.eq("username");
+    });
+
+    it("should set username to default if process.env.BROWSERSTACK_USERNAME and args.username is not present", () =>{
+      let bsConfig = {
+        auth: {
+          username: "test"
+        }
+      }
+      utils.setUsername(bsConfig,{});
+      expect(bsConfig.auth.username).to.be.eq("test");
+    });
+
+  });
+
+  describe("setAccessKey", () => {
+    beforeEach(function () {
+      delete process.env.BROWSERSTACK_ACCESS_KEY;
+    });
+
+    afterEach(function () {
+      delete process.env.BROWSERSTACK_ACCESS_KEY;
+    });
+
+    it("should set access_key if args.key is present", () =>{
+      let bsConfig = {
+        auth: {
+          access_key: "test"
+        }
+      }
+      utils.setAccessKey(bsConfig,{key: "access_key"});
+      expect(bsConfig.auth.access_key).to.be.eq("access_key");
+    });
+
+    it("should set access_key if process.env.BROWSERSTACK_ACCESS_KEY is present and args.access_key is not present", () =>{
+      let bsConfig = {
+        auth: {
+          access_key: "test"
+        }
+      }
+      process.env.BROWSERSTACK_ACCESS_KEY = "access_key"
+      utils.setAccessKey(bsConfig,{});
+      expect(bsConfig.auth.access_key).to.be.eq("access_key");
+    });
+
+    it("should set access_key to default if process.env.BROWSERSTACK_ACCESS_KEY and args.access_key is not present", () =>{
+      let bsConfig = {
+        auth: {
+          access_key: "test"
+        }
+      }
+      utils.setAccessKey(bsConfig,{});
+      expect(bsConfig.auth.access_key).to.be.eq("test");
+    });
+
+  });
 });

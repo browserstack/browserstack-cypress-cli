@@ -95,12 +95,18 @@ exports.setParallels = (bsConfig, args) => {
 exports.setUsername = (bsConfig, args) => {
   if (!this.isUndefined(args.username)) {
     bsConfig['auth']['username'] = args.username;
+  }else if(!this.isUndefined(process.env.BROWSERSTACK_USERNAME)){
+    bsConfig['auth']['username'] = process.env.BROWSERSTACK_USERNAME;
+    logger.info("Reading username from the environment variable BROWSERSTACK_USERNAME");
   }
 }
 
 exports.setAccessKey = (bsConfig, args) => {
   if (!this.isUndefined(args.key)) {
     bsConfig['auth']['access_key'] = args.key;
+  }else if (!this.isUndefined(process.env.BROWSERSTACK_ACCESS_KEY)) {
+    bsConfig['auth']['access_key'] = process.env.BROWSERSTACK_ACCESS_KEY;
+    logger.info("Reading access key from the environment variable BROWSERSTACK_ACCESS_KEY");
   }
 }
 
@@ -148,4 +154,20 @@ exports.isCypressProjDirValid = (cypressDir, cypressProjDir) => {
 
 exports.getLocalFlag = (connectionSettings) => {
   return !this.isUndefined(connectionSettings) && !this.isUndefined(connectionSettings.local) && connectionSettings.local
+}
+
+exports.setLocal = (bsConfig) => {
+  if(!this.isUndefined(process.env.BROWSERSTACK_LOCAL) && !this.isUndefined(bsConfig.connection_settings)){
+    let local = false;
+    if(String(process.env.BROWSERSTACK_LOCAL).toLowerCase() === "true") local = true;
+    bsConfig['connection_settings']['local'] = local;
+    logger.info("Reading local setting from the environment variable BROWSERSTACK_LOCAL");
+  }
+}
+
+exports.setLocalIdentifier = (bsConfig) => {
+  if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL_IDENTIFIER) && !this.isUndefined(bsConfig.connection_settings)){
+    bsConfig['connection_settings']['local_identifier'] = process.env.BROWSERSTACK_LOCAL_IDENTIFIER;
+    logger.info("Reading local identifier from the environment variable BROWSERSTACK_LOCAL_IDENTIFIER");
+  }
 }
