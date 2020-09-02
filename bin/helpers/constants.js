@@ -13,7 +13,9 @@ const userMessages = {
     API_DEPRECATED: "This version of API is deprecated, please use latest version of API.",
     FAILED_TO_ZIP: "Failed to zip files.",
     VISIT_DASHBOARD: "Visit the Automate dashboard for test reporting:",
-    CONFLICTING_INIT_ARGUMENTS: "Conflicting arguments given. You can use --path only with a file name, and not with a file path."
+    CONFLICTING_INIT_ARGUMENTS: "Conflicting arguments given. You can use --path only with a file name, and not with a file path.",
+    NO_PARALLELS: "Your tests will run sequentially. Read more about running your tests in parallel here: https://www.browserstack.com/docs/automate/cypress/run-tests-in-parallel",
+    NO_NPM_DEPENDENCIES: "No npm dependencies specified. Read more here: https://www.browserstack.com/docs/automate/cypress/npm-packages. You can suppress this warning by using --disable-npm-warning flag."
 };
 
 const validationMessages = {
@@ -22,14 +24,17 @@ const validationMessages = {
   EMPTY_TEST_SUITE: "Test suite is empty",
   EMPTY_BROWSERSTACK_JSON: "Empty browserstack.json",
   EMPTY_RUN_SETTINGS: "Empty run settings",
-  EMPTY_SPEC_FILES: "No spec files specified in run_settings",
+  EMPTY_CYPRESS_PROJ_DIR: "cypress_proj_dir is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/sample-tutorial to learn more.",
   VALIDATED: "browserstack.json file is validated",
   NOT_VALID: "browerstack.json is not valid",
   NOT_VALID_JSON: "browerstack.json is not a valid json",
   INVALID_EXTENSION: "Invalid files, please remove these files and try again.",
   INVALID_PARALLELS_CONFIGURATION: "Invalid value specified for parallels to use. Maximum parallels to use should be a number greater than 0.",
   CYPRESS_JSON_NOT_FOUND: "cypress.json file is not found at cypress_proj_dir path ",
-  INVALID_CYPRESS_JSON: "cypress.json is not a valid json"
+  INVALID_CYPRESS_JSON: "cypress.json is not a valid json",
+  INVALID_DEFAULT_AUTH_PARAMS: "Your username and access key are required to run your tests on BrowserStack. Learn more at https://www.browserstack.com/docs/automate/cypress/authentication",
+  LOCAL_NOT_SET: "To test <baseUrl value> on BrowserStack, you will have to set up Local testing. Read more here: https://www.browserstack.com/docs/automate/cypress/local-testing",
+  INCORRECT_DIRECTORY_STRUCTURE: "No tests to run. Note that your Cypress tests should be in the same directory where the cypress.json exists."
 };
 
 const cliMessages = {
@@ -61,7 +66,8 @@ const cliMessages = {
     COMMON: {
       DISABLE_USAGE_REPORTING: "Disable usage reporting",
       USERNAME: "Your BrowserStack username",
-      ACCESS_KEY: "Your BrowserStack access key"
+      ACCESS_KEY: "Your BrowserStack access key",
+      NO_NPM_WARNING: "No NPM warning if npm_dependencies is empty"
     }
 }
 
@@ -74,9 +80,14 @@ const messageTypes = {
   NULL: null
 }
 
+const constants = {
+  DEFAULT_PARALLEL_MESSAGE: "Here goes the number of parallels you want to run"
+}
+
 module.exports = Object.freeze({
   userMessages,
   cliMessages,
   validationMessages,
   messageTypes,
+  constants
 });
