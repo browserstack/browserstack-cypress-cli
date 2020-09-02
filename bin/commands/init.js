@@ -38,6 +38,9 @@ module.exports = function init(args) {
   let path_to_json = get_path(args);
   if (path_to_json === undefined) return;
 
+  // append .json if filename passed is not of json type
+  if (path.extname(path_to_json) !== ".json") path_to_json += '.json';
+
   let config = {
     file: require('../templates/configTemplate')(),
     path: path_to_json
