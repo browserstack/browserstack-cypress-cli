@@ -51,7 +51,7 @@ describe("runs", () => {
         },
       });
 
-      validateBstackJsonStub.returns(Promise.reject({message: "random-error"}));
+      validateBstackJsonStub.returns(Promise.reject({ message: "random-error" }));
 
       return runs(args)
         .then(function (_bsConfig) {
