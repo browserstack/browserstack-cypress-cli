@@ -111,12 +111,16 @@ exports.setBuildName = (bsConfig, args) => {
   }
 }
 
+exports.fixCommaSeparatedString = (string) => {
+  return string.split(/\s{0,},\s+/).join(',');
+}
+
 exports.isUndefined = value => (value === undefined || value === null);
 
 exports.isFloat = value => (Number(value) && Number(value) % 1 !== 0);
 
 exports.isParallelValid = (value) => {
-  return this.isUndefined(value) || !(isNaN(value) || this.isFloat(value) || parseInt(value, 10) === 0 || parseInt(value, 10) < -1 ) || value === Constants.constants.DEFAULT_PARALLEL_MESSAGE;
+  return this.isUndefined(value) || !(isNaN(value) || this.isFloat(value) || parseInt(value, 10) === 0 || parseInt(value, 10) < -1 ) || value === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE;
 }
 
 exports.getUserAgent = () => {

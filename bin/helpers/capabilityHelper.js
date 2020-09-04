@@ -69,7 +69,7 @@ const caps = (bsConfig, zip) => {
       obj.parallels = bsConfig.run_settings.parallels;
     }
 
-    if(obj.parallels === Constants.constants.DEFAULT_PARALLEL_MESSAGE) obj.parallels = undefined
+    if(obj.parallels === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE) obj.parallels = undefined
     
     if (obj.project) logger.log(`Project name is: ${obj.project}`);
 

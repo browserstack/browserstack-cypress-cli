@@ -2,9 +2,10 @@
 const fs = require("fs");
 
 const archiver = require("archiver"),
+  Constants = require('../helpers/constants'),
   logger = require("./logger").winstonLogger;
 
-const archiveSpecs = (runSettings, filePath) => {
+const archiveSpecs = (runSettings, filePath, excludeFiles) => {
   return new Promise(function (resolve, reject) {
     var output = fs.createWriteStream(filePath);
 
@@ -36,9 +37,18 @@ const archiveSpecs = (runSettings, filePath) => {
 
     archive.pipe(output);
 
-    let allowedFileTypes = [ 'js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip' ];
-    allowedFileTypes.forEach(fileType => {
-      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: ['**/node_modules/**', './node_modules/**', 'package-lock.json', 'package.json', 'browserstack-package.json', 'tests.zip'] });
+    let ignoreFiles = Constants.filesToIgnoreWhileUploading;
+
+    // exclude files asked by the user
+    // args will take precedence over config file
+    if (!Utils.isUndefined(excludeFiles)) {
+      ignoreFiles = ignoreFile.concat(Utils.fixCommaSeparatedString(excludeFiles).split(','));
+    } else if (!Utils.isUndefined(runSettings.exclude)) {
+      ignoreFiles = ignoreFile.concat(excludeFiles);
+    }
+
+    Constants.allowedFileTypes.forEach(fileType => {
+      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: ignoreFiles });
     });
 
     let packageJSON = {};
