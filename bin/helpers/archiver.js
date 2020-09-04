@@ -3,7 +3,8 @@ const fs = require("fs");
 
 const archiver = require("archiver"),
   Constants = require('../helpers/constants'),
-  logger = require("./logger").winstonLogger;
+  logger = require("./logger").winstonLogger,
+  utils = require('../helpers/utils');
 
 const archiveSpecs = (runSettings, filePath, excludeFiles) => {
   return new Promise(function (resolve, reject) {
@@ -37,18 +38,8 @@ const archiveSpecs = (runSettings, filePath, excludeFiles) => {
 
     archive.pipe(output);
 
-    let ignoreFiles = Constants.filesToIgnoreWhileUploading;
-
-    // exclude files asked by the user
-    // args will take precedence over config file
-    if (!Utils.isUndefined(excludeFiles)) {
-      ignoreFiles = ignoreFile.concat(Utils.fixCommaSeparatedString(excludeFiles).split(','));
-    } else if (!Utils.isUndefined(runSettings.exclude)) {
-      ignoreFiles = ignoreFile.concat(excludeFiles);
-    }
-
     Constants.allowedFileTypes.forEach(fileType => {
-      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: ignoreFiles });
+      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: getFilesToIgnore(runSettings, excludeFiles) });
     });
 
     let packageJSON = {};
@@ -68,6 +59,20 @@ const archiveSpecs = (runSettings, filePath, excludeFiles) => {
 
     archive.finalize();
   });
+}
+
+const getFilesToIgnore = (runSettings, excludeFiles) => {
+  let ignoreFiles = Constants.filesToIgnoreWhileUploading;
+
+  // exclude files asked by the user
+  // args will take precedence over config file
+  if (!utils.isUndefined(excludeFiles)) {
+    ignoreFiles = ignoreFiles.concat(utils.fixCommaSeparatedString(excludeFiles).split(','));
+  } else if (!utils.isUndefined(runSettings.exclude) && runSettings.exclude.length) {
+    ignoreFiles = ignoreFiles.concat(runSettings.exclude);
+  }
+
+  return ignoreFiles;
 }
 
 exports.archive = archiveSpecs
