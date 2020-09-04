@@ -11,6 +11,8 @@ const archiver = require("../helpers/archiver"),
 
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
+  //Delete build_results.txt from log folder if already present.
+  utils.deleteResults();
 
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
@@ -44,6 +46,7 @@ module.exports = function run(args) {
           return build.createBuild(bsConfig, zip).then(function (data) {
             let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
             let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${config.dashboardUrl}${data.build_id}`;
+            utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
             if ((utils.isUndefined(bsConfig.run_settings.parallels) && utils.isUndefined(args.parallels)) || (!utils.isUndefined(bsConfig.run_settings.parallels) && bsConfig.run_settings.parallels == Constants.constants.DEFAULT_PARALLEL_MESSAGE)) {
               logger.warn(Constants.userMessages.NO_PARALLELS);
             }
