@@ -17,14 +17,20 @@ module.exports = function run(args) {
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
-    // accept the username from command line if provided
+    // accept the username from command line or env variable if provided
     utils.setUsername(bsConfig, args);
 
-    // accept the access key from command line if provided
+    // accept the access key from command line or env variable if provided
     utils.setAccessKey(bsConfig, args);
 
     // accept the build name from command line if provided
     utils.setBuildName(bsConfig, args);
+
+    //accept the local from env variable if provided
+    utils.setLocal(bsConfig);
+
+    //accept the local identifier from env variable if provided
+    utils.setLocalIdentifier(bsConfig);
 
     // Validate browserstack.json values and parallels specified via arguments
     return capabilityHelper.validate(bsConfig, args).then(function (validated) {
@@ -48,8 +54,8 @@ module.exports = function run(args) {
               logger.warn(Constants.userMessages.NO_PARALLELS);
             }
 
-            if(!args.disableNpmWarning && bsConfig.run_settings.npm_dependencies  && Object.keys(bsConfig.run_settings.npm_dependencies).length <= 0) logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES);
-    
+            if (!args.disableNpmWarning && bsConfig.run_settings.npm_dependencies && Object.keys(bsConfig.run_settings.npm_dependencies).length <= 0) logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES);
+
             logger.info(message);
             logger.info(dashboardLink);
             utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
