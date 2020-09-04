@@ -1,6 +1,7 @@
 'use strict';
 const os = require("os");
 const path = require("path");
+const fs = require("fs");
 
 const usageReporting =  require('./usageReporting'),
   logger = require('./logger').winstonLogger,
@@ -164,6 +165,21 @@ exports.configCreated = (args) => {
   let message = Constants.userMessages.CONFIG_FILE_CREATED
   logger.info(message);
   this.sendUsageReport(null, args, message, Constants.messageTypes.SUCCESS, null);
+}
+
+exports.exportResults = (buildId, buildUrl) => {
+  let data = "BUILD_ID=" + buildId + "\nBUILD_URL="+buildUrl;
+  fs.writeFileSync("log/build_results.txt", data , function(err){
+    if(err) {
+      logger.warn(`Couldn't write BUILD_ID with value: ${buildId} to browserstack/build_results.txt`);
+      logger.warn(`Couldn't write BUILD_URL with value: ${buildUrl} to browserstack/build_results.txt`);
+    }
+  });
+}
+
+exports.deleteResults = () => {
+  fs.unlink("log/build_results.txt", function (err){
+  });
 }
 
 exports.isCypressProjDirValid = (cypressDir, cypressProjDir) => {

@@ -4,7 +4,8 @@ const path = require('path');
 const chai = require("chai"),
   expect = chai.expect,
   sinon = require('sinon'),
-  chaiAsPromised = require("chai-as-promised");
+  chaiAsPromised = require("chai-as-promised"),
+  fs = require('fs');
 
 const utils = require('../../../../bin/helpers/utils'),
   constant = require('../../../../bin/helpers/constants'),
@@ -444,6 +445,35 @@ describe("utils", () => {
       let commaString = "string1  ,  string2";
       let result = utils.fixCommaSeparatedString(commaString);
       expect(result).to.be.eq('string1,string2');
+    });
+  });
+
+  describe("exportResults", () => {
+
+    it("should export results to log/build_results.txt", () => {
+      sinon.stub(fs, 'writeFileSync').returns(true);
+      utils.exportResults("build_id", "build_url");
+      fs.writeFileSync.restore();
+    });
+
+    it("should log warning if write to log/build_results.txt fails", () => {
+      let writeFileSyncStub = sinon.stub(fs, 'writeFileSync');
+      let loggerWarnStub = sinon.stub(logger, "warn");
+      writeFileSyncStub.yields(new Error("Write Failed"));
+      utils.exportResults("build_id", "build_url");
+      sinon.assert.calledOnce(writeFileSyncStub);
+      sinon.assert.calledTwice(loggerWarnStub);
+      fs.writeFileSync.restore();
+    });
+
+  });
+
+  describe("deleteResults", () => {
+
+    it("should delete log/build_results.txt", () => {
+      sinon.stub(fs, 'unlink').returns(true);
+      utils.deleteResults();
+      fs.unlink.restore();
     });
   });
 

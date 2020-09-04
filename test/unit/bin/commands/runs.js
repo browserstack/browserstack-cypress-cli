@@ -27,6 +27,7 @@ describe("runs", () => {
         return "end";
       });
       getErrorCodeFromErrStub = sandbox.stub().returns("random-error-code");
+      deleteResultsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -45,7 +46,8 @@ describe("runs", () => {
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
+          deleteResults: deleteResultsStub
         },
       });
 
@@ -61,6 +63,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(getErrorCodeFromErrStub);
+          sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             null,
@@ -91,6 +94,7 @@ describe("runs", () => {
       });
       getErrorCodeFromMsgStub = sandbox.stub().returns("random-error-code");
       capabilityValidatorStub = sandbox.stub();
+      deleteResultsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -114,7 +118,8 @@ describe("runs", () => {
           setBuildName: setBuildNameStub,
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
+          deleteResults: deleteResultsStub
         },
         "../helpers/capabilityHelper": {
           validate: capabilityValidatorStub,
@@ -135,6 +140,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(getErrorCodeFromMsgStub);
+          sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -167,6 +173,7 @@ describe("runs", () => {
       capabilityValidatorStub = sandbox.stub();
       archiverStub = sandbox.stub();
       deleteZipStub = sandbox.stub();
+      deleteResultsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -190,7 +197,8 @@ describe("runs", () => {
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
+          deleteResults: deleteResultsStub
         },
         "../helpers/capabilityHelper": {
           validate: capabilityValidatorStub,
@@ -220,6 +228,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(archiverStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(deleteZipStub);
+          sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -253,6 +262,7 @@ describe("runs", () => {
       archiverStub = sandbox.stub();
       zipUploadStub = sandbox.stub();
       deleteZipStub = sandbox.stub();
+      deleteResultsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -276,7 +286,8 @@ describe("runs", () => {
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
+          deleteResults: deleteResultsStub
         },
         "../helpers/capabilityHelper": {
           validate: capabilityValidatorStub,
@@ -310,7 +321,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(archiverStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(zipUploadStub);
-
+          sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -348,6 +359,7 @@ describe("runs", () => {
       zipUploadStub = sandbox.stub();
       createBuildStub = sandbox.stub();
       deleteZipStub = sandbox.stub();
+      deleteResultsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -371,7 +383,8 @@ describe("runs", () => {
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
+          deleteResults: deleteResultsStub
         },
         "../helpers/capabilityHelper": {
           validate: capabilityValidatorStub,
@@ -414,6 +427,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(createBuildStub);
 
           sinon.assert.calledOnce(sendUsageReportStub);
+          sinon.assert.calledOnce(deleteResultsStub);
 
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
@@ -454,6 +468,8 @@ describe("runs", () => {
       zipUploadStub = sandbox.stub();
       createBuildStub = sandbox.stub();
       deleteZipStub = sandbox.stub();
+      exportResultsStub = sandbox.stub();
+      deleteResultsStub = sandbox.stub();
       isUndefinedStub = sandbox.stub();
     });
 
@@ -480,6 +496,8 @@ describe("runs", () => {
           setUsageReportingFlag: setUsageReportingFlagStub,
           setParallels: setParallelsStub,
           getConfigPath: getConfigPathStub,
+          exportResults: exportResultsStub,
+          deleteResults: deleteResultsStub,
           isUndefined: isUndefinedStub
         },
         "../helpers/capabilityHelper": {
@@ -524,7 +542,8 @@ describe("runs", () => {
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(zipUploadStub);
           sinon.assert.calledOnce(createBuildStub);
-
+          sinon.assert.calledOnce(exportResultsStub);
+          sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
