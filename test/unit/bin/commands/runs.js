@@ -85,6 +85,7 @@ describe("runs", () => {
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
+      setCypressConfigFilenameStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -116,6 +117,7 @@ describe("runs", () => {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
           setLocalIdentifier: setLocalIdentifierStub,
@@ -165,6 +167,7 @@ describe("runs", () => {
       setAccessKeyStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
+      setCypressConfigFilenameStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -196,6 +199,7 @@ describe("runs", () => {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
@@ -255,6 +259,7 @@ describe("runs", () => {
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
+      setCypressConfigFilenameStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -287,6 +292,7 @@ describe("runs", () => {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
@@ -353,6 +359,7 @@ describe("runs", () => {
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
+      setCypressConfigFilenameStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -386,6 +393,7 @@ describe("runs", () => {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
@@ -463,6 +471,7 @@ describe("runs", () => {
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
+      setCypressConfigFilenameStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -499,6 +508,7 @@ describe("runs", () => {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           setParallels: setParallelsStub,
           getConfigPath: getConfigPathStub,
