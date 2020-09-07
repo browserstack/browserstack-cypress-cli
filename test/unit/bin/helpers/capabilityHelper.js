@@ -269,7 +269,8 @@ describe("capabilityHelper.js", () => {
             },
           ],
           run_settings: {
-            cypress_proj_dir: "random path"
+            cypress_proj_dir: "random path",
+            cypressConfigFilePath: "random path"
           },
         };
       });
@@ -651,7 +652,8 @@ describe("capabilityHelper.js", () => {
             },
           ],
           run_settings: {
-            cypress_proj_dir: "random path"
+            cypress_proj_dir: "random path",
+            cypressConfigFilePath: "random path"
           },
         };
       });
