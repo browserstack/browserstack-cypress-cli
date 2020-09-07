@@ -734,6 +734,37 @@ describe("capabilityHelper.js", () => {
             fs.readFileSync.restore();
           });
       });
+
+      context("cypress config file set to false", () => {
+        beforeEach(function() {
+          readFileSpy = sinon.stub(fs, 'readFileSync');
+          jsonParseSpy = sinon.stub(JSON, 'parse');
+        });
+
+        afterEach(function() {
+          readFileSpy.restore();
+          jsonParseSpy.restore();
+        });
+
+        it("does not validate with cypress config filename set to false", () => {
+          // sinon.stub(fs, 'existsSync').returns(false);
+          bsConfig.run_settings.cypressConfigFilePath = 'false';
+          bsConfig.run_settings.cypress_config_filename = 'false';
+
+          return capabilityHelper
+            .validate(bsConfig, {})
+            .then(function (data) {
+              sinon.assert.notCalled(readFileSpy);
+              sinon.assert.notCalled(jsonParseSpy);
+            })
+            .catch((error) => {
+              chai.assert.equal(
+                error,
+                Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE
+              );
+            });
+        })
+      });
     });
   });
 });
