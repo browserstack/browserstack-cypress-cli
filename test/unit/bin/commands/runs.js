@@ -51,7 +51,7 @@ describe("runs", () => {
         },
       });
 
-      validateBstackJsonStub.returns(Promise.reject({message: "random-error"}));
+      validateBstackJsonStub.returns(Promise.reject({ message: "random-error" }));
 
       return runs(args)
         .then(function (_bsConfig) {
@@ -94,6 +94,8 @@ describe("runs", () => {
       });
       getErrorCodeFromMsgStub = sandbox.stub().returns("random-error-code");
       capabilityValidatorStub = sandbox.stub();
+      setLocalStub = sandbox.stub();
+      setLocalIdentifierStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
     });
 
@@ -119,6 +121,8 @@ describe("runs", () => {
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
           getConfigPath: getConfigPathStub,
+          setLocal: setLocalStub,
+          setLocalIdentifier: setLocalIdentifierStub,
           deleteResults: deleteResultsStub
         },
         "../helpers/capabilityHelper": {
@@ -140,6 +144,8 @@ describe("runs", () => {
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(getErrorCodeFromMsgStub);
+          sinon.assert.calledOnce(setLocalStub);
+          sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
@@ -173,6 +179,8 @@ describe("runs", () => {
       capabilityValidatorStub = sandbox.stub();
       archiverStub = sandbox.stub();
       deleteZipStub = sandbox.stub();
+      setLocalStub = sandbox.stub();
+      setLocalIdentifierStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
     });
 
@@ -198,6 +206,8 @@ describe("runs", () => {
           setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub,
+          setLocal: setLocalStub,
+          setLocalIdentifier: setLocalIdentifierStub,
           deleteResults: deleteResultsStub
         },
         "../helpers/capabilityHelper": {
@@ -222,7 +232,9 @@ describe("runs", () => {
         .catch((error) => {
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
-          sinon.assert.calledOnce(setParallelsStub)
+          sinon.assert.calledOnce(setParallelsStub);
+          sinon.assert.calledOnce(setLocalStub);
+          sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(archiverStub);
@@ -262,6 +274,8 @@ describe("runs", () => {
       archiverStub = sandbox.stub();
       zipUploadStub = sandbox.stub();
       deleteZipStub = sandbox.stub();
+      setLocalStub = sandbox.stub();
+      setLocalIdentifierStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
     });
 
@@ -287,6 +301,8 @@ describe("runs", () => {
           setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub,
+          setLocal: setLocalStub,
+          setLocalIdentifier: setLocalIdentifierStub,
           deleteResults: deleteResultsStub
         },
         "../helpers/capabilityHelper": {
@@ -316,6 +332,8 @@ describe("runs", () => {
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(setParallelsStub);
+          sinon.assert.calledOnce(setLocalStub);
+          sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(archiverStub);
@@ -359,6 +377,8 @@ describe("runs", () => {
       zipUploadStub = sandbox.stub();
       createBuildStub = sandbox.stub();
       deleteZipStub = sandbox.stub();
+      setLocalStub = sandbox.stub();
+      setLocalIdentifierStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
     });
 
@@ -384,6 +404,8 @@ describe("runs", () => {
           setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub,
+          setLocal: setLocalStub,
+          setLocalIdentifier: setLocalIdentifierStub,
           deleteResults: deleteResultsStub
         },
         "../helpers/capabilityHelper": {
@@ -421,6 +443,8 @@ describe("runs", () => {
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(setParallelsStub);
+          sinon.assert.calledOnce(setLocalStub);
+          sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(archiverStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(zipUploadStub);
@@ -471,6 +495,8 @@ describe("runs", () => {
       exportResultsStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       isUndefinedStub = sandbox.stub();
+      setLocalStub = sandbox.stub();
+      setLocalIdentifierStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -496,6 +522,8 @@ describe("runs", () => {
           setUsageReportingFlag: setUsageReportingFlagStub,
           setParallels: setParallelsStub,
           getConfigPath: getConfigPathStub,
+          setLocal: setLocalStub,
+          setLocalIdentifier: setLocalIdentifierStub,
           exportResults: exportResultsStub,
           deleteResults: deleteResultsStub,
           isUndefined: isUndefinedStub
@@ -538,6 +566,8 @@ describe("runs", () => {
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(setParallelsStub);
+          sinon.assert.calledOnce(setLocalStub);
+          sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(archiverStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(zipUploadStub);

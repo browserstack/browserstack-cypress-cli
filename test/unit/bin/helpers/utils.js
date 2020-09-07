@@ -105,7 +105,7 @@ describe("utils", () => {
           "parallels": 10,
         }
       };
-      utils.setParallels(bsConfig, {parallels: 100});
+      utils.setParallels(bsConfig, { parallels: 100 });
       expect(bsConfig['run_settings']['parallels']).to.be.eq(100);
     });
 
@@ -115,7 +115,7 @@ describe("utils", () => {
           "parallels": 10,
         }
       };
-      utils.setParallels(bsConfig, {parallels: undefined});
+      utils.setParallels(bsConfig, { parallels: undefined });
       expect(bsConfig['run_settings']['parallels']).to.be.eq(10);
     });
   });
@@ -126,8 +126,8 @@ describe("utils", () => {
     });
 
     it(`should return value depending on validation messages`, () => {
-      expect(utils.getErrorCodeFromErr({"code": "SyntaxError"})).to.eq("bstack_json_parse_error");
-      expect(utils.getErrorCodeFromErr({"code": "EACCES"})).to.eq("bstack_json_no_permission");
+      expect(utils.getErrorCodeFromErr({ "code": "SyntaxError" })).to.eq("bstack_json_parse_error");
+      expect(utils.getErrorCodeFromErr({ "code": "EACCES" })).to.eq("bstack_json_no_permission");
     });
   });
 
@@ -139,15 +139,15 @@ describe("utils", () => {
 
   describe("validateBstackJson", () => {
     it("should reject with SyntaxError for empty file", () => {
-      let bsConfigPath = path.join(process.cwd(),'test', 'test_files', 'dummy_bstack.json');
+      let bsConfigPath = path.join(process.cwd(), 'test', 'test_files', 'dummy_bstack.json');
       expect(utils.validateBstackJson(bsConfigPath)).to.be.rejectedWith(SyntaxError);
     });
     it("should resolve with data for valid json", () => {
-      let bsConfigPath = path.join(process.cwd(),'test', 'test_files', 'dummy_bstack_2.json');
+      let bsConfigPath = path.join(process.cwd(), 'test', 'test_files', 'dummy_bstack_2.json');
       expect(utils.validateBstackJson(bsConfigPath)).to.be.eventually.eql({});
     });
     it("should reject with SyntaxError for invalid json file", () => {
-      let bsConfigPath = path.join(process.cwd(),'test', 'test_files', 'dummy_bstack_3.json');
+      let bsConfigPath = path.join(process.cwd(), 'test', 'test_files', 'dummy_bstack_3.json');
       expect(utils.validateBstackJson(bsConfigPath)).to.be.rejectedWith(SyntaxError);
     });
   });
@@ -478,16 +478,16 @@ describe("utils", () => {
   });
 
   describe("isCypressProjDirValid", () => {
-    it("should return true when cypressDir and cypressProjDir is same", () =>{
-      expect(utils.isCypressProjDirValid("/absolute/path","/absolute/path")).to.be.true;
+    it("should return true when cypressDir and cypressProjDir is same", () => {
+      expect(utils.isCypressProjDirValid("/absolute/path", "/absolute/path")).to.be.true;
     });
 
-    it("should return true when cypressProjDir is child directory of cypressDir", () =>{
-      expect(utils.isCypressProjDirValid("/absolute/path","/absolute/path/childpath")).to.be.true;
+    it("should return true when cypressProjDir is child directory of cypressDir", () => {
+      expect(utils.isCypressProjDirValid("/absolute/path", "/absolute/path/childpath")).to.be.true;
     });
 
-    it("should return false when cypressProjDir is not child directory of cypressDir", () =>{
-      expect(utils.isCypressProjDirValid("/absolute/path","/absolute")).to.be.false;
+    it("should return false when cypressProjDir is not child directory of cypressDir", () => {
+      expect(utils.isCypressProjDirValid("/absolute/path", "/absolute")).to.be.false;
     });
   });
 
@@ -501,11 +501,190 @@ describe("utils", () => {
     });
 
     it("should return false if connectionSettings.local is false", () => {
-      expect(utils.getLocalFlag({"local": false})).to.be.false;
+      expect(utils.getLocalFlag({ "local": false })).to.be.false;
     });
 
     it("should return true if connectionSettings.local is true", () => {
-      expect(utils.getLocalFlag({"local": true})).to.be.true;
+      expect(utils.getLocalFlag({ "local": true })).to.be.true;
     });
+  });
+
+  describe("setLocal", () => {
+    beforeEach(function () {
+      delete process.env.BROWSERSTACK_LOCAL;
+    });
+
+    afterEach(function () {
+      delete process.env.BROWSERSTACK_LOCAL;
+    });
+
+    it("should not change local in bsConfig if process.env.BROWSERSTACK_LOCAL is undefined", () => {
+      let bsConfig = {
+        connection_settings: {
+          local: true
+        }
+      }
+      utils.setLocal(bsConfig);
+      expect(bsConfig.connection_settings.local).to.be.eq(true);
+    });
+
+    it("should change local to false in bsConfig if process.env.BROWSERSTACK_LOCAL is set to false", () => {
+      let bsConfig = {
+        connection_settings: {
+          local: true
+        }
+      }
+      process.env.BROWSERSTACK_LOCAL = false;
+      utils.setLocal(bsConfig);
+      expect(bsConfig.connection_settings.local).to.be.eq(false);
+    });
+
+    it("should change local to true in bsConfig if process.env.BROWSERSTACK_LOCAL is set to true", () => {
+      let bsConfig = {
+        connection_settings: {
+          local: false
+        }
+      }
+      process.env.BROWSERSTACK_LOCAL = true;
+      utils.setLocal(bsConfig);
+      expect(bsConfig.connection_settings.local).to.be.eq(true);
+    });
+
+    it("should set local to true in bsConfig if process.env.BROWSERSTACK_LOCAL is set to true & local is not set in bsConfig", () => {
+      let bsConfig = {
+        connection_settings: {
+        }
+      }
+      process.env.BROWSERSTACK_LOCAL = true;
+      utils.setLocal(bsConfig);
+      expect(bsConfig.connection_settings.local).to.be.eq(true);
+    });
+
+  });
+
+  describe("setLocalIdentifier", () => {
+    beforeEach(function () {
+      delete process.env.BROWSERSTACK_LOCAL_IDENTIFIER;
+    });
+
+    afterEach(function () {
+      delete process.env.BROWSERSTACK_LOCAL_IDENTIFIER;
+    });
+    it("should not change local identifier in bsConfig if process.env.BROWSERSTACK_LOCAL_IDENTIFIER is undefined", () => {
+      let bsConfig = {
+        connection_settings: {
+          local_identifier: "local_identifier"
+        }
+      }
+      utils.setLocalIdentifier(bsConfig);
+      expect(bsConfig.connection_settings.local_identifier).to.be.eq("local_identifier");
+    });
+
+    it("should change local identifier to local_identifier in bsConfig if process.env.BROWSERSTACK_LOCAL_IDENTIFIER is set to local_identifier", () => {
+      let bsConfig = {
+        connection_settings: {
+          local_identifier: "test"
+        }
+      }
+      process.env.BROWSERSTACK_LOCAL_IDENTIFIER = "local_identifier";
+      utils.setLocalIdentifier(bsConfig);
+      expect(bsConfig.connection_settings.local_identifier).to.be.eq("local_identifier");
+    });
+
+    it("should set local identifier in connection_settings in bsConfig if process.env.BROWSERSTACK_LOCAL_IDENTIFIER is present & not set in bsConfig", () => {
+      let bsConfig = {
+        connection_settings: {
+        }
+      }
+      process.env.BROWSERSTACK_LOCAL_IDENTIFIER = "local_identifier";
+      utils.setLocalIdentifier(bsConfig);
+      expect(bsConfig.connection_settings.local_identifier).to.be.eq("local_identifier");
+    });
+
+  });
+
+  describe("setUsername", () => {
+
+    beforeEach(function () {
+      delete process.env.BROWSERSTACK_USERNAME;
+    });
+
+    afterEach(function () {
+      delete process.env.BROWSERSTACK_USERNAME;
+    });
+
+    it("should set username if args.username is present", () => {
+      let bsConfig = {
+        auth: {
+          username: "test"
+        }
+      }
+      utils.setUsername(bsConfig, { username: "username" });
+      expect(bsConfig.auth.username).to.be.eq("username");
+    });
+
+    it("should set username if process.env.BROWSERSTACK_USERNAME is present and args.username is not present", () => {
+      let bsConfig = {
+        auth: {
+          username: "test"
+        }
+      }
+      process.env.BROWSERSTACK_USERNAME = "username"
+      utils.setUsername(bsConfig, {});
+      expect(bsConfig.auth.username).to.be.eq("username");
+    });
+
+    it("should set username to default if process.env.BROWSERSTACK_USERNAME and args.username is not present", () => {
+      let bsConfig = {
+        auth: {
+          username: "test"
+        }
+      }
+      utils.setUsername(bsConfig, {});
+      expect(bsConfig.auth.username).to.be.eq("test");
+    });
+
+  });
+
+  describe("setAccessKey", () => {
+    beforeEach(function () {
+      delete process.env.BROWSERSTACK_ACCESS_KEY;
+    });
+
+    afterEach(function () {
+      delete process.env.BROWSERSTACK_ACCESS_KEY;
+    });
+
+    it("should set access_key if args.key is present", () => {
+      let bsConfig = {
+        auth: {
+          access_key: "test"
+        }
+      }
+      utils.setAccessKey(bsConfig, { key: "access_key" });
+      expect(bsConfig.auth.access_key).to.be.eq("access_key");
+    });
+
+    it("should set access_key if process.env.BROWSERSTACK_ACCESS_KEY is present and args.access_key is not present", () => {
+      let bsConfig = {
+        auth: {
+          access_key: "test"
+        }
+      }
+      process.env.BROWSERSTACK_ACCESS_KEY = "access_key"
+      utils.setAccessKey(bsConfig, {});
+      expect(bsConfig.auth.access_key).to.be.eq("access_key");
+    });
+
+    it("should set access_key to default if process.env.BROWSERSTACK_ACCESS_KEY and args.access_key is not present", () => {
+      let bsConfig = {
+        auth: {
+          access_key: "test"
+        }
+      }
+      utils.setAccessKey(bsConfig, {});
+      expect(bsConfig.auth.access_key).to.be.eq("test");
+    });
+
   });
 });

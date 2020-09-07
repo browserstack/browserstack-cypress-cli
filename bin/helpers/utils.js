@@ -3,19 +3,19 @@ const os = require("os");
 const path = require("path");
 const fs = require("fs");
 
-const usageReporting =  require('./usageReporting'),
+const usageReporting = require('./usageReporting'),
   logger = require('./logger').winstonLogger,
   Constants = require('./constants');
 
 exports.validateBstackJson = (bsConfigPath) => {
-  return new Promise(function(resolve, reject){
+  return new Promise(function (resolve, reject) {
     try {
       logger.info(`Reading config from ${bsConfigPath}`);
       let bsConfig = require(bsConfigPath);
       resolve(bsConfig);
     }
     catch (e) {
-      reject("Couldn't find the browserstack.json file at \""+ bsConfigPath +"\". Please use --config-file <path to browserstack.json>.");
+      reject("Couldn't find the browserstack.json file at \"" + bsConfigPath + "\". Please use --config-file <path to browserstack.json>.");
     }
   });
 }
@@ -51,7 +51,7 @@ exports.getErrorCodeFromMsg = (errMsg) => {
       errorCode = "invalid_directory_structure";
       break;
   }
-  if(errMsg.includes("Please use --config-file <path to browserstack.json>.")){
+  if (errMsg.includes("Please use --config-file <path to browserstack.json>.")) {
     errorCode = "bstack_json_path_invalid";
   }
   return errorCode;
@@ -96,12 +96,18 @@ exports.setParallels = (bsConfig, args) => {
 exports.setUsername = (bsConfig, args) => {
   if (!this.isUndefined(args.username)) {
     bsConfig['auth']['username'] = args.username;
+  } else if (!this.isUndefined(process.env.BROWSERSTACK_USERNAME)) {
+    bsConfig['auth']['username'] = process.env.BROWSERSTACK_USERNAME;
+    logger.info("Reading username from the environment variable BROWSERSTACK_USERNAME");
   }
 }
 
 exports.setAccessKey = (bsConfig, args) => {
   if (!this.isUndefined(args.key)) {
     bsConfig['auth']['access_key'] = args.key;
+  } else if (!this.isUndefined(process.env.BROWSERSTACK_ACCESS_KEY)) {
+    bsConfig['auth']['access_key'] = process.env.BROWSERSTACK_ACCESS_KEY;
+    logger.info("Reading access key from the environment variable BROWSERSTACK_ACCESS_KEY");
   }
 }
 
@@ -146,14 +152,14 @@ exports.isUndefined = value => (value === undefined || value === null);
 exports.isFloat = value => (Number(value) && Number(value) % 1 !== 0);
 
 exports.isParallelValid = (value) => {
-  return this.isUndefined(value) || !(isNaN(value) || this.isFloat(value) || parseInt(value, 10) === 0 || parseInt(value, 10) < -1 ) || value === Constants.constants.DEFAULT_PARALLEL_MESSAGE;
+  return this.isUndefined(value) || !(isNaN(value) || this.isFloat(value) || parseInt(value, 10) === 0 || parseInt(value, 10) < -1) || value === Constants.constants.DEFAULT_PARALLEL_MESSAGE;
 }
 
 exports.getUserAgent = () => {
   return `BStack-Cypress-CLI/1.3.0 (${os.arch()}/${os.platform()}/${os.release()})`;
 }
 
-exports.isAbsolute  = (configPath) => {
+exports.isAbsolute = (configPath) => {
   return path.isAbsolute(configPath)
 }
 
@@ -168,9 +174,9 @@ exports.configCreated = (args) => {
 }
 
 exports.exportResults = (buildId, buildUrl) => {
-  let data = "BUILD_ID=" + buildId + "\nBUILD_URL="+buildUrl;
-  fs.writeFileSync("log/build_results.txt", data , function(err){
-    if(err) {
+  let data = "BUILD_ID=" + buildId + "\nBUILD_URL=" + buildUrl;
+  fs.writeFileSync("log/build_results.txt", data, function (err) {
+    if (err) {
       logger.warn(`Couldn't write BUILD_ID with value: ${buildId} to browserstack/build_results.txt`);
       logger.warn(`Couldn't write BUILD_URL with value: ${buildUrl} to browserstack/build_results.txt`);
     }
@@ -178,7 +184,7 @@ exports.exportResults = (buildId, buildUrl) => {
 }
 
 exports.deleteResults = () => {
-  fs.unlink("log/build_results.txt", function (err){
+  fs.unlink("log/build_results.txt", function (err) {
   });
 }
 
@@ -186,7 +192,7 @@ exports.isCypressProjDirValid = (cypressDir, cypressProjDir) => {
   // Getting absolute path
   cypressDir = path.resolve(cypressDir);
   cypressProjDir = path.resolve(cypressProjDir);
-  if(cypressProjDir === cypressDir) return true;
+  if (cypressProjDir === cypressDir) return true;
   let parentTokens = cypressDir.split('/').filter(i => i.length);
   let childTokens = cypressProjDir.split('/').filter(i => i.length);
   return parentTokens.every((t, i) => childTokens[i] === t);
@@ -194,4 +200,20 @@ exports.isCypressProjDirValid = (cypressDir, cypressProjDir) => {
 
 exports.getLocalFlag = (connectionSettings) => {
   return !this.isUndefined(connectionSettings) && !this.isUndefined(connectionSettings.local) && connectionSettings.local
+}
+
+exports.setLocal = (bsConfig) => {
+  if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL)) {
+    let local = false;
+    if (String(process.env.BROWSERSTACK_LOCAL).toLowerCase() === "true") local = true;
+    bsConfig['connection_settings']['local'] = local;
+    logger.info("Reading local setting from the environment variable BROWSERSTACK_LOCAL");
+  }
+}
+
+exports.setLocalIdentifier = (bsConfig) => {
+  if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL_IDENTIFIER)) {
+    bsConfig['connection_settings']['local_identifier'] = process.env.BROWSERSTACK_LOCAL_IDENTIFIER;
+    logger.info("Reading local identifier from the environment variable BROWSERSTACK_LOCAL_IDENTIFIER");
+  }
 }
