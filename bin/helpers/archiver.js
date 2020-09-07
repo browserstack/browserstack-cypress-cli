@@ -38,8 +38,10 @@ const archiveSpecs = (runSettings, filePath, excludeFiles) => {
 
     archive.pipe(output);
 
+    let ignoreFiles = getFilesToIgnore(runSettings, excludeFiles);
+
     Constants.allowedFileTypes.forEach(fileType => {
-      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: getFilesToIgnore(runSettings, excludeFiles) });
+      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: ignoreFiles });
     });
 
     let packageJSON = {};
@@ -67,9 +69,12 @@ const getFilesToIgnore = (runSettings, excludeFiles) => {
   // exclude files asked by the user
   // args will take precedence over config file
   if (!utils.isUndefined(excludeFiles)) {
-    ignoreFiles = ignoreFiles.concat(utils.fixCommaSeparatedString(excludeFiles).split(','));
+    let excludePatterns = utils.fixCommaSeparatedString(excludeFiles).split(',');
+    ignoreFiles = ignoreFiles.concat(excludePatterns);
+    logger.info(`Excluding files matching: ${JSON.stringify(excludePatterns)}`);
   } else if (!utils.isUndefined(runSettings.exclude) && runSettings.exclude.length) {
     ignoreFiles = ignoreFiles.concat(runSettings.exclude);
+    logger.info(`Excluding files matching: ${JSON.stringify(runSettings.exclude)}`);
   }
 
   return ignoreFiles;
