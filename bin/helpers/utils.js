@@ -131,13 +131,16 @@ exports.verifyCypressConfigFileOption = () => {
 exports.setCypressConfigFilename = (bsConfig, args) => {
   let userProvidedCypessConfigFile = this.verifyCypressConfigFileOption();
 
+  bsConfig.run_settings.userProvidedCypessConfigFile = (userProvidedCypessConfigFile || (!this.isUndefined(bsConfig.run_settings.cypress_config_file)));
+
   if (userProvidedCypessConfigFile || this.isUndefined(bsConfig.run_settings.cypress_config_file)) {
-    bsConfig.run_settings.cypress_config_filename = path.basename(args.cypressConfigFile);
     bsConfig.run_settings.cypress_config_file = args.cypressConfigFile;
-    bsConfig.run_settings.userProvidedCypessConfigFile = userProvidedCypessConfigFile;
+    bsConfig.run_settings.cypress_config_filename = path.basename(args.cypressConfigFile);
+  } else if (!this.isUndefined(bsConfig.run_settings.cypress_config_file)) {
+    bsConfig.run_settings.cypress_config_filename = path.basename(bsConfig.run_settings.cypress_config_file);
   }
 
-  bsConfig.run_settings.cypressConfigFilePath = userProvidedCypessConfigFile ? bsConfig.run_settings.cypress_config_file : path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json');
+  bsConfig.run_settings.cypressConfigFilePath = bsConfig.run_settings.userProvidedCypessConfigFile ? bsConfig.run_settings.cypress_config_file : path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json');
 }
 
 exports.isUndefined = value => (value === undefined || value === null);

@@ -482,4 +482,126 @@ describe("utils", () => {
     });
 
   });
+
+  describe("verifyCypressConfigFileOption", () => {
+    let utilsearchForOptionCypressConfigFileStub, userOption, testOption;
+
+    beforeEach(function() {
+      utilsearchForOptionCypressConfigFileStub = sinon
+                                                    .stub(utils, 'searchForOption')
+                                                    .callsFake((...userOption) => {
+                                                      return (userOption == testOption);
+                                                    });
+    });
+
+    afterEach(function() {
+      utilsearchForOptionCypressConfigFileStub.restore();
+    });
+
+    it("-ccf user option", () => {
+      testOption = '-ccf';
+      expect(utils.verifyCypressConfigFileOption()).to.be.true;
+      sinon.assert.calledWithExactly(utilsearchForOptionCypressConfigFileStub, testOption);
+    });
+
+    it("--ccf user option", () => {
+      testOption = '--ccf';
+      expect(utils.verifyCypressConfigFileOption()).to.be.true;
+      sinon.assert.calledWithExactly(utilsearchForOptionCypressConfigFileStub, testOption);
+    });
+
+    it("-cypress-config-file user option", () => {
+      testOption = '-cypress-config-file';
+      expect(utils.verifyCypressConfigFileOption()).to.be.true;
+      sinon.assert.calledWithExactly(utilsearchForOptionCypressConfigFileStub, testOption);
+    });
+
+    it("--cypress-config-file user option", () => {
+      testOption = '--cypress-config-file';
+      expect(utils.verifyCypressConfigFileOption()).to.be.true;
+      sinon.assert.calledWithExactly(utilsearchForOptionCypressConfigFileStub, testOption);
+    });
+
+    it("-cypressConfigFile user option", () => {
+      testOption = '-cypressConfigFile';
+      expect(utils.verifyCypressConfigFileOption()).to.be.true;
+      sinon.assert.calledWithExactly(utilsearchForOptionCypressConfigFileStub, testOption);
+    });
+
+    it("--cypressConfigFile user option", () => {
+      testOption = '--cypressConfigFile';
+      expect(utils.verifyCypressConfigFileOption()).to.be.true;
+      sinon.assert.calledWithExactly(utilsearchForOptionCypressConfigFileStub, testOption);
+    });
+  });
+
+  describe("setCypressConfigFilename", () => {
+    let verifyCypressConfigFileOptionStub,
+        ccfBool, args, bsConfig, cypress_config_file;
+
+    beforeEach(function() {
+      verifyCypressConfigFileOptionStub = sinon
+                                            .stub(utils, 'verifyCypressConfigFileOption')
+                                            .callsFake(() => ccfBool);
+
+      args = {
+        cypressConfigFile: "args_cypress_config_file"
+      };
+    });
+
+    it("has user provided ccf flag", () => {
+      ccfBool = true;
+
+      bsConfig = {
+        run_settings: {
+          cypress_config_file: "run_settings_cypress_config_file"
+        }
+      };
+
+      utils.setCypressConfigFilename(bsConfig, args);
+
+      expect(bsConfig.run_settings.cypress_config_file).to.be.eq(args.cypressConfigFile);
+      expect(bsConfig.run_settings.cypress_config_filename).to.be.eq(path.basename(args.cypressConfigFile));
+      expect(bsConfig.run_settings.userProvidedCypessConfigFile).to.be.true;
+      expect(bsConfig.run_settings.cypressConfigFilePath).to.be.eq(bsConfig.run_settings.cypress_config_file);
+    });
+
+    it("does not have user provided ccf flag, sets the value from cypress_proj_dir", () => {
+      ccfBool = false;
+
+      bsConfig = {
+        run_settings: {
+          cypress_proj_dir: "cypress_proj_dir"
+        }
+      };
+
+      utils.setCypressConfigFilename(bsConfig, args);
+
+      expect(bsConfig.run_settings.cypress_config_file).to.be.eq(args.cypressConfigFile);
+      expect(bsConfig.run_settings.cypress_config_filename).to.be.eq(path.basename(args.cypressConfigFile));
+      expect(bsConfig.run_settings.userProvidedCypessConfigFile).to.be.false;
+      expect(bsConfig.run_settings.cypressConfigFilePath).to.be.eq(path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json'));
+    });
+
+    it("does not have user provided ccf flag, sets from config file", () => {
+      cypress_config_file = "run_settings_cypress_config_file";
+      ccfBool = false;
+      bsConfig = {
+        run_settings: {
+          cypress_config_file: cypress_config_file
+        }
+      };
+
+      utils.setCypressConfigFilename(bsConfig, args);
+
+      expect(bsConfig.run_settings.cypress_config_file).to.be.eq(cypress_config_file);
+      expect(bsConfig.run_settings.cypress_config_filename).to.be.eq(path.basename(cypress_config_file));
+      expect(bsConfig.run_settings.userProvidedCypessConfigFile).to.be.true;
+      expect(bsConfig.run_settings.cypressConfigFilePath).to.be.eq(bsConfig.run_settings.cypress_config_file);
+    });
+
+    afterEach(function() {
+      verifyCypressConfigFileOptionStub.restore();
+    })
+  });
 });
