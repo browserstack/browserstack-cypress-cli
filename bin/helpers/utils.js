@@ -128,6 +128,11 @@ exports.verifyCypressConfigFileOption = () => {
   return (ccfOptionsSet || cypressConfigFileSet || cypressConfigOptionsSet);
 }
 
+//  TODO: Remove when cleaningup cypress_proj_dir
+//
+// 1. Remove demand from runner.js for --ccf option.
+// 2. Remove the strict check functions: verifyCypressConfigFileOption
+// 3. Just use the args.cypressConfigFile for checking the value for cypress config file.
 exports.setCypressConfigFilename = (bsConfig, args) => {
   let userProvidedCypessConfigFile = this.verifyCypressConfigFileOption();
 
