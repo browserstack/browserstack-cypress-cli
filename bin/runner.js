@@ -165,6 +165,17 @@ var argv = yargs
           type: "string",
           default: undefined
         },
+        's': {
+          alias: ['specs', 'spec'],
+          describe: Constants.cliMessages.RUN.SPECS_DESCRIPTION,
+          type: "string",
+          default: undefined
+        },
+        'env': {
+          describe: Constants.cliMessages.RUN.ENV_DESCRIPTION,
+          type: "string",
+          default: undefined
+        },
         'disable-npm-warning': {
           default: false,
           description: Constants.cliMessages.COMMON.NO_NPM_WARNING,
