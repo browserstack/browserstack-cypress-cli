@@ -29,6 +29,12 @@ module.exports = function run(args) {
     // set cypress config filename
     utils.setCypressConfigFilename(bsConfig, args);
 
+    // accept the specs list from command line if provided
+    utils.setUserSpecs(bsConfig, args);
+
+    // accept the env list from command line and set it
+    utils.setTestEnvs(bsConfig, args);
+
     //accept the local from env variable if provided
     utils.setLocal(bsConfig);
 

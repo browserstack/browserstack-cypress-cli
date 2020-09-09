@@ -68,8 +68,16 @@ const caps = (bsConfig, zip) => {
       obj.projectNotifyURL = bsConfig.run_settings.project_notify_URL;
       obj.parallels = bsConfig.run_settings.parallels;
 
-      if (bsConfig.run_settings.cypress_config_filename) {
+      if (!Utils.isUndefined(bsConfig.run_settings.cypress_config_filename)) {
         obj.cypress_config_filename = bsConfig.run_settings.cypress_config_filename;
+      }
+
+      if (!Utils.isUndefined(bsConfig.run_settings.specs)){
+        obj.specs = bsConfig.run_settings.specs;
+      }
+
+      if (!Utils.isUndefined(bsConfig.run_settings.env)){
+        obj.env = bsConfig.run_settings.env;
       }
     }
 

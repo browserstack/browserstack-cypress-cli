@@ -86,6 +86,8 @@ describe("runs", () => {
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
       setCypressConfigFilenameStub = sandbox.stub();
+      setUserSpecsStub = sandbox.stub();
+      setTestEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -118,6 +120,8 @@ describe("runs", () => {
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
           setCypressConfigFilename: setCypressConfigFilenameStub,
+          setUserSpecs: setUserSpecsStub,
+          setTestEnvs: setTestEnvsStub,
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
           setLocalIdentifier: setLocalIdentifierStub,
@@ -168,6 +172,8 @@ describe("runs", () => {
       getConfigPathStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
       setCypressConfigFilenameStub = sandbox.stub();
+      setUserSpecsStub = sandbox.stub();
+      setTestEnvsStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -200,6 +206,8 @@ describe("runs", () => {
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
           setCypressConfigFilename: setCypressConfigFilenameStub,
+          setUserSpecs: setUserSpecsStub,
+          setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
@@ -260,6 +268,8 @@ describe("runs", () => {
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
       setCypressConfigFilenameStub = sandbox.stub();
+      setUserSpecsStub = sandbox.stub();
+      setTestEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -293,6 +303,8 @@ describe("runs", () => {
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
           setCypressConfigFilename: setCypressConfigFilenameStub,
+          setUserSpecs: setUserSpecsStub,
+          setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
@@ -360,6 +372,8 @@ describe("runs", () => {
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
       setCypressConfigFilenameStub = sandbox.stub();
+      setUserSpecsStub = sandbox.stub();
+      setTestEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -394,6 +408,8 @@ describe("runs", () => {
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
           setCypressConfigFilename: setCypressConfigFilenameStub,
+          setUserSpecs: setUserSpecsStub,
+          setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
@@ -472,6 +488,8 @@ describe("runs", () => {
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
       setCypressConfigFilenameStub = sandbox.stub();
+      setUserSpecsStub = sandbox.stub();
+      setTestEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
@@ -509,6 +527,8 @@ describe("runs", () => {
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
           setCypressConfigFilename: setCypressConfigFilenameStub,
+          setUserSpecs: setUserSpecsStub,
+          setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           setParallels: setParallelsStub,
           getConfigPath: getConfigPathStub,
