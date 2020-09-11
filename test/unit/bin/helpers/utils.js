@@ -243,6 +243,211 @@ describe("utils", () => {
     });
   });
 
+  describe("setBuildName", () => {
+    it("sets the build name from args list", () => {
+      let argBuildName = "argBuildName";
+      let bsConfig = {
+        run_settings: {
+          build_name: "build_name"
+        }
+      };
+      let args = {
+        'build-name': argBuildName
+      };
+
+      utils.setBuildName(bsConfig, args);
+      expect(bsConfig.run_settings.build_name).to.be.eq(argBuildName);
+    });
+  });
+
+  describe("setUsername", () => {
+    it("sets the username from args list", () => {
+      let argUserName = "argUserName";
+      let bsConfig = {
+        auth: {
+          username: "username"
+        }
+      };
+      let args = {
+        username: argUserName
+      };
+
+      utils.setUsername(bsConfig, args);
+      expect(bsConfig.auth.username).to.be.eq(argUserName);
+    });
+  });
+
+  describe("setAccessKey", () => {
+    it("sets the access key from args list", () => {
+      let argAccessKey = "argAccessKey";
+      let bsConfig = {
+        auth: {
+          access_key: "access_key"
+        }
+      };
+      let args = {
+        key: argAccessKey
+      };
+
+      utils.setAccessKey(bsConfig, args);
+      expect(bsConfig.auth.access_key).to.be.eq(argAccessKey);
+    });
+  });
+
+  describe("setUserSpecs", () => {
+    it("sets the specs from args list without space after comma with single space in given list", () => {
+      let argsSpecs = "spec3, spec4";
+      let bsConfig = {
+        run_settings: {
+          specs: "spec1, spec2"
+        }
+      };
+      let args = {
+        specs: argsSpecs
+      };
+
+      utils.setUserSpecs(bsConfig, args);
+      expect(bsConfig.run_settings.specs).to.be.eq('spec3,spec4');
+    });
+
+    it("sets the specs from args list without space after comma with spaces in given list", () => {
+      let argsSpecs = "spec3 , spec4";
+      let bsConfig = {
+        run_settings: {
+          specs: "spec1, spec2"
+        }
+      };
+      let args = {
+        specs: argsSpecs
+      };
+
+      utils.setUserSpecs(bsConfig, args);
+      expect(bsConfig.run_settings.specs).to.be.eq('spec3,spec4');
+    });
+
+    it("sets the specs list from specs key without space after comma with once space after comma in given list", () => {
+      let bsConfig = {
+        run_settings: {
+          specs: "spec1, spec2"
+        }
+      };
+      let args = {
+        specs: null
+      };
+
+      utils.setUserSpecs(bsConfig, args);
+      expect(bsConfig.run_settings.specs).to.be.eq('spec1,spec2');
+    });
+
+    it("sets the specs list from specs key without space after comma with extra space in given list", () => {
+      let bsConfig = {
+        run_settings: {
+          specs: "spec1 , spec2"
+        }
+      };
+      let args = {
+        specs: null
+      };
+
+      utils.setUserSpecs(bsConfig, args);
+      expect(bsConfig.run_settings.specs).to.be.eq('spec1,spec2');
+    });
+
+    it("sets the specs list from specs key array without space with comma", () => {
+      let bsConfig = {
+        run_settings: {
+          specs: ["spec1", "spec2"]
+        }
+      };
+      let args = {
+        specs: null
+      };
+
+      utils.setUserSpecs(bsConfig, args);
+      expect(bsConfig.run_settings.specs).to.be.eq('spec1,spec2');
+    });
+
+    it("does not set the specs list if no specs key specified", () => {
+      let bsConfig = {
+        run_settings: {
+        }
+      };
+      let args = {
+        specs: null
+      };
+
+      utils.setUserSpecs(bsConfig, args);
+      expect(bsConfig.run_settings.specs).to.be.eq(null);
+    });
+  });
+
+  describe("setTestEnvs", () => {
+    it("sets env only from args", () => {
+      let argsEnv = "env3=value3, env4=value4";
+      let bsConfig = {
+        run_settings: {
+          env: "env1=value1, env2=value2"
+        }
+      };
+      let args = {
+        env: argsEnv
+      };
+
+      utils.setTestEnvs(bsConfig, args);
+      expect(bsConfig.run_settings.env).to.be.eq('env3=value3,env4=value4');
+    });
+
+    it("sets env from args without spaces in it", () => {
+      let argsEnv = "env3=value3 , env4=value4";
+      let bsConfig = {
+        run_settings: {
+          env: "env1=value1 , env2=value2"
+        }
+      };
+      let args = {
+        env: argsEnv
+      };
+
+      utils.setTestEnvs(bsConfig, args);
+      expect(bsConfig.run_settings.env).to.be.eq('env3=value3,env4=value4');
+    });
+
+    it("does not set env if not specified in args", () => {
+      let argsEnv = "env3=value3 , env4=value4";
+      let bsConfig = {
+        run_settings: {
+          env: "env1=value1 , env2=value2"
+        }
+      };
+      let args = {
+        env: null
+      };
+
+      utils.setTestEnvs(bsConfig, args);
+      expect(bsConfig.run_settings.env).to.be.eq(null);
+    });
+  });
+
+  describe("fixCommaSeparatedString", () => {
+    it("string with spaces after comma", () => {
+      let commaString = "string1, string2";
+      let result = utils.fixCommaSeparatedString(commaString);
+      expect(result).to.be.eq('string1,string2');
+    });
+
+    it("string with spaces around comma", () => {
+      let commaString = "string1 , string2";
+      let result = utils.fixCommaSeparatedString(commaString);
+      expect(result).to.be.eq('string1,string2');
+    });
+
+    it("string with 2 spaces around comma", () => {
+      let commaString = "string1  ,  string2";
+      let result = utils.fixCommaSeparatedString(commaString);
+      expect(result).to.be.eq('string1,string2');
+    });
+  });
+
   describe("exportResults", () => {
 
     it("should export results to log/build_results.txt", () => {

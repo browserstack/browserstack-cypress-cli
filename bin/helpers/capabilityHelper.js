@@ -67,6 +67,14 @@ const caps = (bsConfig, zip) => {
       obj.callbackURL = bsConfig.run_settings.callback_url;
       obj.projectNotifyURL = bsConfig.run_settings.project_notify_URL;
       obj.parallels = bsConfig.run_settings.parallels;
+
+      if (!Utils.isUndefined(bsConfig.run_settings.specs)){
+        obj.specs = bsConfig.run_settings.specs;
+      }
+
+      if (!Utils.isUndefined(bsConfig.run_settings.env)){
+        obj.env = bsConfig.run_settings.env;
+      }
     }
 
     if(obj.parallels === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE) obj.parallels = undefined
