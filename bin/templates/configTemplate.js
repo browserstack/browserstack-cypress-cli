@@ -55,6 +55,7 @@ module.exports = function () {
       "cypress_config_file" : "/path/to/<cypress config file>.json",
       "project_name": "project-name",
       "build_name": "build-name",
+      "exclude": [],
       "parallels": "Here goes the number of parallels you want to run",
       "npm_dependencies": {
       },

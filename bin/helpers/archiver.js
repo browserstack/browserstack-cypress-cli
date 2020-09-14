@@ -2,10 +2,12 @@
 const fs = require("fs");
 
 const archiver = require("archiver"),
+  Constants = require('../helpers/constants'),
   logger = require("./logger").winstonLogger,
+  utils = require('../helpers/utils'),
   path = require('path');
 
-const archiveSpecs = (runSettings, filePath) => {
+const archiveSpecs = (runSettings, filePath, excludeFiles) => {
   return new Promise(function (resolve, reject) {
     var output = fs.createWriteStream(filePath);
 
@@ -37,9 +39,10 @@ const archiveSpecs = (runSettings, filePath) => {
 
     archive.pipe(output);
 
-    let allowedFileTypes = [ 'js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip' ];
-    allowedFileTypes.forEach(fileType => {
-      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: ['**/node_modules/**', './node_modules/**', 'package-lock.json', 'package.json', 'browserstack-package.json', 'tests.zip', 'cypress.json'] });
+    let ignoreFiles = getFilesToIgnore(runSettings, excludeFiles);
+
+    Constants.allowedFileTypes.forEach(fileType => {
+      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: ignoreFiles });
     });
 
     let packageJSON = {};
@@ -66,6 +69,23 @@ const archiveSpecs = (runSettings, filePath) => {
 
     archive.finalize();
   });
+}
+
+const getFilesToIgnore = (runSettings, excludeFiles) => {
+  let ignoreFiles = Constants.filesToIgnoreWhileUploading;
+
+  // exclude files asked by the user
+  // args will take precedence over config file
+  if (!utils.isUndefined(excludeFiles)) {
+    let excludePatterns = utils.fixCommaSeparatedString(excludeFiles).split(',');
+    ignoreFiles = ignoreFiles.concat(excludePatterns);
+    logger.info(`Excluding files matching: ${JSON.stringify(excludePatterns)}`);
+  } else if (!utils.isUndefined(runSettings.exclude) && runSettings.exclude.length) {
+    ignoreFiles = ignoreFiles.concat(runSettings.exclude);
+    logger.info(`Excluding files matching: ${JSON.stringify(runSettings.exclude)}`);
+  }
+
+  return ignoreFiles;
 }
 
 exports.archive = archiveSpecs

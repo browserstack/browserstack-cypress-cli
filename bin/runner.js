@@ -174,6 +174,12 @@ var argv = yargs
           type: "string",
           default: undefined
         },
+        'e': {
+          alias: 'exclude',
+          describe: Constants.cliMessages.RUN.EXCLUDE,
+          type: "string",
+          default: undefined
+        },
         's': {
           alias: ['specs', 'spec'],
           describe: Constants.cliMessages.RUN.SPECS_DESCRIPTION,

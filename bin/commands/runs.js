@@ -49,7 +49,7 @@ module.exports = function run(args) {
       utils.setParallels(bsConfig, args);
 
       // Archive the spec files
-      return archiver.archive(bsConfig.run_settings, config.fileName).then(function (data) {
+      return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude).then(function (data) {
 
         // Uploaded zip file
         return zipUploader.zipUpload(bsConfig, config.fileName).then(function (zip) {
@@ -59,7 +59,7 @@ module.exports = function run(args) {
             let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
             let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${config.dashboardUrl}${data.build_id}`;
             utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
-            if ((utils.isUndefined(bsConfig.run_settings.parallels) && utils.isUndefined(args.parallels)) || (!utils.isUndefined(bsConfig.run_settings.parallels) && bsConfig.run_settings.parallels == Constants.constants.DEFAULT_PARALLEL_MESSAGE)) {
+            if ((utils.isUndefined(bsConfig.run_settings.parallels) && utils.isUndefined(args.parallels)) || (!utils.isUndefined(bsConfig.run_settings.parallels) && bsConfig.run_settings.parallels == Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE)) {
               logger.warn(Constants.userMessages.NO_PARALLELS);
             }
 
