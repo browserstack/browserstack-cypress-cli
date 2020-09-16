@@ -24,7 +24,7 @@ function get_path(args) {
     let filename = args._[1];
     if (filename !== path.basename(filename)) {
       // filename is an absolute path
-      return filename; 
+      return filename;
     }
     return path.join(process.cwd(), args._[1]);
   }
@@ -39,7 +39,13 @@ module.exports = function init(args) {
   if (path_to_json === undefined) return;
 
   // append .json if filename passed is not of json type
-  if (path.extname(path_to_json) !== ".json") path_to_json += '.json';
+  if (path.extname(path_to_json) !== '' && path.extname(path_to_json) !== ".json") path_to_json += ".json";
+
+  // append browserstack.json if filename is a path without filename
+  if (path.extname(path_to_json) === '') path_to_json = path.join(path_to_json, "browserstack.json");
+
+  console.log(path_to_json);
+  return path_to_json;
 
   let config = {
     file: require('../templates/configTemplate')(),
