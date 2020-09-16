@@ -11,18 +11,32 @@ const archiver = require("../helpers/archiver"),
 
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
+  //Delete build_results.txt from log folder if already present.
+  utils.deleteResults();
 
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
-    // accept the username from command line if provided
+    // accept the username from command line or env variable if provided
     utils.setUsername(bsConfig, args);
 
-    // accept the access key from command line if provided
+    // accept the access key from command line or env variable if provided
     utils.setAccessKey(bsConfig, args);
 
     // accept the build name from command line if provided
     utils.setBuildName(bsConfig, args);
+
+    // accept the specs list from command line if provided
+    utils.setUserSpecs(bsConfig, args);
+
+    // accept the env list from command line and set it
+    utils.setTestEnvs(bsConfig, args);
+
+    //accept the local from env variable if provided
+    utils.setLocal(bsConfig);
+
+    //accept the local identifier from env variable if provided
+    utils.setLocalIdentifier(bsConfig);
 
     // Validate browserstack.json values and parallels specified via arguments
     return capabilityHelper.validate(bsConfig, args).then(function (validated) {
@@ -32,7 +46,7 @@ module.exports = function run(args) {
       utils.setParallels(bsConfig, args);
 
       // Archive the spec files
-      return archiver.archive(bsConfig.run_settings, config.fileName).then(function (data) {
+      return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude).then(function (data) {
 
         // Uploaded zip file
         return zipUploader.zipUpload(bsConfig, config.fileName).then(function (zip) {
@@ -41,6 +55,13 @@ module.exports = function run(args) {
           return build.createBuild(bsConfig, zip).then(function (data) {
             let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
             let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${config.dashboardUrl}${data.build_id}`;
+            utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
+            if ((utils.isUndefined(bsConfig.run_settings.parallels) && utils.isUndefined(args.parallels)) || (!utils.isUndefined(bsConfig.run_settings.parallels) && bsConfig.run_settings.parallels == Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE)) {
+              logger.warn(Constants.userMessages.NO_PARALLELS);
+            }
+
+            if (!args.disableNpmWarning && bsConfig.run_settings.npm_dependencies && Object.keys(bsConfig.run_settings.npm_dependencies).length <= 0) logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES);
+
             logger.info(message);
             logger.info(dashboardLink);
             utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);

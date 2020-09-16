@@ -55,6 +55,7 @@ module.exports = function () {
       "cypress_proj_dir" : "/path/to/directory-that-contains-<cypress.json>-file",
       "project_name": "project-name",
       "build_name": "build-name",
+      "exclude": [],
       "parallels": "Here goes the number of parallels you want to run",
       "npm_dependencies": {
       },
