@@ -44,9 +44,6 @@ module.exports = function init(args) {
   // append browserstack.json if filename is a path without filename
   if (path.extname(path_to_json) === '') path_to_json = path.join(path_to_json, "browserstack.json");
 
-  console.log(path_to_json);
-  return path_to_json;
-
   let config = {
     file: require('../templates/configTemplate')(),
     path: path_to_json
