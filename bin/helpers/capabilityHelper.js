@@ -110,7 +110,9 @@ const validate = (bsConfig, args) => {
 
     if (!bsConfig.run_settings) reject(Constants.validationMessages.EMPTY_RUN_SETTINGS);
 
-    if (!bsConfig.run_settings.cypress_proj_dir) reject(Constants.validationMessages.EMPTY_CYPRESS_PROJ_DIR);
+    if (!bsConfig.run_settings.cypress_proj_dir && !bsConfig.run_settings.userProvidedCypessConfigFile) {
+      reject(Constants.validationMessages.EMPTY_CYPRESS_PROJ_DIR);
+    }
 
     // validate parallels specified in browserstack.json if parallels are not specified via arguments
     if (!Utils.isUndefined(args) && Utils.isUndefined(args.parallels) && !Utils.isParallelValid(bsConfig.run_settings.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
@@ -119,10 +121,10 @@ const validate = (bsConfig, args) => {
     if (!Utils.isUndefined(args) && !Utils.isUndefined(args.parallels) && !Utils.isParallelValid(args.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
 
     // validate if config file provided exists or not when cypress_config_file provided
-    // validate existing cypress_proj_dir key otherwise.
+    // validate the cypressProjectDir key otherwise.
     let cypressConfigFilePath = bsConfig.run_settings.cypressConfigFilePath;
 
-    if (!fs.existsSync(cypressConfigFilePath) && bsConfig.run_settings.cypress_config_filename !== 'false') reject(Constants.validationMessages.CYPRESS_JSON_NOT_FOUND + cypressConfigFilePath);
+    if (!fs.existsSync(cypressConfigFilePath) && bsConfig.run_settings.cypress_config_filename !== 'false') reject(Constants.validationMessages.INVALID_CYPRESS_CONFIG_FILE);
 
     try {
       if (bsConfig.run_settings.cypress_config_filename !== 'false') {
@@ -133,7 +135,7 @@ const validate = (bsConfig, args) => {
         if (!Utils.isUndefined(cypressJson.baseUrl) && cypressJson.baseUrl.includes("localhost") && !Utils.getLocalFlag(bsConfig.connection_settings)) reject(Constants.validationMessages.LOCAL_NOT_SET);
 
         // Detect if the user is not using the right directory structure, and throw an error
-        if (!Utils.isUndefined(cypressJson.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypress_proj_dir,cypressJson.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
+        if (!Utils.isUndefined(cypressJson.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,cypressJson.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
       }
     } catch(error){
       reject(Constants.validationMessages.INVALID_CYPRESS_JSON)

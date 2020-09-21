@@ -55,6 +55,9 @@ exports.getErrorCodeFromMsg = (errMsg) => {
     case Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE:
       errorCode = "invalid_directory_structure";
       break;
+    case Constants.validationMessages.INVALID_CYPRESS_CONFIG_FILE:
+      errorCode = "invalid_cypress_config_file";
+      break;
   }
   if (
     errMsg.includes("Please use --config-file <path to browserstack.json>.")
@@ -168,7 +171,13 @@ exports.setCypressConfigFilename = (bsConfig, args) => {
     bsConfig.run_settings.cypress_config_filename = path.basename(bsConfig.run_settings.cypress_config_file);
   }
 
-  bsConfig.run_settings.cypressConfigFilePath = bsConfig.run_settings.userProvidedCypessConfigFile ? bsConfig.run_settings.cypress_config_file : path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json');
+  if (bsConfig.run_settings.userProvidedCypessConfigFile){
+    bsConfig.run_settings.cypressConfigFilePath = bsConfig.run_settings.cypress_config_file;
+    bsConfig.run_settings.cypressProjectDir = path.dirname(bsConfig.run_settings.cypress_config_file);
+  } else {
+    bsConfig.run_settings.cypressConfigFilePath = path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json');
+    bsConfig.run_settings.cypressProjectDir = bsConfig.run_settings.cypress_proj_dir;
+  }
 }
 
 // specs can be passed from bstack configuration file

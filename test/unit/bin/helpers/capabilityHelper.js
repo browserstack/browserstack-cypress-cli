@@ -783,7 +783,8 @@ describe("capabilityHelper.js", () => {
           ],
           run_settings: {
             cypress_proj_dir: "random path",
-            cypressConfigFilePath: "random path"
+            cypressConfigFilePath: "random path",
+            cypressProjectDir: "random path"
           },
         };
       });
@@ -799,7 +800,7 @@ describe("capabilityHelper.js", () => {
           .catch((error) => {
             chai.assert.equal(
               error,
-              Constants.validationMessages.CYPRESS_JSON_NOT_FOUND + "random path"
+              Constants.validationMessages.INVALID_CYPRESS_CONFIG_FILE
             );
             fs.existsSync.restore();
           });
@@ -860,6 +861,7 @@ describe("capabilityHelper.js", () => {
               error,
               Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE
             );
+
             fs.existsSync.restore();
             fs.readFileSync.restore();
           });
