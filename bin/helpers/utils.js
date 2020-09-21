@@ -1,11 +1,11 @@
-'use strict';
+"use strict";
 const os = require("os");
 const path = require("path");
 const fs = require("fs");
 
-const usageReporting = require('./usageReporting'),
-  logger = require('./logger').winstonLogger,
-  Constants = require('./constants');
+const usageReporting = require("./usageReporting"),
+  logger = require("./logger").winstonLogger,
+  Constants = require("./constants");
 
 exports.validateBstackJson = (bsConfigPath) => {
   return new Promise(function (resolve, reject) {
@@ -13,12 +13,17 @@ exports.validateBstackJson = (bsConfigPath) => {
       logger.info(`Reading config from ${bsConfigPath}`);
       let bsConfig = require(bsConfigPath);
       resolve(bsConfig);
-    }
-    catch (e) {
-      reject("Couldn't find the browserstack.json file at \"" + bsConfigPath + "\". Please use --config-file <path to browserstack.json>.");
+    } catch (e) {
+      reject(
+        e.code === "MODULE_NOT_FOUND"
+          ? "Couldn't find the browserstack.json file at \"" +
+              bsConfigPath +
+              '". Please use --config-file <path to browserstack.json>.'
+          : `Invalid browserstack.json file. Error : ${e.message}`
+      );
     }
   });
-}
+};
 
 exports.getErrorCodeFromMsg = (errMsg) => {
   let errorCode = null;
@@ -51,71 +56,89 @@ exports.getErrorCodeFromMsg = (errMsg) => {
       errorCode = "invalid_directory_structure";
       break;
   }
-  if (errMsg.includes("Please use --config-file <path to browserstack.json>.")) {
+  if (
+    errMsg.includes("Please use --config-file <path to browserstack.json>.")
+  ) {
     errorCode = "bstack_json_path_invalid";
+  } else if (errMsg.includes("Invalid browserstack.json file.")) {
+    errorCode = "bstack_json_invalid";
   }
   return errorCode;
-}
+};
 
 exports.getErrorCodeFromErr = (err) => {
   let errorCode = null;
-  if (err.code === 'SyntaxError') {
-    errorCode = 'bstack_json_parse_error';
-  } else if (err.code === 'EACCES') {
-    errorCode = 'bstack_json_no_permission';
+  if (err.code === "SyntaxError") {
+    errorCode = "bstack_json_parse_error";
+  } else if (err.code === "EACCES") {
+    errorCode = "bstack_json_no_permission";
   } else {
-    errorCode = 'bstack_json_invalid_unknown';
+    errorCode = "bstack_json_invalid_unknown";
   }
-  return errorCode
-}
+  return errorCode;
+};
 
-exports.sendUsageReport = (bsConfig, args, message, message_type, error_code) => {
+exports.sendUsageReport = (
+  bsConfig,
+  args,
+  message,
+  message_type,
+  error_code
+) => {
   usageReporting.send({
     cli_args: args,
     message: message,
     message_type: message_type,
     error_code: error_code,
-    bstack_config: bsConfig
+    bstack_config: bsConfig,
   });
-}
+};
 
 exports.setUsageReportingFlag = (bsConfig, disableUsageReporting) => {
-  if (disableUsageReporting === undefined && bsConfig && bsConfig['disable_usage_reporting'] != undefined) {
-    process.env.DISABLE_USAGE_REPORTING = bsConfig['disable_usage_reporting'];
+  if (
+    disableUsageReporting === undefined &&
+    bsConfig &&
+    bsConfig["disable_usage_reporting"] != undefined
+  ) {
+    process.env.DISABLE_USAGE_REPORTING = bsConfig["disable_usage_reporting"];
   } else {
     process.env.DISABLE_USAGE_REPORTING = disableUsageReporting;
   }
-}
+};
 
 exports.setParallels = (bsConfig, args) => {
   if (!this.isUndefined(args.parallels)) {
-    bsConfig['run_settings']['parallels'] = args.parallels;
+    bsConfig["run_settings"]["parallels"] = args.parallels;
   }
-}
+};
 
 exports.setUsername = (bsConfig, args) => {
   if (!this.isUndefined(args.username)) {
-    bsConfig['auth']['username'] = args.username;
+    bsConfig["auth"]["username"] = args.username;
   } else if (!this.isUndefined(process.env.BROWSERSTACK_USERNAME)) {
-    bsConfig['auth']['username'] = process.env.BROWSERSTACK_USERNAME;
-    logger.info("Reading username from the environment variable BROWSERSTACK_USERNAME");
+    bsConfig["auth"]["username"] = process.env.BROWSERSTACK_USERNAME;
+    logger.info(
+      "Reading username from the environment variable BROWSERSTACK_USERNAME"
+    );
   }
-}
+};
 
 exports.setAccessKey = (bsConfig, args) => {
   if (!this.isUndefined(args.key)) {
-    bsConfig['auth']['access_key'] = args.key;
+    bsConfig["auth"]["access_key"] = args.key;
   } else if (!this.isUndefined(process.env.BROWSERSTACK_ACCESS_KEY)) {
-    bsConfig['auth']['access_key'] = process.env.BROWSERSTACK_ACCESS_KEY;
-    logger.info("Reading access key from the environment variable BROWSERSTACK_ACCESS_KEY");
+    bsConfig["auth"]["access_key"] = process.env.BROWSERSTACK_ACCESS_KEY;
+    logger.info(
+      "Reading access key from the environment variable BROWSERSTACK_ACCESS_KEY"
+    );
   }
-}
+};
 
 exports.setBuildName = (bsConfig, args) => {
-  if (!this.isUndefined(args['build-name'])) {
-    bsConfig['run_settings']['build_name'] = args['build-name'];
+  if (!this.isUndefined(args["build-name"])) {
+    bsConfig["run_settings"]["build_name"] = args["build-name"];
   }
-}
+};
 
 exports.searchForOption = (option) => {
   return (process.argv.indexOf(option) > -1);
@@ -180,71 +203,95 @@ exports.fixCommaSeparatedString = (string) => {
 
 exports.isUndefined = value => (value === undefined || value === null);
 
-exports.isFloat = value => (Number(value) && Number(value) % 1 !== 0);
+exports.isFloat = (value) => Number(value) && Number(value) % 1 !== 0;
 
 exports.isParallelValid = (value) => {
   return this.isUndefined(value) || !(isNaN(value) || this.isFloat(value) || parseInt(value, 10) === 0 || parseInt(value, 10) < -1) || value === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE;
 }
 
 exports.getUserAgent = () => {
-  return `BStack-Cypress-CLI/1.3.0 (${os.arch()}/${os.platform()}/${os.release()})`;
-}
+  return `BStack-Cypress-CLI/1.4.0 (${os.arch()}/${os.platform()}/${os.release()})`;
+};
 
 exports.isAbsolute = (configPath) => {
-  return path.isAbsolute(configPath)
-}
+  return path.isAbsolute(configPath);
+};
 
 exports.getConfigPath = (configPath) => {
-  return this.isAbsolute(configPath) ? configPath : path.join(process.cwd(), configPath);
-}
+  return this.isAbsolute(configPath)
+    ? configPath
+    : path.join(process.cwd(), configPath);
+};
 
 exports.configCreated = (args) => {
-  let message = Constants.userMessages.CONFIG_FILE_CREATED
+  let message = Constants.userMessages.CONFIG_FILE_CREATED;
   logger.info(message);
-  this.sendUsageReport(null, args, message, Constants.messageTypes.SUCCESS, null);
-}
+  this.sendUsageReport(
+    null,
+    args,
+    message,
+    Constants.messageTypes.SUCCESS,
+    null
+  );
+};
 
 exports.exportResults = (buildId, buildUrl) => {
   let data = "BUILD_ID=" + buildId + "\nBUILD_URL=" + buildUrl;
   fs.writeFileSync("log/build_results.txt", data, function (err) {
     if (err) {
-      logger.warn(`Couldn't write BUILD_ID with value: ${buildId} to browserstack/build_results.txt`);
-      logger.warn(`Couldn't write BUILD_URL with value: ${buildUrl} to browserstack/build_results.txt`);
+      logger.warn(
+        `Couldn't write BUILD_ID with value: ${buildId} to browserstack/build_results.txt`
+      );
+      logger.warn(
+        `Couldn't write BUILD_URL with value: ${buildUrl} to browserstack/build_results.txt`
+      );
     }
   });
-}
+};
 
 exports.deleteResults = () => {
-  fs.unlink("log/build_results.txt", function (err) {
-  });
-}
+  fs.unlink("log/build_results.txt", function (err) {});
+};
 
-exports.isCypressProjDirValid = (cypressDir, cypressProjDir) => {
+exports.isCypressProjDirValid = (cypressProjDir, integrationFoldDir) => {
   // Getting absolute path
-  cypressDir = path.resolve(cypressDir);
-  cypressProjDir = path.resolve(cypressProjDir);
-  if (cypressProjDir === cypressDir) return true;
-  let parentTokens = cypressDir.split('/').filter(i => i.length);
-  let childTokens = cypressProjDir.split('/').filter(i => i.length);
+  let cypressDir = path.resolve(cypressProjDir);
+  let integrationFolderDir = path.resolve(integrationFoldDir);
+  if (!this.isAbsolute(integrationFoldDir)) {
+    integrationFolderDir = path.resolve(path.join(cypressProjDir, integrationFoldDir));
+  }
+  if (integrationFolderDir === cypressDir) return true;
+  let parentTokens = cypressDir.split("/").filter((i) => i.length);
+  let childTokens = integrationFolderDir.split("/").filter((i) => i.length);
   return parentTokens.every((t, i) => childTokens[i] === t);
-}
+};
 
 exports.getLocalFlag = (connectionSettings) => {
-  return !this.isUndefined(connectionSettings) && !this.isUndefined(connectionSettings.local) && connectionSettings.local
-}
+  return (
+    !this.isUndefined(connectionSettings) &&
+    !this.isUndefined(connectionSettings.local) &&
+    connectionSettings.local
+  );
+};
 
 exports.setLocal = (bsConfig) => {
   if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL)) {
     let local = false;
-    if (String(process.env.BROWSERSTACK_LOCAL).toLowerCase() === "true") local = true;
-    bsConfig['connection_settings']['local'] = local;
-    logger.info("Reading local setting from the environment variable BROWSERSTACK_LOCAL");
+    if (String(process.env.BROWSERSTACK_LOCAL).toLowerCase() === "true")
+      local = true;
+    bsConfig["connection_settings"]["local"] = local;
+    logger.info(
+      "Reading local setting from the environment variable BROWSERSTACK_LOCAL"
+    );
   }
-}
+};
 
 exports.setLocalIdentifier = (bsConfig) => {
   if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL_IDENTIFIER)) {
-    bsConfig['connection_settings']['local_identifier'] = process.env.BROWSERSTACK_LOCAL_IDENTIFIER;
-    logger.info("Reading local identifier from the environment variable BROWSERSTACK_LOCAL_IDENTIFIER");
+    bsConfig["connection_settings"]["local_identifier"] =
+      process.env.BROWSERSTACK_LOCAL_IDENTIFIER;
+    logger.info(
+      "Reading local identifier from the environment variable BROWSERSTACK_LOCAL_IDENTIFIER"
+    );
   }
-}
+};
