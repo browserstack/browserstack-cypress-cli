@@ -22,7 +22,7 @@ var argv = yargs
   .demand(1, Constants.cliMessages.VERSION.DEMAND)
   .command('init', Constants.cliMessages.INIT.INFO, function(yargs) {
     argv = yargs
-      .usage("usage: $0 init [options]")
+      .usage("usage: $0 init [filename] [options]")
       .options({
         'p': {
           alias: "path",
