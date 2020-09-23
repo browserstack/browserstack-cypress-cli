@@ -34,7 +34,7 @@ function local_cypress_version(bsConfig) {
   // 2. check version of Cypress installed globally if not present in project
 
   if (bsConfig) {
-    let version = get_version(path.join(bsConfig.run_settings.cypressProjectDir, 'node_modules', '.bin', 'cypress'));
+    let version = get_version(path.join(bsConfig.run_settings.cypress_proj_dir, 'node_modules', '.bin', 'cypress'));
     if (!version) {
       version = get_version('cypress');
     }
@@ -81,7 +81,7 @@ function cli_version_and_path(bsConfig) {
   // 2. check version of Cypress installed globally if not present in project
 
   if (bsConfig) {
-    let _path = path.join(bsConfig.run_settings.cypressProjectDir, 'node_modules', 'browserstack-cypress');
+    let _path = path.join(bsConfig.run_settings.cypress_proj_dir, 'node_modules', 'browserstack-cypress');
     let version = get_version(_path);
     if (!version) {
       version = get_version('browserstack-cypress');
