@@ -13,6 +13,7 @@ const userMessages = {
     API_DEPRECATED: "This version of API is deprecated, please use latest version of API.",
     FAILED_TO_ZIP: "Failed to zip files.",
     VISIT_DASHBOARD: "Visit the Automate dashboard for test reporting:",
+    CONFLICTING_INIT_ARGUMENTS: "Conflicting arguments given. You can use --path only with a file name, and not with a file path.",
     NO_PARALLELS: "Your tests will run sequentially. Read more about running your tests in parallel here: https://www.browserstack.com/docs/automate/cypress/run-tests-in-parallel",
     NO_NPM_DEPENDENCIES: "No npm dependencies specified. Read more here: https://www.browserstack.com/docs/automate/cypress/npm-packages. You can suppress this warning by using --disable-npm-warning flag."
 };
