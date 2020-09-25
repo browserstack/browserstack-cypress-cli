@@ -72,10 +72,10 @@ let printFailedSpecsDetails = (data) => {
     let config = {
       border: getBorderCharacters('ramac'),
       columns: {
-        0: { alignment: 'center' },
-        1: { alignment: 'center' },
-        2: { alignment: 'center' },
-        3: { alignment: 'center' },
+        0: { alignment: 'left' },
+        1: { alignment: 'left' },
+        2: { alignment: 'left' },
+        3: { alignment: 'left' },
       },
       /**
       * @typedef {function} drawHorizontalLine
