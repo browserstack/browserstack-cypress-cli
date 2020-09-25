@@ -30,6 +30,7 @@ const validationMessages = {
   NOT_VALID_JSON: "browerstack.json is not a valid json",
   INVALID_EXTENSION: "Invalid files, please remove these files and try again.",
   INVALID_PARALLELS_CONFIGURATION: "Invalid value specified for parallels to use. Maximum parallels to use should be a number greater than 0.",
+  INVALID_CYPRESS_CONFIG_FILE: "Invalid cypress_config_file",
   CYPRESS_JSON_NOT_FOUND: "cypress.json file is not found at cypress_proj_dir path ",
   INVALID_CYPRESS_JSON: "cypress.json is not a valid json",
   INVALID_DEFAULT_AUTH_PARAMS: "Your username and access key are required to run your tests on BrowserStack. Learn more at https://www.browserstack.com/docs/automate/cypress/authentication",
@@ -60,7 +61,9 @@ const cliMessages = {
         PARALLEL_DESC: "The maximum number of parallels to use to run your test suite",
         INFO: "Run your tests on BrowserStack.",
         DESC: "Path to BrowserStack config",
+        CYPRESS_DESC: "Path to Cypress config file",
         CONFIG_DEMAND: "config file is required",
+        CYPRESS_CONFIG_DEMAND: "Cypress config file is required",
         BUILD_NAME: "The build name you want to use to name your test runs",
         EXCLUDE: "Exclude files matching a pattern from zipping and uploading",
         DEFAULT_PARALLEL_MESSAGE: "Here goes the number of parallels you want to run",
@@ -86,7 +89,7 @@ const messageTypes = {
 
 const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip'];
 
-const filesToIgnoreWhileUploading = ['node_modules/**', 'package-lock.json', 'package.json', 'browserstack-package.json', 'tests.zip']
+const filesToIgnoreWhileUploading = ['node_modules/**', 'package-lock.json', 'package.json', 'browserstack-package.json', 'tests.zip', 'cypress.json']
 
 module.exports = Object.freeze({
   userMessages,

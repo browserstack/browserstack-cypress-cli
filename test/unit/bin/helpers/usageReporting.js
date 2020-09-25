@@ -340,7 +340,7 @@ describe("usageReporting", () => {
       expect(isUsageReportingEnabled()).to.be.undefined;
     });
   });
-  
+
   describe("ci_environment", () => {
     afterEach(() => {
       delete process.env.JENKINS_URL;

@@ -68,6 +68,10 @@ const caps = (bsConfig, zip) => {
       obj.projectNotifyURL = bsConfig.run_settings.project_notify_URL;
       obj.parallels = bsConfig.run_settings.parallels;
 
+      if (!Utils.isUndefined(bsConfig.run_settings.cypress_config_filename)) {
+        obj.cypress_config_filename = bsConfig.run_settings.cypress_config_filename;
+      }
+
       if (!Utils.isUndefined(bsConfig.run_settings.specs)){
         obj.specs = bsConfig.run_settings.specs;
       }
@@ -78,7 +82,7 @@ const caps = (bsConfig, zip) => {
     }
 
     if(obj.parallels === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE) obj.parallels = undefined
-    
+
     if (obj.project) logger.log(`Project name is: ${obj.project}`);
 
     if (obj.customBuildName) logger.log(`Build name is: ${obj.customBuildName}`);
@@ -106,7 +110,9 @@ const validate = (bsConfig, args) => {
 
     if (!bsConfig.run_settings) reject(Constants.validationMessages.EMPTY_RUN_SETTINGS);
 
-    if (!bsConfig.run_settings.cypress_proj_dir) reject(Constants.validationMessages.EMPTY_CYPRESS_PROJ_DIR);
+    if (!bsConfig.run_settings.cypress_proj_dir && !bsConfig.run_settings.userProvidedCypessConfigFile) {
+      reject(Constants.validationMessages.EMPTY_CYPRESS_PROJ_DIR);
+    }
 
     // validate parallels specified in browserstack.json if parallels are not specified via arguments
     if (!Utils.isUndefined(args) && Utils.isUndefined(args.parallels) && !Utils.isParallelValid(bsConfig.run_settings.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
@@ -114,18 +120,24 @@ const validate = (bsConfig, args) => {
     // if parallels specified via arguments validate only arguments
     if (!Utils.isUndefined(args) && !Utils.isUndefined(args.parallels) && !Utils.isParallelValid(args.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
 
-    if (!fs.existsSync(path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json'))) reject(Constants.validationMessages.CYPRESS_JSON_NOT_FOUND + bsConfig.run_settings.cypress_proj_dir);
+    // validate if config file provided exists or not when cypress_config_file provided
+    // validate the cypressProjectDir key otherwise.
+    let cypressConfigFilePath = bsConfig.run_settings.cypressConfigFilePath;
+
+    if (!fs.existsSync(cypressConfigFilePath) && bsConfig.run_settings.cypress_config_filename !== 'false') reject(Constants.validationMessages.INVALID_CYPRESS_CONFIG_FILE);
 
     try {
-      let cypressJson = fs.readFileSync(path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json'));
-      cypressJson = JSON.parse(cypressJson);
-      // Cypress Json Base Url & Local true check
-      if (!Utils.isUndefined(cypressJson.baseUrl) && cypressJson.baseUrl.includes("localhost") && !Utils.getLocalFlag(bsConfig.connection_settings)) reject(Constants.validationMessages.LOCAL_NOT_SET);
-      
-      // Detect if the user is not using the right directory structure, and throw an error
-      if (!Utils.isUndefined(cypressJson.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypress_proj_dir,cypressJson.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
+      if (bsConfig.run_settings.cypress_config_filename !== 'false') {
+        let cypressJsonContent = fs.readFileSync(cypressConfigFilePath);
+        cypressJson = JSON.parse(cypressJsonContent);
 
-    } catch (error) {
+        // Cypress Json Base Url & Local true check
+        if (!Utils.isUndefined(cypressJson.baseUrl) && cypressJson.baseUrl.includes("localhost") && !Utils.getLocalFlag(bsConfig.connection_settings)) reject(Constants.validationMessages.LOCAL_NOT_SET);
+
+        // Detect if the user is not using the right directory structure, and throw an error
+        if (!Utils.isUndefined(cypressJson.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,cypressJson.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
+      }
+    } catch(error){
       reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
     }
 

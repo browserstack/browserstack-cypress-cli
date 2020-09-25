@@ -399,7 +399,8 @@ describe("capabilityHelper.js", () => {
             },
           ],
           run_settings: {
-            cypress_proj_dir: "random path"
+            cypress_proj_dir: "random path",
+            cypressConfigFilePath: "random path"
           },
         };
       });
@@ -781,7 +782,9 @@ describe("capabilityHelper.js", () => {
             },
           ],
           run_settings: {
-            cypress_proj_dir: "random path"
+            cypress_proj_dir: "random path",
+            cypressConfigFilePath: "random path",
+            cypressProjectDir: "random path"
           },
         };
       });
@@ -797,7 +800,7 @@ describe("capabilityHelper.js", () => {
           .catch((error) => {
             chai.assert.equal(
               error,
-              Constants.validationMessages.CYPRESS_JSON_NOT_FOUND + "random path"
+              Constants.validationMessages.INVALID_CYPRESS_CONFIG_FILE
             );
             fs.existsSync.restore();
           });
@@ -858,9 +861,41 @@ describe("capabilityHelper.js", () => {
               error,
               Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE
             );
+
             fs.existsSync.restore();
             fs.readFileSync.restore();
           });
+      });
+
+      context("cypress config file set to false", () => {
+        beforeEach(function() {
+          readFileSpy = sinon.stub(fs, 'readFileSync');
+          jsonParseSpy = sinon.stub(JSON, 'parse');
+        });
+
+        afterEach(function() {
+          readFileSpy.restore();
+          jsonParseSpy.restore();
+        });
+
+        it("does not validate with cypress config filename set to false", () => {
+          // sinon.stub(fs, 'existsSync').returns(false);
+          bsConfig.run_settings.cypressConfigFilePath = 'false';
+          bsConfig.run_settings.cypress_config_filename = 'false';
+
+          return capabilityHelper
+            .validate(bsConfig, {})
+            .then(function (data) {
+              sinon.assert.notCalled(readFileSpy);
+              sinon.assert.notCalled(jsonParseSpy);
+            })
+            .catch((error) => {
+              chai.assert.equal(
+                error,
+                Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE
+              );
+            });
+        })
       });
     });
   });

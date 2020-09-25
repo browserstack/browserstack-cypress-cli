@@ -26,6 +26,9 @@ module.exports = function run(args) {
     // accept the build name from command line if provided
     utils.setBuildName(bsConfig, args);
 
+    // set cypress config filename
+    utils.setCypressConfigFilename(bsConfig, args);
+
     // accept the specs list from command line if provided
     utils.setUserSpecs(bsConfig, args);
 

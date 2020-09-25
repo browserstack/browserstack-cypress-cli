@@ -52,7 +52,7 @@ module.exports = function () {
       }
     ],
     "run_settings": {
-      "cypress_proj_dir" : "/path/to/directory-that-contains-<cypress.json>-file",
+      "cypress_config_file" : "/path/to/<cypress config file>.json",
       "project_name": "project-name",
       "build_name": "build-name",
       "exclude": [],

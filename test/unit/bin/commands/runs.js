@@ -85,6 +85,7 @@ describe("runs", () => {
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
+      setCypressConfigFilenameStub = sandbox.stub();
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
@@ -118,6 +119,7 @@ describe("runs", () => {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
           getConfigPath: getConfigPathStub,
@@ -169,6 +171,7 @@ describe("runs", () => {
       setAccessKeyStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
+      setCypressConfigFilenameStub = sandbox.stub();
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
@@ -202,6 +205,7 @@ describe("runs", () => {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
@@ -263,6 +267,7 @@ describe("runs", () => {
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
+      setCypressConfigFilenameStub = sandbox.stub();
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
@@ -297,6 +302,7 @@ describe("runs", () => {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
@@ -365,6 +371,7 @@ describe("runs", () => {
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
+      setCypressConfigFilenameStub = sandbox.stub();
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
@@ -400,6 +407,7 @@ describe("runs", () => {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
@@ -479,6 +487,7 @@ describe("runs", () => {
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
+      setCypressConfigFilenameStub = sandbox.stub();
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
@@ -517,6 +526,7 @@ describe("runs", () => {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,

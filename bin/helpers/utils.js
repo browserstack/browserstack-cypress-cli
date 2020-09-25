@@ -55,6 +55,9 @@ exports.getErrorCodeFromMsg = (errMsg) => {
     case Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE:
       errorCode = "invalid_directory_structure";
       break;
+    case Constants.validationMessages.INVALID_CYPRESS_CONFIG_FILE:
+      errorCode = "invalid_cypress_config_file";
+      break;
   }
   if (
     errMsg.includes("Please use --config-file <path to browserstack.json>.")
@@ -139,6 +142,43 @@ exports.setBuildName = (bsConfig, args) => {
     bsConfig["run_settings"]["build_name"] = args["build-name"];
   }
 };
+
+exports.searchForOption = (option) => {
+  return (process.argv.indexOf(option) > -1);
+}
+
+exports.verifyCypressConfigFileOption = () => {
+  let ccfOptionsSet = (this.searchForOption('-ccf') || this.searchForOption('--ccf'));
+  let cypressConfigFileSet = (this.searchForOption('-cypress-config-file') || this.searchForOption('--cypress-config-file'));
+  let cypressConfigOptionsSet = (this.searchForOption('-cypressConfigFile') || this.searchForOption('--cypressConfigFile'));
+  return (ccfOptionsSet || cypressConfigFileSet || cypressConfigOptionsSet);
+}
+
+//  TODO: Remove when cleaningup cypress_proj_dir
+//
+// 1. Remove demand from runner.js for --ccf option.
+// 2. Remove the strict check functions: verifyCypressConfigFileOption
+// 3. Just use the args.cypressConfigFile for checking the value for cypress config file.
+exports.setCypressConfigFilename = (bsConfig, args) => {
+  let userProvidedCypessConfigFile = this.verifyCypressConfigFileOption();
+
+  bsConfig.run_settings.userProvidedCypessConfigFile = (userProvidedCypessConfigFile || (!this.isUndefined(bsConfig.run_settings.cypress_config_file)));
+
+  if (userProvidedCypessConfigFile || this.isUndefined(bsConfig.run_settings.cypress_config_file)) {
+    bsConfig.run_settings.cypress_config_file = args.cypressConfigFile;
+    bsConfig.run_settings.cypress_config_filename = path.basename(args.cypressConfigFile);
+  } else if (!this.isUndefined(bsConfig.run_settings.cypress_config_file)) {
+    bsConfig.run_settings.cypress_config_filename = path.basename(bsConfig.run_settings.cypress_config_file);
+  }
+
+  if (bsConfig.run_settings.userProvidedCypessConfigFile){
+    bsConfig.run_settings.cypressConfigFilePath = bsConfig.run_settings.cypress_config_file;
+    bsConfig.run_settings.cypressProjectDir = path.dirname(bsConfig.run_settings.cypress_config_file);
+  } else {
+    bsConfig.run_settings.cypressConfigFilePath = path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json');
+    bsConfig.run_settings.cypressProjectDir = bsConfig.run_settings.cypress_proj_dir;
+  }
+}
 
 // specs can be passed from bstack configuration file
 // specs can be passed via command line args as a string

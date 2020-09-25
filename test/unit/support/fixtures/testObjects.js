@@ -4,7 +4,9 @@ const sampleBsConfig = {
     access_key: "random-access-key",
   },
   run_settings: {
-    cypress_proj_dir: "random path"
+    cypress_proj_dir: "random path",
+    cypressConfigFilePath: "random path",
+    cypressProjectDir: "random path"
   }
 };
 

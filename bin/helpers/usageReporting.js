@@ -127,7 +127,7 @@ function ci_environment() {
   }
   // CircleCI
   if (env.CI === "true" && env.CIRCLECI === "true") {
-    return "CircleCI"; 
+    return "CircleCI";
   }
   // Travis CI
   if (env.CI === "true" && env.TRAVIS === "true") {
