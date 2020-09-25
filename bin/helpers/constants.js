@@ -1,9 +1,13 @@
+const syncCLI = {
+  FAILED_SPEC_DETAILS_COL_HEADER: ['Spec', 'Status', 'Browser', 'BrowserStack Session ID']
+};
+
 const userMessages = {
     BUILD_FAILED: "Build creation failed.",
     BUILD_CREATED: "Build created",
     BUILD_INFO_FAILED: "Failed to get build info.",
     BUILD_STOP_FAILED: "Failed to stop build.",
-    BUILD_REPORT_MESDSAGE: "See the entire build report here:",
+    BUILD_REPORT_MESSAGE: "See the entire build report here:",
     ZIP_UPLOADER_NOT_REACHABLE: "Could not reach to zip uploader.",
     ZIP_UPLOAD_FAILED: "Zip Upload failed.",
     CONFIG_FILE_CREATED: "BrowserStack Config File created, you can now run browserstack-cypress --config-file run",
@@ -94,6 +98,7 @@ const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf
 const filesToIgnoreWhileUploading = ['node_modules/**', 'package-lock.json', 'package.json', 'browserstack-package.json', 'tests.zip', 'cypress.json']
 
 module.exports = Object.freeze({
+  syncCLI,
   userMessages,
   cliMessages,
   validationMessages,
