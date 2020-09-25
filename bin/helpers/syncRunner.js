@@ -1,6 +1,6 @@
 'use strict';
 const config = require("./config"),
-  logger = require("./logger").winstonLogger,
+  logger = require("./logger").syncCliLogger,
   Constants = require("./constants"),
   utils = require("./utils"),
   request = require('request');
