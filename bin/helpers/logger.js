@@ -21,6 +21,16 @@ const winstonLoggerParams = {
   ],
 };
 
+const winstonSyncCliLoggerParams = {
+  transports: [
+    new (winston.transports.Console)({
+      formatter: (options) => {
+        return  (options.message ? options.message : '');
+      }
+    }),
+  ]
+}
+
 const winstonFileLoggerParams = {
   transports: [
     new winston.transports.File({
@@ -31,3 +41,4 @@ const winstonFileLoggerParams = {
 
 exports.winstonLogger = new winston.Logger(winstonLoggerParams);
 exports.fileLogger = new winston.Logger(winstonFileLoggerParams);
+exports.syncCliLogger = new winston.Logger(winstonSyncCliLoggerParams);
