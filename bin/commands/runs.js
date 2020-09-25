@@ -7,7 +7,8 @@ const archiver = require("../helpers/archiver"),
   capabilityHelper = require("../helpers/capabilityHelper"),
   Constants = require("../helpers/constants"),
   utils = require("../helpers/utils"),
-  fileHelpers = require("../helpers/fileHelpers");
+  fileHelpers = require("../helpers/fileHelpers"),
+  syncRunner = require("../helpers/syncRunner");
 
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
@@ -64,6 +65,14 @@ module.exports = function run(args) {
             }
 
             if (!args.disableNpmWarning && bsConfig.run_settings.npm_dependencies && Object.keys(bsConfig.run_settings.npm_dependencies).length <= 0) logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES);
+
+            if (args.sync) {
+              syncRunner.pollBuildStatus(bsConfig, data.build_id).then((exitCode) => {
+                utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
+
+                process.exit(exitCode);
+              });
+            }
 
             logger.info(message);
             logger.info(dashboardLink);

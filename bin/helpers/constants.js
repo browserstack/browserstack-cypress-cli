@@ -3,6 +3,7 @@ const userMessages = {
     BUILD_CREATED: "Build created",
     BUILD_INFO_FAILED: "Failed to get build info.",
     BUILD_STOP_FAILED: "Failed to stop build.",
+    BUILD_REPORT_MESDSAGE: "See the entire build report here:",
     ZIP_UPLOADER_NOT_REACHABLE: "Could not reach to zip uploader.",
     ZIP_UPLOAD_FAILED: "Zip Upload failed.",
     CONFIG_FILE_CREATED: "BrowserStack Config File created, you can now run browserstack-cypress --config-file run",
@@ -68,7 +69,8 @@ const cliMessages = {
         EXCLUDE: "Exclude files matching a pattern from zipping and uploading",
         DEFAULT_PARALLEL_MESSAGE: "Here goes the number of parallels you want to run",
         SPECS_DESCRIPTION: 'Specify the spec files to run',
-        ENV_DESCRIPTION: "Specify the environment variables for your spec files"
+        ENV_DESCRIPTION: "Specify the environment variables for your spec files",
+        SYNC_DESCRIPTION: "Makes the run command in sync"
     },
     COMMON: {
       DISABLE_USAGE_REPORTING: "Disable usage reporting",
