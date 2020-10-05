@@ -33,7 +33,7 @@ let logBuildDetails = (bsConfig, bsConfigPath, buildDetails) => {
     parallels_enabled = true;
   }
   let parallelMessage = `Run in parallel: ${parallels_enabled ? 'enabled' : 'disabled'}`;
-  if (parallels_enabled) parallelMessage = parallelMessage + `(attempting to run on ${buildDetails.machines} machines)`;
+  if (parallels_enabled) parallelMessage = parallelMessage + ` (attempting to run on ${buildDetails.machines} machines)`;
 
   // logger.info(`Configuration file: ${bsConfigPath}`);
   // logger.info(`Cypress config file: ${bsConfig.run_settings.cypress_config_file}`);
