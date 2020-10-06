@@ -1,3 +1,6 @@
+const { table, getBorderCharacters } = require('table'),
+      chalk = require('chalk');
+
 /**
  *
  * @param {Array.<{specName: string, status: string, combination: string, sessionId: string}>} data
