@@ -1,5 +1,7 @@
-const { table, getBorderCharacters } = require('table'),
-      chalk = require('chalk');
+const tablePrinter = require('table'), // { table, getBorderCharacters }
+      chalk = require('chalk'),
+      Constants = require("../constants"),
+      logger = require("../logger").syncCliLogger;
 
 /**
  *
@@ -36,7 +38,7 @@ let failedSpecsDetails = (data) => {
     });
 
     let config = {
-      border: getBorderCharacters('ramac'),
+      border: tablePrinter.getBorderCharacters('ramac'),
       columns: {
         0: { alignment: 'left' },
         1: { alignment: 'left' },
@@ -54,7 +56,7 @@ let failedSpecsDetails = (data) => {
       }
     }
 
-    let result = table(specData, config);
+    let result = tablePrinter.table(specData, config);
 
     logger.info('Failed / skipped test report');
     logger.info(result);
