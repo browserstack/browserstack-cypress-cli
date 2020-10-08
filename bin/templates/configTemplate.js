@@ -8,47 +8,47 @@ module.exports = function () {
       {
         "browser": "chrome",
         "os": "Windows 10",
-        "versions": ["latest", "latest-1", "74"]
+        "versions": ["latest", "latest-1"]
       },
       {
         "browser": "firefox",
         "os": "Windows 10",
-        "versions": ["latest", "latest-1", "74"]
+        "versions": ["latest", "latest-1"]
       },
       {
         "browser": "edge",
         "os": "Windows 10",
-        "versions": ["latest", "latest-1", "80"]
+        "versions": ["latest", "latest-1"]
       },
       {
         "browser": "chrome",
         "os": "OS X Mojave",
-        "versions": ["latest", "latest-1", "74"]
+        "versions": ["latest", "latest-1"]
       },
       {
         "browser": "firefox",
         "os": "OS X Mojave",
-        "versions": ["latest", "latest-1", "74"]
+        "versions": ["latest", "latest-1"]
       },
       {
         "browser": "edge",
         "os": "OS X Mojave",
-        "versions": ["latest", "latest-1", "80"]
+        "versions": ["latest", "latest-1"]
       },
       {
         "browser": "chrome",
         "os": "OS X Catalina",
-        "versions": ["latest", "latest-1", "74"]
+        "versions": ["latest", "latest-1"]
       },
       {
         "browser": "firefox",
         "os": "OS X Catalina",
-        "versions": ["latest", "latest-1", "74"]
+        "versions": ["latest", "latest-1"]
       },
       {
         "browser": "edge",
         "os": "OS X Catalina",
-        "versions": ["latest", "latest-1", "80"]
+        "versions": ["latest", "latest-1"]
       }
     ],
     "run_settings": {
