@@ -8,47 +8,47 @@ module.exports = function () {
       {
         "browser": "chrome",
         "os": "Windows 10",
-        "versions": ["78", "77"]
+        "versions": ["latest", "latest-1"]
       },
       {
         "browser": "firefox",
         "os": "Windows 10",
-        "versions": ["74", "75"]
+        "versions": ["latest", "latest-1"]
       },
       {
         "browser": "edge",
         "os": "Windows 10",
-        "versions": ["80", "81"]
+        "versions": ["latest", "latest-1"]
       },
       {
         "browser": "chrome",
         "os": "OS X Mojave",
-        "versions": ["78", "77"]
+        "versions": ["latest", "latest-1"]
       },
       {
         "browser": "firefox",
         "os": "OS X Mojave",
-        "versions": ["74", "75"]
+        "versions": ["latest", "latest-1"]
       },
       {
         "browser": "edge",
         "os": "OS X Mojave",
-        "versions": ["80", "81"]
+        "versions": ["latest", "latest-1"]
       },
       {
         "browser": "chrome",
         "os": "OS X Catalina",
-        "versions": ["78", "77"]
+        "versions": ["latest", "latest-1"]
       },
       {
         "browser": "firefox",
         "os": "OS X Catalina",
-        "versions": ["74", "75"]
+        "versions": ["latest", "latest-1"]
       },
       {
         "browser": "edge",
         "os": "OS X Catalina",
-        "versions": ["80", "81"]
+        "versions": ["latest", "latest-1"]
       }
     ],
     "run_settings": {
