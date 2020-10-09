@@ -17,21 +17,21 @@ const logger = require("../logger").syncCliLogger;
 // ]
 //
 let printSpecsRunSummary = (data, time, machines) => {
-  let summary = {
-    total: 0,
-    failed: 0,
-    passed: 0,
-    skipped: 0
-  };
-
-  data.forEach((spec) => {
-    specSummaryCount(summary, spec.status.toLowerCase());
-  });
-
-  logger.info(`Total tests: ${summary.total}, passed: ${summary.passed}, failed: ${summary.failed}, skipped: ${summary.skipped}`);
-  logger.info(`Done in ${time} using ${machines} machines\n`);
-
   return new Promise((resolve, _reject) => {
+    let summary = {
+      total: 0,
+      failed: 0,
+      passed: 0,
+      skipped: 0
+    };
+
+    data.forEach((spec) => {
+      specSummaryCount(summary, spec.status.toLowerCase());
+    });
+
+    logger.info(`Total tests: ${summary.total}, passed: ${summary.passed}, failed: ${summary.failed}, skipped: ${summary.skipped}`);
+    logger.info(`Done in ${time} using ${machines} machines\n`);
+
     resolve(data);
   })
 };
