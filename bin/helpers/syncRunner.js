@@ -1,9 +1,12 @@
 'use strict';
-const config = require("./config"),
+const Config = require("./config"),
   logger = require("./logger").syncCliLogger,
   Constants = require("./constants"),
   utils = require("./utils"),
-  request = require('request');
+  request = require('request'),
+  specDetails = require('./sync/failedSpecsDetails'),
+  { table, getBorderCharacters } = require('table'),
+  chalk = require('chalk');
 
 exports.pollBuildStatus = (bsConfig, buildId) => {
   logBuildDetails().then((data) => {
@@ -11,15 +14,14 @@ exports.pollBuildStatus = (bsConfig, buildId) => {
   }).then((data) => {
     printSpecsRunSummary();
   }).then((data) => {
-    printFailedSpecsDetails();
-  }).then((data) => {
-    printBuildDashboardLink(buildId);
-  }).then((data) => {
-    // success case!
-    return 0; // exit code 0
-  }).catch((err) => {
-    // failed case!
-    return 1; // exit code 1
+    return specDetails.failedSpecsDetails(data);
+  }).then((successExitCode) => {
+    return resolveExitCode(successExitCode); // exit code 0
+  }).catch((nonZeroExitCode) => {
+    return resolveExitCode(nonZeroExitCode); // exit code 1
+  }).finally(() => {
+    logger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
+    logger.info(`${Config.dashboardUrl}${buildId}`);
   });
 };
 
@@ -35,13 +37,6 @@ let printSpecsRunSummary = () => {
 
 };
 
-let printFailedSpecsDetails = () => {
-
-};
-
-let printBuildDashboardLink = (buildId) => {
-  new Promise((resolve, reject) => {
-    logger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
-    logger.info(`${config.dashboardUrl}${buildId}`);
-  });
+let resolveExitCode = (exitCode) => {
+  return new Promise((resolve, _reject) => { resolve(exitCode) });
 };
