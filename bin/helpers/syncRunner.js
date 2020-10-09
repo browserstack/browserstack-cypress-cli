@@ -5,6 +5,7 @@ const Config = require("./config"),
   utils = require("./utils"),
   request = require('request'),
   specDetails = require('./sync/failedSpecsDetails'),
+  specsSummary = require('./sync/specsSummary'),
   { table, getBorderCharacters } = require('table'),
   chalk = require('chalk');
 
@@ -12,7 +13,7 @@ exports.pollBuildStatus = (bsConfig, buildId) => {
   logBuildDetails().then((data) => {
     printSpecsStatus();
   }).then((data) => {
-    printSpecsRunSummary();
+    return specsSummary.printSpecsRunSummary(data.specs, data.time, data.machines);
   }).then((data) => {
     return specDetails.failedSpecsDetails(data);
   }).then((successExitCode) => {
