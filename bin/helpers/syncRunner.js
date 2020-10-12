@@ -5,9 +5,9 @@ const config = require("./config"),
   utils = require("./utils"),
   request = require('request');
 
-exports.pollBuildStatus = (bsConfig, bsConfigPath, buildDetails) => {
+exports.pollBuildStatus = (bsConfig, buildDetails) => {
   return new Promise(function (resolve, reject) {
-    logBuildDetails(bsConfig, bsConfigPath, buildDetails);
+    logBuildDetails(bsConfig, buildDetails);
     printSpecsStatus()
       .then((data) => {
         printSpecsRunSummary();
@@ -27,7 +27,7 @@ exports.pollBuildStatus = (bsConfig, bsConfigPath, buildDetails) => {
     });
 };
 
-let logBuildDetails = (bsConfig, bsConfigPath, buildDetails) => {
+let logBuildDetails = (bsConfig, buildDetails) => {
   let parallels_enabled = false;
   if (bsConfig.run_settings.parallels) {
     parallels_enabled = true;
@@ -35,9 +35,6 @@ let logBuildDetails = (bsConfig, bsConfigPath, buildDetails) => {
   let parallelMessage = `Run in parallel: ${parallels_enabled ? 'enabled' : 'disabled'}`;
   if (parallels_enabled) parallelMessage = parallelMessage + ` (attempting to run on ${buildDetails.machines} machines)`;
 
-  // logger.info(`Configuration file: ${bsConfigPath}`);
-  // logger.info(`Cypress config file: ${bsConfig.run_settings.cypress_config_file}`);
-  // logger.info(`Local connection: ${bsConfig.connection_settings.local ? 'enabled' : 'disabled'}`);
   logger.info(`Browser Combinations: ${buildDetails.combinations}`);
   logger.info(parallelMessage);
   logger.info(`BrowserStack Dashboard: ${buildDetails.dashboard_url}`);

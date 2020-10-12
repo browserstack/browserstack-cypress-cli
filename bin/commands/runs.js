@@ -67,7 +67,7 @@ module.exports = function run(args) {
             if (!args.disableNpmWarning && bsConfig.run_settings.npm_dependencies && Object.keys(bsConfig.run_settings.npm_dependencies).length <= 0) logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES);
 
             if (args.sync) {
-              syncRunner.pollBuildStatus(bsConfig, bsConfigPath, data).then((exitCode) => {
+              syncRunner.pollBuildStatus(bsConfig, data).then((exitCode) => {
                 utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
 
                 process.exit(exitCode);
