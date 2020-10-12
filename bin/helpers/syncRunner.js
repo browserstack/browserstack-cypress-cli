@@ -1,30 +1,27 @@
 'use strict';
-const config = require("./config"),
-  logger = require("./logger").winstonLogger,
+const Config = require("./config"),
+  logger = require("./logger").syncCliLogger,
   Constants = require("./constants"),
   utils = require("./utils"),
-  request = require('request');
+  request = require('request'),
+  specDetails = require('./sync/failedSpecsDetails'),
+  { table, getBorderCharacters } = require('table'),
+  chalk = require('chalk');
 
 exports.pollBuildStatus = (bsConfig, buildDetails) => {
-  return new Promise(function (resolve, reject) {
-    logBuildDetails(bsConfig, buildDetails);
-    printSpecsStatus()
-      .then((data) => {
-        printSpecsRunSummary();
-      })
-      .then((data) => {
-        printFailedSpecsDetails();
-      })
-      .then((data) => {
-        printBuildDashboardLink(buildDetails.dashboard_url);
-        // success case!
-        resolve(0); // exit code 0
-      })
-      .catch((err) => {
-        // failed case!
-        reject(err); // exit code 1
-      });
-    });
+  logBuildDetails(bsConfig, buildDetails);
+  printSpecsStatus().then((data) => {
+    printSpecsRunSummary();
+  }).then((data) => {
+    return specDetails.failedSpecsDetails(data);
+  }).then((successExitCode) => {
+    return resolveExitCode(successExitCode); // exit code 0
+  }).catch((nonZeroExitCode) => {
+    return resolveExitCode(nonZeroExitCode); // exit code 1
+  }).finally(() => {
+    logger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
+    logger.info(`${Config.dashboardUrl}${buildDetails.dashboard_url}`);
+  });
 };
 
 let logBuildDetails = (bsConfig, buildDetails) => {
@@ -52,12 +49,6 @@ let printSpecsRunSummary = () => {
   });
 };
 
-let printFailedSpecsDetails = () => {
-  return new Promise(function (resolve, reject) {
-    resolve();
-  });
-};
-
-let printBuildDashboardLink = (dashboardUrl) => {
-  logger.info(`${Constants.cliMessages.RUN.BUILD_REPORT_MESSAGE}: ${dashboardUrl}`);
+let resolveExitCode = (exitCode) => {
+  return new Promise((resolve, _reject) => { resolve(exitCode) });
 };
