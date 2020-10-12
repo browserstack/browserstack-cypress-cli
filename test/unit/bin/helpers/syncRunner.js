@@ -3,22 +3,21 @@ const chai = require("chai"),
   chaiAsPromised = require("chai-as-promised"),
   rewire = require("rewire");
 
-const logger = require("../../../../bin/helpers/logger").winstonLogger,
+const logger = require("../../../../bin/helpers/logger").syncCliLogger,
   testObjects = require("../../support/fixtures/testObjects");
 
 const syncRunner = rewire("../../../../bin/helpers/syncRunner");
 
 chai.use(chaiAsPromised);
-logger.transports["console.info"].silent = true;
 
 logBuildDetails = syncRunner.__get__("logBuildDetails");
 
 describe("syncRunner", () => {
-  var sandbox, winstonLoggerStub;
+  var sandbox, loggerStub;
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    winstonLoggerStub = sinon.stub(logger, "log").callsFake(() => {});
+    loggerStub = sinon.stub(logger, "log").callsFake(() => {});
   });
 
   afterEach(() => {
@@ -36,18 +35,18 @@ describe("syncRunner", () => {
     it("parallels defined", () => {
       logBuildDetails(testObjects.sampleBsConfigWithParallels, buildDetails);
 
-      sinon.assert.calledThrice(winstonLoggerStub);
-      sinon.assert.calledWithMatch(winstonLoggerStub, 'info', `Browser Combinations: ${buildDetails.combinations}`);
-      sinon.assert.calledWithMatch(winstonLoggerStub, 'info', `Run in parallel: enabled (attempting to run on ${buildDetails.machines} machines)`);
-      sinon.assert.calledWithMatch(winstonLoggerStub, 'info', `BrowserStack Dashboard: ${buildDetails.dashboard_url}`);
+      sinon.assert.calledThrice(loggerStub);
+      sinon.assert.calledWithMatch(loggerStub, 'info', `Browser Combinations: ${buildDetails.combinations}`);
+      sinon.assert.calledWithMatch(loggerStub, 'info', `Run in parallel: enabled (attempting to run on ${buildDetails.machines} machines)`);
+      sinon.assert.calledWithMatch(loggerStub, 'info', `BrowserStack Dashboard: ${buildDetails.dashboard_url}`);
     });
     it("parallels not defined", () => {
       logBuildDetails(testObjects.sampleBsConfig, buildDetails);
 
-      sinon.assert.calledThrice(winstonLoggerStub);
-      sinon.assert.calledWithMatch(winstonLoggerStub, 'info', `Browser Combinations: ${buildDetails.combinations}`);
-      sinon.assert.calledWithMatch(winstonLoggerStub, 'info', `Run in parallel: disabled`);
-      sinon.assert.calledWithMatch(winstonLoggerStub, 'info', `BrowserStack Dashboard: ${buildDetails.dashboard_url}`);
+      sinon.assert.calledThrice(loggerStub);
+      sinon.assert.calledWithMatch(loggerStub, 'info', `Browser Combinations: ${buildDetails.combinations}`);
+      sinon.assert.calledWithMatch(loggerStub, 'info', `Run in parallel: disabled`);
+      sinon.assert.calledWithMatch(loggerStub, 'info', `BrowserStack Dashboard: ${buildDetails.dashboard_url}`);
     });
   });
 });
