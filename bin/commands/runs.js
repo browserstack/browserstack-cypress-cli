@@ -69,18 +69,14 @@ module.exports = function run(args) {
             if (args.sync) {
               syncRunner.pollBuildStatus(bsConfig, data).then((exitCode) => {
                 utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
-
                 process.exit(exitCode);
-              }).catch((err) => {
-                logger.error(err);
-                process.exit(1);
               });
-            } else {
-              logger.info(message);
-              logger.info(dashboardLink);
-              utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
-              process.exit(2);
             }
+
+            logger.info(message);
+            logger.info(dashboardLink);
+            utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
+            return;
           }).catch(function (err) {
             // Build creation failed
             logger.error(err);
