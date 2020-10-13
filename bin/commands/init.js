@@ -13,6 +13,8 @@ function get_path(args) {
     if (filename !== path.basename(filename)) {
       let message = Constants.userMessages.CONFLICTING_INIT_ARGUMENTS;
       logger.error(message);
+      // set cypress config filename
+      utils.setCypressConfigFilename(args.bstack_config, args);
       utils.sendUsageReport(null, args, message, Constants.messageTypes.ERROR, 'conflicting_path_json_init');
       return;
     }
