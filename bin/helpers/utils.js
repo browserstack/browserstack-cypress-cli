@@ -164,7 +164,7 @@ exports.setCypressConfigFilename = (bsConfig, args) => {
 
   bsConfig.run_settings.userProvidedCypessConfigFile = (userProvidedCypessConfigFile || (!this.isUndefined(bsConfig.run_settings.cypress_config_file)));
 
-  if (userProvidedCypessConfigFile || this.isUndefined(bsConfig.run_settings.cypress_config_file)) {
+  if ((userProvidedCypessConfigFile || this.isUndefined(bsConfig.run_settings.cypress_config_file)) && !this.isUndefined(args.cypressConfigFile)) {
     bsConfig.run_settings.cypress_config_file = args.cypressConfigFile;
     bsConfig.run_settings.cypress_config_filename = path.basename(args.cypressConfigFile);
   } else if (!this.isUndefined(bsConfig.run_settings.cypress_config_file)) {
