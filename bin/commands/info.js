@@ -18,6 +18,9 @@ module.exports = function info(args) {
 
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
+    // set cypress config filename
+    utils.setCypressConfigFilename(bsConfig, args);
+
     let buildId = args._[1];
 
     let options = {
