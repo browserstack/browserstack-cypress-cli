@@ -4,13 +4,14 @@ const Config = require("./config"),
   Constants = require("./constants"),
   utils = require("./utils"),
   request = require('request'),
+  syncSpecsLogs = require('./sync/syncSpecsLogs'),
   specDetails = require('./sync/failedSpecsDetails'),
   { table, getBorderCharacters } = require('table'),
   chalk = require('chalk');
 
 exports.pollBuildStatus = (bsConfig, buildId) => {
   logBuildDetails().then((data) => {
-    printSpecsStatus();
+    return syncSpecsLogs.printSpecsStatus(bsConfig, buildId);
   }).then((data) => {
     printSpecsRunSummary();
   }).then((data) => {
