@@ -198,7 +198,7 @@ var argv = yargs
         },
         'sync': {
           default: false,
-          describe: Constants.cliMessages.SYNC_DESCRIPTION,
+          describe: Constants.cliMessages.RUN.SYNC_DESCRIPTION,
           type: "boolean"
         }
       })

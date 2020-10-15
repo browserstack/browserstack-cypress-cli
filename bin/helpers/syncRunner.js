@@ -9,10 +9,9 @@ const Config = require("./config"),
   { table, getBorderCharacters } = require('table'),
   chalk = require('chalk');
 
-exports.pollBuildStatus = (bsConfig, buildId) => {
-  logBuildDetails().then((data) => {
-    printSpecsStatus();
-  }).then((data) => {
+exports.pollBuildStatus = (bsConfig, buildDetails) => {
+  logBuildDetails(bsConfig, buildDetails);
+  printSpecsStatus().then((data) => {
     return specsSummary.printSpecsRunSummary(data.specs, data.time, data.machines);
   }).then((data) => {
     return specDetails.failedSpecsDetails(data);
@@ -22,20 +21,33 @@ exports.pollBuildStatus = (bsConfig, buildId) => {
     return resolveExitCode(nonZeroExitCode); // exit code 1
   }).finally(() => {
     logger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
-    logger.info(`${Config.dashboardUrl}${buildId}`);
+    logger.info(`${Config.dashboardUrl}${buildDetails.dashboard_url}`);
   });
 };
 
-let logBuildDetails = () => {
+let logBuildDetails = (bsConfig, buildDetails) => {
+  let parallels_enabled = false;
+  if (bsConfig.run_settings.parallels) {
+    parallels_enabled = true;
+  }
+  let parallelMessage = `Run in parallel: ${parallels_enabled ? 'enabled' : 'disabled'}`;
+  if (parallels_enabled) parallelMessage = parallelMessage + ` (attempting to run on ${buildDetails.machines} machines)`;
 
+  logger.info(`Browser Combinations: ${buildDetails.combinations}`);
+  logger.info(parallelMessage);
+  logger.info(`BrowserStack Dashboard: ${buildDetails.dashboard_url}`);
 };
 
 let printSpecsStatus = () => {
-
+  return new Promise(function (resolve, reject) {
+    resolve();
+  });
 };
 
 let printSpecsRunSummary = () => {
-
+  return new Promise(function (resolve, reject) {
+    resolve();
+  });
 };
 
 let resolveExitCode = (exitCode) => {

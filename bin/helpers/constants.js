@@ -3,24 +3,24 @@ const syncCLI = {
 };
 
 const userMessages = {
-    BUILD_FAILED: "Build creation failed.",
-    BUILD_CREATED: "Build created",
-    BUILD_INFO_FAILED: "Failed to get build info.",
-    BUILD_STOP_FAILED: "Failed to stop build.",
-    BUILD_REPORT_MESSAGE: "See the entire build report here:",
-    ZIP_UPLOADER_NOT_REACHABLE: "Could not reach to zip uploader.",
-    ZIP_UPLOAD_FAILED: "Zip Upload failed.",
-    CONFIG_FILE_CREATED: "BrowserStack Config File created, you can now run browserstack-cypress --config-file run",
-    CONFIG_FILE_EXISTS: "File already exists, delete the browserstack.json file manually. skipping...",
-    DIR_NOT_FOUND: "Given path does not exist. Failed to create browserstack.json in %s",
-    ZIP_DELETE_FAILED: "Could not delete local file.",
-    ZIP_DELETED: "Zip file deleted successfully.",
-    API_DEPRECATED: "This version of API is deprecated, please use latest version of API.",
-    FAILED_TO_ZIP: "Failed to zip files.",
-    VISIT_DASHBOARD: "Visit the Automate dashboard for test reporting:",
-    CONFLICTING_INIT_ARGUMENTS: "Conflicting arguments given. You can use --path only with a file name, and not with a file path.",
-    NO_PARALLELS: "Your tests will run sequentially. Read more about running your tests in parallel here: https://www.browserstack.com/docs/automate/cypress/run-tests-in-parallel",
-    NO_NPM_DEPENDENCIES: "No npm dependencies specified. Read more here: https://www.browserstack.com/docs/automate/cypress/npm-packages. You can suppress this warning by using --disable-npm-warning flag."
+  BUILD_FAILED: "Build creation failed.",
+  BUILD_CREATED: "Build created",
+  BUILD_INFO_FAILED: "Failed to get build info.",
+  BUILD_STOP_FAILED: "Failed to stop build.",
+  BUILD_REPORT_MESSAGE: "See the entire build report here:",
+  ZIP_UPLOADER_NOT_REACHABLE: "Could not reach to zip uploader.",
+  ZIP_UPLOAD_FAILED: "Zip Upload failed.",
+  CONFIG_FILE_CREATED: "BrowserStack Config File created, you can now run browserstack-cypress --config-file run",
+  CONFIG_FILE_EXISTS: "File already exists, delete the browserstack.json file manually. skipping...",
+  DIR_NOT_FOUND: "Given path does not exist. Failed to create browserstack.json in %s",
+  ZIP_DELETE_FAILED: "Could not delete local file.",
+  ZIP_DELETED: "Zip file deleted successfully.",
+  API_DEPRECATED: "This version of API is deprecated, please use latest version of API.",
+  FAILED_TO_ZIP: "Failed to zip files.",
+  VISIT_DASHBOARD: "Visit the Automate dashboard for test reporting:",
+  CONFLICTING_INIT_ARGUMENTS: "Conflicting arguments given. You can use --path only with a file name, and not with a file path.",
+  NO_PARALLELS: "Your tests will run sequentially. Read more about running your tests in parallel here: https://www.browserstack.com/docs/automate/cypress/run-tests-in-parallel",
+  NO_NPM_DEPENDENCIES: "No npm dependencies specified. Read more here: https://www.browserstack.com/docs/automate/cypress/npm-packages. You can suppress this warning by using --disable-npm-warning flag."
 };
 
 const validationMessages = {
@@ -44,45 +44,46 @@ const validationMessages = {
 };
 
 const cliMessages = {
-    VERSION: {
-        INFO: "shows version information",
-        HELP: "Specify --help for available options",
-        DEMAND: "Requires init, run or poll argument"
-    },
-    INIT: {
-        INFO: "create a browserstack.json file in the folder specified with the default configuration options.",
-        DESC: "Init in a specified folder"
-    },
-    BUILD: {
-        INFO: "Check status of your build.",
-        STOP: "Stop your build.",
-        DEMAND: "Requires a build id.",
-        DESC: "Path to BrowserStack config",
-        CONFIG_DEMAND: "config file is required",
-        INFO_MESSAGE: "Getting information for buildId ",
-        STOP_MESSAGE: "Stopping build with given buildId "
-    },
-    RUN: {
-        PARALLEL_DESC: "The maximum number of parallels to use to run your test suite",
-        INFO: "Run your tests on BrowserStack.",
-        DESC: "Path to BrowserStack config",
-        CYPRESS_DESC: "Path to Cypress config file",
-        CONFIG_DEMAND: "config file is required",
-        CYPRESS_CONFIG_DEMAND: "Cypress config file is required",
-        BUILD_NAME: "The build name you want to use to name your test runs",
-        EXCLUDE: "Exclude files matching a pattern from zipping and uploading",
-        DEFAULT_PARALLEL_MESSAGE: "Here goes the number of parallels you want to run",
-        SPECS_DESCRIPTION: 'Specify the spec files to run',
-        ENV_DESCRIPTION: "Specify the environment variables for your spec files",
-        SYNC_DESCRIPTION: "Makes the run command in sync"
-    },
-    COMMON: {
-      DISABLE_USAGE_REPORTING: "Disable usage reporting",
-      USERNAME: "Your BrowserStack username",
-      ACCESS_KEY: "Your BrowserStack access key",
-      NO_NPM_WARNING: "No NPM warning if npm_dependencies is empty"
-    }
-}
+  VERSION: {
+    INFO: "shows version information",
+    HELP: "Specify --help for available options",
+    DEMAND: "Requires init, run or poll argument",
+  },
+  INIT: {
+    INFO: "create a browserstack.json file in the folder specified with the default configuration options.",
+    DESC: "Init in a specified folder",
+  },
+  BUILD: {
+    INFO: "Check status of your build.",
+    STOP: "Stop your build.",
+    DEMAND: "Requires a build id.",
+    DESC: "Path to BrowserStack config",
+    CONFIG_DEMAND: "config file is required",
+    INFO_MESSAGE: "Getting information for buildId ",
+    STOP_MESSAGE: "Stopping build with given buildId ",
+  },
+  RUN: {
+    PARALLEL_DESC: "The maximum number of parallels to use to run your test suite",
+    INFO: "Run your tests on BrowserStack.",
+    DESC: "Path to BrowserStack config",
+    CYPRESS_DESC: "Path to Cypress config file",
+    CONFIG_DEMAND: "config file is required",
+    CYPRESS_CONFIG_DEMAND: "Cypress config file is required",
+    BUILD_NAME: "The build name you want to use to name your test runs",
+    EXCLUDE: "Exclude files matching a pattern from zipping and uploading",
+    DEFAULT_PARALLEL_MESSAGE: "Here goes the number of parallels you want to run",
+    SPECS_DESCRIPTION: "Specify the spec files to run",
+    ENV_DESCRIPTION: "Specify the environment variables for your spec files",
+    SYNC_DESCRIPTION: "Makes the run command in sync",
+    BUILD_REPORT_MESSAGE: "See the entire build report here",
+  },
+  COMMON: {
+    DISABLE_USAGE_REPORTING: "Disable usage reporting",
+    USERNAME: "Your BrowserStack username",
+    ACCESS_KEY: "Your BrowserStack access key",
+    NO_NPM_WARNING: "No NPM warning if npm_dependencies is empty",
+  },
+};
 
 const messageTypes = {
   SUCCESS: "success",
