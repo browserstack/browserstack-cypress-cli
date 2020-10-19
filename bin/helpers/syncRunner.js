@@ -12,7 +12,7 @@ const Config = require("./config"),
 
 exports.pollBuildStatus = (bsConfig, buildDetails) => {
   logBuildDetails(bsConfig, buildDetails);
-  printSpecsStatus().then((data) => {
+  syncSpecsLogs.printSpecsStatus(bsConfig, buildDetails).then((data) => {
     return specsSummary.printSpecsRunSummary(data.specs, data.time, data.machines);
   }).then((data) => {
     return specDetails.failedSpecsDetails(data);
