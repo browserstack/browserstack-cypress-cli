@@ -21,24 +21,8 @@ exports.pollBuildStatus = (bsConfig, buildDetails) => {
       resolve(successExitCode); // exit code 0
     }).catch((nonZeroExitCode) => {
       resolve(nonZeroExitCode); // exit code 1
-    }).finally(() => {
-      logger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
-      logger.info(`${Config.dashboardUrl}${buildDetails.dashboard_url}`);
-    });
+    })
   });
-  // logBuildDetails(bsConfig, buildDetails);
-  // syncSpecsLogs.printSpecsStatus(bsConfig, buildDetails).then((data) => {
-  //   return specsSummary.printSpecsRunSummary(data.specs, data.duration, buildDetails.machines);
-  // }).then((data) => {
-  //   return specDetails.failedSpecsDetails(data);
-  // }).then((successExitCode) => {
-  //   return resolveExitCode(successExitCode); // exit code 0
-  // }).catch((nonZeroExitCode) => {
-  //   return resolveExitCode(nonZeroExitCode); // exit code 1
-  // }).finally(() => {
-  //   logger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
-  //   logger.info(`${Config.dashboardUrl}${buildDetails.dashboard_url}`);
-  // });
 };
 
 let logBuildDetails = (bsConfig, buildDetails) => {
@@ -52,20 +36,4 @@ let logBuildDetails = (bsConfig, buildDetails) => {
   logger.info(`Browser Combinations: ${buildDetails.combinations}`);
   logger.info(parallelMessage);
   logger.info(`BrowserStack Dashboard: ${buildDetails.dashboard_url}`);
-};
-
-let printSpecsStatus = () => {
-  return new Promise(function (resolve, reject) {
-    resolve();
-  });
-};
-
-let printSpecsRunSummary = () => {
-  return new Promise(function (resolve, reject) {
-    resolve();
-  });
-};
-
-let resolveExitCode = (exitCode) => {
-  return new Promise((resolve, _reject) => { resolve(exitCode) });
 };
