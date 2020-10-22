@@ -11,19 +11,34 @@ const Config = require("./config"),
   chalk = require('chalk');
 
 exports.pollBuildStatus = (bsConfig, buildDetails) => {
-  logBuildDetails(bsConfig, buildDetails);
-  syncSpecsLogs.printSpecsStatus(bsConfig, buildDetails).then((data) => {
-    return specsSummary.printSpecsRunSummary(data.specs, data.time, data.machines);
-  }).then((data) => {
-    return specDetails.failedSpecsDetails(data);
-  }).then((successExitCode) => {
-    return resolveExitCode(successExitCode); // exit code 0
-  }).catch((nonZeroExitCode) => {
-    return resolveExitCode(nonZeroExitCode); // exit code 1
-  }).finally(() => {
-    logger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
-    logger.info(`${Config.dashboardUrl}${buildDetails.dashboard_url}`);
+  return new Promise((resolve, reject) => {
+    logBuildDetails(bsConfig, buildDetails);
+    syncSpecsLogs.printSpecsStatus(bsConfig, buildDetails).then((data) => {
+      return specsSummary.printSpecsRunSummary(data.specs, data.duration, buildDetails.machines);
+    }).then((data) => {
+      return specDetails.failedSpecsDetails(data);
+    }).then((successExitCode) => {
+      resolve(successExitCode); // exit code 0
+    }).catch((nonZeroExitCode) => {
+      resolve(nonZeroExitCode); // exit code 1
+    }).finally(() => {
+      logger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
+      logger.info(`${Config.dashboardUrl}${buildDetails.dashboard_url}`);
+    });
   });
+  // logBuildDetails(bsConfig, buildDetails);
+  // syncSpecsLogs.printSpecsStatus(bsConfig, buildDetails).then((data) => {
+  //   return specsSummary.printSpecsRunSummary(data.specs, data.duration, buildDetails.machines);
+  // }).then((data) => {
+  //   return specDetails.failedSpecsDetails(data);
+  // }).then((successExitCode) => {
+  //   return resolveExitCode(successExitCode); // exit code 0
+  // }).catch((nonZeroExitCode) => {
+  //   return resolveExitCode(nonZeroExitCode); // exit code 1
+  // }).finally(() => {
+  //   logger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
+  //   logger.info(`${Config.dashboardUrl}${buildDetails.dashboard_url}`);
+  // });
 };
 
 let logBuildDetails = (bsConfig, buildDetails) => {
