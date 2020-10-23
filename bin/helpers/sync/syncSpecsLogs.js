@@ -119,10 +119,7 @@ let showSpecsStatus = (data) => {
     if (specDetails == "created") {
       printInitialLog();
     } else {
-      try {
-        printSpecData(JSON.parse(specDetails))
-      } catch (error) {
-      }
+      printSpecData(JSON.parse(specDetails))
     }
   });
 }

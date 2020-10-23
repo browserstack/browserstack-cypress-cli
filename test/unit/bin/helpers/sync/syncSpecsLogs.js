@@ -7,7 +7,6 @@ const chai = require("chai"),
   request = require("request");
 
 const sinon = require("sinon");
-// var sandbox = require('sinon').createSandbox();
 
 chai.use(chaiAsPromised);
 
