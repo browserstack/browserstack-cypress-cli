@@ -1,5 +1,9 @@
 const syncCLI = {
-  FAILED_SPEC_DETAILS_COL_HEADER: ['Spec', 'Status', 'Browser', 'BrowserStack Session ID']
+  FAILED_SPEC_DETAILS_COL_HEADER: ['Spec', 'Status', 'Browser', 'BrowserStack Session ID'],
+  LOGS: {
+    INIT_LOG: "Running Tests: ..."
+  },
+  INITIAL_DELAY_MULTIPLIER: 10
 };
 
 const userMessages = {

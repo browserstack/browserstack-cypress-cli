@@ -4,6 +4,7 @@ const request = require("request"),
   utils = require("../utils"),
   logger = require("../logger").syncCliLogger,
   async = require('async'),
+  Constants = require("../constants"),
   tableStream = require('table').createStream,
   chalk = require('chalk');
 
@@ -30,26 +31,7 @@ let  getOptions = (auth, build_id) => {
 
 let getTableConfig = () => {
   return {
-    border: {
-      topBody: `-`,
-      topJoin: ``,
-      topLeft: ``,
-      topRight: ``,
-
-      bottomBody: `-`,
-      bottomJoin: ``,
-      bottomLeft: ``,
-      bottomRight: ``,
-
-      bodyLeft: ``,
-      bodyRight: ``,
-      bodyJoin: ``,
-
-      joinBody: ``,
-      joinLeft: ``,
-      joinRight: ``,
-      joinJoin: ``
-    },
+    border: getBorderConfig(),
     singleLine: true,
     columns: {
       0: { alignment: 'right' }
@@ -61,6 +43,29 @@ let getTableConfig = () => {
   };
 }
 
+let getBorderConfig = () => {
+  return {
+    topBody: `-`,
+    topJoin: ``,
+    topLeft: ``,
+    topRight: ``,
+
+    bottomBody: `-`,
+    bottomJoin: ``,
+    bottomLeft: ``,
+    bottomRight: ``,
+
+    bodyLeft: ``,
+    bodyRight: ``,
+    bodyJoin: ``,
+
+    joinBody: ``,
+    joinLeft: ``,
+    joinRight: ``,
+    joinJoin: ``
+  }
+}
+
 let printSpecsStatus = (bsConfig, buildDetails) => {
   return new Promise((resolve, reject) => {
     options = getOptions(bsConfig.auth, buildDetails.build_id)
@@ -68,26 +73,22 @@ let printSpecsStatus = (bsConfig, buildDetails) => {
     stream = tableStream(tableConfig);
 
     async.whilst(
-      function() {
+      function() { // condition for loop
         return whileLoop;
       },
-      function(callback) {
+      function(callback) { // actual loop
         whileProcess(callback)
       },
-      function(err, result) {
-        if (err) {
-          reject(err)
-        } else {
-          specSummary.duration =  endTime - startTime
-          logger.info();
-          resolve(specSummary)
-        }
+      function(err, result) { // when loop ends
+        specSummary.duration =  endTime - startTime
+        logger.info();
+        resolve(specSummary)
       }
     );
   });
 };
 
-function whileProcess(whilstCallback) {
+let whileProcess = (whilstCallback) => {
   request.post(options, function(error, response, body) {
     if (error) {
       return whilstCallback(error);
@@ -107,10 +108,6 @@ function whileProcess(whilstCallback) {
         return whilstCallback(null, body);
       default:
         whileLoop = false;
-        whileTries -= 1;
-        if (whileTries === 0) {
-          return whilstCallback({ status: 504, message: "Tries limit reached" }); //Gateway Timeout
-        }
         return whilstCallback({ status: response.statusCode, message: body });
     }
   });
@@ -120,33 +117,40 @@ let showSpecsStatus = (data) => {
   let specData = JSON.parse(data);
   specData.forEach(specDetails => {
     if (specDetails == "created") {
-      startTime = Date.now();
-      logger.info("Running Tests: ...")
-      n = 10
+      printInitialLog();
     } else {
       try {
-        specDetails = JSON.parse(specDetails)
-        printSpecData(specDetails)
+        printSpecData(JSON.parse(specDetails))
       } catch (error) {
       }
     }
   });
 }
 
+let printInitialLog = () => {
+  startTime = Date.now();
+  logger.info(Constants.syncCLI.LOGS.INIT_LOG)
+  n = Constants.syncCLI.INITIAL_DELAY_MULTIPLIER
+}
+
 let printSpecData = (data) => {
   let combination = getCombinationName(data["spec"]);
-  let specName = data["path"]
   let status = getStatus(data["spec"]["status"]);
+  writeToTable(combination, data["path"], status)
+  addSpecToSummary(data["path"], data["spec"]["status"], combination, data["session_id"])
+}
 
+let writeToTable = (combination, specName, status) => {
   stream.write([combination + ":", `${specName} ${status}`]);
+}
 
-  // for part 3
-  // Format: {specName: 'spec1.failed.js', status: 'Failed', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'},
+let addSpecToSummary = (specName, status, combination, session_id) => {
+  // Format for part 3: {specName: 'spec1.failed.js', status: 'Failed', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'},
   specSummary["specs"].push({
     "specName": specName,
-    "status": data["spec"]["status"],
+    "status": status,
     "combination": combination,
-    "sessionId": data["session_id"]
+    "sessionId": session_id
   })
 }
 
