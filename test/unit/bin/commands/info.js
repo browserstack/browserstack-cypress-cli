@@ -27,6 +27,7 @@ describe("buildInfo", () => {
       validateBstackJsonStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
+      setCypressConfigFilenameStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -54,6 +55,7 @@ describe("buildInfo", () => {
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub
         },
@@ -90,6 +92,7 @@ describe("buildInfo", () => {
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub
         },
@@ -119,6 +122,7 @@ describe("buildInfo", () => {
       validateBstackJsonStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
+      setCypressConfigFilenameStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -148,6 +152,7 @@ describe("buildInfo", () => {
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub
         },
@@ -182,18 +187,19 @@ describe("buildInfo", () => {
         .stub(request, "get")
         .yields(null, { statusCode: 401 }, JSON.stringify(body_with_message));
 
-      const info = proxyquire("../../../../bin/commands/info", {
-        "../helpers/utils": {
+      const info = proxyquire('../../../../bin/commands/info', {
+        '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
         },
-        request: { get: requestStub },
+        request: {get: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -219,18 +225,19 @@ describe("buildInfo", () => {
         .stub(request, "get")
         .yields(null, { statusCode: 402 }, JSON.stringify(body));
 
-      const info = proxyquire("../../../../bin/commands/info", {
-        "../helpers/utils": {
+      const info = proxyquire('../../../../bin/commands/info', {
+        '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
         },
-        request: { get: requestStub },
+        request: {get: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -258,6 +265,7 @@ describe("buildInfo", () => {
       validateBstackJsonStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
+      setCypressConfigFilenameStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -277,18 +285,19 @@ describe("buildInfo", () => {
 
       let requestStub = sandbox.stub(request, "get").yields(null, { statusCode: 200 }, JSON.stringify(body));
 
-      const info = proxyquire("../../../../bin/commands/info", {
-        "../helpers/utils": {
+      const info = proxyquire('../../../../bin/commands/info', {
+        '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
         },
-        request: { get: requestStub },
+        request: {get: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -315,6 +324,7 @@ describe("buildInfo", () => {
       getConfigPathStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
+      setCypressConfigFilenameStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
       });
@@ -335,6 +345,7 @@ describe("buildInfo", () => {
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           getConfigPath: getConfigPathStub
         },
       });
