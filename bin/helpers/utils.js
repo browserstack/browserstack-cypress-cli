@@ -116,8 +116,8 @@ exports.setParallels = (bsConfig, args) => {
 };
 
 exports.setUsername = (bsConfig, args) => {
-  if(this.isUndefined(bsConfig["auth"])){
-    bsConfig["auth"] = {};
+  if (this.isUndefined(bsConfig['auth']) && (!this.isUndefined(args.username) || !this.isUndefined(process.env.BROWSERSTACK_USERNAME))) {
+    bsConfig['auth'] = {};
   }
   if (!this.isUndefined(args.username)) {
     bsConfig["auth"]["username"] = args.username;
