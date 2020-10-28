@@ -33,6 +33,7 @@ describe("buildStop", () => {
         return "end";
       });
       getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
+      defaultAuthHashStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -60,6 +61,7 @@ describe("buildStop", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub,
+          defaultAuthHash: defaultAuthHashStub
         },
         request: {post: requestStub},
       });
@@ -97,6 +99,7 @@ describe("buildStop", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub,
+          defaultAuthHash: defaultAuthHashStub
         },
         request: {post: requestStub},
       });
@@ -129,6 +132,7 @@ describe("buildStop", () => {
         return "end";
       });
       getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
+      defaultAuthHashStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -156,6 +160,7 @@ describe("buildStop", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub,
+          defaultAuthHash: defaultAuthHashStub
         },
         request: {post: requestStub},
       });
@@ -200,6 +205,7 @@ describe("buildStop", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub,
+          defaultAuthHash: defaultAuthHashStub
         },
         request: {post: requestStub},
       });
@@ -239,6 +245,7 @@ describe("buildStop", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub,
+          defaultAuthHash: defaultAuthHashStub
         },
         request: {post: requestStub},
       });
@@ -273,6 +280,7 @@ describe("buildStop", () => {
         return "end";
       });
       getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
+      defaultAuthHashStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -300,6 +308,7 @@ describe("buildStop", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub,
+          defaultAuthHash: defaultAuthHashStub
         },
         request: {post: requestStub},
       });
@@ -333,6 +342,7 @@ describe("buildStop", () => {
         return "end";
       });
       getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
+      defaultAuthHashStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -351,6 +361,7 @@ describe("buildStop", () => {
           setUsageReportingFlag: setUsageReportingFlagStub,
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getConfigPath: getConfigPathStub,
+          defaultAuthHash: defaultAuthHashStub
         },
       });
 

@@ -33,6 +33,7 @@ describe("buildInfo", () => {
         return "end";
       });
       getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
+      defaultAuthHashStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -47,8 +48,8 @@ describe("buildInfo", () => {
 
       let requestStub = sandbox.stub(request, "get").yields(null, { statusCode: 299 }, null);
 
-      const info = proxyquire("../../../../bin/commands/info", {
-        "../helpers/utils": {
+      const info = proxyquire('../../../../bin/commands/info', {
+        '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
@@ -57,9 +58,10 @@ describe("buildInfo", () => {
           setUsageReportingFlag: setUsageReportingFlagStub,
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
+          defaultAuthHash: defaultAuthHashStub
         },
-        request: { get: requestStub },
+        request: {get: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -84,8 +86,8 @@ describe("buildInfo", () => {
         .stub(request, "get")
         .yields(null, { statusCode: 299 }, JSON.stringify(body));
 
-      const info = proxyquire("../../../../bin/commands/info", {
-        "../helpers/utils": {
+      const info = proxyquire('../../../../bin/commands/info', {
+        '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
@@ -94,9 +96,10 @@ describe("buildInfo", () => {
           setUsageReportingFlag: setUsageReportingFlagStub,
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
+          defaultAuthHash: defaultAuthHashStub
         },
-        request: { get: requestStub },
+        request: {get: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -128,6 +131,7 @@ describe("buildInfo", () => {
         return "end";
       });
       getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
+      defaultAuthHashStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -144,8 +148,8 @@ describe("buildInfo", () => {
         .stub(request, "get")
         .yields(null, { statusCode: 400 }, null);
 
-      const info = proxyquire("../../../../bin/commands/info", {
-        "../helpers/utils": {
+      const info = proxyquire('../../../../bin/commands/info', {
+        '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
@@ -154,9 +158,10 @@ describe("buildInfo", () => {
           setUsageReportingFlag: setUsageReportingFlagStub,
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
+          defaultAuthHash: defaultAuthHashStub
         },
-        request: { get: requestStub },
+        request: {get: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -198,6 +203,7 @@ describe("buildInfo", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub,
+          defaultAuthHash: defaultAuthHashStub
         },
         request: {get: requestStub},
       });
@@ -236,6 +242,7 @@ describe("buildInfo", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub,
+          defaultAuthHash: defaultAuthHashStub
         },
         request: {get: requestStub},
       });
@@ -271,6 +278,7 @@ describe("buildInfo", () => {
         return "end";
       });
       getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
+      defaultAuthHashStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -296,6 +304,7 @@ describe("buildInfo", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub,
+          defaultAuthHash: defaultAuthHashStub
         },
         request: {get: requestStub},
       });
@@ -329,6 +338,7 @@ describe("buildInfo", () => {
         return "end";
       });
       getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
+      defaultAuthHashStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -337,8 +347,8 @@ describe("buildInfo", () => {
     });
 
     it("send usage report if validateBstackJson fails", () => {
-      const info = proxyquire("../../../../bin/commands/info", {
-        "../helpers/utils": {
+      const info = proxyquire('../../../../bin/commands/info', {
+        '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           validateBstackJson: validateBstackJsonStub,
@@ -346,7 +356,8 @@ describe("buildInfo", () => {
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           setCypressConfigFilename: setCypressConfigFilenameStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
+          defaultAuthHash: defaultAuthHashStub
         },
       });
 

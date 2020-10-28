@@ -10,6 +10,9 @@ module.exports = function info(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
 
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
+    // setting defaultAuthHash to {} if not present and set via env variables or via args.
+    utils.defaultAuthHash(bsConfig, args);
+    
     // accept the username from command line if provided
     utils.setUsername(bsConfig, args);
 
@@ -30,7 +33,7 @@ module.exports = function info(args) {
         password: bsConfig.auth.access_key,
       },
       headers: {
-        "User-Agent": utils.getUserAgent(),
+        'User-Agent': utils.getUserAgent(),
       },
     };
 
@@ -55,7 +58,7 @@ module.exports = function info(args) {
 
         if (resp.statusCode == 299) {
           messageType = Constants.messageTypes.INFO;
-          errorCode = "api_deprecated";
+          errorCode = 'api_deprecated';
 
           if (build) {
             message = build.message;
@@ -66,14 +69,14 @@ module.exports = function info(args) {
           }
         } else if (resp.statusCode != 200) {
           messageType = Constants.messageTypes.ERROR;
-          errorCode = "api_failed_build_info";
+          errorCode = 'api_failed_build_info';
 
           if (build) {
             message = `${
               Constants.userMessages.BUILD_INFO_FAILED
             } with error: \n${JSON.stringify(build, null, 2)}`;
             logger.error(message);
-            if (build.message === "Unauthorized") errorCode = "api_auth_failed";
+            if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
           } else {
             message = Constants.userMessages.BUILD_INFO_FAILED;
             logger.error(message);
@@ -89,7 +92,7 @@ module.exports = function info(args) {
         }
       }
       utils.sendUsageReport(bsConfig, args, message, messageType, errorCode);
-    })
+    });
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
