@@ -78,10 +78,12 @@ describe("init", () => {
       };
 
       loggerStub = sandbox.stub(logger, 'error');
+      cypressConfigFileStub = sandbox.stub(utils, 'setCypressConfigFilename');
       usageStub = sandbox.stub(utils, 'sendUsageReport');
 
       expect(get_path(args)).to.be.undefined;
       sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledOnce(cypressConfigFileStub);
       sinon.assert.calledOnce(usageStub);
     });
 
