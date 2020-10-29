@@ -30,7 +30,7 @@ const caps = (bsConfig, zip) => {
     }
     obj.devices = osBrowserArray;
     if (obj.devices.length == 0) reject(Constants.validationMessages.EMPTY_BROWSER_LIST);
-    logger.info(`Browser list: ${osBrowserArray.toString()}`);
+    logger.info(`Browsers list: ${osBrowserArray.toString()}`);
 
     // Test suite
     if (zip.zip_url && zip.zip_url.split("://")[1].length !== 0) {
@@ -38,12 +38,11 @@ const caps = (bsConfig, zip) => {
     } else {
       reject("Test suite is empty");
     }
-    logger.info(`Test suite: bs://${obj.test_suite}`);
 
     // Local
     obj.local = false;
     if (bsConfig.connection_settings && bsConfig.connection_settings.local === true) obj.local = true;
-    logger.info(`Local is set to: ${obj.local}`);
+    logger.info(`Local is set to: ${obj.local} (${obj.local ? Constants.userMessages.LOCAL_TRUE : Constants.userMessages.LOCAL_FALSE})`);
 
     // Local Identifier
     obj.localIdentifier = null;
@@ -100,6 +99,7 @@ const caps = (bsConfig, zip) => {
 
 const validate = (bsConfig, args) => {
   return new Promise(function (resolve, reject) {
+    logger.info(Constants.userMessages.VALIDATING_CONFIG);
     if (!bsConfig) reject(Constants.validationMessages.EMPTY_BROWSERSTACK_JSON);
 
     if (!bsConfig.auth) reject(Constants.validationMessages.INCORRECT_AUTH_PARAMS);

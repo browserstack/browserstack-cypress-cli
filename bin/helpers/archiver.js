@@ -13,6 +13,8 @@ const archiveSpecs = (runSettings, filePath, excludeFiles) => {
 
     var cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
 
+    logger.info(`Creating tests.zip with files in ${cypressFolderPath}`);
+
     var archive = archiver('zip', {
       zlib: { level: 9 } // Sets the compression level.
     });

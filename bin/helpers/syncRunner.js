@@ -12,11 +12,13 @@ const Config = require("./config"),
 
 exports.pollBuildStatus = (bsConfig, buildDetails) => {
   return new Promise((resolve, reject) => {
-    logBuildDetails(bsConfig, buildDetails);
+    //logBuildDetails(bsConfig, buildDetails);
     syncSpecsLogs.printSpecsStatus(bsConfig, buildDetails).then((data) => {
-      return specsSummary.printSpecsRunSummary(data.specs, data.duration, buildDetails.machines);
-    }).then((data) => {
       return specDetails.failedSpecsDetails(data);
+      // return specsSummary.printSpecsRunSummary(data.specs, data.duration, buildDetails.machines);
+    }).then((data) => {
+      return specsSummary.printSpecsRunSummary(data, buildDetails.machines);
+      // return specDetails.failedSpecsDetails(data);
     }).then((successExitCode) => {
       resolve(successExitCode); // exit code 0
     }).catch((nonZeroExitCode) => {

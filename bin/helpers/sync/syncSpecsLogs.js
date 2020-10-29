@@ -126,7 +126,7 @@ let showSpecsStatus = (data) => {
 
 let printInitialLog = () => {
   startTime = Date.now();
-  logger.info(Constants.syncCLI.LOGS.INIT_LOG)
+  logger.info(`\n${Constants.syncCLI.LOGS.INIT_LOG}`)
   n = Constants.syncCLI.INITIAL_DELAY_MULTIPLIER
 }
 

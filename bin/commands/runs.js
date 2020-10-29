@@ -8,7 +8,8 @@ const archiver = require("../helpers/archiver"),
   Constants = require("../helpers/constants"),
   utils = require("../helpers/utils"),
   fileHelpers = require("../helpers/fileHelpers"),
-  syncRunner = require("../helpers/syncRunner");
+  syncRunner = require("../helpers/syncRunner"),
+  syncCliLogger = require("../helpers/logger").syncCliLogger;
 
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
@@ -44,7 +45,7 @@ module.exports = function run(args) {
 
     // Validate browserstack.json values and parallels specified via arguments
     return capabilityHelper.validate(bsConfig, args).then(function (validated) {
-      logger.info(validated);
+      // logger.info(validated);
 
       // accept the number of parallels
       utils.setParallels(bsConfig, args);
@@ -54,7 +55,6 @@ module.exports = function run(args) {
 
         // Uploaded zip file
         return zipUploader.zipUpload(bsConfig, config.fileName).then(function (zip) {
-
           // Create build
           return build.createBuild(bsConfig, zip).then(function (data) {
             let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
@@ -64,19 +64,22 @@ module.exports = function run(args) {
               logger.warn(Constants.userMessages.NO_PARALLELS);
             }
 
-            if (!args.disableNpmWarning && bsConfig.run_settings.npm_dependencies && Object.keys(bsConfig.run_settings.npm_dependencies).length <= 0) logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES);
-
+            if (!args.disableNpmWarning && bsConfig.run_settings.npm_dependencies && Object.keys(bsConfig.run_settings.npm_dependencies).length <= 0) {
+              logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES);
+              logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES_READ_MORE);
+            }
             if (args.sync) {
               syncRunner.pollBuildStatus(bsConfig, data).then((exitCode) => {
                 utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
-                logger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
-                logger.info(data.dashboard_url)
+                syncCliLogger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
+                syncCliLogger.info(data.dashboard_url);
                 process.exit(exitCode);
               });
             }
 
             logger.info(message);
             logger.info(dashboardLink);
+            if(!args.sync) logger.info(Constants.userMessages.EXIT_SYNC_CLI_MESSAGE.replace("<build-id>",data.build_id));
             utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
             return;
           }).catch(function (err) {
@@ -88,9 +91,8 @@ module.exports = function run(args) {
           // Zip Upload failed
           logger.error(err);
           logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED);
-          utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed');
-        }).finally(function () {
           fileHelpers.deleteZip();
+          utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed');
         });
       }).catch(function (err) {
         // Zipping failed

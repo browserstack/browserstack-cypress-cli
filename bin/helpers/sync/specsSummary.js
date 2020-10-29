@@ -16,7 +16,7 @@ const logger = require("../logger").syncCliLogger;
 //   {specName: 'spec8.alias.js', status: 'Skipped', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'}
 // ]
 //
-let printSpecsRunSummary = (data, time, machines) => {
+let printSpecsRunSummary = (data, machines) => {
   return new Promise((resolve, _reject) => {
     let summary = {
       total: 0,
@@ -25,14 +25,14 @@ let printSpecsRunSummary = (data, time, machines) => {
       skipped: 0
     };
 
-    data.forEach((spec) => {
+    data.specs.forEach((spec) => {
       specSummaryCount(summary, spec.status.toLowerCase());
     });
 
     logger.info(`Total tests: ${summary.total}, passed: ${summary.passed}, failed: ${summary.failed}, skipped: ${summary.skipped}`);
-    logger.info(`Done in ${time/1000} seconds using ${machines} machines\n`);
+    logger.info(`Done in ${data.duration/1000} seconds using ${machines} machines\n`);
 
-    resolve(data);
+    resolve(data.exitCode);
   })
 };
 
