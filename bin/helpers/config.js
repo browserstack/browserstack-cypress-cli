@@ -1,6 +1,6 @@
 var config = require('./config.json');
 
-config.env = process.env.NODE_ENV || "production";
+config.env = process.env.BSTACK_CYPRESS_NODE_ENV || "production";
 
 if(config.env !== "production") {
   // load config based on env
