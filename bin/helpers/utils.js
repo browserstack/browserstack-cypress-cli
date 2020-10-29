@@ -115,7 +115,7 @@ exports.setParallels = (bsConfig, args) => {
   }
 };
 
-exports.defaultAuthHash = (bsConfig, args) => {
+exports.setDefaultAuthHash = (bsConfig, args) => {
   if (
     this.isUndefined(bsConfig['auth']) &&
     (!this.isUndefined(args.username) ||

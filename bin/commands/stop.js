@@ -10,8 +10,8 @@ module.exports = function stop(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
 
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
-    // setting defaultAuthHash to {} if not present and set via env variables or via args.
-    utils.defaultAuthHash(bsConfig, args);
+    // setting setDefaultAuthHash to {} if not present and set via env variables or via args.
+    utils.setDefaultAuthHash(bsConfig, args);
     
     // accept the username from command line if provided
     utils.setUsername(bsConfig, args);

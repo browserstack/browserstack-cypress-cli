@@ -918,7 +918,7 @@ describe('utils', () => {
     });
   });
 
-  describe('defaultAuthHash', () => {
+  describe('setDefaultAuthHash', () => {
     beforeEach(function () {
       delete process.env.BROWSERSTACK_USERNAME;
     });
@@ -927,22 +927,22 @@ describe('utils', () => {
       delete process.env.BROWSERSTACK_USERNAME;
     });
 
-    it('should set defaultAuthHash if args.username is present', () => {
+    it('should set setDefaultAuthHash if args.username is present', () => {
       let bsConfig = {};
-      utils.defaultAuthHash(bsConfig, {username: 'username'});
+      utils.setDefaultAuthHash(bsConfig, {username: 'username'});
       expect(utils.isUndefined(bsConfig.auth)).to.be.false;
     });
 
-    it('should set defaultAuthHash if process.env.BROWSERSTACK_USERNAME is present and args.username is not present', () => {
+    it('should set setDefaultAuthHash if process.env.BROWSERSTACK_USERNAME is present and args.username is not present', () => {
       let bsConfig = {};
       process.env.BROWSERSTACK_USERNAME = 'username';
-      utils.defaultAuthHash(bsConfig, {});
+      utils.setDefaultAuthHash(bsConfig, {});
       expect(utils.isUndefined(bsConfig.auth)).to.be.false;
     });
 
-    it('should not set defaultAuthHash if process.env.BROWSERSTACK_USERNAME and args.username is not present', () => {
+    it('should not set setDefaultAuthHash if process.env.BROWSERSTACK_USERNAME and args.username is not present', () => {
       let bsConfig = {};
-      utils.defaultAuthHash(bsConfig, {});
+      utils.setDefaultAuthHash(bsConfig, {});
       expect(utils.isUndefined(bsConfig.auth)).to.be.true;
     });
   });
