@@ -48,7 +48,6 @@ module.exports = function run(args) {
 
     // Validate browserstack.json values and parallels specified via arguments
     return capabilityHelper.validate(bsConfig, args).then(function (validated) {
-      // logger.info(validated);
 
       // accept the number of parallels
       utils.setParallels(bsConfig, args);
