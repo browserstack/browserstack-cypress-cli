@@ -10,6 +10,9 @@ module.exports = function stop(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
 
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
+    // setting setDefaultAuthHash to {} if not present and set via env variables or via args.
+    utils.setDefaultAuthHash(bsConfig, args);
+    
     // accept the username from command line if provided
     utils.setUsername(bsConfig, args);
 
@@ -17,6 +20,9 @@ module.exports = function stop(args) {
     utils.setAccessKey(bsConfig, args);
 
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
+
+    // set cypress config filename
+    utils.setCypressConfigFilename(bsConfig, args);
 
     let buildId = args._[1];
 
@@ -27,7 +33,7 @@ module.exports = function stop(args) {
         password: bsConfig.auth.access_key,
       },
       headers: {
-        "User-Agent": utils.getUserAgent(),
+        'User-Agent': utils.getUserAgent(),
       },
     };
 
@@ -43,16 +49,16 @@ module.exports = function stop(args) {
 
         logger.info(message);
       } else {
-        let build = null
+        let build = null;
         try {
-          build = JSON.parse(body)
+          build = JSON.parse(body);
         } catch (error) {
-          build = null
+          build = null;
         }
 
         if (resp.statusCode == 299) {
           messageType = Constants.messageTypes.INFO;
-          errorCode = "api_deprecated";
+          errorCode = 'api_deprecated';
 
           if (build) {
             message = build.message;
@@ -63,14 +69,14 @@ module.exports = function stop(args) {
           }
         } else if (resp.statusCode != 200) {
           messageType = Constants.messageTypes.ERROR;
-          errorCode = "api_failed_build_stop";
+          errorCode = 'api_failed_build_stop';
 
           if (build) {
             message = `${
               Constants.userMessages.BUILD_STOP_FAILED
             } with error: \n${JSON.stringify(build, null, 2)}`;
             logger.error(message);
-            if (build.message === "Unauthorized") errorCode = "api_auth_failed";
+            if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
           } else {
             message = Constants.userMessages.BUILD_STOP_FAILED;
             logger.error(message);
@@ -82,7 +88,7 @@ module.exports = function stop(args) {
         }
       }
       utils.sendUsageReport(bsConfig, args, message, messageType, errorCode);
-    })
+    });
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);

@@ -115,6 +115,16 @@ exports.setParallels = (bsConfig, args) => {
   }
 };
 
+exports.setDefaultAuthHash = (bsConfig, args) => {
+  if (
+    this.isUndefined(bsConfig['auth']) &&
+    (!this.isUndefined(args.username) ||
+      !this.isUndefined(process.env.BROWSERSTACK_USERNAME))
+  ) {
+    bsConfig['auth'] = {};
+  }
+}
+
 exports.setUsername = (bsConfig, args) => {
   if (!this.isUndefined(args.username)) {
     bsConfig["auth"]["username"] = args.username;
@@ -164,7 +174,7 @@ exports.setCypressConfigFilename = (bsConfig, args) => {
 
   bsConfig.run_settings.userProvidedCypessConfigFile = (userProvidedCypessConfigFile || (!this.isUndefined(bsConfig.run_settings.cypress_config_file)));
 
-  if (userProvidedCypessConfigFile || this.isUndefined(bsConfig.run_settings.cypress_config_file)) {
+  if ((userProvidedCypessConfigFile || this.isUndefined(bsConfig.run_settings.cypress_config_file)) && !this.isUndefined(args.cypressConfigFile)) {
     bsConfig.run_settings.cypress_config_file = args.cypressConfigFile;
     bsConfig.run_settings.cypress_config_filename = path.basename(args.cypressConfigFile);
   } else if (!this.isUndefined(bsConfig.run_settings.cypress_config_file)) {
@@ -219,7 +229,7 @@ exports.isParallelValid = (value) => {
 }
 
 exports.getUserAgent = () => {
-  return `BStack-Cypress-CLI/1.5.0 (${os.arch()}/${os.platform()}/${os.release()})`;
+  return `BStack-Cypress-CLI/1.5.1 (${os.arch()}/${os.platform()}/${os.release()})`;
 };
 
 exports.isAbsolute = (configPath) => {
