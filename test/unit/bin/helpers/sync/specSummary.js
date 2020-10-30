@@ -10,7 +10,7 @@ var specSummary = require('../../../../../bin/helpers/sync/specsSummary');
 
 describe("printSpecsRunSummary", () => {
   context("data is empty", () => {
-    let data = [], time = '2 minutes', machines = 2;
+    let data = [], time = 6000, machines = 2;
     it('returns passed specs data', () => {
       return specSummary.printSpecsRunSummary(data, time, machines).then((specsData) => {
         expect(data).to.equal(specsData);
@@ -19,7 +19,7 @@ describe("printSpecsRunSummary", () => {
   });
 
   context("with data", () => {
-    let time = '2 minutes',
+    let time = 6000,
         machines = 2,
         data = [
           {specName: 'spec2.name.js', status: 'Failed', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'},
@@ -33,7 +33,7 @@ describe("printSpecsRunSummary", () => {
 
       specSummary.printSpecsRunSummary(data, time, machines);
       sinon.assert.calledWith(loggerInfoSpy, 'Total tests: 4, passed: 1, failed: 2, skipped: 1');
-      sinon.assert.calledWith(loggerInfoSpy, `Done in ${time} using ${machines} machines\n`);
+      sinon.assert.calledWith(loggerInfoSpy, `Done in ${time / 1000} seconds using ${machines} machines\n`);
 
       loggerInfoSpy.restore();
     });

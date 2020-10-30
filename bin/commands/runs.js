@@ -69,6 +69,8 @@ module.exports = function run(args) {
             if (args.sync) {
               syncRunner.pollBuildStatus(bsConfig, data).then((exitCode) => {
                 utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
+                logger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
+                logger.info(data.dashboard_url)
                 process.exit(exitCode);
               });
             }
