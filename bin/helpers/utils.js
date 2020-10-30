@@ -314,3 +314,7 @@ exports.setLocalIdentifier = (bsConfig) => {
     );
   }
 };
+
+exports.capitalizeFirstLetter = (stringToCapitalize) => {
+  return stringToCapitalize && (stringToCapitalize[0].toUpperCase() + stringToCapitalize.slice(1));
+};

@@ -20,17 +20,20 @@ const caps = (bsConfig, zip) => {
 
     // Browser list
     let osBrowserArray = [];
+    let browsersList = [];
     if (bsConfig.browsers) {
       bsConfig.browsers.forEach((element) => {
         osBrowser = element.os + "-" + element.browser;
+        osAndBrowser = element.os + " / " + Utils.capitalizeFirstLetter(element.browser);
         element.versions.forEach((version) => {
           osBrowserArray.push(osBrowser + version);
+          browsersList.push(`${osAndBrowser} (${version})`);
         });
       });
     }
     obj.devices = osBrowserArray;
     if (obj.devices.length == 0) reject(Constants.validationMessages.EMPTY_BROWSER_LIST);
-    logger.info(`Browsers list: ${osBrowserArray.toString()}`);
+    logger.info(`Browsers list: ${browsersList.join(", ")}`);
 
     // Test suite
     if (zip.zip_url && zip.zip_url.split("://")[1].length !== 0) {

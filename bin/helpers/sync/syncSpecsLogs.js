@@ -32,25 +32,25 @@ let  getOptions = (auth, build_id) => {
 let getTableConfig = () => {
   return {
     border: getBorderConfig(),
-    singleLine: true,
     columns: {
-      0: { alignment: 'right' }
+      1: {alignment: 'center', width: 1},
+      2: {alignment: 'left', width: 30}
     },
     columnDefault: {
-      width: 50
+      width: 25,
     },
-    columnCount: 2
+    columnCount: 3,
   };
 }
 
 let getBorderConfig = () => {
   return {
-    topBody: `-`,
+    topBody: ``,
     topJoin: ``,
     topLeft: ``,
     topRight: ``,
 
-    bottomBody: `-`,
+    bottomBody: ``,
     bottomJoin: ``,
     bottomLeft: ``,
     bottomRight: ``,
@@ -81,7 +81,6 @@ let printSpecsStatus = (bsConfig, buildDetails) => {
       },
       function(err, result) { // when loop ends
         specSummary.duration =  endTime - startTime
-        logger.info();
         resolve(specSummary)
       }
     );
@@ -105,6 +104,7 @@ let whileProcess = (whilstCallback) => {
         whileLoop = false;
         endTime = Date.now();
         showSpecsStatus(body);
+        logger.info("\n--------------------------------------------------------------------------------")
         return whilstCallback(null, body);
       default:
         whileLoop = false;
@@ -127,6 +127,7 @@ let showSpecsStatus = (data) => {
 let printInitialLog = () => {
   startTime = Date.now();
   logger.info(`\n${Constants.syncCLI.LOGS.INIT_LOG}`)
+  logger.info("--------------------------------------------------------------------------------")
   n = Constants.syncCLI.INITIAL_DELAY_MULTIPLIER
 }
 
@@ -138,7 +139,7 @@ let printSpecData = (data) => {
 }
 
 let writeToTable = (combination, specName, status) => {
-  stream.write([combination + ":", `${specName} ${status}`]);
+  stream.write([combination , ":", `${specName} ${status}`]);
 }
 
 let addSpecToSummary = (specName, status, combination, session_id) => {
@@ -152,7 +153,7 @@ let addSpecToSummary = (specName, status, combination, session_id) => {
 }
 
 let getCombinationName = (spec) => {
-  return `${spec["os"]} ${spec["osVersion"]} / ${spec["browser"]} ${spec["browserVersion"]}`
+  return `${utils.capitalizeFirstLetter(spec['browser'])} ${spec['browserVersion']} (${spec['os']} ${spec['osVersion']})`;
 }
 
 let getStatus = (status) => {
