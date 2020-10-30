@@ -181,37 +181,22 @@ describe('utils', () => {
     });
   });
 
-  describe('validateBstackJson', () => {
-    it('should reject with SyntaxError for empty file', () => {
-      let bsConfigPath = path.join(
-        process.cwd(),
-        'test',
-        'test_files',
-        'dummy_bstack.json'
-      );
-      expect(utils.validateBstackJson(bsConfigPath)).to.be.rejectedWith(
-        SyntaxError
-      );
+  describe("validateBstackJson", () => {
+    it("should reject with SyntaxError for empty file", () => {
+      let bsConfigPath = path.join(process.cwd(), 'test', 'test_files', 'dummy_bstack.json');
+      return utils.validateBstackJson(bsConfigPath).catch((error)=>{
+        sinon.match(error, "Invalid browserstack.json file")
+      });
     });
-    it('should resolve with data for valid json', () => {
-      let bsConfigPath = path.join(
-        process.cwd(),
-        'test',
-        'test_files',
-        'dummy_bstack_2.json'
-      );
+    it("should resolve with data for valid json", () => {
+      let bsConfigPath = path.join(process.cwd(), 'test', 'test_files', 'dummy_bstack_2.json');
       expect(utils.validateBstackJson(bsConfigPath)).to.be.eventually.eql({});
     });
-    it('should reject with SyntaxError for invalid json file', () => {
-      let bsConfigPath = path.join(
-        process.cwd(),
-        'test',
-        'test_files',
-        'dummy_bstack_3.json'
-      );
-      expect(utils.validateBstackJson(bsConfigPath)).to.be.rejectedWith(
-        SyntaxError
-      );
+    it("should reject with SyntaxError for invalid json file", () => {
+      let bsConfigPath = path.join(process.cwd(), 'test', 'test_files', 'dummy_bstack_3.json');
+      return utils.validateBstackJson(bsConfigPath).catch((error) => {
+        sinon.match(error, "Invalid browserstack.json file")
+      });
     });
   });
 
