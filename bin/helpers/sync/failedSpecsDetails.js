@@ -29,6 +29,9 @@ let failedSpecsDetails = (data) => {
     let specData = [specResultHeader]; // 2-D array
 
     data.forEach((spec) => {
+      if (spec.status.toLowerCase() === 'passed') {
+        return;
+      }
       if (spec.status && spec.status.toLowerCase() === 'failed' && !failedSpecs)
         failedSpecs = true;
 

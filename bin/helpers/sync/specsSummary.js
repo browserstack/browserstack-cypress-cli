@@ -30,7 +30,7 @@ let printSpecsRunSummary = (data, time, machines) => {
     });
 
     logger.info(`Total tests: ${summary.total}, passed: ${summary.passed}, failed: ${summary.failed}, skipped: ${summary.skipped}`);
-    logger.info(`Done in ${time} using ${machines} machines\n`);
+    logger.info(`Done in ${time/1000} seconds using ${machines} machines\n`);
 
     resolve(data);
   })
