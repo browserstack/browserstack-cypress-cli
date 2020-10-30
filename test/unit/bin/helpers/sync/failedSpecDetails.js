@@ -21,39 +21,41 @@ describe("failedSpecsDetails", () => {
   });
 
   context("data is empty", () => {
-    let data = [];
+    let data = {
+      specs: [],
+      exitCode: 0
+    };
+
     it('returns 0 exit code', () => {
-      return specDetails.failedSpecsDetails(data).then((status) => {
-        expect(status).to.equal(0);
+      return specDetails.failedSpecsDetails(data).then((result) => {
+        expect(result).to.equal(data);
       });
     });
   });
 
   context("data does not have failed specs", () => {
-    let data = [
-      {specName: 'spec2.name.js', status: 'Skipped', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'}
-    ];
+    let data = {
+      specs: [{specName: 'spec2.name.js', status: 'Skipped', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'}],
+      exitCode: 0
+    };
 
     it("returns 0 exit code", () => {
-      return specDetails.failedSpecsDetails(data).then((status) => {
-        expect(status).to.equal(0);
+      return specDetails.failedSpecsDetails(data).then((result) => {
+        expect(result).to.equal(data);
       });
     });
   });
 
   context("data has failed specs", () => {
-    let data = [
-      {specName: 'spec2.name.js', status: 'Failed', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'},
-      {specName: 'spec2.name.js', status: 'Passed', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'}
-    ];
+    let data = {
+      specs: [ {specName: 'spec2.name.js', status: 'Failed', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'},
+      {specName: 'spec2.name.js', status: 'Passed', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'}],
+      exitCode: 1
+    };
 
     it("returns 1 exit code", () => {
-      return specDetails.failedSpecsDetails(data)
-        .then((status) => {
-          chai.assert.equal(status, 1);
-          expect(status).to.equal(1);
-        }).catch((status) => {
-          expect(status).to.equal(1);
+      return specDetails.failedSpecsDetails(data).then((result) => {
+        expect(result).to.equal(data);
       });
     });
   });
