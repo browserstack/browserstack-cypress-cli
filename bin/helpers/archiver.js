@@ -45,6 +45,8 @@ const archiveSpecs = (runSettings, filePath, excludeFiles) => {
       archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: ignoreFiles });
     });
 
+    archive.file(".npmrc");
+    
     let packageJSON = {};
 
     if (typeof runSettings.package_config_options === 'object') {

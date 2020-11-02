@@ -87,7 +87,7 @@ const messageTypes = {
   NULL: null
 }
 
-const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip', 'npmrc'];
+const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip'];
 
 const filesToIgnoreWhileUploading = ['node_modules/**', 'package-lock.json', 'package.json', 'browserstack-package.json', 'tests.zip', 'cypress.json']
 
