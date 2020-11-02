@@ -204,6 +204,46 @@ var argv = yargs
       return require('./commands/runs')(argv);
     }
   })
+  .command('generate-report', Constants.cliMessages.GENERATE_REPORT.INFO, function(yargs) {
+    argv = yargs
+      .usage('usage: $0 generate-report <buildId>')
+      .demand(1, Constants.cliMessages.BUILD.DEMAND)
+      .options({
+        'cf': {
+          alias: 'config-file',
+          describe: Constants.cliMessages.BUILD.DESC,
+          default: 'browserstack.json',
+          type: 'string',
+          nargs: 1,
+          demand: true,
+          demand: Constants.cliMessages.BUILD.CONFIG_DEMAND
+        },
+        'disable-usage-reporting': {
+          default: undefined,
+          description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
+          type: "boolean"
+        },
+        'u': {
+          alias: 'username',
+          describe: Constants.cliMessages.COMMON.USERNAME,
+          type: "string",
+          default: undefined
+        },
+        'k': {
+          alias: 'key',
+          describe: Constants.cliMessages.COMMON.ACCESS_KEY,
+          type: "string",
+          default: undefined
+        },
+      })
+      .help('help')
+      .wrap(null)
+      .argv
+    if (checkCommands(yargs, argv, 1)) {
+      logger.info(Constants.cliMessages.BUILD.INFO_MESSAGE + argv._[1]);
+      return require('./commands/info')(argv);
+    }
+  })
   .help('help')
   .wrap(null)
   .argv

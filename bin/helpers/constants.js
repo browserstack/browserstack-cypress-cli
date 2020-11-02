@@ -75,6 +75,9 @@ const cliMessages = {
       USERNAME: "Your BrowserStack username",
       ACCESS_KEY: "Your BrowserStack access key",
       NO_NPM_WARNING: "No NPM warning if npm_dependencies is empty"
+    },
+    GENERATE_REPORT: {
+      INFO: "Generates the build report"
     }
 }
 
