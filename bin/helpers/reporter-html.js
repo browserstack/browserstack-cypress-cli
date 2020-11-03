@@ -5,7 +5,7 @@ function loadFile(fileName) {
 }
 
 function loadInlineCss() {
-  loadFile(path.join(templatesDir, 'browserstack-cypress-report.css'));
+  loadFile(path.join(templatesDir, 'assets', 'browserstack-cypress-report.css'));
 }
 
 renderReportHTML = (props) => {
