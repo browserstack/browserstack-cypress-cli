@@ -2,6 +2,7 @@
 const os = require("os");
 const path = require("path");
 const fs = require("fs");
+const glob = require('glob');
 
 const usageReporting = require("./usageReporting"),
   logger = require("./logger").winstonLogger,
@@ -313,4 +314,12 @@ exports.setLocalIdentifier = (bsConfig) => {
       "Reading local identifier from the environment variable BROWSERSTACK_LOCAL_IDENTIFIER"
     );
   }
+};
+
+exports.getNumberOfSpecFiles = (bsConfig, args, cypressJson) => {
+  let testFolderPath = cypressJson.integrationFolder || Constants.DEFAULT_CYPRESS_SPEC_PATH;
+  let globSearchPatttern = bsConfig.run_settings.specs || `${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`;
+  let ignoreFiles = args.exclude || bsConfig.run_settings.exclude;
+  let files = glob.sync(globSearchPatttern, {cmd: bsConfig.run_settings.cypressConfigFilePath, matchBase: true, ignore: ignoreFiles});
+  return files;
 };

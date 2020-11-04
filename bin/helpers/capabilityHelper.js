@@ -123,6 +123,7 @@ const validate = (bsConfig, args) => {
     // validate if config file provided exists or not when cypress_config_file provided
     // validate the cypressProjectDir key otherwise.
     let cypressConfigFilePath = bsConfig.run_settings.cypressConfigFilePath;
+    let cypressJson = {};
 
     if (!fs.existsSync(cypressConfigFilePath) && bsConfig.run_settings.cypress_config_filename !== 'false') reject(Constants.validationMessages.INVALID_CYPRESS_CONFIG_FILE);
 
@@ -141,7 +142,7 @@ const validate = (bsConfig, args) => {
       reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
     }
 
-    resolve(Constants.validationMessages.VALIDATED);
+    resolve(cypressJson);
   });
 }
 

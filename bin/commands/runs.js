@@ -45,8 +45,11 @@ module.exports = function run(args) {
     utils.setLocalIdentifier(bsConfig);
 
     // Validate browserstack.json values and parallels specified via arguments
-    return capabilityHelper.validate(bsConfig, args).then(function (validated) {
-      logger.info(validated);
+    return capabilityHelper.validate(bsConfig, args).then(function (cypressJson) {
+
+      //get the number of spec files
+      let files = utils.getNumberOfSpecFiles(bsConfig,args,cypressJson);
+      logger.info(files);
 
       // accept the number of parallels
       utils.setParallels(bsConfig, args);

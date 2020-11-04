@@ -18,7 +18,8 @@
     "request": "^2.88.0",
     "requestretry": "^4.1.0",
     "winston": "^2.3.1",
-    "yargs": "^14.2.2"
+    "yargs": "^14.2.2",
+    "glob": "^7.1.6"
   },
   "repository": {
     "type": "git",
