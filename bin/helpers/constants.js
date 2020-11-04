@@ -1,5 +1,6 @@
 const userMessages = {
     BUILD_FAILED: "Build creation failed.",
+    BUILD_GENERATE_REPORT_FAILED: "Generating report for the build <build-id> failed.",
     BUILD_CREATED: "Build created",
     BUILD_INFO_FAILED: "Failed to get build info.",
     BUILD_STOP_FAILED: "Failed to stop build.",
