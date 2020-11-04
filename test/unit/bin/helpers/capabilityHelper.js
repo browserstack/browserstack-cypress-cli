@@ -561,10 +561,7 @@ describe("capabilityHelper.js", () => {
         return capabilityHelper
           .validate(bsConfig, { parallels: undefined })
           .then(function (data) {
-            chai.assert.equal(data, Constants.validationMessages.VALIDATED);
-          })
-          .catch((error) => {
-            chai.assert.fail("Promise error");
+            chai.assert.deepEqual(data, {});
           });
       });
 
@@ -574,10 +571,7 @@ describe("capabilityHelper.js", () => {
         return capabilityHelper
           .validate(bsConfig, { parallels: undefined })
           .then(function (data) {
-            chai.assert.equal(data, Constants.validationMessages.VALIDATED);
-          })
-          .catch((error) => {
-            chai.assert.fail("Promise error");
+            chai.assert.deepEqual(data, {});
           });
       });
 
@@ -586,10 +580,7 @@ describe("capabilityHelper.js", () => {
         return capabilityHelper
           .validate(bsConfig, { parallels: 200 })
           .then(function (data) {
-            chai.assert.equal(data, Constants.validationMessages.VALIDATED);
-          })
-          .catch((error) => {
-            chai.assert.fail("Promise error");
+            chai.assert.deepEqual(data, {});
           });
       });
 
@@ -598,10 +589,7 @@ describe("capabilityHelper.js", () => {
         return capabilityHelper
           .validate(bsConfig, { parallels: -1 })
           .then(function (data) {
-            chai.assert.equal(data, Constants.validationMessages.VALIDATED);
-          })
-          .catch((error) => {
-            chai.assert.fail("Promise error");
+            chai.assert.deepEqual(data, {});
           });
       });
 
@@ -611,10 +599,7 @@ describe("capabilityHelper.js", () => {
         return capabilityHelper
           .validate(bsConfig, { parallels: -1 })
           .then(function (data) {
-            chai.assert.equal(data, Constants.validationMessages.VALIDATED);
-          })
-          .catch((error) => {
-            chai.assert.fail("Promise error");
+            chai.assert.deepEqual(data, {});
           });
       });
 
@@ -624,10 +609,7 @@ describe("capabilityHelper.js", () => {
         return capabilityHelper
           .validate(bsConfig, { parallels: -1 })
           .then(function (data) {
-            chai.assert.equal(data, Constants.validationMessages.VALIDATED);
-          })
-          .catch((error) => {
-            chai.assert.fail("Promise error");
+            chai.assert.deepEqual(data, {});
           });
       });
     });

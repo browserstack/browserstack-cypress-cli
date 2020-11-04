@@ -189,6 +189,7 @@ describe("runs", () => {
       setLocalIdentifierStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       setDefaultAuthHashStub = sandbox.stub();
+      getNumberOfSpecFilesStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -217,7 +218,8 @@ describe("runs", () => {
           setLocal: setLocalStub,
           setLocalIdentifier: setLocalIdentifierStub,
           deleteResults: deleteResultsStub,
-          setDefaultAuthHash: setDefaultAuthHashStub
+          setDefaultAuthHash: setDefaultAuthHashStub,
+          getNumberOfSpecFiles: getNumberOfSpecFilesStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -289,6 +291,7 @@ describe("runs", () => {
       setLocalIdentifierStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       setDefaultAuthHashStub = sandbox.stub();
+      getNumberOfSpecFilesStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -317,7 +320,8 @@ describe("runs", () => {
           setLocal: setLocalStub,
           setLocalIdentifier: setLocalIdentifierStub,
           deleteResults: deleteResultsStub,
-          setDefaultAuthHash: setDefaultAuthHashStub
+          setDefaultAuthHash: setDefaultAuthHashStub,
+          getNumberOfSpecFiles: getNumberOfSpecFilesStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -397,6 +401,7 @@ describe("runs", () => {
       setLocalIdentifierStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       setDefaultAuthHashStub = sandbox.stub();
+      getNumberOfSpecFilesStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -425,7 +430,8 @@ describe("runs", () => {
           setLocal: setLocalStub,
           setLocalIdentifier: setLocalIdentifierStub,
           deleteResults: deleteResultsStub,
-          setDefaultAuthHash: setDefaultAuthHashStub
+          setDefaultAuthHash: setDefaultAuthHashStub,
+          getNumberOfSpecFiles: getNumberOfSpecFilesStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -519,6 +525,7 @@ describe("runs", () => {
       isUndefinedStub = sandbox.stub();
       setLocalStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
+      getNumberOfSpecFilesStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -532,8 +539,8 @@ describe("runs", () => {
       let message = `Success! ${Constants.userMessages.BUILD_CREATED} with build id: random_build_id`;
       let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${dashboardUrl}random_build_id`;
 
-      const runs = proxyquire("../../../../bin/commands/runs", {
-        "../helpers/utils": {
+      const runs = proxyquire('../../../../bin/commands/runs', {
+        '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
           setUsername: setUsernameStub,
@@ -550,24 +557,25 @@ describe("runs", () => {
           exportResults: exportResultsStub,
           deleteResults: deleteResultsStub,
           setDefaultAuthHash: setDefaultAuthHashStub,
-          isUndefined: isUndefinedStub
+          isUndefined: isUndefinedStub,
+          getNumberOfSpecFiles: getNumberOfSpecFilesStub
         },
-        "../helpers/capabilityHelper": {
+        '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
         },
-        "../helpers/archiver": {
+        '../helpers/archiver': {
           archive: archiverStub,
         },
-        "../helpers/fileHelpers": {
+        '../helpers/fileHelpers': {
           deleteZip: deleteZipStub,
         },
-        "../helpers/zipUpload": {
+        '../helpers/zipUpload': {
           zipUpload: zipUploadStub,
         },
-        "../helpers/build": {
+        '../helpers/build': {
           createBuild: createBuildStub,
         },
-        "../helpers/config": {
+        '../helpers/config': {
           dashboardUrl: dashboardUrl,
         },
       });

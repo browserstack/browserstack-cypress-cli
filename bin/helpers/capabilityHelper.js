@@ -141,7 +141,6 @@ const validate = (bsConfig, args) => {
     } catch(error){
       reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
     }
-
     resolve(cypressJson);
   });
 }

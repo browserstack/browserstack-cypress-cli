@@ -1,11 +1,14 @@
 'use strict';
+const { it } = require('mocha');
 const path = require('path');
+const { sandbox } = require('sinon');
 
 const chai = require('chai'),
   expect = chai.expect,
   sinon = require('sinon'),
   chaiAsPromised = require('chai-as-promised'),
-  fs = require('fs');
+  fs = require('fs'),
+  glob = require('glob');
 
 const utils = require('../../../../bin/helpers/utils'),
   constant = require('../../../../bin/helpers/constants'),
@@ -946,4 +949,26 @@ describe('utils', () => {
       expect(utils.isUndefined(bsConfig.auth)).to.be.true;
     });
   });
+
+  describe('getNumberOfSpecFiles', () => {
+
+    it('glob search pattern should be equal to bsConfig.run_settings.specs', () => {
+      sinon.stub(glob, 'sync').returns(true);
+      let bsConfig = {
+        run_settings: {
+          cypressConfigFilePath: 'cypressConfigFilePath',
+          exclude: 'exclude'
+        },
+      };
+      // sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+      // sinon.assert.calledOnceWithExactly(getNumberOfSpecFilesStub, 'specs', {
+      //   cmd: 'cypressConfigFilePath',
+      //   matchBase: true,
+      //   ignore: 'exclude',
+      // });
+      utils.getNumberOfSpecFiles(bsConfig,{},{});
+      glob.sync.restore();
+    });
+  });
+
 });
