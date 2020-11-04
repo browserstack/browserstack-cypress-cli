@@ -107,4 +107,3 @@ renderReportHTML = (report_data) => {
 }
 
 exports.reporterHTML = renderReportHTML;
-exports.loadInlineCss = loadInlineCss;
