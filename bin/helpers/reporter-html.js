@@ -1,6 +1,6 @@
 const fs = require('fs'),
       path = require('path'),
-      { winstonLogger } = require('./logger');
+      logger = require('./logger').winstonLogger;
 
 let templatesDir = path.join(__dirname, '../', 'templates');
 
@@ -98,11 +98,20 @@ renderReportHTML = (report_data) => {
   let body = `<body> ${bodyReporterContainer} </body>`;
   let html = `${htmlOpenTag} ${head} ${body} ${htmlClosetag}`;
 
+  // Writing the JSON used in creating the HTML file.
+  fs.writeFileSync('browserstack-report.json', JSON.stringify(report_data), () => {
+    if(err) {
+      return logger.error(err);
+    }
+    logger.info("The JSON file is saved");
+  });
+
+  // Writing the HTML file generated from the JSON data.
   fs.writeFileSync('browserstack-report.html', html, () => {
     if(err) {
-      return winstonLogger(err);
+      return logger.error(err);
     }
-    winstonLogger("The file was saved!");
+    logger.info("The HTML file was saved!");
   });
 }
 
