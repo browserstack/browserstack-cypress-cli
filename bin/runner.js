@@ -241,7 +241,7 @@ var argv = yargs
       .argv
     if (checkCommands(yargs, argv, 1)) {
       logger.info(Constants.cliMessages.BUILD.INFO_MESSAGE + argv._[1]);
-      return require('./commands/info')(argv);
+      return require('./commands/generateReport')(argv);
     }
   })
   .help('help')
