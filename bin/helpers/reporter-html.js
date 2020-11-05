@@ -99,7 +99,7 @@ renderReportHTML = (report_data) => {
   let html = `${htmlOpenTag} ${head} ${body} ${htmlClosetag}`;
 
   // Writing the JSON used in creating the HTML file.
-  fs.writeFileSync('browserstack-report.json', JSON.stringify(report_data), () => {
+  fs.writeFileSync('browserstack-cypress-report.json', JSON.stringify(report_data), () => {
     if(err) {
       return logger.error(err);
     }
@@ -107,7 +107,7 @@ renderReportHTML = (report_data) => {
   });
 
   // Writing the HTML file generated from the JSON data.
-  fs.writeFileSync('browserstack-report.html', html, () => {
+  fs.writeFileSync('browserstack-cypress-report.html', html, () => {
     if(err) {
       return logger.error(err);
     }
