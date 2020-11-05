@@ -110,9 +110,17 @@ exports.setUsageReportingFlag = (bsConfig, disableUsageReporting) => {
   }
 };
 
-exports.setParallels = (bsConfig, args) => {
+exports.setParallels = (bsConfig, args, numOfSpecs) => {
   if (!this.isUndefined(args.parallels)) {
     bsConfig["run_settings"]["parallels"] = args.parallels;
+  }
+  let browserCombinations = this.getBrowserCombinations(bsConfig);
+  let maxParallels = browserCombinations.length * numOfSpecs;
+  if (bsConfig['run_settings']['parallels'] > maxParallels) {
+    logger.warn(
+      `Using ${maxParallels} machines instead of ${bsConfig['run_settings']['parallels']} that you configured as there are ${numOfSpecs} specs to be run on ${browserCombinations.length} browser combinations.`
+    );
+    bsConfig['run_settings']['parallels'] = maxParallels;
   }
 };
 
@@ -322,4 +330,18 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressJson) => {
   let ignoreFiles = args.exclude || bsConfig.run_settings.exclude;
   let files = glob.sync(globSearchPatttern, {cmd: bsConfig.run_settings.cypressConfigFilePath, matchBase: true, ignore: ignoreFiles});
   return files;
+};
+
+exports.getBrowserCombinations = (bsConfig) => {
+  let osBrowserArray = [];
+  let osBrowser = "";
+  if (bsConfig.browsers) {
+    bsConfig.browsers.forEach((element) => {
+      osBrowser = element.os + '-' + element.browser;
+      element.versions.forEach((version) => {
+        osBrowserArray.push(osBrowser + version);
+      });
+    });
+  }
+  return osBrowserArray;
 };

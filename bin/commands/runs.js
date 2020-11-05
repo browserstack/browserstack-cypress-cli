@@ -48,11 +48,10 @@ module.exports = function run(args) {
     return capabilityHelper.validate(bsConfig, args).then(function (cypressJson) {
 
       //get the number of spec files
-      let files = utils.getNumberOfSpecFiles(bsConfig,args,cypressJson);
-      logger.info(files);
+      let specFiles = utils.getNumberOfSpecFiles(bsConfig,args,cypressJson);
 
       // accept the number of parallels
-      utils.setParallels(bsConfig, args);
+      utils.setParallels(bsConfig, args, specFiles.length);
 
       // Archive the spec files
       return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude).then(function (data) {

@@ -302,7 +302,7 @@ describe('utils', () => {
     let args = testObjects.initSampleArgs;
 
     it('should call sendUsageReport', () => {
-      sandbox = sinon.createSandbox();
+      let sandbox = sinon.createSandbox();
       sendUsageReportStub = sandbox
         .stub(utils, 'sendUsageReport')
         .callsFake(function () {
@@ -953,22 +953,106 @@ describe('utils', () => {
   describe('getNumberOfSpecFiles', () => {
 
     it('glob search pattern should be equal to bsConfig.run_settings.specs', () => {
-      sinon.stub(glob, 'sync').returns(true);
+      let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
+      let bsConfig = {
+        run_settings: {
+          specs: 'specs',
+          cypressConfigFilePath: 'cypressConfigFilePath',
+          exclude: 'exclude'
+        },
+      };
+
+      utils.getNumberOfSpecFiles(bsConfig,{},{});
+      sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+      sinon.assert.calledOnceWithExactly(getNumberOfSpecFilesStub, 'specs', {
+        cmd: 'cypressConfigFilePath',
+        matchBase: true,
+        ignore: 'exclude',
+      });
+      glob.sync.restore();
+    });
+
+    it('glob search pattern should be equal to default', () => {
+      let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
       let bsConfig = {
         run_settings: {
           cypressConfigFilePath: 'cypressConfigFilePath',
           exclude: 'exclude'
         },
       };
-      // sinon.assert.calledOnce(getNumberOfSpecFilesStub);
-      // sinon.assert.calledOnceWithExactly(getNumberOfSpecFilesStub, 'specs', {
-      //   cmd: 'cypressConfigFilePath',
-      //   matchBase: true,
-      //   ignore: 'exclude',
-      // });
+
       utils.getNumberOfSpecFiles(bsConfig,{},{});
+
+      sinon.assert.calledOnceWithExactly(getNumberOfSpecFilesStub, `cypress/integration/**/*.+(${constant.specFileTypes.join("|")})`, {
+        cmd: 'cypressConfigFilePath',
+        matchBase: true,
+        ignore: 'exclude',
+      });
       glob.sync.restore();
     });
+
+    it('glob search pattern should be equal to default with integrationFolder', () => {
+      let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
+      let bsConfig = {
+        run_settings: {
+          cypressConfigFilePath: 'cypressConfigFilePath',
+          exclude: 'exclude',
+        },
+      };
+
+      utils.getNumberOfSpecFiles(bsConfig, {}, { "integrationFolder": "specs"});
+
+      sinon.assert.calledOnceWithExactly(
+        getNumberOfSpecFilesStub,
+        `specs/**/*.+(${constant.specFileTypes.join('|')})`,
+        {
+          cmd: 'cypressConfigFilePath',
+          matchBase: true,
+          ignore: 'exclude',
+        }
+      );
+      glob.sync.restore();
+    });
+
+  });
+
+  describe('getBrowserCombinations', () => {
+
+    it('returns correct number of browserCombinations for one combination', () => {
+      let bsConfig = {
+        browsers: [
+          {
+            browser: 'chrome',
+            os: 'OS X Mojave',
+            versions: ['85'],
+          },
+        ]
+      };
+      chai.assert.deepEqual(utils.getBrowserCombinations(bsConfig), ['OS X Mojave-chrome85']);
+    });
+
+    it('returns correct number of browserCombinations for multiple combinations', () => {
+      let bsConfig = {
+        browsers: [
+          {
+            browser: 'chrome',
+            os: 'OS X Mojave',
+            versions: ['85'],
+          },
+          {
+            browser: 'chrome',
+            os: 'OS X Catalina',
+            versions: ['85','84'],
+          },
+        ],
+      };
+      chai.assert.deepEqual(utils.getBrowserCombinations(bsConfig), [
+        'OS X Mojave-chrome85',
+        'OS X Catalina-chrome85',
+        'OS X Catalina-chrome84'
+      ]);
+    });
+
   });
 
 });
