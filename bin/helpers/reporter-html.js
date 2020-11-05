@@ -85,6 +85,7 @@ function buildSpecStats(specMeta) {
 }
 
 renderReportHTML = (report_data) => {
+  let resultsDir = 'results';
   let metaCharSet = `<meta charset="utf-8">`;
   let metaViewPort = `<meta name="viewport" content="width=device-width, initial-scale=1"> `;
   let pageTitle = `<title> Browserstack Cypress Report </title>`;
@@ -98,8 +99,13 @@ renderReportHTML = (report_data) => {
   let body = `<body> ${bodyReporterContainer} </body>`;
   let html = `${htmlOpenTag} ${head} ${body} ${htmlClosetag}`;
 
+
+  if (!fs.existsSync(resultsDir)){
+    fs.mkdirSync(resultsDir);
+  }
+
   // Writing the JSON used in creating the HTML file.
-  fs.writeFileSync('browserstack-cypress-report.json', JSON.stringify(report_data), () => {
+  fs.writeFileSync(`${resultsDir}/browserstack-cypress-report.json`, JSON.stringify(report_data), () => {
     if(err) {
       return logger.error(err);
     }
@@ -107,7 +113,7 @@ renderReportHTML = (report_data) => {
   });
 
   // Writing the HTML file generated from the JSON data.
-  fs.writeFileSync('browserstack-cypress-report.html', html, () => {
+  fs.writeFileSync(`${resultsDir}/browserstack-cypress-report.html`, html, () => {
     if(err) {
       return logger.error(err);
     }
