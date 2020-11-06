@@ -29,13 +29,13 @@ describe("syncSpecsLogs", () => {
   context("getCombinationName", () => {
     const get_path = syncSpecsLogs.__get__("getCombinationName");;
     let spec = {
-      "os": "Windows 10",
+      "os": "Windows",
       "osVersion": "10",
       "browser": "chrome",
       "browserVersion": "86"
     }
     it("returns combination name", () => {
-      let expectedCombination = `${spec["os"]} ${spec["osVersion"]} / ${spec["browser"]} ${spec["browserVersion"]}`;
+      let expectedCombination = `Chrome 86 (Windows 10)`;
       expect(get_path(spec)).to.equal(expectedCombination);
     });
   });
@@ -61,15 +61,12 @@ describe("syncSpecsLogs", () => {
     const printInitialLog = syncSpecsLogs.__get__("printInitialLog");
 
     it("should print inital logs for specs in sync", () => {
-      var loggerInfoStub = sinon.stub(logger, 'info');
 
       printInitialLog()
 
       expect(syncSpecsLogs.__get__("n")).to.equal(Constants.syncCLI.INITIAL_DELAY_MULTIPLIER);
       expect(syncSpecsLogs.__get__("startTime")).to.not.be.null;
-      sinon.assert.calledWith(loggerInfoStub, Constants.syncCLI.LOGS.INIT_LOG);
 
-      loggerInfoStub.restore();
     });
   });
 
@@ -95,10 +92,12 @@ describe("syncSpecsLogs", () => {
       syncSpecsLogs.__set__('getBorderConfig', getBorderConfigStub);
 
       let options = getTableConfig();
-      expect(options.singleLine).to.be.true;
-      expect(options.columnDefault.width).to.equal(50);
-      expect(options.columns[0].alignment).to.equal('right');
-      expect(options.columnCount).to.equal(2);
+      expect(options.columnDefault.width).to.equal(25);
+      expect(options.columns[1].alignment).to.equal('center');
+      expect(options.columns[2].alignment).to.equal('left');
+      expect(options.columns[1].width).to.equal(1);
+      expect(options.columns[2].width).to.equal(30);
+      expect(options.columnCount).to.equal(3);
       expect(getBorderConfigStub.calledOnce).to.be.true;
     });
   });
@@ -108,8 +107,8 @@ describe("syncSpecsLogs", () => {
 
     it('should return proper border option for spec table', () => {
       let options = getBorderConfig();
-      expect(options.topBody).to.equal("-");
-      expect(options.bottomBody).to.equal("-");
+      expect(options.topBody).to.equal("");
+      expect(options.bottomBody).to.equal("");
     });
   });
 
@@ -122,7 +121,7 @@ describe("syncSpecsLogs", () => {
       syncSpecsLogs.__set__('stream', stream);
       let combination = "Windows 10", path = "path", status = "passed";
       writeToTable(combination, path, status);
-      sinon.assert.calledOnceWithExactly(stream.write, [combination + ":", `${path} ${status}`]);
+      sinon.assert.calledOnceWithExactly(stream.write, [combination , ":", `${path} ${status}`]);
     });
   });
 
@@ -200,7 +199,7 @@ describe("syncSpecsLogs", () => {
   context("printSpecsStatus", () => {
     const printSpecsStatus = syncSpecsLogs.__get__("printSpecsStatus");
     let startTime = Date.now(), endTime = Date.now() + 10, counter = 0;
-    let specSummary = { specs: [] }, getOptions, getTableConfig, tableStream, whileProcess, loggerInfoStub;
+    let specSummary = { specs: [] }, getOptions, getTableConfig, tableStream, whileProcess;
 
     beforeEach(() => {
       counter = 0;
@@ -213,8 +212,6 @@ describe("syncSpecsLogs", () => {
 
       tableStream = sandbox.stub();
       syncSpecsLogs.__set__('tableStream', tableStream);
-
-      loggerInfoStub = sandbox.stub(logger, 'info');
 
       whileProcess = sandbox.stub().callsFake(function (whilstCallback) {
         counter++
@@ -237,7 +234,6 @@ describe("syncSpecsLogs", () => {
         expect(getOptions.calledOnce).to.be.true;
         expect(getTableConfig.calledOnce).to.be.true;
         expect(tableStream.calledOnce).to.be.true;
-        expect(loggerInfoStub.calledOnce).to.be.true;
         expect(whileProcess.calledOnce).to.be.false;
         expect(specSummary.specs).deep.to.equal([])
         expect(specSummary.duration).to.eql(endTime - startTime);

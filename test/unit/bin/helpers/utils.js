@@ -931,4 +931,16 @@ describe('utils', () => {
       expect(utils.isUndefined(bsConfig.auth)).to.be.true;
     });
   });
+
+  describe('capitalizeFirstLetter', () => {
+
+    it('should capitalize First Letter ', () => {
+      expect(utils.capitalizeFirstLetter("chrome")).to.eq("Chrome");
+    });
+
+    it('should return null if value passed is null', () => {
+      expect(utils.capitalizeFirstLetter(null)).to.eq(null);
+    });
+
+  });
 });

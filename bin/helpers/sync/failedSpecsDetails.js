@@ -19,7 +19,8 @@ const tablePrinter = require('table'), // { table, getBorderCharacters }
 //
 let failedSpecsDetails = (data) => {
   return new Promise((resolve, reject) => {
-    if (data.length === 0) resolve(0); // return if no failed/skipped tests.
+    data.exitCode = 0;
+    if (data.specs.length === 0) resolve(data); // return if no failed/skipped tests.
 
     let failedSpecs = false;
     let specResultHeader = Constants.syncCLI.FAILED_SPEC_DETAILS_COL_HEADER.map((col) => {
@@ -28,16 +29,23 @@ let failedSpecsDetails = (data) => {
 
     let specData = [specResultHeader]; // 2-D array
 
-    data.forEach((spec) => {
+    data.specs.forEach((spec) => {
       if (spec.status.toLowerCase() === 'passed') {
         return;
       }
       if (spec.status && spec.status.toLowerCase() === 'failed' && !failedSpecs)
         failedSpecs = true;
 
-      let specStatus = (spec.status && spec.status.toLowerCase() === 'failed') ?
-                          chalk.red(spec.status) : chalk.yellow(spec.status);
-      specData.push([spec.specName, specStatus, spec.combination, spec.sessionId]);
+      let specStatus =
+        spec.status && spec.status.toLowerCase() === 'failed'
+          ? chalk.red(spec.status)
+          : chalk.yellow(spec.status);
+      specData.push([
+        spec.specName,
+        specStatus,
+        spec.combination,
+        spec.sessionId,
+      ]);
     });
 
     let config = {
@@ -61,11 +69,11 @@ let failedSpecsDetails = (data) => {
 
     let result = tablePrinter.table(specData, config);
 
-    logger.info('Failed / skipped test report');
+    logger.info('\nFailed / skipped test report:');
     logger.info(result);
 
-    if (failedSpecs) reject(1); // specs failed, send exitCode as 1
-    resolve(0); // No Specs failed, maybe skipped, but not failed, send exitCode as 0
+    if (failedSpecs) data.exitCode = 1 ; // specs failed, send exitCode as 1
+    resolve(data); // No Specs failed, maybe skipped, but not failed, send exitCode as 0
   });
 }
 

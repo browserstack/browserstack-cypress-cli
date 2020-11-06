@@ -1,7 +1,7 @@
 const syncCLI = {
   FAILED_SPEC_DETAILS_COL_HEADER: ['Spec', 'Status', 'Browser', 'BrowserStack Session ID'],
   LOGS: {
-    INIT_LOG: "Running Tests: ..."
+    INIT_LOG: "All tests:"
   },
   INITIAL_DELAY_MULTIPLIER: 10
 };
@@ -17,14 +17,20 @@ const userMessages = {
   CONFIG_FILE_CREATED: "BrowserStack Config File created, you can now run browserstack-cypress --config-file run",
   CONFIG_FILE_EXISTS: "File already exists, delete the browserstack.json file manually. skipping...",
   DIR_NOT_FOUND: "Given path does not exist. Failed to create browserstack.json in %s",
-  ZIP_DELETE_FAILED: "Could not delete local file.",
-  ZIP_DELETED: "Zip file deleted successfully.",
+  ZIP_DELETE_FAILED: "Could not delete tests.zip successfully.",
+  ZIP_DELETED: "Deleted tests.zip successfully.",
   API_DEPRECATED: "This version of API is deprecated, please use latest version of API.",
   FAILED_TO_ZIP: "Failed to zip files.",
-  VISIT_DASHBOARD: "Visit the Automate dashboard for test reporting:",
+  VISIT_DASHBOARD: "Visit the Automate dashboard for real-time test reporting:",
   CONFLICTING_INIT_ARGUMENTS: "Conflicting arguments given. You can use --path only with a file name, and not with a file path.",
-  NO_PARALLELS: "Your tests will run sequentially. Read more about running your tests in parallel here: https://www.browserstack.com/docs/automate/cypress/run-tests-in-parallel",
-  NO_NPM_DEPENDENCIES: "No npm dependencies specified. Read more here: https://www.browserstack.com/docs/automate/cypress/npm-packages. You can suppress this warning by using --disable-npm-warning flag."
+  NO_PARALLELS: "Your specs will run sequentially on a single machine. Read more about running your specs in parallel here: https://www.browserstack.com/docs/automate/cypress/run-tests-in-parallel",
+  NO_NPM_DEPENDENCIES: "No npm dependencies specified - your specs might fail if they need any packages to be installed before running.",
+  NO_NPM_DEPENDENCIES_READ_MORE: "Read more about npm dependencies here: https://www.browserstack.com/docs/automate/cypress/npm-packages. You can suppress this warning by using --disable-npm-warning flag.",
+  VALIDATING_CONFIG: "Validating the config",
+  UPLOADING_TESTS: "Uploading the tests to BrowserStack",
+  LOCAL_TRUE: "you will now be able to test localhost / private URLs",
+  LOCAL_FALSE: "you won't be able to test localhost / private URLs",
+  EXIT_SYNC_CLI_MESSAGE: "Exiting the CLI, but your build is still running. You can use the --sync option to keep getting test updates. You can also use the build-info <build-id> command now."
 };
 
 const validationMessages = {

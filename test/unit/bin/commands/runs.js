@@ -481,9 +481,6 @@ describe("runs", () => {
             messageType,
             errorCode
           );
-        })
-        .finally(function () {
-          sinon.assert.calledOnce(deleteZipStub);
         });
     });
   });
@@ -607,9 +604,6 @@ describe("runs", () => {
             messageType,
             errorCode
           );
-        })
-        .finally(function () {
-          sinon.assert.calledOnce(deleteZipStub);
         });
     });
   });
