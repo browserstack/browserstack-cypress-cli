@@ -51,6 +51,8 @@ const archiveSpecs = (runSettings, filePath, excludeFiles) => {
       Object.assign(packageJSON, runSettings.package_config_options);
     }
 
+    if (!runSettings.npm_dependencies) runSettings.npm_dependencies = {}
+
     if (typeof runSettings.npm_dependencies === 'object') {
       Object.assign(packageJSON, {devDependencies: runSettings.npm_dependencies});
     }
