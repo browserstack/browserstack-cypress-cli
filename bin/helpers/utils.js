@@ -125,6 +125,12 @@ exports.setDefaultAuthHash = (bsConfig, args) => {
   }
 }
 
+exports.setDefaultNpmHash = (bsConfig) => {
+  if (bsConfig.run_settings && !bsConfig.run_settings.npm_dependencies) {
+    bsConfig.run_settings.npm_dependencies = {}
+  }
+}
+
 exports.setUsername = (bsConfig, args) => {
   if (!this.isUndefined(args.username)) {
     bsConfig["auth"]["username"] = args.username;

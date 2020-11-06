@@ -20,6 +20,9 @@ module.exports = function run(args) {
     // setting setDefaultAuthHash to {} if not present and set via env variables or via args.
     utils.setDefaultAuthHash(bsConfig,args);
 
+    // setting npm_dependencies to {} if not present
+    utils.setDefaultNpmHash(bsConfig);
+
     // accept the username from command line or env variable if provided
     utils.setUsername(bsConfig, args);
 
