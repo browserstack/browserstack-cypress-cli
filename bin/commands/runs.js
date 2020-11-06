@@ -17,11 +17,7 @@ module.exports = function run(args) {
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
-    // setting setDefaultAuthHash to {} if not present and set via env variables or via args.
-    utils.setDefaultAuthHash(bsConfig,args);
-
-    // setting npm_dependencies to {} if not present
-    utils.setDefaultNpmHash(bsConfig);
+    utils.setDefaults(bsConfig, args);
 
     // accept the username from command line or env variable if provided
     utils.setUsername(bsConfig, args);
