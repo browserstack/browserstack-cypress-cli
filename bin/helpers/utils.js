@@ -116,7 +116,11 @@ exports.setParallels = (bsConfig, args, numOfSpecs) => {
   }
   let browserCombinations = this.getBrowserCombinations(bsConfig);
   let maxParallels = browserCombinations.length * numOfSpecs;
-  if (bsConfig['run_settings']['parallels'] > maxParallels) {
+  if (numOfSpecs <= 0) {
+    bsConfig['run_settings']['parallels'] = browserCombinations.length;
+    return;
+  }
+  if (bsConfig['run_settings']['parallels'] > maxParallels && bsConfig['run_settings']['parallels'] != -1 ) {
     logger.warn(
       `Using ${maxParallels} machines instead of ${bsConfig['run_settings']['parallels']} that you configured as there are ${numOfSpecs} specs to be run on ${browserCombinations.length} browser combinations.`
     );

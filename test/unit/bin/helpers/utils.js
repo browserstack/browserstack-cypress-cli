@@ -140,13 +140,25 @@ describe('utils', () => {
   });
 
   describe('setParallels', () => {
+    var sandbox;
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      sandbox.stub(utils,'getBrowserCombinations').returns(['a','b']);
+    });
+    
+    afterEach(() => {
+      sandbox.restore();
+      sinon.restore();
+    });
+
     it('should set bsconfig parallels equal to value provided in args', () => {
       let bsConfig = {
         run_settings: {
           parallels: 10,
         },
       };
-      utils.setParallels(bsConfig, {parallels: 100});
+
+      utils.setParallels(bsConfig, {parallels: 100}, 100);
       expect(bsConfig['run_settings']['parallels']).to.be.eq(100);
     });
 
@@ -156,9 +168,40 @@ describe('utils', () => {
           parallels: 10,
         },
       };
-      utils.setParallels(bsConfig, {parallels: undefined});
+      utils.setParallels(bsConfig, {parallels: undefined}, 10);
       expect(bsConfig['run_settings']['parallels']).to.be.eq(10);
     });
+
+    it('should set bsconfig parallels to browserCombinations.length if numOfSpecs is zero', () => {
+      let bsConfig = {
+        run_settings: {
+          parallels: 10,
+        },
+      };
+      utils.setParallels(bsConfig, {parallels: undefined}, 0);
+      expect(bsConfig['run_settings']['parallels']).to.be.eq(2);
+    });
+
+    it('shouldnot set bsconfig parallels if parallels is -1', () => {
+      let bsConfig = {
+        run_settings: {
+          parallels: -1,
+        },
+      };
+      utils.setParallels(bsConfig, {parallels: undefined}, 2);
+      expect(bsConfig['run_settings']['parallels']).to.be.eq(-1);
+    });
+
+    it('should set bsconfig parallels if parallels is greater than numOfSpecs * combinations', () => {
+      let bsConfig = {
+        run_settings: {
+          parallels: 100,
+        },
+      };
+      utils.setParallels(bsConfig, {parallels: undefined}, 2);
+      expect(bsConfig['run_settings']['parallels']).to.be.eq(4);
+    });
+
   });
 
   describe('getErrorCodeFromErr', () => {
