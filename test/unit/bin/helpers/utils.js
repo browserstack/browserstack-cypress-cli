@@ -928,22 +928,25 @@ describe('utils', () => {
     });
 
     it('should set setDefaults if args.username is present', () => {
-      let bsConfig = {};
+      let bsConfig = { run_settings: {} };
       utils.setDefaults(bsConfig, {username: 'username'});
       expect(utils.isUndefined(bsConfig.auth)).to.be.false;
+      expect(utils.isUndefined(bsConfig.run_settings.npm_dependencies)).to.be.false;
     });
 
     it('should set setDefaults if process.env.BROWSERSTACK_USERNAME is present and args.username is not present', () => {
-      let bsConfig = {};
+      let bsConfig = { run_settings: {} };
       process.env.BROWSERSTACK_USERNAME = 'username';
       utils.setDefaults(bsConfig, {});
       expect(utils.isUndefined(bsConfig.auth)).to.be.false;
+      expect(utils.isUndefined(bsConfig.run_settings.npm_dependencies)).to.be.false;
     });
 
     it('should not set setDefaults if process.env.BROWSERSTACK_USERNAME and args.username is not present', () => {
-      let bsConfig = {};
+      let bsConfig = { run_settings: {} };
       utils.setDefaults(bsConfig, {});
       expect(utils.isUndefined(bsConfig.auth)).to.be.true;
+      expect(utils.isUndefined(bsConfig.run_settings.npm_dependencies)).to.be.false;
     });
   });
 });
