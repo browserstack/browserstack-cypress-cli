@@ -89,7 +89,7 @@ const messageTypes = {
 
 const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip', 'npmrc'];
 
-const filesToIgnoreWhileUploading = ['node_modules/**', 'package-lock.json', 'package.json', 'browserstack-package.json', 'tests.zip', 'cypress.json']
+const filesToIgnoreWhileUploading = ['**/node_modules/**', 'node_modules/**', 'package-lock.json', 'package.json', 'browserstack-package.json', 'tests.zip', 'cypress.json']
 
 module.exports = Object.freeze({
   userMessages,
