@@ -115,13 +115,15 @@ exports.setParallels = (bsConfig, args) => {
   }
 };
 
-exports.setDefaultAuthHash = (bsConfig, args) => {
-  if (
-    this.isUndefined(bsConfig['auth']) &&
-    (!this.isUndefined(args.username) ||
-      !this.isUndefined(process.env.BROWSERSTACK_USERNAME))
-  ) {
+exports.setDefaults = (bsConfig, args) => {
+  // setting setDefaultAuthHash to {} if not present and set via env variables or via args.
+  if (this.isUndefined(bsConfig['auth']) && (!this.isUndefined(args.username) || !this.isUndefined(process.env.BROWSERSTACK_USERNAME))) {
     bsConfig['auth'] = {};
+  }
+
+  // setting npm_dependencies to {} if not present
+  if (bsConfig.run_settings && this.isUndefined(bsConfig.run_settings.npm_dependencies)) {
+    bsConfig.run_settings.npm_dependencies = {}
   }
 }
 
