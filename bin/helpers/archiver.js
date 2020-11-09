@@ -42,7 +42,7 @@ const archiveSpecs = (runSettings, filePath, excludeFiles) => {
     let ignoreFiles = getFilesToIgnore(runSettings, excludeFiles);
 
     Constants.allowedFileTypes.forEach(fileType => {
-      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: ignoreFiles });
+      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: ignoreFiles, dot:true });
     });
 
     let packageJSON = {};
