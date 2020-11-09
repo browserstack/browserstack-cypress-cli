@@ -17,6 +17,8 @@ module.exports = function run(args) {
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
+    utils.setDefaults(bsConfig, args);
+
     // accept the username from command line or env variable if provided
     utils.setUsername(bsConfig, args);
 

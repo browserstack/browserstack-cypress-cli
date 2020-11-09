@@ -40,8 +40,8 @@ describe("runs", () => {
       let messageType = Constants.messageTypes.ERROR;
       let errorCode = "random-error-code";
 
-      const runs = proxyquire("../../../../bin/commands/runs", {
-        "../helpers/utils": {
+      const runs = proxyquire('../../../../bin/commands/runs', {
+        '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -98,6 +98,7 @@ describe("runs", () => {
       setLocalStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
+      setDefaultsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -110,8 +111,8 @@ describe("runs", () => {
       let messageType = Constants.messageTypes.ERROR;
       let errorCode = "random-error-code";
 
-      const runs = proxyquire("../../../../bin/commands/runs", {
-        "../helpers/utils": {
+      const runs = proxyquire('../../../../bin/commands/runs', {
+        '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromMsg: getErrorCodeFromMsgStub,
           sendUsageReport: sendUsageReportStub,
@@ -125,9 +126,10 @@ describe("runs", () => {
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
           setLocalIdentifier: setLocalIdentifierStub,
-          deleteResults: deleteResultsStub
+          deleteResults: deleteResultsStub,
+          setDefaults: setDefaultsStub
         },
-        "../helpers/capabilityHelper": {
+        '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
         },
       });
@@ -149,6 +151,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(deleteResultsStub);
+          sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -185,6 +188,7 @@ describe("runs", () => {
       setLocalStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
+      setDefaultsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -197,8 +201,8 @@ describe("runs", () => {
       let messageType = Constants.messageTypes.ERROR;
       let errorCode = "zip_creation_failed";
 
-      const runs = proxyquire("../../../../bin/commands/runs", {
-        "../helpers/utils": {
+      const runs = proxyquire('../../../../bin/commands/runs', {
+        '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
           setParallels: setParallelsStub,
@@ -212,17 +216,18 @@ describe("runs", () => {
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
           setLocalIdentifier: setLocalIdentifierStub,
-          deleteResults: deleteResultsStub
+          deleteResults: deleteResultsStub,
+          setDefaults: setDefaultsStub
         },
-        "../helpers/capabilityHelper": {
+        '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
         },
-        "../helpers/archiver": {
+        '../helpers/archiver': {
           archive: archiverStub,
         },
-        "../helpers/fileHelpers": {
-          deleteZip: deleteZipStub
-        }
+        '../helpers/fileHelpers': {
+          deleteZip: deleteZipStub,
+        },
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -245,6 +250,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(deleteZipStub);
           sinon.assert.calledOnce(deleteResultsStub);
+          sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -282,6 +288,7 @@ describe("runs", () => {
       setLocalStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
+      setDefaultsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -294,8 +301,8 @@ describe("runs", () => {
       let messageType = Constants.messageTypes.ERROR;
       let errorCode = "zip_upload_failed";
 
-      const runs = proxyquire("../../../../bin/commands/runs", {
-        "../helpers/utils": {
+      const runs = proxyquire('../../../../bin/commands/runs', {
+        '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
           setParallels: setParallelsStub,
@@ -309,18 +316,19 @@ describe("runs", () => {
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
           setLocalIdentifier: setLocalIdentifierStub,
-          deleteResults: deleteResultsStub
+          deleteResults: deleteResultsStub,
+          setDefaults: setDefaultsStub
         },
-        "../helpers/capabilityHelper": {
+        '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
         },
-        "../helpers/archiver": {
+        '../helpers/archiver': {
           archive: archiverStub,
         },
-        "../helpers/fileHelpers": {
+        '../helpers/fileHelpers': {
           deleteZip: deleteZipStub,
         },
-        "../helpers/zipUpload": {
+        '../helpers/zipUpload': {
           zipUpload: zipUploadStub,
         },
       });
@@ -346,6 +354,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(zipUploadStub);
           sinon.assert.calledOnce(deleteResultsStub);
+          sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -387,6 +396,7 @@ describe("runs", () => {
       setLocalStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
+      setDefaultsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -399,8 +409,8 @@ describe("runs", () => {
       let messageType = Constants.messageTypes.ERROR;
       let errorCode = "build_failed";
 
-      const runs = proxyquire("../../../../bin/commands/runs", {
-        "../helpers/utils": {
+      const runs = proxyquire('../../../../bin/commands/runs', {
+        '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
           setParallels: setParallelsStub,
@@ -414,21 +424,22 @@ describe("runs", () => {
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
           setLocalIdentifier: setLocalIdentifierStub,
-          deleteResults: deleteResultsStub
+          deleteResults: deleteResultsStub,
+          setDefaults: setDefaultsStub
         },
-        "../helpers/capabilityHelper": {
+        '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
         },
-        "../helpers/archiver": {
+        '../helpers/archiver': {
           archive: archiverStub,
         },
-        "../helpers/fileHelpers": {
+        '../helpers/fileHelpers': {
           deleteZip: deleteZipStub,
         },
-        "../helpers/zipUpload": {
+        '../helpers/zipUpload': {
           zipUpload: zipUploadStub,
         },
-        "../helpers/build": {
+        '../helpers/build': {
           createBuild: createBuildStub,
         },
       });
@@ -460,6 +471,7 @@ describe("runs", () => {
 
           sinon.assert.calledOnce(sendUsageReportStub);
           sinon.assert.calledOnce(deleteResultsStub);
+          sinon.assert.calledOnce(setDefaultsStub);
 
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
@@ -503,6 +515,7 @@ describe("runs", () => {
       deleteZipStub = sandbox.stub();
       exportResultsStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
+      setDefaultsStub = sandbox.stub();
       isUndefinedStub = sandbox.stub();
       setLocalStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
@@ -536,6 +549,7 @@ describe("runs", () => {
           setLocalIdentifier: setLocalIdentifierStub,
           exportResults: exportResultsStub,
           deleteResults: deleteResultsStub,
+          setDefaults: setDefaultsStub,
           isUndefined: isUndefinedStub
         },
         "../helpers/capabilityHelper": {
@@ -584,6 +598,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(createBuildStub);
           sinon.assert.calledOnce(exportResultsStub);
           sinon.assert.calledOnce(deleteResultsStub);
+          sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,

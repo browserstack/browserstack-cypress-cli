@@ -27,11 +27,13 @@ describe("buildStop", () => {
       setAccessKeyStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
+      setCypressConfigFilenameStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
       });
       getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
+      setDefaultsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -48,18 +50,20 @@ describe("buildStop", () => {
         .stub(request, "post")
         .yields(null, { statusCode: 299 }, null);
 
-      const stop = proxyquire("../../../../bin/commands/stop", {
-        "../helpers/utils": {
+      const stop = proxyquire('../../../../bin/commands/stop', {
+        '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
+          setDefaults: setDefaultsStub
         },
-        request: { post: requestStub },
+        request: {post: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -84,18 +88,20 @@ describe("buildStop", () => {
         .stub(request, "post")
         .yields(null, { statusCode: 299 }, JSON.stringify(body));
 
-      const stop = proxyquire("../../../../bin/commands/stop", {
-        "../helpers/utils": {
+      const stop = proxyquire('../../../../bin/commands/stop', {
+        '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
+          setDefaults: setDefaultsStub
         },
-        request: { post: requestStub },
+        request: {post: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -120,11 +126,13 @@ describe("buildStop", () => {
       validateBstackJsonStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
+      setCypressConfigFilenameStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
       });
       getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
+      setDefaultsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -141,18 +149,20 @@ describe("buildStop", () => {
         .stub(request, "post")
         .yields(null, { statusCode: 400 }, null);
 
-      const stop = proxyquire("../../../../bin/commands/stop", {
-        "../helpers/utils": {
+      const stop = proxyquire('../../../../bin/commands/stop', {
+        '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
+          setDefaults: setDefaultsStub
         },
-        request: { post: requestStub },
+        request: {post: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -184,18 +194,20 @@ describe("buildStop", () => {
         .stub(request, "post")
         .yields(null, { statusCode: 401 }, JSON.stringify(body_with_message));
 
-      const stop = proxyquire("../../../../bin/commands/stop", {
-        "../helpers/utils": {
+      const stop = proxyquire('../../../../bin/commands/stop', {
+        '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
+          setDefaults: setDefaultsStub
         },
-        request: { post: requestStub },
+        request: {post: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -222,18 +234,20 @@ describe("buildStop", () => {
         .stub(request, "post")
         .yields(null, { statusCode: 402 }, JSON.stringify(body));
 
-      const stop = proxyquire("../../../../bin/commands/stop", {
-        "../helpers/utils": {
+      const stop = proxyquire('../../../../bin/commands/stop', {
+        '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
+          setDefaults: setDefaultsStub
         },
-        request: { post: requestStub },
+        request: {post: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -260,11 +274,13 @@ describe("buildStop", () => {
       validateBstackJsonStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
+      setCypressConfigFilenameStub = sandbox.stub().returns(undefined);
       getUserAgentStub = sandbox.stub().returns("random user-agent");
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
       });
       getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
+      setDefaultsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -281,18 +297,20 @@ describe("buildStop", () => {
         .stub(request, "post")
         .yields(null, { statusCode: 200 }, JSON.stringify(body));
 
-      const stop = proxyquire("../../../../bin/commands/stop", {
-        "../helpers/utils": {
+      const stop = proxyquire('../../../../bin/commands/stop', {
+        '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub
+          getConfigPath: getConfigPathStub,
+          setDefaults: setDefaultsStub
         },
-        request: { post: requestStub },
+        request: {post: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -319,10 +337,12 @@ describe("buildStop", () => {
       validateBstackJsonStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
+      setCypressConfigFilenameStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
       });
       getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
+      setDefaultsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -331,15 +351,17 @@ describe("buildStop", () => {
     });
 
     it("send usage report if validateBstackJson fails", () => {
-      const stop = proxyquire("../../../../bin/commands/stop", {
-        "../helpers/utils": {
+      const stop = proxyquire('../../../../bin/commands/stop', {
+        '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
-          getConfigPath: getConfigPathStub
+          setCypressConfigFilename: setCypressConfigFilenameStub,
+          getConfigPath: getConfigPathStub,
+          setDefaults: setDefaultsStub
         },
       });
 
