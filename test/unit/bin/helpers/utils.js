@@ -541,23 +541,28 @@ describe('utils', () => {
   });
 
   describe('isCypressProjDirValid', () => {
-    it('should return true when cypressDir and cypressProjDir is same', () => {
-      expect(utils.isCypressProjDirValid('/absolute/path', '/absolute/path')).to
-        .be.true;
+    it('should return true when cypressProjDir and integrationFoldDir is same', () => {
+      expect(utils.isCypressProjDirValid('/absolute/path', '/absolute/path')).to.be.true;
+
+      // should be as below for windows but path.resolve thinks windows path as a filename when run on linux/mac
+      // expect(utils.isCypressProjDirValid('C:\\absolute\\path', 'C:\\absolute\\path')).to.be.true;
+      expect(utils.isCypressProjDirValid('/C/absolute/path', '/C/absolute/path')).to.be.true;
     });
 
-    it('should return true when cypressProjDir is child directory of cypressDir', () => {
-      expect(
-        utils.isCypressProjDirValid(
-          '/absolute/path',
-          '/absolute/path/childpath'
-        )
-      ).to.be.true;
+    it('should return true when integrationFoldDir is child directory of cypressProjDir', () => {
+      expect(utils.isCypressProjDirValid('/absolute/path', '/absolute/path/childpath')).to.be.true;
+
+      // should be as below for windows but path.resolve thinks windows path as a filename when run on linux/mac
+      // expect(utils.isCypressProjDirValid('C:\\absolute\\path', 'C:\\absolute\\path\\childpath')).to.be.true;
+      expect(utils.isCypressProjDirValid('/C/absolute/path', '/C/absolute/path/childpath')).to.be.true;
     });
 
-    it('should return false when cypressProjDir is not child directory of cypressDir', () => {
-      expect(utils.isCypressProjDirValid('/absolute/path', '/absolute')).to.be
-        .false;
+    it('should return false when integrationFoldDir is not child directory of cypressProjDir', () => {
+      expect(utils.isCypressProjDirValid('/absolute/path', '/absolute')).to.be.false;
+
+      // should be as below for windows but path.resolve thinks windows path as a filename when run on linux/mac
+      // expect(utils.isCypressProjDirValid('C:\\absolute\\path', 'C:\\absolute')).to.be.false;
+      expect(utils.isCypressProjDirValid('/C/absolute/path', '/C/absolute')).to.be.false;
     });
   });
 

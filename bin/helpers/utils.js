@@ -280,8 +280,8 @@ exports.isCypressProjDirValid = (cypressProjDir, integrationFoldDir) => {
     integrationFolderDir = path.resolve(path.join(cypressProjDir, integrationFoldDir));
   }
   if (integrationFolderDir === cypressDir) return true;
-  let parentTokens = cypressDir.split("/").filter((i) => i.length);
-  let childTokens = integrationFolderDir.split("/").filter((i) => i.length);
+  let parentTokens = cypressDir.split(path.sep).filter((i) => i.length);
+  let childTokens = integrationFolderDir.split(path.sep).filter((i) => i.length);
   return parentTokens.every((t, i) => childTokens[i] === t);
 };
 
