@@ -1,7 +1,5 @@
 'use strict';
-const { it } = require('mocha');
 const path = require('path');
-const { sandbox } = require('sinon');
 
 const chai = require('chai'),
   expect = chai.expect,
