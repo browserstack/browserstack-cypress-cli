@@ -66,6 +66,10 @@ module.exports = function run(args) {
               logger.warn(Constants.userMessages.NO_PARALLELS);
             }
 
+            if (bsConfig.cypress_version && bsConfig.cypress_version !== data.cypress_version) {
+              logger.warn(Constants.userMessages.CYPRESS_VERSION_CHANGED);
+            }
+
             if (!args.disableNpmWarning && bsConfig.run_settings.npm_dependencies && Object.keys(bsConfig.run_settings.npm_dependencies).length <= 0) logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES);
 
             logger.info(message);
