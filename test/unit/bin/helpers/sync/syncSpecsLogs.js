@@ -96,7 +96,7 @@ describe("syncSpecsLogs", () => {
       expect(options.columns[1].alignment).to.equal('center');
       expect(options.columns[2].alignment).to.equal('left');
       expect(options.columns[1].width).to.equal(1);
-      expect(options.columns[2].width).to.equal(30);
+      expect(options.columns[2].width).to.equal(50);
       expect(options.columnCount).to.equal(3);
       expect(getBorderConfigStub.calledOnce).to.be.true;
     });
@@ -259,7 +259,60 @@ describe("syncSpecsLogs", () => {
   context("whileProcess", () => {
     const whileProcess = syncSpecsLogs.__get__("whileProcess");
 
-    it('Should break the loop if request has error', () => {
+    context('network issue', () => {
+      it('Should retry when error is because of network issue', () => {
+        let delayed_n = 2, timeout = 3000, n = 1;
+        let error = new Error("error");
+        error.code = "ETIMEDOUT";
+
+        let requestStub = sandbox.stub();
+
+        let postStub = sandbox
+          .stub(request, "post")
+          .yields(error, { statusCode: 502 }, JSON.stringify({}));
+
+        requestStub.post = postStub;
+
+        let setTimeout = sandbox.stub();
+        syncSpecsLogs.__set__('setTimeout', setTimeout);
+        syncSpecsLogs.__set__('n', n);
+        syncSpecsLogs.__set__('timeout', timeout);
+        syncSpecsLogs.__set__('request', requestStub);
+        syncSpecsLogs.__set__('whileTries', 5);
+
+        let whilstCallback = sandbox.stub();
+        whileProcess(whilstCallback);
+
+        sinon.assert.calledWith(setTimeout, whilstCallback, timeout * delayed_n, null);
+        expect(syncSpecsLogs.__get__("whileTries")).to.equal(4);
+      });
+
+      it('Should give-up on retry when error is b because of network issue after 5 retries and set proper exit code', () => {
+        let error = new Error("error"), requestStub = sandbox.stub();
+        error.code = "ETIMEDOUT";
+
+        let postStub = sandbox
+          .stub(request, "post")
+          .yields(error, { statusCode: 502 }, JSON.stringify({}));
+
+        requestStub.post = postStub;
+
+        syncSpecsLogs.__set__('request', requestStub);
+        syncSpecsLogs.__set__('whileTries', 1);
+        syncSpecsLogs.__set__('specSummary', {});
+        syncSpecsLogs.__set__('whileLoop', true);
+
+        let whilstCallback = sandbox.stub();
+        whileProcess(whilstCallback);
+
+        sinon.assert.calledWith(whilstCallback, { status: 504, message: "Tries limit reached" });
+        expect(syncSpecsLogs.__get__("whileTries")).to.equal(0);
+        expect(syncSpecsLogs.__get__("whileLoop")).to.equal(false);
+        expect(syncSpecsLogs.__get__("specSummary.exitCode")).to.equal(2);
+      });
+    });
+
+    it('Should break the loop if request has error other than network issue', () => {
       let error = new Error("error");
       let requestStub = sandbox.stub();
       let postStub = sandbox

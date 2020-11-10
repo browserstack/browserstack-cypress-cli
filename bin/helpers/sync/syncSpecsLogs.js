@@ -8,7 +8,7 @@ const request = require("request"),
   tableStream = require('table').createStream,
   chalk = require('chalk');
 
-let whileLoop = true, whileTries = 40, options, timeout = 3000, n = 10, tableConfig, stream, startTime, endTime;
+let whileLoop = true, whileTries = config.retries, options, timeout = 3000, n = 10, tableConfig, stream, endTime, startTime = Date.now();
 let specSummary = {
   "specs": [],
   "duration": null
@@ -22,6 +22,7 @@ let  getOptions = (auth, build_id) => {
       user: auth.username,
       password: auth.access_key
     },
+    timeout: 10000,
     headers: {
       "Content-Type": "application/json",
       "User-Agent": utils.getUserAgent()
@@ -80,6 +81,7 @@ let printSpecsStatus = (bsConfig, buildDetails) => {
         whileProcess(callback)
       },
       function(err, result) { // when loop ends
+        logger.info("\n--------------------------------------------------------------------------------")
         specSummary.duration =  endTime - startTime
         resolve(specSummary)
       }
@@ -90,8 +92,24 @@ let printSpecsStatus = (bsConfig, buildDetails) => {
 let whileProcess = (whilstCallback) => {
   request.post(options, function(error, response, body) {
     if (error) {
-      return whilstCallback(error);
+      if (error.code === "ETIMEDOUT") {
+        whileTries -= 1;
+        if (whileTries === 0) {
+          whileLoop = false;
+          endTime = Date.now();
+          specSummary.exitCode = config.networkErrorExitCode;
+          return whilstCallback({ status: 504, message: "Tries limit reached" }); //Gateway Timeout
+        } else {
+          n = 2
+          return setTimeout(whilstCallback, timeout * n, null);
+        }
+      } else {
+        return whilstCallback(error);
+      }
     }
+
+    whileTries = config.retries; // reset to default after every successful request
+
     switch (response.statusCode) {
       case 202: // get data here and print it
         n = 2
@@ -104,7 +122,6 @@ let whileProcess = (whilstCallback) => {
         whileLoop = false;
         endTime = Date.now();
         showSpecsStatus(body);
-        logger.info("\n--------------------------------------------------------------------------------")
         return whilstCallback(null, body);
       default:
         whileLoop = false;
@@ -125,7 +142,6 @@ let showSpecsStatus = (data) => {
 }
 
 let printInitialLog = () => {
-  startTime = Date.now();
   logger.info(`\n${Constants.syncCLI.LOGS.INIT_LOG}`)
   logger.info("--------------------------------------------------------------------------------")
   n = Constants.syncCLI.INITIAL_DELAY_MULTIPLIER
