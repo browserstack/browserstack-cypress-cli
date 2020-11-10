@@ -115,13 +115,15 @@ exports.setParallels = (bsConfig, args) => {
   }
 };
 
-exports.setDefaultAuthHash = (bsConfig, args) => {
-  if (
-    this.isUndefined(bsConfig['auth']) &&
-    (!this.isUndefined(args.username) ||
-      !this.isUndefined(process.env.BROWSERSTACK_USERNAME))
-  ) {
+exports.setDefaults = (bsConfig, args) => {
+  // setting setDefaultAuthHash to {} if not present and set via env variables or via args.
+  if (this.isUndefined(bsConfig['auth']) && (!this.isUndefined(args.username) || !this.isUndefined(process.env.BROWSERSTACK_USERNAME))) {
     bsConfig['auth'] = {};
+  }
+
+  // setting npm_dependencies to {} if not present
+  if (bsConfig.run_settings && this.isUndefined(bsConfig.run_settings.npm_dependencies)) {
+    bsConfig.run_settings.npm_dependencies = {}
   }
 }
 
@@ -280,8 +282,8 @@ exports.isCypressProjDirValid = (cypressProjDir, integrationFoldDir) => {
     integrationFolderDir = path.resolve(path.join(cypressProjDir, integrationFoldDir));
   }
   if (integrationFolderDir === cypressDir) return true;
-  let parentTokens = cypressDir.split("/").filter((i) => i.length);
-  let childTokens = integrationFolderDir.split("/").filter((i) => i.length);
+  let parentTokens = cypressDir.split(path.sep).filter((i) => i.length);
+  let childTokens = integrationFolderDir.split(path.sep).filter((i) => i.length);
   return parentTokens.every((t, i) => childTokens[i] === t);
 };
 
