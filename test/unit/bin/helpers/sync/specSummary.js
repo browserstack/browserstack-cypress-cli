@@ -18,6 +18,15 @@ describe("printSpecsRunSummary", () => {
     });
   });
 
+  context("request failure", () => {
+    let data = { specs: [], duration: 6000, exitCode: 2}, machines = 2;
+    it('returns passed specs data with proper exit code', () => {
+      return specSummary.printSpecsRunSummary(data, machines).then((specsData) => {
+        expect(data.exitCode).to.equal(specsData);
+      });
+    });
+  });
+
   context("with data", () => {
     let time = 6000,
         machines = 2,

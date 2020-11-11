@@ -59,4 +59,18 @@ describe("failedSpecsDetails", () => {
       });
     });
   });
+
+  context("failed because of network issue", () => {
+    let data = {
+      specs: [ {specName: 'spec2.name.js', status: 'Failed', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'},
+      {specName: 'spec2.name.js', status: 'Passed', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'}],
+      exitCode: 2
+    };
+
+    it("returns 2 exit code", () => {
+      return specDetails.failedSpecsDetails(data).then((result) => {
+        expect(result).to.equal(data);
+      });
+    });
+  });
 });

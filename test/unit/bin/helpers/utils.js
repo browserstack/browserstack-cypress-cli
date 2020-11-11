@@ -5,12 +5,14 @@ const chai = require('chai'),
   expect = chai.expect,
   sinon = require('sinon'),
   chaiAsPromised = require('chai-as-promised'),
+  chalk = require('chalk'),
   fs = require('fs');
 
 const utils = require('../../../../bin/helpers/utils'),
   constant = require('../../../../bin/helpers/constants'),
   logger = require('../../../../bin/helpers/logger').winstonLogger,
-  testObjects = require('../../support/fixtures/testObjects');
+  testObjects = require('../../support/fixtures/testObjects'),
+  syncLogger = require("../../../../bin/helpers/logger").syncCliLogger;
 
 chai.use(chaiAsPromised);
 logger.transports['console.info'].silent = true;
@@ -942,5 +944,43 @@ describe('utils', () => {
       expect(utils.capitalizeFirstLetter(null)).to.eq(null);
     });
 
+  });
+
+  describe('#handleSyncExit', () => {
+    let processStub;
+    beforeEach(function () {
+      processStub = sinon.stub(process, 'exit');
+    });
+
+    afterEach(function () {
+      processStub.restore();
+    });
+    it('should print network error message when exit code is set to network error code', () => {
+      let dashboard_url = "dashboard_url", exitCode = 2;
+      let getNetworkErrorMessageStub = sinon.stub(utils, 'getNetworkErrorMessage');
+      utils.handleSyncExit(exitCode, dashboard_url);
+      sinon.assert.calledOnce(getNetworkErrorMessageStub);
+      sinon.assert.calledOnceWithExactly(processStub, exitCode);
+      getNetworkErrorMessageStub.restore();
+    });
+
+    it('should print dashboard link when exit code is not network error code', () => {
+      let dashboard_url = "dashboard_url", exitCode = 1;
+      let syncCliLoggerStub = sinon.stub(syncLogger, 'info');
+      utils.handleSyncExit(exitCode, dashboard_url);
+      sinon.assert.calledTwice(syncCliLoggerStub);
+      sinon.assert.calledOnceWithExactly(processStub, exitCode);
+    });
+  });
+
+  describe('#getNetworkErrorMessage', () => {
+    it('should return the error message in red color', () => {
+      let dashboard_url = "dashboard_url";
+      let message  =  constant.userMessages.FATAL_NETWORK_ERROR + '\n'
+                  + constant.userMessages.RETRY_LIMIT_EXCEEDED + '\n'
+                  + constant.userMessages.CHECK_DASHBOARD_AT  + dashboard_url
+      utils.getNetworkErrorMessage(dashboard_url);
+      expect(utils.getNetworkErrorMessage(dashboard_url)).to.eq(chalk.red(message))
+    });
   });
 });

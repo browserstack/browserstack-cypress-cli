@@ -92,19 +92,15 @@ let printSpecsStatus = (bsConfig, buildDetails) => {
 let whileProcess = (whilstCallback) => {
   request.post(options, function(error, response, body) {
     if (error) {
-      if (error.code === "ETIMEDOUT") {
-        whileTries -= 1;
-        if (whileTries === 0) {
-          whileLoop = false;
-          endTime = Date.now();
-          specSummary.exitCode = config.networkErrorExitCode;
-          return whilstCallback({ status: 504, message: "Tries limit reached" }); //Gateway Timeout
-        } else {
-          n = 2
-          return setTimeout(whilstCallback, timeout * n, null);
-        }
+      whileTries -= 1;
+      if (whileTries === 0) {
+        whileLoop = false;
+        endTime = Date.now();
+        specSummary.exitCode = config.networkErrorExitCode;
+        return whilstCallback({ status: 504, message: "Tries limit reached" }); //Gateway Timeout
       } else {
-        return whilstCallback(error);
+        n = 2
+        return setTimeout(whilstCallback, timeout * n, null);
       }
     }
 

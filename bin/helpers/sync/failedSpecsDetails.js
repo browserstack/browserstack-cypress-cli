@@ -1,7 +1,8 @@
 const tablePrinter = require('table'), // { table, getBorderCharacters }
       chalk = require('chalk'),
       Constants = require("../constants"),
-      logger = require("../logger").syncCliLogger;
+      logger = require("../logger").syncCliLogger,
+      config = require("../config");
 
 /**
  *
@@ -49,7 +50,7 @@ let failedSpecsDetails = (data) => {
       ]);
     });
 
-    let config = {
+    let tableConfig = {
       border: tablePrinter.getBorderCharacters('ramac'),
       columns: {
         0: { alignment: 'left' },
@@ -68,12 +69,12 @@ let failedSpecsDetails = (data) => {
       }
     }
 
-    let result = tablePrinter.table(specData, config);
+    let result = tablePrinter.table(specData, tableConfig);
 
     logger.info('\nFailed / skipped test report:');
     logger.info(result);
 
-    if (failedSpecs && data.exitCode !== 2) data.exitCode = 1 ; // specs failed, send exitCode as 1
+    if (failedSpecs && data.exitCode !== config.networkErrorExitCode) data.exitCode = 1 ; // specs failed, send exitCode as 1
     resolve(data); // No Specs failed, maybe skipped, but not failed, send exitCode as 0
   });
 }

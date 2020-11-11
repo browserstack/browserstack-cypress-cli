@@ -333,8 +333,8 @@ exports.handleSyncExit = (exitCode, dashboard_url) => {
 }
 
 exports.getNetworkErrorMessage = (dashboard_url) => {
-  let message  = `fatal: unable to access '${config.buildUrl}': Could not resolve host: ${config.rails_host}` + '\n'
-                  + `Max retries exceeded trying to connect to the host (retries: ${config.retries})` + '\n'
-                  + `Please check the build status at: ${dashboard_url}`
+  let message  =  Constants.userMessages.FATAL_NETWORK_ERROR + '\n'
+                  + Constants.userMessages.RETRY_LIMIT_EXCEEDED + '\n'
+                  + Constants.userMessages.CHECK_DASHBOARD_AT  + dashboard_url
   return chalk.red(message)
 }
