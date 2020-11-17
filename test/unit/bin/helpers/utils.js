@@ -1006,15 +1006,15 @@ describe('utils', () => {
       let bsConfig = {
         run_settings: {
           specs: 'specs',
-          cypressConfigFilePath: 'cypressConfigFilePath',
-          exclude: 'exclude'
+          cypressProjectDir: 'cypressProjectDir',
+          exclude: 'exclude',
         },
       };
 
       utils.getNumberOfSpecFiles(bsConfig,{},{});
       sinon.assert.calledOnce(getNumberOfSpecFilesStub);
       sinon.assert.calledOnceWithExactly(getNumberOfSpecFilesStub, 'specs', {
-        cmd: 'cypressConfigFilePath',
+        cwd: 'cypressProjectDir',
         matchBase: true,
         ignore: 'exclude',
       });
@@ -1025,15 +1025,15 @@ describe('utils', () => {
       let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
       let bsConfig = {
         run_settings: {
-          cypressConfigFilePath: 'cypressConfigFilePath',
-          exclude: 'exclude'
+          cypressProjectDir: 'cypressProjectDir',
+          exclude: 'exclude',
         },
       };
 
       utils.getNumberOfSpecFiles(bsConfig,{},{});
 
       sinon.assert.calledOnceWithExactly(getNumberOfSpecFilesStub, `cypress/integration/**/*.+(${constant.specFileTypes.join("|")})`, {
-        cmd: 'cypressConfigFilePath',
+        cwd: 'cypressProjectDir',
         matchBase: true,
         ignore: 'exclude',
       });
@@ -1044,7 +1044,7 @@ describe('utils', () => {
       let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
       let bsConfig = {
         run_settings: {
-          cypressConfigFilePath: 'cypressConfigFilePath',
+          cypressProjectDir: 'cypressProjectDir',
           exclude: 'exclude',
         },
       };
@@ -1055,7 +1055,7 @@ describe('utils', () => {
         getNumberOfSpecFilesStub,
         `specs/**/*.+(${constant.specFileTypes.join('|')})`,
         {
-          cmd: 'cypressConfigFilePath',
+          cwd: 'cypressProjectDir',
           matchBase: true,
           ignore: 'exclude',
         }
