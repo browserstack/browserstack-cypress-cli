@@ -8,8 +8,7 @@ const archiver = require("../helpers/archiver"),
   Constants = require("../helpers/constants"),
   utils = require("../helpers/utils"),
   fileHelpers = require("../helpers/fileHelpers"),
-  syncRunner = require("../helpers/syncRunner"),
-  syncCliLogger = require("../helpers/logger").syncCliLogger;
+  syncRunner = require("../helpers/syncRunner");
 
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
@@ -73,9 +72,7 @@ module.exports = function run(args) {
             if (args.sync) {
               syncRunner.pollBuildStatus(bsConfig, data).then((exitCode) => {
                 utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
-                syncCliLogger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
-                syncCliLogger.info(data.dashboard_url);
-                process.exit(exitCode);
+                utils.handleSyncExit(exitCode, data.dashboard_url)
               });
             }
 
