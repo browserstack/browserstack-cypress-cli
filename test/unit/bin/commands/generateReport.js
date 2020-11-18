@@ -4,8 +4,7 @@ const chai = require("chai"),
 
 const Constants = require("../../../../bin/helpers/constants"),
       logger = require("../../../../bin/helpers/logger").winstonLogger,
-      testObjects = require("../../support/fixtures/testObjects"),
-      reporterHTML = require('../helpers/reporterHTML');
+      testObjects = require("../../support/fixtures/testObjects");
 
 const proxyquire = require("proxyquire").noCallThru();
 
@@ -67,7 +66,7 @@ describe("generateReport", () => {
 
       generateReport(args)
       .then(function (_bsConfig) {
-        sinon.assert.calledWith(reportGeneratorSpy, bsConfig, args._[1]);
+        sinon.assert.calledWith(reportGeneratorSpy, bsConfig, args);
         sinon.assert.calledOnce(getConfigPathStub);
         sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, 'generate-report called', Constants.messageTypes.INFO, null);
       })

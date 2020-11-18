@@ -1,10 +1,9 @@
 'use strict';
 
-const config = require("../helpers/config"),
-  logger = require("../helpers/logger").winstonLogger,
-  Constants = require("../helpers/constants"),
-  utils = require("../helpers/utils"),
-  reporterHTML = require('../helpers/reporterHTML');
+const logger = require("../helpers/logger").winstonLogger,
+      Constants = require("../helpers/constants"),
+      utils = require("../helpers/utils"),
+      reporterHTML = require('../helpers/reporterHTML');
 
 
 module.exports = function generateReport(args) {
@@ -26,12 +25,10 @@ module.exports = function generateReport(args) {
     // set cypress config filename
     utils.setCypressConfigFilename(bsConfig, args);
 
-    let buildId = args._[1];
-
     let messageType = Constants.messageTypes.INFO;
     let errorCode = null;
 
-    reportGenerator(bsConfig, buildId);
+    reportGenerator(bsConfig, args);
     utils.sendUsageReport(bsConfig, args, 'generate-report called', messageType, errorCode);
   }).catch(function (err) {
     logger.error(err);
