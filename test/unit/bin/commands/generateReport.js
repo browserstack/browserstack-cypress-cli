@@ -66,7 +66,7 @@ describe("generateReport", () => {
 
       generateReport(args)
       .then(function (_bsConfig) {
-        sinon.assert.calledWith(reportGeneratorSpy, bsConfig, args);
+        sinon.assert.calledWith(reportGeneratorSpy, bsConfig, args._[1], args);
         sinon.assert.calledOnce(getConfigPathStub);
         sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, 'generate-report called', Constants.messageTypes.INFO, null);
       })

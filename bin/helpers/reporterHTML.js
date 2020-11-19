@@ -1,6 +1,9 @@
 const fs = require('fs'),
       path = require('path'),
-      logger = require('./logger').winstonLogger;
+      logger = require('./logger').winstonLogger,
+      utils = require("./utils"),
+      Constants = require('./constants'),
+      config = require("./config");
 
 let templatesDir = path.join(__dirname, '../', 'templates');
 
@@ -84,7 +87,7 @@ function buildSpecStats(specMeta) {
   return specStats;
 }
 
-reportGenerator = (bsConfig, buildId) => {
+reportGenerator = (bsConfig, buildId, args) => {
   let options = {
     url: `${config.buildUrl}${buildId}/custom_report`,
     auth: {

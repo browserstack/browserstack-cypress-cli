@@ -27,8 +27,9 @@ module.exports = function generateReport(args) {
 
     let messageType = Constants.messageTypes.INFO;
     let errorCode = null;
+    let buildId = args._[1];
 
-    reportGenerator(bsConfig, args);
+    reportGenerator(bsConfig, buildId, args);
     utils.sendUsageReport(bsConfig, args, 'generate-report called', messageType, errorCode);
   }).catch(function (err) {
     logger.error(err);
