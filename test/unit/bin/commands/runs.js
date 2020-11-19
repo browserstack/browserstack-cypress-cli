@@ -481,9 +481,6 @@ describe("runs", () => {
             messageType,
             errorCode
           );
-        })
-        .finally(function () {
-          sinon.assert.calledOnce(deleteZipStub);
         });
     });
   });
@@ -530,7 +527,7 @@ describe("runs", () => {
       let messageType = Constants.messageTypes.SUCCESS;
       let errorCode = null;
       let message = `Success! ${Constants.userMessages.BUILD_CREATED} with build id: random_build_id`;
-      let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${dashboardUrl}random_build_id`;
+      let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${dashboardUrl}`;
 
       const runs = proxyquire("../../../../bin/commands/runs", {
         "../helpers/utils": {
@@ -578,7 +575,7 @@ describe("runs", () => {
       );
       archiverStub.returns(Promise.resolve("Zipping completed"));
       zipUploadStub.returns(Promise.resolve("zip uploaded"));
-      createBuildStub.returns(Promise.resolve({ message: 'Success', build_id: 'random_build_id' }));
+      createBuildStub.returns(Promise.resolve({ message: 'Success', build_id: 'random_build_id', dashboard_url: dashboardUrl }));
 
       return runs(args)
         .then(function (_bsConfig) {
@@ -607,9 +604,6 @@ describe("runs", () => {
             messageType,
             errorCode
           );
-        })
-        .finally(function () {
-          sinon.assert.calledOnce(deleteZipStub);
         });
     });
   });

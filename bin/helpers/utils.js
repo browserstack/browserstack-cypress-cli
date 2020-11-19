@@ -5,7 +5,10 @@ const fs = require("fs");
 
 const usageReporting = require("./usageReporting"),
   logger = require("./logger").winstonLogger,
-  Constants = require("./constants");
+  Constants = require("./constants"),
+  chalk = require('chalk'),
+  syncCliLogger = require("../helpers/logger").syncCliLogger,
+  config = require("../helpers/config");
 
 exports.validateBstackJson = (bsConfigPath) => {
   return new Promise(function (resolve, reject) {
@@ -316,3 +319,24 @@ exports.setLocalIdentifier = (bsConfig) => {
     );
   }
 };
+
+exports.capitalizeFirstLetter = (stringToCapitalize) => {
+  return stringToCapitalize && (stringToCapitalize[0].toUpperCase() + stringToCapitalize.slice(1));
+};
+
+exports.handleSyncExit = (exitCode, dashboard_url) => {
+  if (exitCode === config.networkErrorExitCode) {
+    syncCliLogger.info(this.getNetworkErrorMessage(dashboard_url));
+  } else {
+    syncCliLogger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
+    syncCliLogger.info(dashboard_url);
+  }
+  process.exit(exitCode);
+}
+
+exports.getNetworkErrorMessage = (dashboard_url) => {
+  let message  =  Constants.userMessages.FATAL_NETWORK_ERROR + '\n'
+                  + Constants.userMessages.RETRY_LIMIT_EXCEEDED + '\n'
+                  + Constants.userMessages.CHECK_DASHBOARD_AT  + dashboard_url
+  return chalk.red(message)
+}
