@@ -95,7 +95,6 @@ let reportGenerator = (bsConfig, buildId, args) => {
       user: bsConfig.auth.username,
       password: bsConfig.auth.access_key,
     },
-    rejectUnauthorized: false,
     headers: {
       'User-Agent': utils.getUserAgent(),
     },
