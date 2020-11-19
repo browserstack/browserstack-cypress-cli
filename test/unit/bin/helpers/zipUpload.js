@@ -22,6 +22,7 @@ describe("zipUpload", () => {
     sandbox = sinon.createSandbox();
     getUserAgentStub = sandbox.stub().returns("random user-agent");
     createReadStreamStub = sandbox.stub(fs, "createReadStream");
+    deleteZipStub = sandbox.stub().returns(true);
   });
 
   afterEach(() => {
@@ -119,11 +120,14 @@ describe("zipUpload", () => {
       .stub(request, "post")
       .yields(null, { statusCode: 200 }, JSON.stringify({ zip_url: zip_url }));
 
-    const zipUploader = proxyquire("../../../../bin/helpers/zipUpload", {
-      "./utils": {
+    const zipUploader = proxyquire('../../../../bin/helpers/zipUpload', {
+      './utils': {
         getUserAgent: getUserAgentStub,
       },
-      request: { post: requestStub },
+      request: {post: requestStub},
+      './fileHelpers': {
+        deleteZip: deleteZipStub,
+      },
     });
 
     return zipUploader
@@ -132,6 +136,7 @@ describe("zipUpload", () => {
         sinon.assert.calledOnce(requestStub);
         sinon.assert.calledOnce(getUserAgentStub);
         sinon.assert.calledOnce(createReadStreamStub);
+        sinon.assert.calledOnce(deleteZipStub);
         chai.assert.equal(data.zip_url, zip_url);
       })
       .catch((error) => {
