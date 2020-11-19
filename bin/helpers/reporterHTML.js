@@ -1,5 +1,6 @@
 const fs = require('fs'),
       path = require('path'),
+      request = require('request'),
       logger = require('./logger').winstonLogger,
       utils = require("./utils"),
       Constants = require('./constants'),
@@ -87,7 +88,7 @@ function buildSpecStats(specMeta) {
   return specStats;
 }
 
-reportGenerator = (bsConfig, buildId, args) => {
+let reportGenerator = (bsConfig, buildId, args) => {
   let options = {
     url: `${config.buildUrl}${buildId}/custom_report`,
     auth: {
