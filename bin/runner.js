@@ -195,6 +195,11 @@ var argv = yargs
           default: false,
           description: Constants.cliMessages.COMMON.NO_NPM_WARNING,
           type: "boolean"
+        },
+        'sync': {
+          default: false,
+          describe: Constants.cliMessages.RUN.SYNC_DESCRIPTION,
+          type: "boolean"
         }
       })
       .help('help')

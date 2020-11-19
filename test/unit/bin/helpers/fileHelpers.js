@@ -1,8 +1,10 @@
-const chai = require("chai"),
-  sinon = require("sinon"),
+const chai = require('chai'),
+  sinon = require('sinon'),
   expect = chai.expect,
   assert = chai.assert,
-  chaiAsPromised = require("chai-as-promised");
+  chaiAsPromised = require('chai-as-promised'),
+  fs = require('fs-extra'),
+  fileHelpers = require('../../../../bin/helpers/fileHelpers');
 
 const logger = require("../../../../bin/helpers/logger").winstonLogger,
   proxyquire = require("proxyquire").noCallThru();
@@ -82,30 +84,19 @@ describe("fileHelpers", () => {
   });
 
   it("deleteZip returns 0 on success", () => {
-    let unlinkStub = sandbox.stub().yields();
-
-    const fileHelpers = proxyquire("../../../../bin/helpers/fileHelpers", {
-      "fs-extra": {
-        unlink: unlinkStub,
-      },
-    });
+    let unlinkStub = sinon.stub(fs, 'unlinkSync').returns(true);
 
     let result = fileHelpers.deleteZip();
     sinon.assert.calledOnce(unlinkStub);
     assert.equal(result, 0);
+    fs.unlinkSync.restore();
   });
 
   it("deleteZip returns 1 on failure", () => {
-    let unlinkStub = sandbox.stub().yields(new Error("random-error"));
-
-    const fileHelpers = proxyquire("../../../../bin/helpers/fileHelpers", {
-      "fs-extra": {
-        unlink: unlinkStub,
-      },
-    });
-
+    let unlinkStub = sinon.stub(fs, 'unlinkSync').yields(new Error("random-error"));
     let result = fileHelpers.deleteZip();
     sinon.assert.calledOnce(unlinkStub);
     assert.equal(result, 1);
+    fs.unlinkSync.restore();
   });
 });
