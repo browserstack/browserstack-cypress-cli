@@ -88,7 +88,7 @@ function buildSpecStats(specMeta) {
   return specStats;
 }
 
-let reportGenerator = (bsConfig, buildId, args) => {
+let reportGenerator = (bsConfig, buildId, args, cb) => {
   let options = {
     url: `${config.buildUrl}${buildId}/custom_report`,
     auth: {
@@ -100,7 +100,7 @@ let reportGenerator = (bsConfig, buildId, args) => {
     },
   };
 
-  request.get(options, function (err, resp, body) {
+  return request.get(options, function (err, resp, body) {
     let message = null;
     let messageType = null;
     let errorCode = null;
@@ -152,8 +152,10 @@ let reportGenerator = (bsConfig, buildId, args) => {
       logger.info(message);
     }
     utils.sendUsageReport(bsConfig, args, message, messageType, errorCode);
+    if (cb){
+      cb();
+    }
   });
-
 }
 
 function renderReportHTML(report_data) {
