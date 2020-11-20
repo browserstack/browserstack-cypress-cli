@@ -11,8 +11,8 @@ module.exports = function generateReport(args) {
   let reportGenerator = reporterHTML.reportGenerator;
 
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
-    // setting setDefaultAuthHash to {} if not present and set via env variables or via args.
-    utils.setDefaultAuthHash(bsConfig, args);
+    // setting setDefaults to {} if not present and set via env variables or via args.
+    utils.setDefaults(bsConfig, args);
 
     // accept the username from command line if provided
     utils.setUsername(bsConfig, args);
