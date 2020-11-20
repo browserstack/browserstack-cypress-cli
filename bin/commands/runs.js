@@ -8,7 +8,8 @@ const archiver = require("../helpers/archiver"),
   Constants = require("../helpers/constants"),
   utils = require("../helpers/utils"),
   fileHelpers = require("../helpers/fileHelpers"),
-  syncRunner = require("../helpers/syncRunner");
+  syncRunner = require("../helpers/syncRunner"),
+  reporterHTML = require('../helpers/reporterHTML');
 
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
@@ -73,6 +74,8 @@ module.exports = function run(args) {
                 utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
                 utils.handleSyncExit(exitCode, data.dashboard_url)
               });
+              // Generate custom report!
+              reporterHTML.reportGenerator(bsConfig, data.build_id, args);
             }
 
             logger.info(message);
