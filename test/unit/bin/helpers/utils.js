@@ -5,6 +5,7 @@ const chai = require('chai'),
   expect = chai.expect,
   sinon = require('sinon'),
   chaiAsPromised = require('chai-as-promised'),
+  glob = require('glob'),
   chalk = require('chalk'),
   fs = require('fs');
 
@@ -139,13 +140,25 @@ describe('utils', () => {
   });
 
   describe('setParallels', () => {
+    var sandbox;
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      sandbox.stub(utils,'getBrowserCombinations').returns(['a','b']);
+    });
+    
+    afterEach(() => {
+      sandbox.restore();
+      sinon.restore();
+    });
+
     it('should set bsconfig parallels equal to value provided in args', () => {
       let bsConfig = {
         run_settings: {
           parallels: 10,
         },
       };
-      utils.setParallels(bsConfig, {parallels: 100});
+
+      utils.setParallels(bsConfig, {parallels: 100}, 100);
       expect(bsConfig['run_settings']['parallels']).to.be.eq(100);
     });
 
@@ -155,9 +168,40 @@ describe('utils', () => {
           parallels: 10,
         },
       };
-      utils.setParallels(bsConfig, {parallels: undefined});
+      utils.setParallels(bsConfig, {parallels: undefined}, 10);
       expect(bsConfig['run_settings']['parallels']).to.be.eq(10);
     });
+
+    it('should set bsconfig parallels to browserCombinations.length if numOfSpecs is zero', () => {
+      let bsConfig = {
+        run_settings: {
+          parallels: 10,
+        },
+      };
+      utils.setParallels(bsConfig, {parallels: undefined}, 0);
+      expect(bsConfig['run_settings']['parallels']).to.be.eq(2);
+    });
+
+    it('shouldnot set bsconfig parallels if parallels is -1', () => {
+      let bsConfig = {
+        run_settings: {
+          parallels: -1,
+        },
+      };
+      utils.setParallels(bsConfig, {parallels: undefined}, 2);
+      expect(bsConfig['run_settings']['parallels']).to.be.eq(-1);
+    });
+
+    it('should set bsconfig parallels if parallels is greater than numOfSpecs * combinations', () => {
+      let bsConfig = {
+        run_settings: {
+          parallels: 100,
+        },
+      };
+      utils.setParallels(bsConfig, {parallels: undefined}, 2);
+      expect(bsConfig['run_settings']['parallels']).to.be.eq(4);
+    });
+
   });
 
   describe('getErrorCodeFromErr', () => {
@@ -286,7 +330,7 @@ describe('utils', () => {
     let args = testObjects.initSampleArgs;
 
     it('should call sendUsageReport', () => {
-      sandbox = sinon.createSandbox();
+      let sandbox = sinon.createSandbox();
       sendUsageReportStub = sandbox
         .stub(utils, 'sendUsageReport')
         .callsFake(function () {
@@ -942,6 +986,71 @@ describe('utils', () => {
     });
   });
 
+  describe('getNumberOfSpecFiles', () => {
+
+    it('glob search pattern should be equal to bsConfig.run_settings.specs', () => {
+      let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
+      let bsConfig = {
+        run_settings: {
+          specs: 'specs',
+          cypressProjectDir: 'cypressProjectDir',
+          exclude: 'exclude',
+        },
+      };
+
+      utils.getNumberOfSpecFiles(bsConfig,{},{});
+      sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+      sinon.assert.calledOnceWithExactly(getNumberOfSpecFilesStub, 'specs', {
+        cwd: 'cypressProjectDir',
+        matchBase: true,
+        ignore: 'exclude',
+      });
+      glob.sync.restore();
+    });
+
+    it('glob search pattern should be equal to default', () => {
+      let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
+      let bsConfig = {
+        run_settings: {
+          cypressProjectDir: 'cypressProjectDir',
+          exclude: 'exclude',
+        },
+      };
+
+      utils.getNumberOfSpecFiles(bsConfig,{},{});
+
+      sinon.assert.calledOnceWithExactly(getNumberOfSpecFilesStub, `cypress/integration/**/*.+(${constant.specFileTypes.join("|")})`, {
+        cwd: 'cypressProjectDir',
+        matchBase: true,
+        ignore: 'exclude',
+      });
+      glob.sync.restore();
+    });
+
+    it('glob search pattern should be equal to default with integrationFolder', () => {
+      let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
+      let bsConfig = {
+        run_settings: {
+          cypressProjectDir: 'cypressProjectDir',
+          exclude: 'exclude',
+        },
+      };
+
+      utils.getNumberOfSpecFiles(bsConfig, {}, { "integrationFolder": "specs"});
+
+      sinon.assert.calledOnceWithExactly(
+        getNumberOfSpecFilesStub,
+        `specs/**/*.+(${constant.specFileTypes.join('|')})`,
+        {
+          cwd: 'cypressProjectDir',
+          matchBase: true,
+          ignore: 'exclude',
+        }
+      );
+      glob.sync.restore();
+    });
+  });
+
   describe('capitalizeFirstLetter', () => {
 
     it('should capitalize First Letter ', () => {
@@ -950,6 +1059,45 @@ describe('utils', () => {
 
     it('should return null if value passed is null', () => {
       expect(utils.capitalizeFirstLetter(null)).to.eq(null);
+    });
+
+  });
+
+  describe('getBrowserCombinations', () => {
+
+    it('returns correct number of browserCombinations for one combination', () => {
+      let bsConfig = {
+        browsers: [
+          {
+            browser: 'chrome',
+            os: 'OS X Mojave',
+            versions: ['85'],
+          },
+        ]
+      };
+      chai.assert.deepEqual(utils.getBrowserCombinations(bsConfig), ['OS X Mojave-chrome85']);
+    });
+
+    it('returns correct number of browserCombinations for multiple combinations', () => {
+      let bsConfig = {
+        browsers: [
+          {
+            browser: 'chrome',
+            os: 'OS X Mojave',
+            versions: ['85'],
+          },
+          {
+            browser: 'chrome',
+            os: 'OS X Catalina',
+            versions: ['85','84'],
+          },
+        ],
+      };
+      chai.assert.deepEqual(utils.getBrowserCombinations(bsConfig), [
+        'OS X Mojave-chrome85',
+        'OS X Catalina-chrome85',
+        'OS X Catalina-chrome84'
+      ]);
     });
 
   });
