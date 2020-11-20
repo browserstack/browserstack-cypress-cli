@@ -72,10 +72,10 @@ module.exports = function run(args) {
             if (args.sync) {
               syncRunner.pollBuildStatus(bsConfig, data).then((exitCode) => {
                 utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
+                // Generate custom report!
+                reporterHTML.reportGenerator(bsConfig, data.build_id, args);
                 utils.handleSyncExit(exitCode, data.dashboard_url)
               });
-              // Generate custom report!
-              reporterHTML.reportGenerator(bsConfig, data.build_id, args);
             }
 
             logger.info(message);
