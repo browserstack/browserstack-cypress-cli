@@ -20,7 +20,8 @@
     "requestretry": "^4.1.0",
     "table": "^5.4.6",
     "winston": "^2.3.1",
-    "yargs": "^14.2.2"
+    "yargs": "^14.2.2",
+    "glob": "^7.1.6"
   },
   "repository": {
     "type": "git",

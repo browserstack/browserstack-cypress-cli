@@ -117,6 +117,10 @@ const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf
 
 const filesToIgnoreWhileUploading = ['**/node_modules/**', 'node_modules/**', 'package-lock.json', 'package.json', 'browserstack-package.json', 'tests.zip', 'cypress.json']
 
+const specFileTypes = ['js', 'ts', 'feature']
+
+const DEFAULT_CYPRESS_SPEC_PATH = "cypress/integration"
+
 module.exports = Object.freeze({
   syncCLI,
   userMessages,
@@ -124,5 +128,7 @@ module.exports = Object.freeze({
   validationMessages,
   messageTypes,
   allowedFileTypes,
-  filesToIgnoreWhileUploading
+  filesToIgnoreWhileUploading,
+  specFileTypes,
+  DEFAULT_CYPRESS_SPEC_PATH
 });
