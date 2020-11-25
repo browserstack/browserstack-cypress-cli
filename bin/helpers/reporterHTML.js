@@ -137,12 +137,12 @@ let reportGenerator = (bsConfig, buildId, args, cb) => {
 
       if (build) {
         message = `${
-          Constants.userMessages.BUILD_GENERATE_REPORT_FAILED.replace('<build-id>>', buildId)
+          Constants.userMessages.BUILD_GENERATE_REPORT_FAILED.replace('<build-id>', buildId)
         } with error: \n${JSON.stringify(build, null, 2)}`;
         logger.error(message);
         if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
       } else {
-        message = Constants.userMessages.BUILD_GENERATE_REPORT_FAILED.replace('<build-id>>', buildId);
+        message = Constants.userMessages.BUILD_GENERATE_REPORT_FAILED.replace('<build-id>', buildId);
         logger.error(message);
       }
     } else {

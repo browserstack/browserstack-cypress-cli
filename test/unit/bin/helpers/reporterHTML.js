@@ -116,7 +116,7 @@ describe("reportHTML", () => {
         let body = JSON.stringify(build);
         let requestStub = sandbox.stub(request, "get").yields(null, { statusCode: 400 }, body);
         let message = `${
-          Constants.userMessages.BUILD_GENERATE_REPORT_FAILED.replace('<build-id>>', buildId)
+          Constants.userMessages.BUILD_GENERATE_REPORT_FAILED.replace('<build-id>', buildId)
         } with error: \n${JSON.stringify(build, null, 2)}`;
         let messageType = Constants.messageTypes.ERROR;
         let errorCode = 'api_failed_build_generate_report';
@@ -149,7 +149,7 @@ describe("reportHTML", () => {
         let body = JSON.stringify(build);
         let requestStub = sandbox.stub(request, "get").yields(null, { statusCode: 401 }, body);
         let message = `${
-          Constants.userMessages.BUILD_GENERATE_REPORT_FAILED.replace('<build-id>>', buildId)
+          Constants.userMessages.BUILD_GENERATE_REPORT_FAILED.replace('<build-id>', buildId)
         } with error: \n${JSON.stringify(build, null, 2)}`;
         let messageType = Constants.messageTypes.ERROR;
         let errorCode = 'api_auth_failed';
@@ -179,7 +179,7 @@ describe("reportHTML", () => {
 
       it("400 status, build not available, cannot generate report", () => {
         let requestStub = sandbox.stub(request, "get").yields(null, { statusCode: 400 }, null);
-        let message = Constants.userMessages.BUILD_GENERATE_REPORT_FAILED.replace('<build-id>>', buildId);
+        let message = Constants.userMessages.BUILD_GENERATE_REPORT_FAILED.replace('<build-id>', buildId);
         let messageType = Constants.messageTypes.ERROR;
         let errorCode = 'api_failed_build_generate_report';
 
