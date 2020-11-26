@@ -68,7 +68,8 @@ module.exports = function run(args) {
             }
 
             if (bsConfig.cypress_version && bsConfig.cypress_version !== data.cypress_version) {
-              logger.warn(Constants.userMessages.CYPRESS_VERSION_CHANGED);
+              message = utils.versionChangedMessage(bsConfig.cypress_version, data.cypress_version)
+              logger.warn(message);
             }
 
             if (!args.disableNpmWarning && bsConfig.run_settings.npm_dependencies && Object.keys(bsConfig.run_settings.npm_dependencies).length <= 0) {

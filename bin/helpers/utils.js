@@ -374,3 +374,9 @@ exports.getNetworkErrorMessage = (dashboard_url) => {
                   + Constants.userMessages.CHECK_DASHBOARD_AT  + dashboard_url
   return chalk.red(message)
 }
+
+exports.versionChangedMessage = (preferredVersion, actualVersion) => {
+  let message = Constants.userMessages.CYPRESS_VERSION_CHANGED.replace("<preferredVersion>", preferredVersion);
+  message = version_message.replace("<actualVersion>", actualVersion);
+  return message
+}
