@@ -377,6 +377,6 @@ exports.getNetworkErrorMessage = (dashboard_url) => {
 
 exports.versionChangedMessage = (preferredVersion, actualVersion) => {
   let message = Constants.userMessages.CYPRESS_VERSION_CHANGED.replace("<preferredVersion>", preferredVersion);
-  message = version_message.replace("<actualVersion>", actualVersion);
+  message = message.replace("<actualVersion>", actualVersion);
   return message
 }
