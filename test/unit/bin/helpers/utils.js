@@ -5,12 +5,15 @@ const chai = require('chai'),
   expect = chai.expect,
   sinon = require('sinon'),
   chaiAsPromised = require('chai-as-promised'),
+  glob = require('glob'),
+  chalk = require('chalk'),
   fs = require('fs');
 
 const utils = require('../../../../bin/helpers/utils'),
   constant = require('../../../../bin/helpers/constants'),
   logger = require('../../../../bin/helpers/logger').winstonLogger,
-  testObjects = require('../../support/fixtures/testObjects');
+  testObjects = require('../../support/fixtures/testObjects'),
+  syncLogger = require("../../../../bin/helpers/logger").syncCliLogger;
 
 chai.use(chaiAsPromised);
 logger.transports['console.info'].silent = true;
@@ -137,13 +140,25 @@ describe('utils', () => {
   });
 
   describe('setParallels', () => {
+    var sandbox;
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      sandbox.stub(utils,'getBrowserCombinations').returns(['a','b']);
+    });
+    
+    afterEach(() => {
+      sandbox.restore();
+      sinon.restore();
+    });
+
     it('should set bsconfig parallels equal to value provided in args', () => {
       let bsConfig = {
         run_settings: {
           parallels: 10,
         },
       };
-      utils.setParallels(bsConfig, {parallels: 100});
+
+      utils.setParallels(bsConfig, {parallels: 100}, 100);
       expect(bsConfig['run_settings']['parallels']).to.be.eq(100);
     });
 
@@ -153,9 +168,40 @@ describe('utils', () => {
           parallels: 10,
         },
       };
-      utils.setParallels(bsConfig, {parallels: undefined});
+      utils.setParallels(bsConfig, {parallels: undefined}, 10);
       expect(bsConfig['run_settings']['parallels']).to.be.eq(10);
     });
+
+    it('should set bsconfig parallels to browserCombinations.length if numOfSpecs is zero', () => {
+      let bsConfig = {
+        run_settings: {
+          parallels: 10,
+        },
+      };
+      utils.setParallels(bsConfig, {parallels: undefined}, 0);
+      expect(bsConfig['run_settings']['parallels']).to.be.eq(2);
+    });
+
+    it('shouldnot set bsconfig parallels if parallels is -1', () => {
+      let bsConfig = {
+        run_settings: {
+          parallels: -1,
+        },
+      };
+      utils.setParallels(bsConfig, {parallels: undefined}, 2);
+      expect(bsConfig['run_settings']['parallels']).to.be.eq(-1);
+    });
+
+    it('should set bsconfig parallels if parallels is greater than numOfSpecs * combinations', () => {
+      let bsConfig = {
+        run_settings: {
+          parallels: 100,
+        },
+      };
+      utils.setParallels(bsConfig, {parallels: undefined}, 2);
+      expect(bsConfig['run_settings']['parallels']).to.be.eq(4);
+    });
+
   });
 
   describe('getErrorCodeFromErr', () => {
@@ -181,37 +227,22 @@ describe('utils', () => {
     });
   });
 
-  describe('validateBstackJson', () => {
-    it('should reject with SyntaxError for empty file', () => {
-      let bsConfigPath = path.join(
-        process.cwd(),
-        'test',
-        'test_files',
-        'dummy_bstack.json'
-      );
-      expect(utils.validateBstackJson(bsConfigPath)).to.be.rejectedWith(
-        SyntaxError
-      );
+  describe("validateBstackJson", () => {
+    it("should reject with SyntaxError for empty file", () => {
+      let bsConfigPath = path.join(process.cwd(), 'test', 'test_files', 'dummy_bstack.json');
+      return utils.validateBstackJson(bsConfigPath).catch((error)=>{
+        sinon.match(error, "Invalid browserstack.json file")
+      });
     });
-    it('should resolve with data for valid json', () => {
-      let bsConfigPath = path.join(
-        process.cwd(),
-        'test',
-        'test_files',
-        'dummy_bstack_2.json'
-      );
+    it("should resolve with data for valid json", () => {
+      let bsConfigPath = path.join(process.cwd(), 'test', 'test_files', 'dummy_bstack_2.json');
       expect(utils.validateBstackJson(bsConfigPath)).to.be.eventually.eql({});
     });
-    it('should reject with SyntaxError for invalid json file', () => {
-      let bsConfigPath = path.join(
-        process.cwd(),
-        'test',
-        'test_files',
-        'dummy_bstack_3.json'
-      );
-      expect(utils.validateBstackJson(bsConfigPath)).to.be.rejectedWith(
-        SyntaxError
-      );
+    it("should reject with SyntaxError for invalid json file", () => {
+      let bsConfigPath = path.join(process.cwd(), 'test', 'test_files', 'dummy_bstack_3.json');
+      return utils.validateBstackJson(bsConfigPath).catch((error) => {
+        sinon.match(error, "Invalid browserstack.json file")
+      });
     });
   });
 
@@ -299,7 +330,7 @@ describe('utils', () => {
     let args = testObjects.initSampleArgs;
 
     it('should call sendUsageReport', () => {
-      sandbox = sinon.createSandbox();
+      let sandbox = sinon.createSandbox();
       sendUsageReportStub = sandbox
         .stub(utils, 'sendUsageReport')
         .callsFake(function () {
@@ -541,23 +572,28 @@ describe('utils', () => {
   });
 
   describe('isCypressProjDirValid', () => {
-    it('should return true when cypressDir and cypressProjDir is same', () => {
-      expect(utils.isCypressProjDirValid('/absolute/path', '/absolute/path')).to
-        .be.true;
+    it('should return true when cypressProjDir and integrationFoldDir is same', () => {
+      expect(utils.isCypressProjDirValid('/absolute/path', '/absolute/path')).to.be.true;
+
+      // should be as below for windows but path.resolve thinks windows path as a filename when run on linux/mac
+      // expect(utils.isCypressProjDirValid('C:\\absolute\\path', 'C:\\absolute\\path')).to.be.true;
+      expect(utils.isCypressProjDirValid('/C/absolute/path', '/C/absolute/path')).to.be.true;
     });
 
-    it('should return true when cypressProjDir is child directory of cypressDir', () => {
-      expect(
-        utils.isCypressProjDirValid(
-          '/absolute/path',
-          '/absolute/path/childpath'
-        )
-      ).to.be.true;
+    it('should return true when integrationFoldDir is child directory of cypressProjDir', () => {
+      expect(utils.isCypressProjDirValid('/absolute/path', '/absolute/path/childpath')).to.be.true;
+
+      // should be as below for windows but path.resolve thinks windows path as a filename when run on linux/mac
+      // expect(utils.isCypressProjDirValid('C:\\absolute\\path', 'C:\\absolute\\path\\childpath')).to.be.true;
+      expect(utils.isCypressProjDirValid('/C/absolute/path', '/C/absolute/path/childpath')).to.be.true;
     });
 
-    it('should return false when cypressProjDir is not child directory of cypressDir', () => {
-      expect(utils.isCypressProjDirValid('/absolute/path', '/absolute')).to.be
-        .false;
+    it('should return false when integrationFoldDir is not child directory of cypressProjDir', () => {
+      expect(utils.isCypressProjDirValid('/absolute/path', '/absolute')).to.be.false;
+
+      // should be as below for windows but path.resolve thinks windows path as a filename when run on linux/mac
+      // expect(utils.isCypressProjDirValid('C:\\absolute\\path', 'C:\\absolute')).to.be.false;
+      expect(utils.isCypressProjDirValid('/C/absolute/path', '/C/absolute')).to.be.false;
     });
   });
 
@@ -918,7 +954,7 @@ describe('utils', () => {
     });
   });
 
-  describe('setDefaultAuthHash', () => {
+  describe('setDefaults', () => {
     beforeEach(function () {
       delete process.env.BROWSERSTACK_USERNAME;
     });
@@ -927,23 +963,180 @@ describe('utils', () => {
       delete process.env.BROWSERSTACK_USERNAME;
     });
 
-    it('should set setDefaultAuthHash if args.username is present', () => {
-      let bsConfig = {};
-      utils.setDefaultAuthHash(bsConfig, {username: 'username'});
+    it('should set setDefaults if args.username is present', () => {
+      let bsConfig = { run_settings: {} };
+      utils.setDefaults(bsConfig, {username: 'username'});
       expect(utils.isUndefined(bsConfig.auth)).to.be.false;
+      expect(utils.isUndefined(bsConfig.run_settings.npm_dependencies)).to.be.false;
     });
 
-    it('should set setDefaultAuthHash if process.env.BROWSERSTACK_USERNAME is present and args.username is not present', () => {
-      let bsConfig = {};
+    it('should set setDefaults if process.env.BROWSERSTACK_USERNAME is present and args.username is not present', () => {
+      let bsConfig = { run_settings: {} };
       process.env.BROWSERSTACK_USERNAME = 'username';
-      utils.setDefaultAuthHash(bsConfig, {});
+      utils.setDefaults(bsConfig, {});
       expect(utils.isUndefined(bsConfig.auth)).to.be.false;
+      expect(utils.isUndefined(bsConfig.run_settings.npm_dependencies)).to.be.false;
     });
 
-    it('should not set setDefaultAuthHash if process.env.BROWSERSTACK_USERNAME and args.username is not present', () => {
-      let bsConfig = {};
-      utils.setDefaultAuthHash(bsConfig, {});
+    it('should not set setDefaults if process.env.BROWSERSTACK_USERNAME and args.username is not present', () => {
+      let bsConfig = { run_settings: {} };
+      utils.setDefaults(bsConfig, {});
       expect(utils.isUndefined(bsConfig.auth)).to.be.true;
+      expect(utils.isUndefined(bsConfig.run_settings.npm_dependencies)).to.be.false;
+    });
+  });
+
+  describe('getNumberOfSpecFiles', () => {
+
+    it('glob search pattern should be equal to bsConfig.run_settings.specs', () => {
+      let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
+      let bsConfig = {
+        run_settings: {
+          specs: 'specs',
+          cypressProjectDir: 'cypressProjectDir',
+          exclude: 'exclude',
+        },
+      };
+
+      utils.getNumberOfSpecFiles(bsConfig,{},{});
+      sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+      sinon.assert.calledOnceWithExactly(getNumberOfSpecFilesStub, 'specs', {
+        cwd: 'cypressProjectDir',
+        matchBase: true,
+        ignore: 'exclude',
+      });
+      glob.sync.restore();
+    });
+
+    it('glob search pattern should be equal to default', () => {
+      let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
+      let bsConfig = {
+        run_settings: {
+          cypressProjectDir: 'cypressProjectDir',
+          exclude: 'exclude',
+        },
+      };
+
+      utils.getNumberOfSpecFiles(bsConfig,{},{});
+
+      sinon.assert.calledOnceWithExactly(getNumberOfSpecFilesStub, `cypress/integration/**/*.+(${constant.specFileTypes.join("|")})`, {
+        cwd: 'cypressProjectDir',
+        matchBase: true,
+        ignore: 'exclude',
+      });
+      glob.sync.restore();
+    });
+
+    it('glob search pattern should be equal to default with integrationFolder', () => {
+      let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
+      let bsConfig = {
+        run_settings: {
+          cypressProjectDir: 'cypressProjectDir',
+          exclude: 'exclude',
+        },
+      };
+
+      utils.getNumberOfSpecFiles(bsConfig, {}, { "integrationFolder": "specs"});
+
+      sinon.assert.calledOnceWithExactly(
+        getNumberOfSpecFilesStub,
+        `specs/**/*.+(${constant.specFileTypes.join('|')})`,
+        {
+          cwd: 'cypressProjectDir',
+          matchBase: true,
+          ignore: 'exclude',
+        }
+      );
+      glob.sync.restore();
+    });
+  });
+
+  describe('capitalizeFirstLetter', () => {
+
+    it('should capitalize First Letter ', () => {
+      expect(utils.capitalizeFirstLetter("chrome")).to.eq("Chrome");
+    });
+
+    it('should return null if value passed is null', () => {
+      expect(utils.capitalizeFirstLetter(null)).to.eq(null);
+    });
+
+  });
+
+  describe('getBrowserCombinations', () => {
+
+    it('returns correct number of browserCombinations for one combination', () => {
+      let bsConfig = {
+        browsers: [
+          {
+            browser: 'chrome',
+            os: 'OS X Mojave',
+            versions: ['85'],
+          },
+        ]
+      };
+      chai.assert.deepEqual(utils.getBrowserCombinations(bsConfig), ['OS X Mojave-chrome85']);
+    });
+
+    it('returns correct number of browserCombinations for multiple combinations', () => {
+      let bsConfig = {
+        browsers: [
+          {
+            browser: 'chrome',
+            os: 'OS X Mojave',
+            versions: ['85'],
+          },
+          {
+            browser: 'chrome',
+            os: 'OS X Catalina',
+            versions: ['85','84'],
+          },
+        ],
+      };
+      chai.assert.deepEqual(utils.getBrowserCombinations(bsConfig), [
+        'OS X Mojave-chrome85',
+        'OS X Catalina-chrome85',
+        'OS X Catalina-chrome84'
+      ]);
+    });
+
+  });
+
+  describe('#handleSyncExit', () => {
+    let processStub;
+    beforeEach(function () {
+      processStub = sinon.stub(process, 'exit');
+    });
+
+    afterEach(function () {
+      processStub.restore();
+    });
+    it('should print network error message when exit code is set to network error code', () => {
+      let dashboard_url = "dashboard_url", exitCode = 2;
+      let getNetworkErrorMessageStub = sinon.stub(utils, 'getNetworkErrorMessage');
+      utils.handleSyncExit(exitCode, dashboard_url);
+      sinon.assert.calledOnce(getNetworkErrorMessageStub);
+      sinon.assert.calledOnceWithExactly(processStub, exitCode);
+      getNetworkErrorMessageStub.restore();
+    });
+
+    it('should print dashboard link when exit code is not network error code', () => {
+      let dashboard_url = "dashboard_url", exitCode = 1;
+      let syncCliLoggerStub = sinon.stub(syncLogger, 'info');
+      utils.handleSyncExit(exitCode, dashboard_url);
+      sinon.assert.calledTwice(syncCliLoggerStub);
+      sinon.assert.calledOnceWithExactly(processStub, exitCode);
+    });
+  });
+
+  describe('#getNetworkErrorMessage', () => {
+    it('should return the error message in red color', () => {
+      let dashboard_url = "dashboard_url";
+      let message  =  constant.userMessages.FATAL_NETWORK_ERROR + '\n'
+                  + constant.userMessages.RETRY_LIMIT_EXCEEDED + '\n'
+                  + constant.userMessages.CHECK_DASHBOARD_AT  + dashboard_url
+      utils.getNetworkErrorMessage(dashboard_url);
+      expect(utils.getNetworkErrorMessage(dashboard_url)).to.eq(chalk.red(message))
     });
   });
 });

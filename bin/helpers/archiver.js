@@ -13,8 +13,10 @@ const archiveSpecs = (runSettings, filePath, excludeFiles) => {
 
     var cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
 
+    logger.info(`Creating tests.zip with files in ${cypressFolderPath}`);
+
     var archive = archiver('zip', {
-      zlib: { level: 9 } // Sets the compression level.
+      zlib: {level: 9}, // Sets the compression level.
     });
 
     archive.on('warning', function (err) {
@@ -26,7 +28,7 @@ const archiveSpecs = (runSettings, filePath, excludeFiles) => {
     });
 
     output.on('close', function () {
-      resolve("Zipping completed");
+      resolve('Zipping completed');
     });
 
     output.on('end', function () {
@@ -41,9 +43,7 @@ const archiveSpecs = (runSettings, filePath, excludeFiles) => {
 
     let ignoreFiles = getFilesToIgnore(runSettings, excludeFiles);
 
-    Constants.allowedFileTypes.forEach(fileType => {
-      archive.glob(`**/*.${fileType}`, { cwd: cypressFolderPath, matchBase: true, ignore: ignoreFiles });
-    });
+    archive.glob(`**/*.+(${Constants.allowedFileTypes.join("|")})`, { cwd: cypressFolderPath, matchBase: true, ignore: ignoreFiles, dot:true });
 
     let packageJSON = {};
 
@@ -52,19 +52,26 @@ const archiveSpecs = (runSettings, filePath, excludeFiles) => {
     }
 
     if (typeof runSettings.npm_dependencies === 'object') {
-      Object.assign(packageJSON, {devDependencies: runSettings.npm_dependencies});
+      Object.assign(packageJSON, {
+        devDependencies: runSettings.npm_dependencies,
+      });
     }
 
     if (Object.keys(packageJSON).length > 0) {
       let packageJSONString = JSON.stringify(packageJSON, null, 4);
-      archive.append(packageJSONString, { name: 'browserstack-package.json' });
+      archive.append(packageJSONString, {name: 'browserstack-package.json'});
     }
 
     // do not add cypress.json if arg provided is false
-    if (runSettings.cypress_config_file && runSettings.cypress_config_filename !== 'false') {
-      let cypressJSON = JSON.parse(fs.readFileSync(runSettings.cypressConfigFilePath));
+    if (
+      runSettings.cypress_config_file &&
+      runSettings.cypress_config_filename !== 'false'
+    ) {
+      let cypressJSON = JSON.parse(
+        fs.readFileSync(runSettings.cypressConfigFilePath)
+      );
       let cypressJSONString = JSON.stringify(cypressJSON, null, 4);
-      archive.append(cypressJSONString, { name: 'cypress.json' });
+      archive.append(cypressJSONString, {name: 'cypress.json'});
     }
 
     archive.finalize();

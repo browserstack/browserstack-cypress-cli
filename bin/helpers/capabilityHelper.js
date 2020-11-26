@@ -20,17 +20,20 @@ const caps = (bsConfig, zip) => {
 
     // Browser list
     let osBrowserArray = [];
+    let browsersList = [];
     if (bsConfig.browsers) {
       bsConfig.browsers.forEach((element) => {
         osBrowser = element.os + "-" + element.browser;
+        osAndBrowser = element.os + " / " + Utils.capitalizeFirstLetter(element.browser);
         element.versions.forEach((version) => {
           osBrowserArray.push(osBrowser + version);
+          browsersList.push(`${osAndBrowser} (${version})`);
         });
       });
     }
     obj.devices = osBrowserArray;
     if (obj.devices.length == 0) reject(Constants.validationMessages.EMPTY_BROWSER_LIST);
-    logger.info(`Browser list: ${osBrowserArray.toString()}`);
+    logger.info(`Browsers list: ${browsersList.join(", ")}`);
 
     // Test suite
     if (zip.zip_url && zip.zip_url.split("://")[1].length !== 0) {
@@ -38,12 +41,11 @@ const caps = (bsConfig, zip) => {
     } else {
       reject("Test suite is empty");
     }
-    logger.info(`Test suite: bs://${obj.test_suite}`);
 
     // Local
     obj.local = false;
     if (bsConfig.connection_settings && bsConfig.connection_settings.local === true) obj.local = true;
-    logger.info(`Local is set to: ${obj.local}`);
+    logger.info(`Local is set to: ${obj.local} (${obj.local ? Constants.userMessages.LOCAL_TRUE : Constants.userMessages.LOCAL_FALSE})`);
 
     // Local Identifier
     obj.localIdentifier = null;
@@ -102,6 +104,7 @@ const caps = (bsConfig, zip) => {
 
 const validate = (bsConfig, args) => {
   return new Promise(function (resolve, reject) {
+    logger.info(Constants.userMessages.VALIDATING_CONFIG);
     if (!bsConfig) reject(Constants.validationMessages.EMPTY_BROWSERSTACK_JSON);
 
     if (!bsConfig.auth) reject(Constants.validationMessages.INCORRECT_AUTH_PARAMS);
@@ -125,6 +128,7 @@ const validate = (bsConfig, args) => {
     // validate if config file provided exists or not when cypress_config_file provided
     // validate the cypressProjectDir key otherwise.
     let cypressConfigFilePath = bsConfig.run_settings.cypressConfigFilePath;
+    let cypressJson = {};
 
     if (!fs.existsSync(cypressConfigFilePath) && bsConfig.run_settings.cypress_config_filename !== 'false') reject(Constants.validationMessages.INVALID_CYPRESS_CONFIG_FILE);
 
@@ -142,8 +146,7 @@ const validate = (bsConfig, args) => {
     } catch(error){
       reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
     }
-
-    resolve(Constants.validationMessages.VALIDATED);
+    resolve(cypressJson);
   });
 }
 

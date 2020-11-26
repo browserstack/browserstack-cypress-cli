@@ -2,10 +2,14 @@
 const os = require("os");
 const path = require("path");
 const fs = require("fs");
+const glob = require('glob');
 
 const usageReporting = require("./usageReporting"),
   logger = require("./logger").winstonLogger,
-  Constants = require("./constants");
+  Constants = require("./constants"),
+  chalk = require('chalk'),
+  syncCliLogger = require("../helpers/logger").syncCliLogger,
+  config = require("../helpers/config");
 
 exports.validateBstackJson = (bsConfigPath) => {
   return new Promise(function (resolve, reject) {
@@ -109,19 +113,33 @@ exports.setUsageReportingFlag = (bsConfig, disableUsageReporting) => {
   }
 };
 
-exports.setParallels = (bsConfig, args) => {
+exports.setParallels = (bsConfig, args, numOfSpecs) => {
   if (!this.isUndefined(args.parallels)) {
     bsConfig["run_settings"]["parallels"] = args.parallels;
   }
+  let browserCombinations = this.getBrowserCombinations(bsConfig);
+  let maxParallels = browserCombinations.length * numOfSpecs;
+  if (numOfSpecs <= 0) {
+    bsConfig['run_settings']['parallels'] = browserCombinations.length;
+    return;
+  }
+  if (bsConfig['run_settings']['parallels'] > maxParallels && bsConfig['run_settings']['parallels'] != -1 ) {
+    logger.warn(
+      `Using ${maxParallels} machines instead of ${bsConfig['run_settings']['parallels']} that you configured as there are ${numOfSpecs} specs to be run on ${browserCombinations.length} browser combinations.`
+    );
+    bsConfig['run_settings']['parallels'] = maxParallels;
+  }
 };
 
-exports.setDefaultAuthHash = (bsConfig, args) => {
-  if (
-    this.isUndefined(bsConfig['auth']) &&
-    (!this.isUndefined(args.username) ||
-      !this.isUndefined(process.env.BROWSERSTACK_USERNAME))
-  ) {
+exports.setDefaults = (bsConfig, args) => {
+  // setting setDefaultAuthHash to {} if not present and set via env variables or via args.
+  if (this.isUndefined(bsConfig['auth']) && (!this.isUndefined(args.username) || !this.isUndefined(process.env.BROWSERSTACK_USERNAME))) {
     bsConfig['auth'] = {};
+  }
+
+  // setting npm_dependencies to {} if not present
+  if (bsConfig.run_settings && this.isUndefined(bsConfig.run_settings.npm_dependencies)) {
+    bsConfig.run_settings.npm_dependencies = {}
   }
 }
 
@@ -280,8 +298,8 @@ exports.isCypressProjDirValid = (cypressProjDir, integrationFoldDir) => {
     integrationFolderDir = path.resolve(path.join(cypressProjDir, integrationFoldDir));
   }
   if (integrationFolderDir === cypressDir) return true;
-  let parentTokens = cypressDir.split("/").filter((i) => i.length);
-  let childTokens = integrationFolderDir.split("/").filter((i) => i.length);
+  let parentTokens = cypressDir.split(path.sep).filter((i) => i.length);
+  let childTokens = integrationFolderDir.split(path.sep).filter((i) => i.length);
   return parentTokens.every((t, i) => childTokens[i] === t);
 };
 
@@ -314,3 +332,45 @@ exports.setLocalIdentifier = (bsConfig) => {
     );
   }
 };
+
+exports.getNumberOfSpecFiles = (bsConfig, args, cypressJson) => {
+  let testFolderPath = cypressJson.integrationFolder || Constants.DEFAULT_CYPRESS_SPEC_PATH;
+  let globSearchPatttern = bsConfig.run_settings.specs || `${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`;
+  let ignoreFiles = args.exclude || bsConfig.run_settings.exclude;
+  let files = glob.sync(globSearchPatttern, {cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles});
+  return files;
+};
+
+exports.getBrowserCombinations = (bsConfig) => {
+  let osBrowserArray = [];
+  let osBrowser = "";
+  if (bsConfig.browsers) {
+    bsConfig.browsers.forEach((element) => {
+      osBrowser = element.os + '-' + element.browser;
+      element.versions.forEach((version) => {
+        osBrowserArray.push(osBrowser + version);
+      });
+    });
+  }
+  return osBrowserArray;
+};
+exports.capitalizeFirstLetter = (stringToCapitalize) => {
+  return stringToCapitalize && (stringToCapitalize[0].toUpperCase() + stringToCapitalize.slice(1));
+};
+
+exports.handleSyncExit = (exitCode, dashboard_url) => {
+  if (exitCode === config.networkErrorExitCode) {
+    syncCliLogger.info(this.getNetworkErrorMessage(dashboard_url));
+  } else {
+    syncCliLogger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
+    syncCliLogger.info(dashboard_url);
+  }
+  process.exit(exitCode);
+}
+
+exports.getNetworkErrorMessage = (dashboard_url) => {
+  let message  =  Constants.userMessages.FATAL_NETWORK_ERROR + '\n'
+                  + Constants.userMessages.RETRY_LIMIT_EXCEEDED + '\n'
+                  + Constants.userMessages.CHECK_DASHBOARD_AT  + dashboard_url
+  return chalk.red(message)
+}

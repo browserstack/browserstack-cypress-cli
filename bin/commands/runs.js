@@ -7,7 +7,8 @@ const archiver = require("../helpers/archiver"),
   capabilityHelper = require("../helpers/capabilityHelper"),
   Constants = require("../helpers/constants"),
   utils = require("../helpers/utils"),
-  fileHelpers = require("../helpers/fileHelpers");
+  fileHelpers = require("../helpers/fileHelpers"),
+  syncRunner = require("../helpers/syncRunner");
 
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
@@ -17,8 +18,7 @@ module.exports = function run(args) {
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
-    // setting setDefaultAuthHash to {} if not present and set via env variables or via args.
-    utils.setDefaultAuthHash(bsConfig,args);
+    utils.setDefaults(bsConfig, args);
 
     // accept the username from command line or env variable if provided
     utils.setUsername(bsConfig, args);
@@ -45,22 +45,23 @@ module.exports = function run(args) {
     utils.setLocalIdentifier(bsConfig);
 
     // Validate browserstack.json values and parallels specified via arguments
-    return capabilityHelper.validate(bsConfig, args).then(function (validated) {
-      logger.info(validated);
+    return capabilityHelper.validate(bsConfig, args).then(function (cypressJson) {
+
+      //get the number of spec files
+      let specFiles = utils.getNumberOfSpecFiles(bsConfig, args, cypressJson);
 
       // accept the number of parallels
-      utils.setParallels(bsConfig, args);
+      utils.setParallels(bsConfig, args, specFiles.length);
 
       // Archive the spec files
       return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude).then(function (data) {
 
         // Uploaded zip file
         return zipUploader.zipUpload(bsConfig, config.fileName).then(function (zip) {
-
           // Create build
           return build.createBuild(bsConfig, zip).then(function (data) {
             let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
-            let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${config.dashboardUrl}${data.build_id}`;
+            let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
             utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
             if ((utils.isUndefined(bsConfig.run_settings.parallels) && utils.isUndefined(args.parallels)) || (!utils.isUndefined(bsConfig.run_settings.parallels) && bsConfig.run_settings.parallels == Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE)) {
               logger.warn(Constants.userMessages.NO_PARALLELS);
@@ -70,10 +71,21 @@ module.exports = function run(args) {
               logger.warn(Constants.userMessages.CYPRESS_VERSION_CHANGED);
             }
 
-            if (!args.disableNpmWarning && bsConfig.run_settings.npm_dependencies && Object.keys(bsConfig.run_settings.npm_dependencies).length <= 0) logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES);
+            if (!args.disableNpmWarning && bsConfig.run_settings.npm_dependencies && Object.keys(bsConfig.run_settings.npm_dependencies).length <= 0) {
+              logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES);
+              logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES_READ_MORE);
+            }
+
+            if (args.sync) {
+              syncRunner.pollBuildStatus(bsConfig, data).then((exitCode) => {
+                utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
+                utils.handleSyncExit(exitCode, data.dashboard_url)
+              });
+            }
 
             logger.info(message);
             logger.info(dashboardLink);
+            if(!args.sync) logger.info(Constants.userMessages.EXIT_SYNC_CLI_MESSAGE.replace("<build-id>",data.build_id));
             utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
             return;
           }).catch(function (err) {
@@ -85,9 +97,8 @@ module.exports = function run(args) {
           // Zip Upload failed
           logger.error(err);
           logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED);
-          utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed');
-        }).finally(function () {
           fileHelpers.deleteZip();
+          utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed');
         });
       }).catch(function (err) {
         // Zipping failed
