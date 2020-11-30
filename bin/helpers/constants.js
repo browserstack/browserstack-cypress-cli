@@ -36,7 +36,7 @@ const userMessages = {
   FATAL_NETWORK_ERROR: `fatal: unable to access '${config.buildUrl}': Could not resolve host: ${config.rails_host}`,
   RETRY_LIMIT_EXCEEDED: `Max retries exceeded trying to connect to the host (retries: ${config.retries})`,
   CHECK_DASHBOARD_AT: "Please check the build status at: ",
-  CYPRESS_VERSION_CHANGED: "You specified <preferredVersion> as the preferred Cypress version. Note that we run the tests on <actualVersion>"
+  CYPRESS_VERSION_CHANGED: "Your build will run using <actualVersion> instead of <preferredVersion>. Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions"
 };
 
 const validationMessages = {
