@@ -8,7 +8,8 @@ const archiver = require("../helpers/archiver"),
   Constants = require("../helpers/constants"),
   utils = require("../helpers/utils"),
   fileHelpers = require("../helpers/fileHelpers"),
-  syncRunner = require("../helpers/syncRunner");
+  syncRunner = require("../helpers/syncRunner"),
+  reportGenerator = require('../helpers/reporterHTML').reportGenerator;
 
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
@@ -79,8 +80,11 @@ module.exports = function run(args) {
 
             if (args.sync) {
               syncRunner.pollBuildStatus(bsConfig, data).then((exitCode) => {
-                utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
-                utils.handleSyncExit(exitCode, data.dashboard_url)
+                // Generate custom report!
+                reportGenerator(bsConfig, data.build_id, args, function(){
+                  utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
+                  utils.handleSyncExit(exitCode, data.dashboard_url);
+                });
               });
             }
 
