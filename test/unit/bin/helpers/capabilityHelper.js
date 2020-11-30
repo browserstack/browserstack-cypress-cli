@@ -44,6 +44,36 @@ describe("capabilityHelper.js", () => {
         });
     });
 
+    it("handle cypress version passed", () => {
+      let zip_url = "bs://<random>";
+      let cypress_version = "version"
+      let bsConfig = {
+        auth: {
+          username: "random",
+          access_key: "random",
+        },
+        browsers: [
+          {
+            browser: "chrome",
+            os: "Windows 10",
+            versions: ["78", "77"],
+          },
+        ],
+        cypress_version: cypress_version,
+        connection_settings: {
+          local: true
+        }
+      };
+      return capabilityHelper
+        .caps(bsConfig, { zip_url: zip_url })
+        .then(function (data) {
+          chai.assert.equal(JSON.parse(data).cypress_version, cypress_version);
+        })
+        .catch((error) => {
+          chai.assert.fail("Promise error");
+        });
+    });
+
     it("handle empty test_suite", () => {
       let zip_url = undefined;
       let incorrectBsConfig = {
