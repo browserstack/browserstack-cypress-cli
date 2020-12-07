@@ -68,8 +68,8 @@ module.exports = function run(args) {
               logger.warn(Constants.userMessages.NO_PARALLELS);
             }
 
-            if (bsConfig.cypress_version && bsConfig.cypress_version !== data.cypress_version) {
-              let versionMessage = utils.versionChangedMessage(bsConfig.cypress_version, data.cypress_version)
+            if (bsConfig.run_settings.cypress_version && bsConfig.run_settings.cypress_version !== data.cypress_version) {
+              let versionMessage = utils.versionChangedMessage(bsConfig.run_settings.cypress_version, data.cypress_version)
               logger.warn(versionMessage);
             }
 
