@@ -36,7 +36,8 @@ const userMessages = {
   EXIT_SYNC_CLI_MESSAGE: "Exiting the CLI, but your build is still running. You can use the --sync option to keep getting test updates. You can also use the build-info <build-id> command now.",
   FATAL_NETWORK_ERROR: `fatal: unable to access '${config.buildUrl}': Could not resolve host: ${config.rails_host}`,
   RETRY_LIMIT_EXCEEDED: `Max retries exceeded trying to connect to the host (retries: ${config.retries})`,
-  CHECK_DASHBOARD_AT: "Please check the build status at: "
+  CHECK_DASHBOARD_AT: "Please check the build status at: ",
+  CYPRESS_VERSION_CHANGED: "Your build will run using Cypress <actualVersion> instead of Cypress <preferredVersion>. Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions"
 };
 
 const validationMessages = {

@@ -83,6 +83,8 @@ const caps = (bsConfig, zip) => {
       }
     }
 
+    if (bsConfig.cypress_version) obj.cypress_version = bsConfig.cypress_version;
+
     if(obj.parallels === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE) obj.parallels = undefined
 
     if (obj.project) logger.log(`Project name is: ${obj.project}`);

@@ -1135,8 +1135,15 @@ describe('utils', () => {
       let message  =  constant.userMessages.FATAL_NETWORK_ERROR + '\n'
                   + constant.userMessages.RETRY_LIMIT_EXCEEDED + '\n'
                   + constant.userMessages.CHECK_DASHBOARD_AT  + dashboard_url
-      utils.getNetworkErrorMessage(dashboard_url);
       expect(utils.getNetworkErrorMessage(dashboard_url)).to.eq(chalk.red(message))
     });
   });
+
+  describe('#versionChangedMessage', () => {
+    it('should return proper error message with placeholders replaced', () => {
+      let preferredVersion = "v1", actualVersion = "v2";
+      let message = constant.userMessages.CYPRESS_VERSION_CHANGED.replace("<preferredVersion>", preferredVersion).replace("<actualVersion>", actualVersion);
+      expect(utils.versionChangedMessage(preferredVersion, actualVersion)).to.eq(message)
+    });
+  })
 });

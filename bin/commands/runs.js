@@ -68,10 +68,16 @@ module.exports = function run(args) {
               logger.warn(Constants.userMessages.NO_PARALLELS);
             }
 
+            if (bsConfig.cypress_version && bsConfig.cypress_version !== data.cypress_version) {
+              let versionMessage = utils.versionChangedMessage(bsConfig.cypress_version, data.cypress_version)
+              logger.warn(versionMessage);
+            }
+
             if (!args.disableNpmWarning && bsConfig.run_settings.npm_dependencies && Object.keys(bsConfig.run_settings.npm_dependencies).length <= 0) {
               logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES);
               logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES_READ_MORE);
             }
+
             if (args.sync) {
               syncRunner.pollBuildStatus(bsConfig, data).then((exitCode) => {
                 // Generate custom report!
