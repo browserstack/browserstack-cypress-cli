@@ -107,11 +107,15 @@ let reportGenerator = (bsConfig, buildId, args, cb) => {
     let build;
 
     if (err) {
-      message = Constants.userMessages.BUILD_INFO_FAILED;
+      message = err;
       messageType = Constants.messageTypes.ERROR;
-      errorCode = 'api_failed_build_info';
+      errorCode = 'api_failed_build_report';
 
-      logger.info(message);
+      logger.error('Generating the build report failed.');
+      logger.error(message);
+
+      utils.sendUsageReport(bsConfig, args, message, messageType, errorCode);
+      return;
     } else {
       try {
         build = JSON.parse(body);
