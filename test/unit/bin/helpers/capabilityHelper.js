@@ -59,7 +59,9 @@ describe("capabilityHelper.js", () => {
             versions: ["78", "77"],
           },
         ],
-        cypress_version: cypress_version,
+        run_settings: {
+          cypress_version: cypress_version
+        },
         connection_settings: {
           local: true
         }
@@ -113,6 +115,9 @@ describe("capabilityHelper.js", () => {
             versions: ["78", "77"],
           },
         ],
+        run_settings: {
+          cypress_version: "cypress_version"
+        },
         connection_settings: {
           local: true
         }

@@ -81,9 +81,10 @@ const caps = (bsConfig, zip) => {
       if (!Utils.isUndefined(bsConfig.run_settings.env)){
         obj.env = bsConfig.run_settings.env;
       }
+      if (!Utils.isUndefined(bsConfig.run_settings.cypress_version)){
+        obj.cypress_version = bsConfig.run_settings.cypress_version;
+      }
     }
-
-    if (bsConfig.cypress_version) obj.cypress_version = bsConfig.cypress_version;
 
     if(obj.parallels === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE) obj.parallels = undefined
 
