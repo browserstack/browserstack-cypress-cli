@@ -118,7 +118,7 @@ const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf
 
 const filesToIgnoreWhileUploading = ['**/node_modules/**', 'node_modules/**', 'package-lock.json', 'package.json', 'browserstack-package.json', 'tests.zip', 'cypress.json']
 
-const specFileTypes = ['js', 'ts', 'feature']
+const specFileTypes = ['js', 'ts', 'feature', 'jsx', 'coffee', 'cjsx'];
 
 const DEFAULT_CYPRESS_SPEC_PATH = "cypress/integration"
 
