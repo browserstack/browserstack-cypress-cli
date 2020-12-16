@@ -96,7 +96,7 @@ describe("syncSpecsLogs", () => {
       expect(options.columns[1].alignment).to.equal('center');
       expect(options.columns[2].alignment).to.equal('left');
       expect(options.columns[1].width).to.equal(1);
-      expect(options.columns[2].width).to.equal(80);
+      expect(options.columns[2].width).to.equal(100);
       expect(options.columnCount).to.equal(3);
       expect(getBorderConfigStub.calledOnce).to.be.true;
     });
