@@ -38,7 +38,7 @@ let getTableConfig = () => {
       2: {alignment: 'left', width: 100}
     },
     columnDefault: {
-      width: 25,
+      width: 30,
     },
     columnCount: 3,
   };

@@ -92,7 +92,7 @@ describe("syncSpecsLogs", () => {
       syncSpecsLogs.__set__('getBorderConfig', getBorderConfigStub);
 
       let options = getTableConfig();
-      expect(options.columnDefault.width).to.equal(25);
+      expect(options.columnDefault.width).to.equal(30);
       expect(options.columns[1].alignment).to.equal('center');
       expect(options.columns[2].alignment).to.equal('left');
       expect(options.columns[1].width).to.equal(1);
