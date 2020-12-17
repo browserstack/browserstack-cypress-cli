@@ -53,7 +53,7 @@ let failedSpecsDetails = (data) => {
     let tableConfig = {
       border: tablePrinter.getBorderCharacters('ramac'),
       columns: {
-        0: { alignment: 'left' },
+        0: { alignment: 'left' , width: 60 },
         1: { alignment: 'left' },
         2: { alignment: 'left' },
         3: { alignment: 'left' },
@@ -65,7 +65,7 @@ let failedSpecsDetails = (data) => {
       * @return {boolean}
       */
       drawHorizontalLine: (index, size) => {
-        return (index === 0 || index === 1 ||  index === size);
+        return (index === 0 || index === 1 ||  index === specData.length);
       }
     }
 
