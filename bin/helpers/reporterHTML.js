@@ -166,7 +166,7 @@ function renderReportHTML(report_data) {
   let resultsDir = 'results';
   let metaCharSet = `<meta charset="utf-8">`;
   let metaViewPort = `<meta name="viewport" content="width=device-width, initial-scale=1"> `;
-  let pageTitle = `<title> Browserstack Cypress Report </title>`;
+  let pageTitle = `<title> BrowserStack Cypress Report </title>`;
   let inlineCss = `<style type="text/css"> ${loadInlineCss()} </style>`;
   let head = `<head> ${metaCharSet} ${metaViewPort} ${pageTitle} ${inlineCss} </head>`;
   let htmlOpenTag = `<!DOCTYPE HTML><html>`;
