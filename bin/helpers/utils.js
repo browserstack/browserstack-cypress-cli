@@ -380,3 +380,22 @@ exports.versionChangedMessage = (preferredVersion, actualVersion) => {
   message = message.replace("<actualVersion>", actualVersion);
   return message
 }
+
+exports.isJSONInvalid = (err, args) => {
+  let invalid =  true
+
+  if (err === Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION && !this.isUndefined(args.parallels)) {
+    invalid = false
+  }
+
+  if (this.deleteBaseUrlFromError(err) === this.deleteBaseUrlFromError(Constants.validationMessages.LOCAL_NOT_SET)) {
+    invalid = false
+  }
+
+  return invalid
+}
+
+exports.deleteBaseUrlFromError = (err) => {
+  return err.replace(/To test ([\s\S]*)on BrowserStack/g, 'To test on BrowserStack');
+}
+

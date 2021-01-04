@@ -122,7 +122,7 @@ module.exports = function run(args) {
 
       // display browserstack.json is not valid only if validation of browserstack.json field has failed, otherwise display just the error message
       // If parallels specified in arguments are invalid do not display browserstack.json is invalid message
-      if (!(err === Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION && !utils.isUndefined(args.parallels))) {
+      if (utils.isJSONInvalid(err, args)) {
         logger.error(Constants.validationMessages.NOT_VALID);
       }
 
