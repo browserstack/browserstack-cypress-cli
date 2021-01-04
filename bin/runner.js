@@ -200,6 +200,11 @@ var argv = yargs
           default: false,
           describe: Constants.cliMessages.RUN.SYNC_DESCRIPTION,
           type: "boolean"
+        },
+        'headed': {
+          default: true,
+          describe: Constants.cliMessages.RUN.HEADED,
+          type: "boolean"
         }
       })
       .help('help')

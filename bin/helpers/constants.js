@@ -93,6 +93,7 @@ const cliMessages = {
     ENV_DESCRIPTION: "Specify the environment variables for your spec files",
     SYNC_DESCRIPTION: "Makes the run command in sync",
     BUILD_REPORT_MESSAGE: "See the entire build report here",
+    HEADED: "Run tests in headed mode.",
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",

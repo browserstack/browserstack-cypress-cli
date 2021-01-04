@@ -45,6 +45,9 @@ module.exports = function run(args) {
     //accept the local identifier from env variable if provided
     utils.setLocalIdentifier(bsConfig);
 
+    // run test in headed mode
+    utils.setHeaded(bsConfig, args);
+
     // Validate browserstack.json values and parallels specified via arguments
     return capabilityHelper.validate(bsConfig, args).then(function (cypressJson) {
 

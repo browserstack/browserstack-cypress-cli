@@ -333,6 +333,12 @@ exports.setLocalIdentifier = (bsConfig) => {
   }
 };
 
+exports.setHeaded = (bsConfig, args) => {
+  if (!this.isUndefined(args.headed) && args.headed === true) {
+    bsConfig.run_settings.headless = false;
+  }
+};
+
 exports.getNumberOfSpecFiles = (bsConfig, args, cypressJson) => {
   let testFolderPath = cypressJson.integrationFolder || Constants.DEFAULT_CYPRESS_SPEC_PATH;
   let globSearchPatttern = bsConfig.run_settings.specs || `${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`;
