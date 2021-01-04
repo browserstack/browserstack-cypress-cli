@@ -145,7 +145,7 @@ describe('utils', () => {
       sandbox = sinon.createSandbox();
       sandbox.stub(utils,'getBrowserCombinations').returns(['a','b']);
     });
-    
+
     afterEach(() => {
       sandbox.restore();
       sinon.restore();
@@ -542,6 +542,32 @@ describe('utils', () => {
       let commaString = 'string1  ,  string2';
       let result = utils.fixCommaSeparatedString(commaString);
       expect(result).to.be.eq('string1,string2');
+    });
+  });
+
+  describe('setHeaded', () => {
+    it('sets the headless to false', () => {
+      let args = {
+        headed: true
+      };
+      let bsConfig = {
+        run_settings: {}
+      };
+
+      utils.setHeaded(bsConfig, args);
+      expect(bsConfig.run_settings.headless).to.be.eq(false);
+    });
+
+    it('sets the headless to false', () => {
+      let args = {
+        headed: false
+      };
+      let bsConfig = {
+        run_settings: {}
+      };
+
+      utils.setHeaded(bsConfig, args);
+      expect(bsConfig.run_settings.headless).to.be.eq(undefined);
     });
   });
 

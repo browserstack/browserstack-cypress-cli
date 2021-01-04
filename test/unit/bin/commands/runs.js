@@ -5,6 +5,7 @@ const chai = require("chai"),
 const Constants = require("../../../../bin/helpers/constants"),
   logger = require("../../../../bin/helpers/logger").winstonLogger,
   testObjects = require("../../support/fixtures/testObjects");
+const { setHeaded } = require("../../../../bin/helpers/utils");
 
 const proxyquire = require("proxyquire").noCallThru();
 
@@ -97,6 +98,7 @@ describe("runs", () => {
       capabilityValidatorStub = sandbox.stub();
       setLocalStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
+      setHeadedStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       setDefaultsStub = sandbox.stub();
     });
@@ -126,6 +128,7 @@ describe("runs", () => {
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
           setLocalIdentifier: setLocalIdentifierStub,
+          setHeaded: setHeadedStub,
           deleteResults: deleteResultsStub,
           setDefaults: setDefaultsStub
         },
@@ -150,6 +153,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(getErrorCodeFromMsgStub);
           sinon.assert.calledOnce(setLocalStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
+          sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnceWithExactly(
@@ -187,6 +191,7 @@ describe("runs", () => {
       deleteZipStub = sandbox.stub();
       setLocalStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
+      setHeadedStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
       setDefaultsStub = sandbox.stub();
@@ -217,6 +222,7 @@ describe("runs", () => {
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
           setLocalIdentifier: setLocalIdentifierStub,
+          setHeaded: setHeadedStub,
           deleteResults: deleteResultsStub,
           setDefaults: setDefaultsStub,
           getNumberOfSpecFiles: getNumberOfSpecFilesStub
@@ -247,6 +253,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(setLocalStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
+          sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(archiverStub);
@@ -290,6 +297,7 @@ describe("runs", () => {
       deleteZipStub = sandbox.stub();
       setLocalStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
+      setHeadedStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
       setDefaultsStub = sandbox.stub();
@@ -320,6 +328,7 @@ describe("runs", () => {
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
           setLocalIdentifier: setLocalIdentifierStub,
+          setHeaded: setHeadedStub,
           deleteResults: deleteResultsStub,
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
           setDefaults: setDefaultsStub
@@ -354,6 +363,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(setLocalStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
+          sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(archiverStub);
@@ -401,6 +411,7 @@ describe("runs", () => {
       deleteZipStub = sandbox.stub();
       setLocalStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
+      setHeadedStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
       setDefaultsStub = sandbox.stub();
@@ -431,6 +442,7 @@ describe("runs", () => {
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
           setLocalIdentifier: setLocalIdentifierStub,
+          setHeaded: setHeadedStub,
           deleteResults: deleteResultsStub,
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
           setDefaults: setDefaultsStub
@@ -473,6 +485,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(setLocalStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
+          sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(archiverStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(zipUploadStub);
@@ -525,6 +538,7 @@ describe("runs", () => {
       isUndefinedStub = sandbox.stub();
       setLocalStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
+      setHeadedStub = sandbox.stub();
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
     });
 
@@ -554,6 +568,7 @@ describe("runs", () => {
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
           setLocalIdentifier: setLocalIdentifierStub,
+          setHeaded: setHeadedStub,
           exportResults: exportResultsStub,
           deleteResults: deleteResultsStub,
           setDefaults: setDefaultsStub,
@@ -601,6 +616,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(setLocalStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
+          sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(archiverStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(zipUploadStub);
