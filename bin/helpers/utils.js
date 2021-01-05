@@ -385,11 +385,11 @@ exports.isJSONInvalid = (err, args) => {
   let invalid =  true
 
   if (err === Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION && !this.isUndefined(args.parallels)) {
-    invalid = false
+    return false
   }
 
   if (this.deleteBaseUrlFromError(err) === this.deleteBaseUrlFromError(Constants.validationMessages.LOCAL_NOT_SET)) {
-    invalid = false
+    return false
   }
 
   return invalid

@@ -145,7 +145,7 @@ describe('utils', () => {
       sandbox = sinon.createSandbox();
       sandbox.stub(utils,'getBrowserCombinations').returns(['a','b']);
     });
-    
+
     afterEach(() => {
       sandbox.restore();
       sinon.restore();
@@ -1146,4 +1146,34 @@ describe('utils', () => {
       expect(utils.versionChangedMessage(preferredVersion, actualVersion)).to.eq(message)
     });
   })
+
+  describe('#isJSONInvalid', () => {
+    it('JSON is valid when error is parallel misconfiguration', () => {
+      let error = constant.validationMessages.INVALID_PARALLELS_CONFIGURATION;
+      let args = {"parallels": 4}
+      expect(utils.isJSONInvalid(error, args)).to.eq(false)
+    });
+
+    it('JSON is valid when local is not set for localhost url', () => {
+      let error = constant.validationMessages.LOCAL_NOT_SET.replace("<baseUrlValue>", "localhost:4000");
+      expect(utils.isJSONInvalid(error, {})).to.eq(false)
+    });
+
+    it('JSON is invalid for errors apart from Local or Prallell misconfiguration', () => {
+      let error = constant.validationMessages.INCORRECT_AUTH_PARAMS;
+      expect(utils.isJSONInvalid(error, {})).to.eq(true)
+    });
+  })
+
+  describe('#deleteBaseUrlFromError', () => {
+    it('Replace baseUrl in Local error string', () => {
+      let error = constant.validationMessages.LOCAL_NOT_SET;
+      expect(utils.deleteBaseUrlFromError(error)).to.match(/To test on BrowserStack/)
+    });
+
+    it('should not replace baseUrl in other error string', () => {
+      let error = constant.validationMessages.NOT_VALID_JSON;
+      expect(utils.deleteBaseUrlFromError(error)).not.to.match(/To test on BrowserStack/)
+    });
+  });
 });

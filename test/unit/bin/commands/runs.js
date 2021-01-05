@@ -82,6 +82,7 @@ describe("runs", () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
       validateBstackJsonStub = sandbox.stub();
+      isJSONInvalidStub = sandbox.stub();
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
@@ -127,7 +128,8 @@ describe("runs", () => {
           setLocal: setLocalStub,
           setLocalIdentifier: setLocalIdentifierStub,
           deleteResults: deleteResultsStub,
-          setDefaults: setDefaultsStub
+          setDefaults: setDefaultsStub,
+          isJSONInvalid: isJSONInvalidStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
