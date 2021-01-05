@@ -174,6 +174,9 @@ function send(args) {
 
   let bsConfig = args.bstack_config;
   let cli_details = cli_version_and_path(bsConfig);
+  let data = {
+    cypress_version: bsConfig.run_settings.cypress_version
+  };
 
   delete args.bstack_config;
 
@@ -190,6 +193,7 @@ function send(args) {
       local_cypress_version: local_cypress_version(bsConfig),
       ci_environment: ci_environment(),
       event_timestamp: new Date().toLocaleString(),
+      data: JSON.stringify(data),
       ...args,
     },
   };
