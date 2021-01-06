@@ -8,7 +8,7 @@ const request = require("request"),
   tableStream = require('table').createStream,
   chalk = require('chalk');
 
-let whileLoop = true, whileTries = config.retries, options, timeout = 3000, n = 10, tableConfig, stream, endTime, startTime = Date.now();
+let whileLoop = true, whileTries = config.retries, options, timeout = 3000, n = 2, tableConfig, stream, endTime, startTime = Date.now();
 let specSummary = {
   "specs": [],
   "duration": null
