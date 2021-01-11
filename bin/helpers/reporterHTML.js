@@ -112,6 +112,18 @@ let reportGenerator = (bsConfig, buildId, args, cb) => {
       errorCode = 'api_failed_build_report';
 
       logger.error('Generating the build report failed.');
+
+      if (resp.statusCode == 422) {
+        try {
+          response = JSON.parse(body);
+          message = response.message;
+        } catch (error) {
+          logger.error(`Error generating the report: ${error}`);
+          response = {message: message};
+        }
+        logger.error(response.message);
+      }
+
       logger.error(message);
 
       utils.sendUsageReport(bsConfig, args, message, messageType, errorCode);
