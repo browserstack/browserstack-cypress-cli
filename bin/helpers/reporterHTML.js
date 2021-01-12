@@ -136,6 +136,8 @@ let reportGenerator = (bsConfig, buildId, args, cb) => {
         logger.info(message);
       }
     } else if (resp.statusCode === 422) {
+      messageType = Constants.messageTypes.ERROR;
+      errorCode = 'api_failed_build_generate_report';
       try {
         response = JSON.parse(body);
         message = response.message;
