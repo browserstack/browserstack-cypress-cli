@@ -87,7 +87,8 @@ const caps = (bsConfig, zip) => {
 
       if (!Utils.isUndefined(bsConfig.run_settings.headless) && String(bsConfig.run_settings.headless) === "false"){
         obj.headless = bsConfig.run_settings.headless;
-        logger.info(`Disabling headless. Value is set to: ${obj.headless}`);
+      } else {
+        logger.info(`Running your tests in headless mode. Use --headed arg to run in headful mode.`);
       }
     }
 

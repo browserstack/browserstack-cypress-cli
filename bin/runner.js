@@ -202,7 +202,7 @@ var argv = yargs
           type: "boolean"
         },
         'headed': {
-          default: true,
+          default: false,
           describe: Constants.cliMessages.RUN.HEADED,
           type: "boolean"
         }

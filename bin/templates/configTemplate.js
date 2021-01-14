@@ -60,7 +60,8 @@ module.exports = function () {
       "npm_dependencies": {
       },
       "package_config_options": {
-      }
+      },
+      "headless": true
     },
     "connection_settings": {
       "local": false,
