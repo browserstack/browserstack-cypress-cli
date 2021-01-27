@@ -15,7 +15,7 @@ const userMessages = {
   BUILD_INFO_FAILED: "Failed to get build info.",
   BUILD_STOP_FAILED: "Failed to stop build.",
   BUILD_REPORT_MESSAGE: "See the entire build report here:",
-  ZIP_UPLOADER_NOT_REACHABLE: "Could not reach to zip uploader.",
+  ZIP_UPLOADER_NOT_REACHABLE: "Could not reach BrowserStack APIs. Please check your network or see if you need to whitelist *.browserstack.com",
   ZIP_UPLOAD_FAILED: "Zip Upload failed.",
   CONFIG_FILE_CREATED: "BrowserStack Config File created, you can now run browserstack-cypress --config-file run",
   CONFIG_FILE_EXISTS: "File already exists, delete the browserstack.json file manually. skipping...",
@@ -56,7 +56,7 @@ const validationMessages = {
   CYPRESS_JSON_NOT_FOUND: "cypress.json file is not found at cypress_proj_dir path ",
   INVALID_CYPRESS_JSON: "cypress.json is not a valid json",
   INVALID_DEFAULT_AUTH_PARAMS: "Your username and access key are required to run your tests on BrowserStack. Learn more at https://www.browserstack.com/docs/automate/cypress/authentication",
-  LOCAL_NOT_SET: "To test <baseUrl value> on BrowserStack, you will have to set up Local testing. Read more here: https://www.browserstack.com/docs/automate/cypress/local-testing",
+  LOCAL_NOT_SET: "To test <baseUrlValue> on BrowserStack, you will have to set up Local testing. Read more here: https://www.browserstack.com/docs/automate/cypress/local-testing",
   INCORRECT_DIRECTORY_STRUCTURE: "No tests to run. Note that your Cypress tests should be in the same directory where the cypress.json exists."
 };
 

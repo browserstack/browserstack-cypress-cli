@@ -856,7 +856,7 @@ describe("capabilityHelper.js", () => {
           .catch((error) => {
             chai.assert.equal(
               error,
-              Constants.validationMessages.LOCAL_NOT_SET
+              Constants.validationMessages.LOCAL_NOT_SET.replace("<baseUrlValue>", "http://localhost:3000")
             );
             fs.existsSync.restore();
             fs.readFileSync.restore();
