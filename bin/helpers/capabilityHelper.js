@@ -84,6 +84,12 @@ const caps = (bsConfig, zip) => {
       if (!Utils.isUndefined(bsConfig.run_settings.cypress_version)){
         obj.cypress_version = bsConfig.run_settings.cypress_version;
       }
+
+      if (!Utils.isUndefined(bsConfig.run_settings.headless) && String(bsConfig.run_settings.headless) === "false"){
+        obj.headless = bsConfig.run_settings.headless;
+      } else {
+        logger.info(`Running your tests in headless mode. Use --headed arg to run in headful mode.`);
+      }
     }
 
     if(obj.parallels === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE) obj.parallels = undefined

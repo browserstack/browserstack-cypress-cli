@@ -414,6 +414,136 @@ describe("capabilityHelper.js", () => {
           });
       });
     });
+
+    context("headless in run_settings", () => {
+      it("sets headless if false", () => {
+        let headless = false;
+        let zip_url = "bs://<random>";
+        let bsConfig = {
+          auth: {
+            username: "random",
+            access_key: "random",
+          },
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            headless: headless
+          },
+        };
+
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: zip_url })
+          .then(function (data) {
+            let parsed_data = JSON.parse(data);
+            chai.assert.equal(parsed_data.headless, headless);
+            chai.assert.equal(parsed_data.env, undefined);
+          })
+          .catch((error) => {
+            chai.assert.fail("Promise error");
+          });
+      });
+
+      it("sets headless if string false", () => {
+        let headless = "false";
+        let zip_url = "bs://<random>";
+        let bsConfig = {
+          auth: {
+            username: "random",
+            access_key: "random",
+          },
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            headless: headless
+          },
+        };
+
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: zip_url })
+          .then(function (data) {
+            let parsed_data = JSON.parse(data);
+            chai.assert.equal(parsed_data.headless, headless);
+            chai.assert.equal(parsed_data.env, undefined);
+          })
+          .catch((error) => {
+            chai.assert.fail("Promise error");
+          });
+      });
+
+      it("does not set headless if true", () => {
+        let headless = true;
+        let zip_url = "bs://<random>";
+        let bsConfig = {
+          auth: {
+            username: "random",
+            access_key: "random",
+          },
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            headless: headless
+          },
+        };
+
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: zip_url })
+          .then(function (data) {
+            let parsed_data = JSON.parse(data);
+            chai.assert.equal(parsed_data.headless, undefined);
+            chai.assert.equal(parsed_data.env, undefined);
+          })
+          .catch((error) => {
+            chai.assert.fail("Promise error");
+          });
+      });
+
+      it("does not set headless if truthy", () => {
+        let headless = "enable";
+        let zip_url = "bs://<random>";
+        let bsConfig = {
+          auth: {
+            username: "random",
+            access_key: "random",
+          },
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            headless: headless
+          },
+        };
+
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: zip_url })
+          .then(function (data) {
+            let parsed_data = JSON.parse(data);
+            chai.assert.equal(parsed_data.headless, undefined);
+            chai.assert.equal(parsed_data.env, undefined);
+          })
+          .catch((error) => {
+            chai.assert.fail("Promise error");
+          });
+      });
+    });
   });
 
   describe("validate", () => {

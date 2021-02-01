@@ -545,6 +545,32 @@ describe('utils', () => {
     });
   });
 
+  describe('setHeaded', () => {
+    it('sets the headless to false', () => {
+      let args = {
+        headed: true
+      };
+      let bsConfig = {
+        run_settings: {}
+      };
+
+      utils.setHeaded(bsConfig, args);
+      expect(bsConfig.run_settings.headless).to.be.eq(false);
+    });
+
+    it('sets the headless to false', () => {
+      let args = {
+        headed: false
+      };
+      let bsConfig = {
+        run_settings: {}
+      };
+
+      utils.setHeaded(bsConfig, args);
+      expect(bsConfig.run_settings.headless).to.be.eq(undefined);
+    });
+  });
+
   describe('exportResults', () => {
     it('should export results to log/build_results.txt', () => {
       sinon.stub(fs, 'writeFileSync').returns(true);
