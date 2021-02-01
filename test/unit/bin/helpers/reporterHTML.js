@@ -111,6 +111,37 @@ describe("reportHTML", () => {
     });
 
     context("non 200 response", () => {
+      it("422 status, build available but running, cannot generate report", () => {
+        let build = { message: 'The report cannot be generated as the build is running' };
+        let body = JSON.stringify(build);
+        let requestStub = sandbox.stub(request, "get").yields(null, { statusCode: 422 }, body);
+        let message = build.message;
+        let messageType = Constants.messageTypes.ERROR;
+        let errorCode = 'api_failed_build_generate_report';
+
+        const reporterHTML = proxyquire('../../../../bin/helpers/reporterHTML', {
+          './utils': {
+            validateBstackJson: validateBstackJsonStub,
+            setDefaultAuthHash: setDefaultAuthHashStub,
+            setUsername: setUsernameStub,
+            setAccessKey: setAccessKeyStub,
+            getUserAgent: getUserAgentStub,
+            setUsageReportingFlag: setUsageReportingFlagStub,
+            setCypressConfigFilename: setCypressConfigFilenameStub,
+            sendUsageReport: sendUsageReportStub,
+            setDefaults: setDefaultsStub,
+            getErrorCodeFromErr: getErrorCodeFromErrStub
+          },
+          request: {get: requestStub}
+        });
+
+        reporterHTML.reportGenerator(bsConfig, buildId, args);
+
+        sinon.assert.calledOnce(requestStub);
+        sinon.assert.calledOnce(getUserAgentStub);
+        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+      });
+
       it("400 status, build available, cannot generate report", () => {
         let build = { buildId: buildId, message: 'success', rows: [] };
         let body = JSON.stringify(build);

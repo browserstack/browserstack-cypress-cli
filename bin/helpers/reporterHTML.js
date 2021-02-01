@@ -135,6 +135,17 @@ let reportGenerator = (bsConfig, buildId, args, cb) => {
         message = Constants.userMessages.API_DEPRECATED;
         logger.info(message);
       }
+    } else if (resp.statusCode === 422) {
+      messageType = Constants.messageTypes.ERROR;
+      errorCode = 'api_failed_build_generate_report';
+      try {
+        response = JSON.parse(body);
+        message = response.message;
+      } catch (error) {
+        logger.error(`Error generating the report: ${error}`);
+        response = {message: message};
+      }
+      logger.error(response.message);
     } else if (resp.statusCode != 200) {
       messageType = Constants.messageTypes.ERROR;
       errorCode = 'api_failed_build_generate_report';
