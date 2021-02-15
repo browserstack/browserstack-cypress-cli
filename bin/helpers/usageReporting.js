@@ -174,9 +174,11 @@ function send(args) {
 
   let bsConfig = args.bstack_config;
   let cli_details = cli_version_and_path(bsConfig);
-  let data = {
-    cypress_version: bsConfig.run_settings.cypress_version
-  };
+  let data = {}
+
+  if (bsConfig && bsConfig.run_settings) {
+    data.cypress_version = bsConfig.run_settings.cypress_version
+  }
 
   delete args.bstack_config;
 
