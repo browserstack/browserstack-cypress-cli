@@ -74,10 +74,10 @@ let printSpecsStatus = (bsConfig, buildDetails) => {
     stream = tableStream(tableConfig);
 
     async.whilst(
-      function() { // condition for loop
-        return whileLoop;
+      function test(callback) { // condition for loop
+        callback(null, whileLoop);
       },
-      function(callback) { // actual loop
+      function iter(callback) { // actual loop
         whileProcess(callback)
       },
       function(err, result) { // when loop ends
