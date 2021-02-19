@@ -40,10 +40,13 @@ module.exports = function run(args) {
     utils.setTestEnvs(bsConfig, args);
 
     //accept the local from env variable if provided
-    utils.setLocal(bsConfig);
+    utils.setLocal(bsConfig, args);
+
+    // set Local Mode (on-demand/ always-on)
+    utils.setLocalMode(bsConfig, args);
 
     //accept the local identifier from env variable if provided
-    utils.setLocalIdentifier(bsConfig);
+    utils.setLocalIdentifier(bsConfig, args);
 
     // run test in headed mode
     utils.setHeaded(bsConfig, args);

@@ -3,6 +3,8 @@ const os = require("os");
 const path = require("path");
 const fs = require("fs");
 const glob = require('glob');
+const getmac = require('getmac');
+const { v4: uuidv4 } = require('uuid');
 
 const usageReporting = require("./usageReporting"),
   logger = require("./logger").winstonLogger,
@@ -10,6 +12,7 @@ const usageReporting = require("./usageReporting"),
   chalk = require('chalk'),
   syncCliLogger = require("../helpers/logger").syncCliLogger,
   config = require("../helpers/config");
+const { demand } = require("yargs");
 
 exports.validateBstackJson = (bsConfigPath) => {
   return new Promise(function (resolve, reject) {
@@ -311,8 +314,16 @@ exports.getLocalFlag = (connectionSettings) => {
   );
 };
 
-exports.setLocal = (bsConfig) => {
-  if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL)) {
+exports.setLocal = (bsConfig, args) => {
+  if (!this.isUndefined(args.local)) {
+    let local = false;
+    if (String(args.local).toLowerCase() === "true" || !this.isUndefined(args.local_mode))
+      local = true;
+    bsConfig["connection_settings"]["local"] = local;
+    logger.info(
+      "Setting up Local testing..."
+    );
+  }else if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL)) {
     let local = false;
     if (String(process.env.BROWSERSTACK_LOCAL).toLowerCase() === "true")
       local = true;
@@ -323,14 +334,52 @@ exports.setLocal = (bsConfig) => {
   }
 };
 
-exports.setLocalIdentifier = (bsConfig) => {
-  if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL_IDENTIFIER)) {
+exports.setLocalIdentifier = (bsConfig, args) => {
+  if (!this.isUndefined(args.local_identifier)){
+    bsConfig["connection_settings"]["local_identifier"] = args.local_identifier;
+    logger.info(
+      `Local testing identifier: ${bsConfig['connection_settings']['local_identifier']}`
+    );
+  } else if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL_IDENTIFIER)) {
     bsConfig["connection_settings"]["local_identifier"] =
       process.env.BROWSERSTACK_LOCAL_IDENTIFIER;
     logger.info(
       "Reading local identifier from the environment variable BROWSERSTACK_LOCAL_IDENTIFIER"
     );
+  } else if (
+      bsConfig['connection_settings']['local'] && 
+      this.isUndefined(bsConfig["connection_settings"]["local_identifier"])
+    ){
+    bsConfig["connection_settings"]["local_identifier"] = this.generateLocalIdentifier(bsConfig['connection_settings']['local_mode']);
+    logger.info(
+      `Local testing identifier: ${bsConfig['connection_settings']['local_identifier']}`
+    );
   }
+};
+
+exports.setLocalMode = (bsConfig, args) => {
+  if(String(bsConfig["connection_settings"]["local"]).toLowerCase() === "true"){
+    let local_mode = 'on-demand';
+    if(!this.isUndefined(args.local_mode) && args.local_mode == "always-on"){
+      local_mode = 'always-on';
+    } else if (
+      !this.isUndefined(bsConfig['connection_settings']['local_mode']) &&
+      bsConfig['connection_settings']['local_mode'].toLowerCase() === "always-on"
+      ){
+      local_mode = 'always-on';
+    }
+    bsConfig['connection_settings']['local_mode'] = local_mode;
+  }
+};
+
+exports.generateLocalIdentifier = (mode) => { 
+  let local_identifier = undefined;
+  if(mode == "always-on"){
+    local_identifier = getmac();
+  } else {
+    local_identifier = uuidv4();
+  }
+  return Buffer.from(local_identifier).toString("base64");
 };
 
 exports.setHeaded = (bsConfig, args) => {

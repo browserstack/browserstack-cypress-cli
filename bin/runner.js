@@ -205,6 +205,21 @@ var argv = yargs
           default: false,
           describe: Constants.cliMessages.RUN.HEADED,
           type: "boolean"
+        },
+        'local': {
+          default: true,
+          describe: Constants.cliMessages.RUN.LOCAL,
+          type: "boolean"
+        },
+        'local-identifier': {
+          describe: Constants.cliMessages.RUN.LOCAL_IDENTIFIER,
+          default: undefined,
+          type: "string"
+        },
+        'local-mode': {
+          describe: Constants.cliMessages.RUN.LOCAL_MODE,
+          default: "on-demand",
+          type: "string"
         }
       })
       .help('help')
