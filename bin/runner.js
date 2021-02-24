@@ -207,7 +207,6 @@ var argv = yargs
           type: "boolean"
         },
         'local': {
-          default: true,
           describe: Constants.cliMessages.RUN.LOCAL,
           type: "boolean"
         },

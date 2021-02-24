@@ -3,8 +3,9 @@ const os = require("os");
 const path = require("path");
 const fs = require("fs");
 const glob = require('glob');
-const getmac = require('getmac');
+const getmac = require('getmac').default;
 const { v4: uuidv4 } = require('uuid');
+const browserstack = require('browserstack-local');
 
 const usageReporting = require("./usageReporting"),
   logger = require("./logger").winstonLogger,
@@ -12,7 +13,6 @@ const usageReporting = require("./usageReporting"),
   chalk = require('chalk'),
   syncCliLogger = require("../helpers/logger").syncCliLogger,
   config = require("../helpers/config");
-const { demand } = require("yargs");
 
 exports.validateBstackJson = (bsConfigPath) => {
   return new Promise(function (resolve, reject) {
@@ -360,16 +360,51 @@ exports.setLocalIdentifier = (bsConfig, args) => {
 exports.setLocalMode = (bsConfig, args) => {
   if(String(bsConfig["connection_settings"]["local"]).toLowerCase() === "true"){
     let local_mode = 'on-demand';
-    if(!this.isUndefined(args.local_mode) && args.local_mode == "always-on"){
+    if (!this.isUndefined(args.localMode) && args.localMode == 'always-on') {
       local_mode = 'always-on';
     } else if (
       !this.isUndefined(bsConfig['connection_settings']['local_mode']) &&
-      bsConfig['connection_settings']['local_mode'].toLowerCase() === "always-on"
-      ){
+      bsConfig['connection_settings']['local_mode'].toLowerCase() ===
+        'always-on'
+    ) {
       local_mode = 'always-on';
     }
     bsConfig['connection_settings']['local_mode'] = local_mode;
+    args.sync = true;
   }
+};
+
+exports.setupLocalTesting = (bsConfig, args) => {
+ return new Promise((resolve, reject) => {
+  if (bsConfig['connection_settings']['local']){
+    var bs_local = new browserstack.Local();
+    var bs_local_args = this.setLocalArgs(bsConfig, args);
+    bs_local.start(bs_local_args, function () {
+      logger.info('Started BrowserStackLocal');
+      resolve(bs_local);
+    });
+  }else {
+    resolve();
+  }
+ });
+};
+
+exports.stopLocalBinary = (bs_local) => {
+  return new Promise((resolve,reject) => {
+      bs_local.stop(function () {
+        console.log('Stopped BrowserStackLocal');
+        resolve();
+      });
+  });
+};
+
+exports.setLocalArgs = (bsConfig, args) => {
+  let local_args = {}
+  local_args['key'] = bsConfig['auth']['access_key'];
+  local_args['localIdentifier'] = bsConfig["connection_settings"]["local_identifier"];
+  local_args['daemon'] = true;
+  local_args['enable-logging-for-api'] = true
+  return local_args;
 };
 
 exports.generateLocalIdentifier = (mode) => { 

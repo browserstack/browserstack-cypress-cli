@@ -16,7 +16,7 @@ module.exports = function run(args) {
   //Delete build_results.txt from log folder if already present.
   utils.deleteResults();
 
-  return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
+  return utils.validateBstackJson(bsConfigPath).then(async function (bsConfig) {
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
     utils.setDefaults(bsConfig, args);
@@ -47,6 +47,9 @@ module.exports = function run(args) {
 
     //accept the local identifier from env variable if provided
     utils.setLocalIdentifier(bsConfig, args);
+
+    //setup Local Testing
+    let bs_local = await utils.setupLocalTesting(bsConfig, args);
 
     // run test in headed mode
     utils.setHeaded(bsConfig, args);
@@ -85,7 +88,11 @@ module.exports = function run(args) {
             }
 
             if (args.sync) {
-              syncRunner.pollBuildStatus(bsConfig, data).then((exitCode) => {
+              syncRunner.pollBuildStatus(bsConfig, data).then(async (exitCode) => {
+                // stop the Local instance
+
+                await utils.stopLocalBinary(bs_local);
+
                 // Generate custom report!
                 reportGenerator(bsConfig, data.build_id, args, function(){
                   utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
