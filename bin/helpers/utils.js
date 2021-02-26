@@ -347,7 +347,7 @@ exports.setLocalIdentifier = (bsConfig, args) => {
       "Reading local identifier from the environment variable BROWSERSTACK_LOCAL_IDENTIFIER"
     );
   } else if (
-      bsConfig['connection_settings']['local'] && 
+      bsConfig['connection_settings']['local'] &&
       this.isUndefined(bsConfig["connection_settings"]["local_identifier"])
     ){
     bsConfig["connection_settings"]["local_identifier"] = this.generateLocalIdentifier(bsConfig['connection_settings']['local_mode']);
@@ -369,7 +369,9 @@ exports.setLocalMode = (bsConfig, args) => {
     ) {
       local_mode = 'always-on';
     }
+    logger.info(`Local testing set up in ${local_mode} mode.`);
     bsConfig['connection_settings']['local_mode'] = local_mode;
+    logger.info('Setting "sync" mode to enable Local testing.');
     args.sync = true;
   }
 };
@@ -407,7 +409,7 @@ exports.setLocalArgs = (bsConfig, args) => {
   return local_args;
 };
 
-exports.generateLocalIdentifier = (mode) => { 
+exports.generateLocalIdentifier = (mode) => {
   let local_identifier = undefined;
   if(mode == "always-on"){
     local_identifier = getmac();
