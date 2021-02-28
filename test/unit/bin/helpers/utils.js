@@ -19,6 +19,7 @@ chai.use(chaiAsPromised);
 logger.transports['console.info'].silent = true;
 
 describe('utils', () => {
+  let args = testObjects.runSampleArgs;
   describe('getErrorCodeFromMsg', () => {
     it("should return null for errMsg which isn't present in the list", () => {
       expect(utils.getErrorCodeFromMsg('random_value')).to.be.null;
@@ -656,7 +657,8 @@ describe('utils', () => {
           local: true,
         },
       };
-      utils.setLocal(bsConfig);
+      utils.setLocal(bsConfig,args);
+      //expect(bsConfig).to.be.eq(undefined);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
     });
 
@@ -667,7 +669,7 @@ describe('utils', () => {
         },
       };
       process.env.BROWSERSTACK_LOCAL = false;
-      utils.setLocal(bsConfig);
+      utils.setLocal(bsConfig,args);
       expect(bsConfig.connection_settings.local).to.be.eq(false);
     });
 
@@ -678,7 +680,7 @@ describe('utils', () => {
         },
       };
       process.env.BROWSERSTACK_LOCAL = true;
-      utils.setLocal(bsConfig);
+      utils.setLocal(bsConfig,args);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
     });
 
@@ -687,7 +689,7 @@ describe('utils', () => {
         connection_settings: {},
       };
       process.env.BROWSERSTACK_LOCAL = true;
-      utils.setLocal(bsConfig);
+      utils.setLocal(bsConfig,args);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
     });
   });
@@ -706,7 +708,7 @@ describe('utils', () => {
           local_identifier: 'local_identifier',
         },
       };
-      utils.setLocalIdentifier(bsConfig);
+      utils.setLocalIdentifier(bsConfig,args);
       expect(bsConfig.connection_settings.local_identifier).to.be.eq(
         'local_identifier'
       );
@@ -719,7 +721,7 @@ describe('utils', () => {
         },
       };
       process.env.BROWSERSTACK_LOCAL_IDENTIFIER = 'local_identifier';
-      utils.setLocalIdentifier(bsConfig);
+      utils.setLocalIdentifier(bsConfig,args);
       expect(bsConfig.connection_settings.local_identifier).to.be.eq(
         'local_identifier'
       );
@@ -730,7 +732,7 @@ describe('utils', () => {
         connection_settings: {},
       };
       process.env.BROWSERSTACK_LOCAL_IDENTIFIER = 'local_identifier';
-      utils.setLocalIdentifier(bsConfig);
+      utils.setLocalIdentifier(bsConfig,args);
       expect(bsConfig.connection_settings.local_identifier).to.be.eq(
         'local_identifier'
       );

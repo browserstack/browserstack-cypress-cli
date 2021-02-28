@@ -5,7 +5,7 @@ const chai = require("chai"),
 const Constants = require("../../../../bin/helpers/constants"),
   logger = require("../../../../bin/helpers/logger").winstonLogger,
   testObjects = require("../../support/fixtures/testObjects");
-const { setHeaded } = require("../../../../bin/helpers/utils");
+const { setHeaded, setupLocalTesting } = require("../../../../bin/helpers/utils");
 
 const proxyquire = require("proxyquire").noCallThru();
 
@@ -91,17 +91,19 @@ describe("runs", () => {
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
+      setupLocalTestingStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
       });
       getErrorCodeFromMsgStub = sandbox.stub().returns("random-error-code");
-      capabilityValidatorStub = sandbox.stub();
+      capabilityValidatorStub = sandbox.stub().returns("random-error");
       setLocalStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
       setHeadedStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       setDefaultsStub = sandbox.stub();
+      setLocalModeStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -132,14 +134,17 @@ describe("runs", () => {
           setHeaded: setHeadedStub,
           deleteResults: deleteResultsStub,
           setDefaults: setDefaultsStub,
-          isJSONInvalid: isJSONInvalidStub
+          setupLocalTesting: setupLocalTestingStub,
+          isJSONInvalid: isJSONInvalidStub,
+          setLocalMode: setLocalModeStub
         },
         '../helpers/capabilityHelper': {
-          validate: capabilityValidatorStub,
+          validate: capabilityValidatorStub
         },
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
+      setupLocalTestingStub.returns(Promise.resolve("return nothing"));
       capabilityValidatorStub.returns(Promise.reject("random-error"));
 
       return runs(args)
@@ -150,12 +155,14 @@ describe("runs", () => {
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
+          sinon.assert.calledOnce(setupLocalTestingStub);
+          sinon.assert.calledOnce(setLocalModeStub);
+          sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(getErrorCodeFromMsgStub);
           sinon.assert.calledOnce(setLocalStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
-          sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnceWithExactly(
@@ -192,6 +199,8 @@ describe("runs", () => {
       archiverStub = sandbox.stub();
       deleteZipStub = sandbox.stub();
       setLocalStub = sandbox.stub();
+      setLocalModeStub = sandbox.stub();
+      setupLocalTestingStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
       setHeadedStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
@@ -223,6 +232,8 @@ describe("runs", () => {
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
+          setLocalMode: setLocalModeStub,
+          setupLocalTesting: setupLocalTestingStub,
           setLocalIdentifier: setLocalIdentifierStub,
           setHeaded: setHeadedStub,
           deleteResults: deleteResultsStub,
@@ -241,6 +252,7 @@ describe("runs", () => {
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
+      setupLocalTestingStub.returns(Promise.resolve("nothing"))
       capabilityValidatorStub.returns(Promise.resolve(Constants.validationMessages.VALIDATED));
       archiverStub.returns(Promise.reject("random-error"));
 
@@ -251,6 +263,8 @@ describe("runs", () => {
         .catch((error) => {
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
+          sinon.assert.calledOnce(setLocalModeStub);
+          sinon.assert.calledOnce(setupLocalTestingStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(setLocalStub);
@@ -298,6 +312,8 @@ describe("runs", () => {
       zipUploadStub = sandbox.stub();
       deleteZipStub = sandbox.stub();
       setLocalStub = sandbox.stub();
+      setLocalModeStub = sandbox.stub();
+      setupLocalTestingStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
       setHeadedStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
@@ -329,6 +345,8 @@ describe("runs", () => {
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
+          setLocalMode: setLocalModeStub,
+          setupLocalTesting: setupLocalTestingStub,
           setLocalIdentifier: setLocalIdentifierStub,
           setHeaded: setHeadedStub,
           deleteResults: deleteResultsStub,
@@ -351,6 +369,7 @@ describe("runs", () => {
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
       capabilityValidatorStub.returns(Promise.resolve(Constants.validationMessages.VALIDATED));
+      setupLocalTestingStub.returns(Promise.resolve("nothing"));
       archiverStub.returns(Promise.resolve("Zipping completed"));
       zipUploadStub.returns(Promise.reject("random-error"));
 
@@ -361,6 +380,8 @@ describe("runs", () => {
         .catch((error) => {
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
+          sinon.assert.calledOnce(setLocalModeStub);
+          sinon.assert.calledOnce(setupLocalTestingStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(setLocalStub);
@@ -412,6 +433,8 @@ describe("runs", () => {
       createBuildStub = sandbox.stub();
       deleteZipStub = sandbox.stub();
       setLocalStub = sandbox.stub();
+      setLocalModeStub = sandbox.stub();
+      setupLocalTestingStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
       setHeadedStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
@@ -443,6 +466,8 @@ describe("runs", () => {
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
+          setLocalMode: setLocalModeStub,
+          setupLocalTesting: setupLocalTestingStub,
           setLocalIdentifier: setLocalIdentifierStub,
           setHeaded: setHeadedStub,
           deleteResults: deleteResultsStub,
@@ -467,6 +492,7 @@ describe("runs", () => {
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
+      setupLocalTestingStub.returns(Promise.resolve("nothing"));
       capabilityValidatorStub.returns(
         Promise.resolve(Constants.validationMessages.VALIDATED)
       );
@@ -481,6 +507,8 @@ describe("runs", () => {
         .catch((error) => {
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
+          sinon.assert.calledOnce(setLocalModeStub);
+          sinon.assert.calledOnce(setupLocalTestingStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
@@ -539,6 +567,8 @@ describe("runs", () => {
       setDefaultsStub = sandbox.stub();
       isUndefinedStub = sandbox.stub();
       setLocalStub = sandbox.stub();
+      setLocalModeStub = sandbox.stub();
+      setupLocalTestingStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
       setHeadedStub = sandbox.stub();
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
@@ -569,6 +599,8 @@ describe("runs", () => {
           setParallels: setParallelsStub,
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
+          setLocalMode: setLocalModeStub,
+          setupLocalTesting: setupLocalTestingStub,
           setLocalIdentifier: setLocalIdentifierStub,
           setHeaded: setHeadedStub,
           exportResults: exportResultsStub,
@@ -598,6 +630,7 @@ describe("runs", () => {
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
+      setupLocalTestingStub.returns(Promise.resolve("nothing"));
       capabilityValidatorStub.returns(
         Promise.resolve(Constants.validationMessages.VALIDATED)
       );
@@ -617,6 +650,8 @@ describe("runs", () => {
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(setLocalStub);
+          sinon.assert.calledOnce(setLocalModeStub);
+          sinon.assert.calledOnce(setupLocalTestingStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(archiverStub);
