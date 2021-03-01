@@ -1,0 +1,9 @@
+
+
+
+Mon Mar 01 2021 12:22:25 GMT+0530 (India Standard Time) -- [ERROR] Please provide a valid key, available here: https://www.browserstack.com/accounts/settings
+Mon Mar 01 2021 12:22:25 GMT+0530 (India Standard Time) -- [ERROR] Please provide a valid key, available here: https://www.browserstack.com/accounts/settings
+Mon Mar 01 2021 12:22:25 GMT+0530 (India Standard Time) -- [ERROR] DATA_INCORRECT:3001 https://browserstack.com/docs/local-testing/binary/errors/3001
+Mon Mar 01 2021 12:22:25 GMT+0530 (India Standard Time) -- You can learn more about BrowserStack Binary flags by running ./BrowserStackLocal --help
+Mon Mar 01 2021 12:22:25 GMT+0530 (India Standard Time) -- [ERROR] DATA_INCORRECT:3001 https://browserstack.com/docs/local-testing/binary/errors/3001
+Mon Mar 01 2021 12:22:25 GMT+0530 (India Standard Time) -- You can learn more about BrowserStack Binary flags by running ./BrowserStackLocal --help

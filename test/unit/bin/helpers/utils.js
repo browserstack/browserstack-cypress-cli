@@ -17,6 +17,7 @@ const utils = require('../../../../bin/helpers/utils'),
 
 chai.use(chaiAsPromised);
 logger.transports['console.info'].silent = true;
+const browserstack = require('browserstack-local');
 
 describe('utils', () => {
   let args = testObjects.runSampleArgs;
@@ -658,7 +659,6 @@ describe('utils', () => {
         },
       };
       utils.setLocal(bsConfig,args);
-      //expect(bsConfig).to.be.eq(undefined);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
     });
 
@@ -691,6 +691,129 @@ describe('utils', () => {
       process.env.BROWSERSTACK_LOCAL = true;
       utils.setLocal(bsConfig,args);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
+    });
+  });
+
+  describe('setLocalMode', () => {
+    it('if the bsconfig local mode is always-on then local_mode should also be always-on', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: true,
+          local_mode: "always-on"
+        },
+      };
+      utils.setLocalMode(bsConfig,args);
+      expect(bsConfig['connection_settings']['local_mode']).to.be.eq("always-on");
+    });
+
+    it('if bsconfig local mode is not always-on then local_mode should be on-demand', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: true,
+          local_mode: "xyz"
+        },
+      };
+      let args1 = testObjects.runSampleArgs;
+      args1.localMode = "xyz";
+      utils.setLocalMode(bsConfig,args1);
+      expect(bsConfig['connection_settings']['local_mode']).to.be.eq("on-demand");
+    });
+
+    it('setLocalMode should end up setting args.sync as true', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: true,
+          local_mode: "xyz"
+        },
+      };
+      utils.setLocalMode(bsConfig,args);
+      expect(args.sync).to.be.eq(true);
+    });
+  });
+
+  describe( 'setupLocalTesting' ,() => {
+    it('if bsconfig local is false then promise should resolve with undefined', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: false,
+        },
+      };
+      return utils.setupLocalTesting(bsConfig,args).then((result) => {
+        expect(result).to.be.eq(undefined);
+      });
+    });
+
+    it('if bsconfig local is true then promise should return a browserstack local object', () => {
+      let bsConfig = {
+        auth: {
+          access_key: "xyz"
+        },
+        connection_settings: {
+          local: true,
+          local_identifier: "xyz"
+        },
+      };
+      let localObj = new browserstack.Local();
+      let bsLocalArgs = utils.setLocalArgs(bsConfig, args);
+      localObj.start(bsLocalArgs,function() {});
+      let flag = true;
+      return utils.setupLocalTesting(bsConfig,args).then((result) => {
+        const entries1 = Object.entries(result);
+        const entries2 = Object.entries(localObj);
+        for (const [key, value] of entries1) {
+          var value1 = entries1[key];
+          var value2 = entries2[key];
+          if(key != "pid" && value1 != value2){
+            flag = false;
+          }
+        }
+        expect(flag).to.be.eq(true);
+      });
+    });
+  });
+
+  describe('setLocalArgs', () => {
+    it('setting up local args and returning a local_args hash', () => {
+      let bsConfig = {
+        auth: {
+          access_key: "xyz"
+        },
+        connection_settings: {
+          local: true,
+          local_identifier: "xyz"
+        },
+      };
+      let local_args = utils.setLocalArgs(bsConfig, args);
+      expect(local_args["key"]).to.be.eq(bsConfig['auth']['access_key']);
+      expect(local_args["localIdentifier"]).to.be.eq(bsConfig["connection_settings"]["local_identifier"]);
+      expect(local_args["daemon"]).to.be.eq(true);
+      expect(local_args["enable-logging-for-api"]).to.be.eq(true);
+    });
+  });
+
+  describe('stopLocalBinary' , () => {
+    it('stopLocalBinary promise gets resolve with undefined' ,() => {
+      let localObj = new browserstack.Local();
+      return utils.stopLocalBinary(localObj).then((result) => {
+      expect(result).to.be.eq(undefined);
+    });
+    });
+  });
+
+  describe('generateLocalIdentifier', () => {
+
+    it('function never returns the undefined', () => {
+      expect(utils.generateLocalIdentifier("always-on")).to.not.eq(undefined);
+      expect(utils.generateLocalIdentifier("abc")).to.not.eq(undefined);
+    });
+
+    it('if the mode is always-on it returns getmac() as local-identifier', () => {
+      expect(utils.generateLocalIdentifier("always-on")).to.be.eq("OGM6ODU6OTA6Nzc6MWU6N2Q=");
+    });
+    it('if the mode is not always-on it returns random uuidv4 as local-identifier', () => {
+      let uuidv41 = utils.generateLocalIdentifier("abc");
+      let uuidv42 = utils.generateLocalIdentifier("abc");
+      expect(uuidv41 != uuidv42).to.be.eq(true);
     });
   });
 

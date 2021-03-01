@@ -407,7 +407,7 @@ exports.setLocalArgs = (bsConfig, args) => {
   return local_args;
 };
 
-exports.generateLocalIdentifier = (mode) => { 
+exports.generateLocalIdentifier = (mode) => {
   let local_identifier = undefined;
   if(mode == "always-on"){
     local_identifier = getmac();
