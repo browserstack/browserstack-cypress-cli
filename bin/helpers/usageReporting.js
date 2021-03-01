@@ -231,5 +231,6 @@ function send(args) {
 }
 
 module.exports = {
-  send
-}
+  send,
+  cli_version_and_path,
+};
