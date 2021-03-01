@@ -97,7 +97,7 @@ describe("runs", () => {
         return "end";
       });
       getErrorCodeFromMsgStub = sandbox.stub().returns("random-error-code");
-      capabilityValidatorStub = sandbox.stub().returns("random-error");
+      capabilityValidatorStub = sandbox.stub();
       setLocalStub = sandbox.stub();
       setLocalIdentifierStub = sandbox.stub();
       setHeadedStub = sandbox.stub();
