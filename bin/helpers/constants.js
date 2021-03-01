@@ -96,7 +96,9 @@ const cliMessages = {
     HEADED: "Run your tests in a headed browser instead of a headless browser",
     LOCAL: "Accepted values: (true | false) - create a local testing connection to let you test staging and localhost websites, or sites behind proxies; learn more at browserstack.com/local-testing",
     LOCAL_MODE: 'Accepted values: ("always-on" | "on-demand") - if you choose to keep the binary "always-on", it will speed up your tests by keeping the Local connection warmed up in the background; otherwise, you can choose to have it spawn and killed for every build',
-    LOCAL_IDENTIFIER: "Accepted values: String - assign an identifier to your Local process instance"
+    LOCAL_IDENTIFIER: "Accepted values: String - assign an identifier to your Local process instance",
+    LOCAL_MODE_DEMAND: 'When using --local-mode, a value needs to be supplied. \n--local-mode ("always-on" | "on-demand") \nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference#run-tests',
+    LOCAL_IDENTIFIER_DEMAND: 'When using --local-identifier, a value needs to be supplied. \n--local-identifier <String> \nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference#run-tests'
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",

@@ -213,12 +213,17 @@ var argv = yargs
         'local-identifier': {
           describe: Constants.cliMessages.RUN.LOCAL_IDENTIFIER,
           default: undefined,
-          type: "string"
+          type: "string",
+          requiresArg: true,
+          // demand: Constants.cliMessages.RUN.LOCAL_IDENTIFIER_DEMAND
         },
         'local-mode': {
           describe: Constants.cliMessages.RUN.LOCAL_MODE,
           default: "on-demand",
-          type: "string"
+          type: "string",
+          requiresArg: true,
+          choices: ["always-on", "on-demand"],
+          // demand: Constants.cliMessages.RUN.LOCAL_MODE_DEMAND
         }
       })
       .help('help')

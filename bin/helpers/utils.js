@@ -14,6 +14,8 @@ const usageReporting = require("./usageReporting"),
   syncCliLogger = require("../helpers/logger").syncCliLogger,
   config = require("../helpers/config");
 
+const request = require('request');
+
 exports.validateBstackJson = (bsConfigPath) => {
   return new Promise(function (resolve, reject) {
     try {
@@ -347,7 +349,7 @@ exports.setLocalIdentifier = (bsConfig, args) => {
       "Reading local identifier from the environment variable BROWSERSTACK_LOCAL_IDENTIFIER"
     );
   } else if (
-      bsConfig['connection_settings']['local'] && 
+      bsConfig['connection_settings']['local'] &&
       this.isUndefined(bsConfig["connection_settings"]["local_identifier"])
     ){
     bsConfig["connection_settings"]["local_identifier"] = this.generateLocalIdentifier(bsConfig['connection_settings']['local_mode']);
@@ -369,32 +371,39 @@ exports.setLocalMode = (bsConfig, args) => {
     ) {
       local_mode = 'always-on';
     }
+    logger.info(`Local testing set up in ${local_mode} mode.`);
     bsConfig['connection_settings']['local_mode'] = local_mode;
+    logger.info('Setting "sync" mode to enable Local testing.');
     args.sync = true;
   }
 };
 
 exports.setupLocalTesting = (bsConfig, args) => {
- return new Promise((resolve, reject) => {
-  if (bsConfig['connection_settings']['local']){
+ return new Promise(async (resolve, reject) => {
+  let localIdentifierRunning = await this.checkLocalIdentifierRunning(
+    bsConfig, bsConfig['connection_settings']['local_identifier']
+  );
+  if (bsConfig['connection_settings']['local'] && !localIdentifierRunning){
     var bs_local = new browserstack.Local();
     var bs_local_args = this.setLocalArgs(bsConfig, args);
     bs_local.start(bs_local_args, function () {
-      logger.info('Started BrowserStackLocal');
       resolve(bs_local);
     });
-  }else {
+  } else {
     resolve();
   }
  });
 };
 
-exports.stopLocalBinary = (bs_local) => {
-  return new Promise((resolve,reject) => {
+exports.stopLocalBinary = (bsConfig, bs_local) => {
+  return new Promise((resolve, reject) => {
+    if (!this.isUndefined(bs_local) && bs_local.isRunning() && bsConfig['connection_settings']['local_mode'].toLowerCase() != "always-on") {
       bs_local.stop(function () {
-        console.log('Stopped BrowserStackLocal');
         resolve();
       });
+    } else {
+      resolve();
+    }
   });
 };
 
@@ -404,6 +413,7 @@ exports.setLocalArgs = (bsConfig, args) => {
   local_args['localIdentifier'] = bsConfig["connection_settings"]["local_identifier"];
   local_args['daemon'] = true;
   local_args['enable-logging-for-api'] = true
+  local_args['source'] = `cypress:${usageReporting.cli_version_and_path(bsConfig).version}`;
   return local_args;
 };
 
@@ -415,6 +425,36 @@ exports.generateLocalIdentifier = (mode) => {
     local_identifier = uuidv4();
   }
   return Buffer.from(local_identifier).toString("base64");
+};
+
+exports.checkLocalIdentifierRunning = (bsConfig, localIdentifier) => {
+  let options = {
+    url: `${config.localTestingUrl}/list?auth_token=${bsConfig.auth.access_key}&state=running`,
+    auth: {
+      user: bsConfig.auth.username,
+      password: bsConfig.auth.access_key,
+    },
+    headers: {
+      'User-Agent': this.getUserAgent(),
+    },
+  };
+  
+  return new Promise ( function(resolve, reject) {
+      request.get(options, function (err, resp, body) {
+      if(err){
+        reject(err);
+      }
+      let response = JSON.parse(body);
+      let localInstances = response['instances'];
+      let localIdentifiers = [];
+
+      localInstances.forEach(function(instance){
+        localIdentifiers.push(instance['localIdentifier']);
+      });
+
+      resolve(localIdentifiers.includes(localIdentifier));
+    });
+  });
 };
 
 exports.setHeaded = (bsConfig, args) => {

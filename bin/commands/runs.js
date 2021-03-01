@@ -16,7 +16,7 @@ module.exports = function run(args) {
   //Delete build_results.txt from log folder if already present.
   utils.deleteResults();
 
-  return utils.validateBstackJson(bsConfigPath).then(async function (bsConfig) {
+  return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
     utils.setDefaults(bsConfig, args);
@@ -48,9 +48,6 @@ module.exports = function run(args) {
     //accept the local identifier from env variable if provided
     utils.setLocalIdentifier(bsConfig, args);
 
-    //setup Local Testing
-    let bs_local = await utils.setupLocalTesting(bsConfig, args);
-
     // run test in headed mode
     utils.setHeaded(bsConfig, args);
 
@@ -67,8 +64,12 @@ module.exports = function run(args) {
       return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude).then(function (data) {
 
         // Uploaded zip file
-        return zipUploader.zipUpload(bsConfig, config.fileName).then(function (zip) {
+        return zipUploader.zipUpload(bsConfig, config.fileName).then(async function (zip) {
           // Create build
+
+          //setup Local Testing
+          let bs_local = await utils.setupLocalTesting(bsConfig, args);
+
           return build.createBuild(bsConfig, zip).then(function (data) {
             let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
             let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
@@ -89,9 +90,9 @@ module.exports = function run(args) {
 
             if (args.sync) {
               syncRunner.pollBuildStatus(bsConfig, data).then(async (exitCode) => {
-                // stop the Local instance
 
-                await utils.stopLocalBinary(bs_local);
+                // stop the Local instance
+                await utils.stopLocalBinary(bsConfig, bs_local);
 
                 // Generate custom report!
                 reportGenerator(bsConfig, data.build_id, args, function(){
@@ -106,9 +107,12 @@ module.exports = function run(args) {
             if(!args.sync) logger.info(Constants.userMessages.EXIT_SYNC_CLI_MESSAGE.replace("<build-id>",data.build_id));
             utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
             return;
-          }).catch(function (err) {
+          }).catch(async function (err) {
             // Build creation failed
             logger.error(err);
+            // stop the Local instance
+            await utils.stopLocalBinary(bsConfig, bs_local);
+
             utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'build_failed');
           });
         }).catch(function (err) {
