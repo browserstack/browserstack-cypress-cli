@@ -48,6 +48,9 @@ module.exports = function run(args) {
     //accept the local identifier from env variable if provided
     utils.setLocalIdentifier(bsConfig, args);
 
+    // setup sync inferred
+    utils.setSyncInferred(bsConfig, args);
+
     // run test in headed mode
     utils.setHeaded(bsConfig, args);
 
