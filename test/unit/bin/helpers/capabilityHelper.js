@@ -779,6 +779,70 @@ describe("capabilityHelper.js", () => {
       });
     });
 
+    describe("validates username and password" , () =>{
+      beforeEach(() => {
+        //Stub for cypress json validation
+        sinon.stub(fs, 'existsSync').returns(true);
+        sinon.stub(fs, 'readFileSync').returns("{}");
+
+        bsConfig = {
+          auth: {},
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            cypress_proj_dir: "random path",
+            cypressConfigFilePath: "random path"
+          },
+        };
+      });
+
+      afterEach(() => {
+        fs.existsSync.restore();
+        fs.readFileSync.restore();
+      });
+
+      it('throws an error if the user has given username as null', () =>{
+        return capabilityHelper
+          .validate(bsConfig, { username: "" })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.EMPTY_ARGS.replace("<argsNotGiven>","Username"));
+          });
+      });
+
+      it('throws an error if the user has given password as null', () =>{
+        return capabilityHelper
+          .validate(bsConfig, { key: "" })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.EMPTY_ARGS.replace("<argsNotGiven>","Password"));
+          });
+      });
+
+      it('throws an error if the user has given username and password both as null', () =>{
+        return capabilityHelper
+          .validate(bsConfig, {
+            username: "",
+            key: ""
+        })
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.EMPTY_ARGS.replace("<argsNotGiven>","Username and Password"));
+          });
+      });
+    });
+
     it("validate bsConfig", () => {
       let bsConfig = undefined;
       return capabilityHelper
