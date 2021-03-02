@@ -41,10 +41,20 @@ const caps = (bsConfig, zip) => {
     } else {
       reject("Test suite is empty");
     }
+    
+    // Inferred settings
+    if (bsConfig.connection_settings.local_mode_inferred) {
+      obj.local_mode_inferred = bsConfig.connection_settings.local_mode_inferred;
+    }
 
-    // Sync Inferred
-    if (bsConfig.connection_settings && bsConfig.connection_settings.sync_inferred)
+    if (bsConfig.connection_settings.local_inferred) {
+      obj.local_inferred = bsConfig.connection_settings.local_inferred;
+    }
+
+    if (bsConfig.sync_inferred) {
+      obj.sync_inferred = bsConfig.sync_inferred;
       logger.info('Setting "sync" mode to enable Local testing.');
+    }
     
     // Local
     obj.local = false;
@@ -105,18 +115,6 @@ const caps = (bsConfig, zip) => {
       } else {
         logger.info(`Running your tests in headless mode. Use --headed arg to run in headful mode.`);
       }
-    }
-
-    if (bsConfig.connection_settings.local_mode_inferred) {
-      obj.local_mode_inferred = bsConfig.connection_settings.local_mode_inferred;
-    }
-
-    if (bsConfig.connection_settings.local_inferred) {
-      obj.local_inferred = bsConfig.connection_settings.local_inferred;
-    }
-
-    if (bsConfig.sync_inferred) {
-      obj.sync_inferred = bsConfig.sync_inferred;
     }
 
     if(obj.parallels === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE) obj.parallels = undefined

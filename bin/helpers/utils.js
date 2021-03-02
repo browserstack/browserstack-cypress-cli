@@ -404,13 +404,14 @@ exports.setupLocalTesting = (bsConfig, args) => {
     if (bsConfig['connection_settings']['local'] && !localIdentifierRunning){
       var bs_local = new browserstack.Local();
       var bs_local_args = this.setLocalArgs(bsConfig, args);
+      let that = this;
       bs_local.start(bs_local_args, function (localStartError) {
-        if (this.isUndefined(localStartError)) {
+        if (that.isUndefined(localStartError)) {
           resolve(bs_local);
         } else {
           let message = `name: ${localStartError.name}, message: ${localStartError.message}, extra: ${localStartError.extra}`,
               errorCode = "local_start_error";
-          this.sendUsageReport(
+          that.sendUsageReport(
             bsConfig,
             args,
             message,
@@ -428,13 +429,14 @@ exports.setupLocalTesting = (bsConfig, args) => {
 exports.stopLocalBinary = (bsConfig, bs_local) => {
   return new Promise((resolve, reject) => {
     if (!this.isUndefined(bs_local) && bs_local.isRunning() && bsConfig['connection_settings']['local_mode'].toLowerCase() != "always-on") {
+      let that = this;
       bs_local.stop(function (localStopError) {
-        if (this.isUndefined(localStopError)) {
+        if (that.isUndefined(localStopError)) {
           resolve();
         } else {
           let message = `name: ${localStartError.name}, message: ${localStartError.message}, extra: ${localStartError.extra}`,
               errorCode = "local_stop_error";
-          this.sendUsageReport(
+          that.sendUsageReport(
             bsConfig,
             args,
             message,
