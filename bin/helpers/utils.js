@@ -371,12 +371,6 @@ exports.setSyncInferred = (bsConfig, args) => {
 };
 
 exports.setLocalMode = (bsConfig, args) => {
-  let localModeInferred = this.searchForOption('--local-mode');
-
-  if (localModeInferred) {
-    bsConfig.connection_settings.local_mode_inferred = localModeInferred;
-  }
-
   if(String(bsConfig["connection_settings"]["local"]).toLowerCase() === "true"){
     let local_mode = 'on-demand';
     if (!this.isUndefined(args.localMode) && args.localMode == 'always-on') {
@@ -393,6 +387,12 @@ exports.setLocalMode = (bsConfig, args) => {
       bsConfig['connection_settings']['sync_inferred'] = true;
     }
     args.sync = true;
+
+    let localModeInferred = this.searchForOption('--local-mode');
+
+    if (localModeInferred) {
+      bsConfig.connection_settings.local_mode_inferred = local_mode;
+    }
   }
 };
 
