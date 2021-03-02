@@ -5,7 +5,7 @@ const chai = require("chai"),
 const Constants = require("../../../../bin/helpers/constants"),
   logger = require("../../../../bin/helpers/logger").winstonLogger,
   testObjects = require("../../support/fixtures/testObjects");
-const { setHeaded, setupLocalTesting } = require("../../../../bin/helpers/utils");
+const { setHeaded, setupLocalTesting, stopLocalBinary } = require("../../../../bin/helpers/utils");
 
 const proxyquire = require("proxyquire").noCallThru();
 
@@ -155,7 +155,6 @@ describe("runs", () => {
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
-          sinon.assert.calledOnce(setupLocalTestingStub);
           sinon.assert.calledOnce(setLocalModeStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
@@ -264,7 +263,10 @@ describe("runs", () => {
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(setLocalModeStub);
-          sinon.assert.calledOnce(setupLocalTestingStub);
+          sinon.assert.calledOnce(setUsernameStub);
+          sinon.assert.calledOnce(setAccessKeyStub);
+          sinon.assert.calledOnce(setBuildNameStub);
+          sinon.assert.calledOnce(setCypressConfigFilenameStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(setLocalStub);
@@ -381,7 +383,6 @@ describe("runs", () => {
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(setLocalModeStub);
-          sinon.assert.calledOnce(setupLocalTestingStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(setLocalStub);
@@ -440,6 +441,7 @@ describe("runs", () => {
       deleteResultsStub = sandbox.stub();
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
       setDefaultsStub = sandbox.stub();
+      stopLocalBinaryStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -472,7 +474,8 @@ describe("runs", () => {
           setHeaded: setHeadedStub,
           deleteResults: deleteResultsStub,
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
-          setDefaults: setDefaultsStub
+          setDefaults: setDefaultsStub,
+          stopLocalBinary: stopLocalBinaryStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -498,6 +501,7 @@ describe("runs", () => {
       );
       archiverStub.returns(Promise.resolve("Zipping completed"));
       zipUploadStub.returns(Promise.resolve("zip uploaded"));
+      stopLocalBinaryStub.returns(Promise.resolve("nothing"));
       createBuildStub.returns(Promise.reject("random-error"));
 
       return runs(args)
