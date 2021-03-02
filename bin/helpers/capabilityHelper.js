@@ -134,11 +134,11 @@ const validate = (bsConfig, args) => {
 
     if(!Utils.isUndefined(args)){
       if(!Utils.isUndefined(args.username) && !Utils.isUndefined(args.key))
-      reject(Constants.validationMessages.EMPTY_ARGS.replace("<argsNotGiven>", "Username and Password"));
+        reject(Constants.validationMessages.EMPTY_ARGS.replace("<argsNotGiven>", "Username and Password"));
       else if(!Utils.isUndefined(args.username))
         reject(Constants.validationMessages.EMPTY_ARGS.replace("<argsNotGiven>", "Username"));
       else if(!Utils.isUndefined(args.key))
-      reject(Constants.validationMessages.EMPTY_ARGS.replace("<argsNotGiven>", "Password"));
+        reject(Constants.validationMessages.EMPTY_ARGS.replace("<argsNotGiven>", "Password"));
     }
     // validate if config file provided exists or not when cypress_config_file provided
     // validate the cypressProjectDir key otherwise.
