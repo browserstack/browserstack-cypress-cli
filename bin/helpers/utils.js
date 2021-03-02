@@ -458,7 +458,7 @@ exports.setLocalArgs = (bsConfig, args) => {
   local_args['daemon'] = true;
   local_args['enable-logging-for-api'] = true
   local_args['source'] = `cypress:${usageReporting.cli_version_and_path(bsConfig).version}`;
-  local_args['bs-host'] = 'k8s-devcypress.bsstag.com';
+
   return local_args;
 };
 
