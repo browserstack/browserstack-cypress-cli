@@ -38,34 +38,40 @@ exports.getErrorCodeFromMsg = (errMsg) => {
   let errorCode = null;
   switch (errMsg) {
     case Constants.validationMessages.EMPTY_BROWSERSTACK_JSON:
-      errorCode = "bstack_json_invalid_empty";
+      errorCode = 'bstack_json_invalid_empty';
       break;
     case Constants.validationMessages.INCORRECT_AUTH_PARAMS:
-      errorCode = "bstack_json_invalid_missing_keys";
+      errorCode = 'bstack_json_invalid_missing_keys';
       break;
     case Constants.validationMessages.EMPTY_BROWSER_LIST:
-      errorCode = "bstack_json_invalid_no_browsers";
+      errorCode = 'bstack_json_invalid_no_browsers';
       break;
     case Constants.validationMessages.EMPTY_RUN_SETTINGS:
-      errorCode = "bstack_json_invalid_no_run_settings";
+      errorCode = 'bstack_json_invalid_no_run_settings';
       break;
     case Constants.validationMessages.EMPTY_CYPRESS_PROJ_DIR:
-      errorCode = "bstack_json_invalid_no_cypress_proj_dir";
+      errorCode = 'bstack_json_invalid_no_cypress_proj_dir';
       break;
     case Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS:
-      errorCode = "bstack_json_default_auth_keys";
+      errorCode = 'bstack_json_default_auth_keys';
       break;
     case Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION:
-      errorCode = "invalid_parallels_specified";
+      errorCode = 'invalid_parallels_specified';
+      break;
+    case Constants.validationMessages.INVALID_LOCAL_IDENTIFIER:
+      errorCode = 'invalid_local_identifier';
+      break;
+    case Constants.validationMessages.INVALID_LOCAL_MODE:
+      errorCode = 'invalid_local_mode';
       break;
     case Constants.validationMessages.LOCAL_NOT_SET:
-      errorCode = "cypress_json_base_url_no_local";
+      errorCode = 'cypress_json_base_url_no_local';
       break;
     case Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE:
-      errorCode = "invalid_directory_structure";
+      errorCode = 'invalid_directory_structure';
       break;
     case Constants.validationMessages.INVALID_CYPRESS_CONFIG_FILE:
-      errorCode = "invalid_cypress_config_file";
+      errorCode = 'invalid_cypress_config_file';
       break;
   }
   if (
@@ -322,9 +328,6 @@ exports.setLocal = (bsConfig, args) => {
     if (String(args.local).toLowerCase() === "true" || !this.isUndefined(args.local_mode))
       local = true;
     bsConfig["connection_settings"]["local"] = local;
-    logger.info(
-      "Setting up Local testing..."
-    );
   }else if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL)) {
     let local = false;
     if (String(process.env.BROWSERSTACK_LOCAL).toLowerCase() === "true")
@@ -339,9 +342,6 @@ exports.setLocal = (bsConfig, args) => {
 exports.setLocalIdentifier = (bsConfig, args) => {
   if (!this.isUndefined(args.local_identifier)){
     bsConfig["connection_settings"]["local_identifier"] = args.local_identifier;
-    logger.info(
-      `Local testing identifier: ${bsConfig['connection_settings']['local_identifier']}`
-    );
   } else if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL_IDENTIFIER)) {
     bsConfig["connection_settings"]["local_identifier"] =
       process.env.BROWSERSTACK_LOCAL_IDENTIFIER;
@@ -353,9 +353,6 @@ exports.setLocalIdentifier = (bsConfig, args) => {
       this.isUndefined(bsConfig["connection_settings"]["local_identifier"])
     ){
     bsConfig["connection_settings"]["local_identifier"] = this.generateLocalIdentifier(bsConfig['connection_settings']['local_mode']);
-    logger.info(
-      `Local testing identifier: ${bsConfig['connection_settings']['local_identifier']}`
-    );
   }
 };
 
@@ -371,9 +368,10 @@ exports.setLocalMode = (bsConfig, args) => {
     ) {
       local_mode = 'always-on';
     }
-    logger.info(`Local testing set up in ${local_mode} mode.`);
     bsConfig['connection_settings']['local_mode'] = local_mode;
-    logger.info('Setting "sync" mode to enable Local testing.');
+    if (this.isUndefined(args.sync) || !args.sync ){
+      bsConfig['connection_settings']['sync_inferred'] = true;
+    }
     args.sync = true;
   }
 };
@@ -414,6 +412,7 @@ exports.setLocalArgs = (bsConfig, args) => {
   local_args['daemon'] = true;
   local_args['enable-logging-for-api'] = true
   local_args['source'] = `cypress:${usageReporting.cli_version_and_path(bsConfig).version}`;
+  local_args['bs-host'] = 'k8s-devcypress.bsstag.com';
   return local_args;
 };
 
@@ -438,14 +437,17 @@ exports.checkLocalIdentifierRunning = (bsConfig, localIdentifier) => {
       'User-Agent': this.getUserAgent(),
     },
   };
-  
-  return new Promise ( function(resolve, reject) {
+  let that = this;
+  return new Promise (function(resolve, reject) {
       request.get(options, function (err, resp, body) {
       if(err){
         reject(err);
       }
       let response = JSON.parse(body);
-      let localInstances = response['instances'];
+      let localInstances = [];
+      if(!that.isUndefined(response['instances'])){
+        localInstances = response['instances'];
+      }
       let localIdentifiers = [];
 
       localInstances.forEach(function(instance){
@@ -519,6 +521,10 @@ exports.isJSONInvalid = (err, args) => {
   }
 
   if (this.deleteBaseUrlFromError(err) === this.deleteBaseUrlFromError(Constants.validationMessages.LOCAL_NOT_SET)) {
+    return false
+  }
+
+  if( err === Constants.validationMessages.INVALID_LOCAL_IDENTIFIER || err === Constants.validationMessages.INVALID_LOCAL_MODE ){
     return false
   }
 
