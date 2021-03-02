@@ -107,6 +107,18 @@ const caps = (bsConfig, zip) => {
       }
     }
 
+    if (bsConfig.connection_settings.local_mode_inferred) {
+      obj.local_mode_inferred = bsConfig.connection_settings.local_mode_inferred;
+    }
+
+    if (bsConfig.connection_settings.local_inferred) {
+      obj.local_inferred = bsConfig.connection_settings.local_inferred;
+    }
+
+    if (bsConfig.sync_inferred) {
+      obj.sync_inferred = bsConfig.sync_inferred;
+    }
+
     if(obj.parallels === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE) obj.parallels = undefined
 
     if (obj.project) logger.info(`Project name is: ${obj.project}`);

@@ -323,6 +323,12 @@ exports.getLocalFlag = (connectionSettings) => {
 };
 
 exports.setLocal = (bsConfig, args) => {
+  let localInferred = this.searchForOption('--local');
+
+  if (localInferred) {
+    bsConfig.connection_settings.local_inferred = localInferred;
+  }
+
   if (!this.isUndefined(args.local)) {
     let local = false;
     if (String(args.local).toLowerCase() === "true" || !this.isUndefined(args.local_mode))
@@ -356,7 +362,21 @@ exports.setLocalIdentifier = (bsConfig, args) => {
   }
 };
 
+exports.setSyncInferred = (bsConfig, args) => {
+  let syncInferred = this.searchForOption('--sync');
+
+  if (syncInferred) {
+    bsConfig.sync_inferred = syncInferred;
+  }
+};
+
 exports.setLocalMode = (bsConfig, args) => {
+  let localModeInferred = this.searchForOption('--local-mode');
+
+  if (localModeInferred) {
+    bsConfig.connection_settings.local_mode_inferred = localModeInferred;
+  }
+
   if(String(bsConfig["connection_settings"]["local"]).toLowerCase() === "true"){
     let local_mode = 'on-demand';
     if (!this.isUndefined(args.localMode) && args.localMode == 'always-on') {
@@ -377,27 +397,51 @@ exports.setLocalMode = (bsConfig, args) => {
 };
 
 exports.setupLocalTesting = (bsConfig, args) => {
- return new Promise(async (resolve, reject) => {
-  let localIdentifierRunning = await this.checkLocalIdentifierRunning(
-    bsConfig, bsConfig['connection_settings']['local_identifier']
-  );
-  if (bsConfig['connection_settings']['local'] && !localIdentifierRunning){
-    var bs_local = new browserstack.Local();
-    var bs_local_args = this.setLocalArgs(bsConfig, args);
-    bs_local.start(bs_local_args, function () {
-      resolve(bs_local);
-    });
-  } else {
-    resolve();
-  }
- });
+  return new Promise(async (resolve, reject) => {
+    let localIdentifierRunning = await this.checkLocalIdentifierRunning(
+      bsConfig, bsConfig['connection_settings']['local_identifier']
+    );
+    if (bsConfig['connection_settings']['local'] && !localIdentifierRunning){
+      var bs_local = new browserstack.Local();
+      var bs_local_args = this.setLocalArgs(bsConfig, args);
+      bs_local.start(bs_local_args, function (localStartError) {
+        if (this.isUndefined(localStartError)) {
+          resolve(bs_local);
+        } else {
+          let message = `name: ${localStartError.name}, message: ${localStartError.message}, extra: ${localStartError.extra}`,
+              errorCode = "local_start_error";
+          this.sendUsageReport(
+            bsConfig,
+            args,
+            message,
+            Constants.messageTypes.ERROR,
+            errorCode
+          );
+        }
+      });
+    } else {
+      resolve();
+    }
+  });
 };
 
 exports.stopLocalBinary = (bsConfig, bs_local) => {
   return new Promise((resolve, reject) => {
     if (!this.isUndefined(bs_local) && bs_local.isRunning() && bsConfig['connection_settings']['local_mode'].toLowerCase() != "always-on") {
-      bs_local.stop(function () {
-        resolve();
+      bs_local.stop(function (localStopError) {
+        if (this.isUndefined(localStopError)) {
+          resolve();
+        } else {
+          let message = `name: ${localStartError.name}, message: ${localStartError.message}, extra: ${localStartError.extra}`,
+              errorCode = "local_stop_error";
+          this.sendUsageReport(
+            bsConfig,
+            args,
+            message,
+            Constants.messageTypes.ERROR,
+            errorCode
+          );
+        }
       });
     } else {
       resolve();
@@ -438,7 +482,7 @@ exports.checkLocalIdentifierRunning = (bsConfig, localIdentifier) => {
     },
   };
   let that = this;
-  return new Promise (function(resolve, reject) {
+  return new Promise ( function(resolve, reject) {
       request.get(options, function (err, resp, body) {
       if(err){
         reject(err);
