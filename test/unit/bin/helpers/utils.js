@@ -77,6 +77,26 @@ describe('utils', () => {
           'Please use --config-file <path to browserstack.json>.'
         )
       ).to.eq('bstack_json_path_invalid');
+      expect(
+        utils.getErrorCodeFromMsg(
+          constant.validationMessages.INVALID_LOCAL_IDENTIFIER
+        )
+      ).to.eq('invalid_local_identifier');
+      expect(
+        utils.getErrorCodeFromMsg(
+          constant.validationMessages.INVALID_LOCAL_MODE
+        )
+      ).to.eq('invalid_local_mode');
+      expect(
+        utils.getErrorCodeFromMsg(
+          constant.validationMessages.INVALID_LOCAL_CONFIG_FILE
+        )
+      ).to.eq('invalid_local_config_file');
+      expect(
+        utils.getErrorCodeFromMsg(
+          "Invalid browserstack.json file."
+        )
+      ).to.eq("bstack_json_invalid");
     });
   });
 
@@ -646,39 +666,37 @@ describe('utils', () => {
   });
 
   describe('setLocal', () => {
-    beforeEach(function () {
+    afterEach(function () {
+      sinon.restore();
       delete process.env.BROWSERSTACK_LOCAL;
     });
 
-    afterEach(function () {
-      delete process.env.BROWSERSTACK_LOCAL;
+    it('bsconfig connection_settings local_inferred as true if serachforOption returns false with args local true', () => {
+      let bsConfig = {
+        connection_settings: {
+          local_inferred: false,
+        },
+      };
+      let args = {
+        local: true,
+        local_mode: false
+      };
+      let searchForOptionStub = sinon.stub(utils,"searchForOption");
+      searchForOptionStub.returns(false);
+      utils.setLocal(bsConfig,args);
+      expect(bsConfig.connection_settings.local_inferred).to.be.eq(true);
     });
 
     it('should not change local in bsConfig if process.env.BROWSERSTACK_LOCAL is undefined', () => {
+      delete process.env.BROWSERSTACK_LOCAL;
       let bsConfig = {
         connection_settings: {
           local: true,
         },
       };
-      let args = {
-        local: true
-      };
+      let args = {};
       utils.setLocal(bsConfig,args);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
-    });
-
-    it('should change local to false in bsConfig if process.env.BROWSERSTACK_LOCAL is set to false', () => {
-      let bsConfig = {
-        connection_settings: {
-          local: true,
-        },
-      };
-      let args = {
-        local: false
-      };
-      process.env.BROWSERSTACK_LOCAL = false;
-      utils.setLocal(bsConfig,args);
-      expect(bsConfig.connection_settings.local).to.be.eq(false);
     });
 
     it('should change local to true in bsConfig if process.env.BROWSERSTACK_LOCAL is set to true', () => {
@@ -690,6 +708,45 @@ describe('utils', () => {
       let args = {
         local: true
       };
+      process.env.BROWSERSTACK_LOCAL = true;
+      utils.setLocal(bsConfig,args);
+      expect(bsConfig.connection_settings.local).to.be.eq(true);
+    });
+
+    it('should change local to false in bsConfig if process.env.BROWSERSTACK_LOCAL is set to false', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: false,
+        },
+      };
+      let args = {};
+      process.env.BROWSERSTACK_LOCAL = false;
+      utils.setLocal(bsConfig,args);
+      expect(bsConfig.connection_settings.local).to.be.eq(false);
+    });
+
+    it('should change local to false in bsConfig if process.env.BROWSERSTACK_LOCAL is set to false', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: false,
+          local_inferred: false
+        },
+      };
+      let args = {};
+      process.env.BROWSERSTACK_LOCAL = true;
+      let searchForOptionStub = sinon.stub(utils, "searchForOption");
+      searchForOptionStub.returns(false);
+      utils.setLocal(bsConfig,args);
+      expect(bsConfig.connection_settings.local_inferred).to.be.eq(true);
+    });
+
+    it('should change local to true in bsConfig if process.env.BROWSERSTACK_LOCAL is set to true', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: false,
+        },
+      };
+      let args = {};
       process.env.BROWSERSTACK_LOCAL = true;
       utils.setLocal(bsConfig,args);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
@@ -897,7 +954,8 @@ describe('utils', () => {
         },
         connection_settings: {
           local: true,
-          local_identifier: "xyz"
+          local_identifier: "xyz",
+          local_config_file: "file"
         },
       };
       let args = {};
@@ -908,6 +966,7 @@ describe('utils', () => {
       expect(local_args["localIdentifier"]).to.be.eq(bsConfig["connection_settings"]["local_identifier"]);
       expect(local_args["daemon"]).to.be.eq(true);
       expect(local_args["enable-logging-for-api"]).to.be.eq(true);
+      expect(local_args['config-file']).to.be.eq(path.resolve("file"));
     });
   });
 
@@ -1486,6 +1545,16 @@ describe('utils', () => {
       let error = constant.validationMessages.INCORRECT_AUTH_PARAMS;
       expect(utils.isJSONInvalid(error, {})).to.eq(true)
     });
+
+    it('JSON is invalid if local identifier is invalid', () =>{
+      let error = constant.validationMessages.INVALID_LOCAL_IDENTIFIER;
+      expect(utils.isJSONInvalid(error,{})).to.eq(false);
+    });
+
+    it('JSON is invalid if local mode is invalid', () =>{
+      let error = constant.validationMessages.INVALID_LOCAL_MODE;
+      expect(utils.isJSONInvalid(error,{})).to.eq(false);
+    });
   })
 
   describe('#deleteBaseUrlFromError', () => {
@@ -1576,6 +1645,21 @@ describe('utils', () => {
       return utils.checkLocalIdentifierRunning(bsConfig, localIdentifier).then((result) => {
         expect(result).to.be.eq(true);
       });
+    });
+  });
+
+  describe('setLocalConfigFile', () => {
+    it('the args localConfigfile should be assigned to bsconfig connection_settigs local_config_file', () => {
+      let bsConfig = {
+        connection_settings: {
+          local_config_file: "efgh"
+        }
+      };
+      let args = {
+        localConfigFile: "abcd"
+      };
+      utils.setLocalConfigFile(bsConfig, args);
+      expect(args.localConfigFile).to.be.eql(bsConfig.connection_settings.local_config_file);
     });
   });
 
