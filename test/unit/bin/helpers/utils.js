@@ -709,6 +709,9 @@ describe('utils', () => {
   });
 
   describe('setLocalMode', () => {
+    afterEach(() =>{
+      sinon.restore();
+    })
     it('if bsconfig local is true and args local is always-on then local_mode should be always-on' , () => {
       let bsConfig = {
         connection_settings: {
@@ -764,13 +767,65 @@ describe('utils', () => {
       utils.setLocalMode(bsConfig,args);
       expect(args.sync).to.be.eq(true);
     });
+
+    it('if args sync is false then the bsconfig connection_settings sync_inferred gets true', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: true,
+          local_mode: "xyz"
+        },
+      };
+      let args = {
+        localMode: "xyz",
+        sync: false
+      }
+      utils.setLocalMode(bsConfig,args);
+      expect(bsConfig.connection_settings.sync_inferred).to.be.eq(true);
+    });
+
+    it('if localModeInferred is false then the bsConfig local_mode_inferred changes to local_mode', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: true,
+          local_mode: "xyz",
+          local_mode_inferred: "xyz"
+        },
+      };
+      let args = {
+        localMode: "xyz",
+        sync: false
+      }
+      let searchForOptionStub = sinon.stub(utils,"searchForOption");
+      searchForOptionStub.returns(false);
+      utils.setLocalMode(bsConfig,args);
+      expect(bsConfig.connection_settings.local_mode_inferred).to.be.eq("on-demand");
+    });
+
+    it('if localModeInferred is true then the bsConfig local_mode_inferred remains unchanged', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: true,
+          local_mode: "xyz",
+          local_mode_inferred: "xyz"
+        },
+      };
+      let args = {
+        localMode: "xyz",
+        sync: false
+      }
+      let searchForOptionStub = sinon.stub(utils,"searchForOption");
+      searchForOptionStub.returns(true);
+      utils.setLocalMode(bsConfig,args);
+      expect(bsConfig.connection_settings.local_mode_inferred).to.be.eq("xyz");
+    });
   });
 
   describe('setupLocalTesting' ,() => {
     afterEach(function () {
       sinon.restore();
     });
-    it('if bsconfig local is false then promise should resolve with undefined', () => {
+
+    it('if the localArgs is passed with no key then error is raised', () => {
       let bsConfig = {
         auth: {
           access_key: "xyz"
@@ -785,8 +840,33 @@ describe('utils', () => {
       checkLocalIdentifierRunningStub.returns(Promise.resolve(false));
       let setLocalArgsStub = sinon.stub(utils,"setLocalArgs");
       setLocalArgsStub.returns({});
-      return utils.setupLocalTesting(bsConfig,args).then((result) => {
-        expect(result.constructor.name).to.be.eq("Local");
+      return utils.setupLocalTesting(bsConfig,args).catch((error) => {
+        sinon.match(error, "Key is required to start local testing!")
+      });
+    });
+
+    it('if the local_args is passed with invalid key then error is raised', () => {
+      let bsConfig = {
+        auth: {
+          access_key: "xyz"
+        },
+        connection_settings: {
+          local: true,
+          local_identifier: "xyz"
+        },
+      };
+      let args = {};
+      let localArgs = {
+        key: "abc",
+        localIdentifier: "abc",
+        daemon: true
+      }
+      let checkLocalIdentifierRunningStub = sinon.stub(utils, "checkLocalIdentifierRunning");
+      checkLocalIdentifierRunningStub.returns(Promise.resolve(false));
+      let setLocalArgsStub = sinon.stub(utils,"setLocalArgs");
+      setLocalArgsStub.returns(localArgs);
+      return utils.setupLocalTesting(bsConfig,args).catch((error) => {
+        sinon.match(error, "You provided an invalid key")
       });
     });
 
