@@ -37,10 +37,19 @@ const uploadCypressZip = (bsConfig, filePath) => {
           responseData = null
         }
         if (resp.statusCode != 200) {
-          if (responseData && responseData["error"]) {
-            reject(responseData["error"]);
-          } else {
-            reject(Constants.userMessages.ZIP_UPLOADER_NOT_REACHABLE);
+          if(resp.statusCode == 401){
+            if(responseData && responseData["error"]){
+              reject(responseData["error"]);
+            } else {
+              reject(Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS);
+            }
+          }
+          else{
+            if (responseData && responseData["error"]) {
+              reject(responseData["error"]);
+            } else {
+              reject(Constants.userMessages.ZIP_UPLOADER_NOT_REACHABLE);
+            }
           }
         } else {
           logger.info(`Uploaded tests successfully (${responseData.zip_url})`);
