@@ -57,8 +57,7 @@ const validationMessages = {
   INVALID_CYPRESS_JSON: "cypress.json is not a valid json",
   INVALID_DEFAULT_AUTH_PARAMS: "Your username and access key are required to run your tests on BrowserStack. Learn more at https://www.browserstack.com/docs/automate/cypress/authentication",
   LOCAL_NOT_SET: "To test <baseUrlValue> on BrowserStack, you will have to set up Local testing. Read more here: https://www.browserstack.com/docs/automate/cypress/local-testing",
-  INCORRECT_DIRECTORY_STRUCTURE: "No tests to run. Note that your Cypress tests should be in the same directory where the cypress.json exists.",
-  EMPTY_ARGS: "Empty <argsNotGiven>"
+  INCORRECT_DIRECTORY_STRUCTURE: "No tests to run. Note that your Cypress tests should be in the same directory where the cypress.json exists."
 };
 
 const cliMessages = {
