@@ -348,14 +348,16 @@ exports.setLocal = (bsConfig, args) => {
 };
 
 exports.setLocalIdentifier = (bsConfig, args) => {
-  if (!this.isUndefined(args.local_identifier)){
-    bsConfig["connection_settings"]["local_identifier"] = args.local_identifier;
+  if (!this.isUndefined(args.localIdentifier)){
+    bsConfig["connection_settings"]["local_identifier"] = args.localIdentifier;
+    bsConfig['connection_settings']['local_mode'] = "always-on";
   } else if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL_IDENTIFIER)) {
     bsConfig["connection_settings"]["local_identifier"] =
       process.env.BROWSERSTACK_LOCAL_IDENTIFIER;
     logger.info(
       "Reading local identifier from the environment variable BROWSERSTACK_LOCAL_IDENTIFIER"
     );
+    bsConfig['connection_settings']['local_mode'] = 'always-on';
   } else if (
       bsConfig['connection_settings']['local'] &&
       this.isUndefined(bsConfig["connection_settings"]["local_identifier"])
@@ -439,6 +441,7 @@ exports.stopLocalBinary = (bsConfig, bs_local) => {
             Constants.messageTypes.ERROR,
             errorCode
           );
+          resolve(localStopError);
         }
       });
     } else {
