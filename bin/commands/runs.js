@@ -51,9 +51,6 @@ module.exports = function run(args) {
     // set Local Config File
     utils.setLocalConfigFile(bsConfig, args);
 
-    // setup sync inferred
-    utils.setSyncInferred(bsConfig, args);
-
     // run test in headed mode
     utils.setHeaded(bsConfig, args);
 

@@ -326,21 +326,20 @@ exports.getLocalFlag = (connectionSettings) => {
 };
 
 exports.setLocal = (bsConfig, args) => {
-  let localInferred = this.searchForOption('--local');
-
-  if (localInferred) {
-    bsConfig.connection_settings.local_inferred = localInferred;
-  }
-
+  let localInferred = !(this.searchForOption('--local'));
   if (!this.isUndefined(args.local)) {
     let local = false;
-    if (String(args.local).toLowerCase() === "true" || !this.isUndefined(args.local_mode))
+    if (String(args.local).toLowerCase() === "true" || !this.isUndefined(args.local_mode)) {
       local = true;
+      bsConfig.connection_settings.local_inferred = localInferred;
+    }
     bsConfig["connection_settings"]["local"] = local;
-  }else if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL)) {
+  } else if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL)) {
     let local = false;
-    if (String(process.env.BROWSERSTACK_LOCAL).toLowerCase() === "true")
+    if (String(process.env.BROWSERSTACK_LOCAL).toLowerCase() === "true") {
       local = true;
+      bsConfig.connection_settings.local_inferred = localInferred;
+    }
     bsConfig["connection_settings"]["local"] = local;
     logger.info(
       "Reading local setting from the environment variable BROWSERSTACK_LOCAL"
@@ -365,14 +364,6 @@ exports.setLocalIdentifier = (bsConfig, args) => {
   }
 };
 
-exports.setSyncInferred = (bsConfig, args) => {
-  let syncInferred = this.searchForOption('--sync');
-
-  if (syncInferred) {
-    bsConfig.sync_inferred = syncInferred;
-  }
-};
-
 exports.setLocalMode = (bsConfig, args) => {
   if(String(bsConfig["connection_settings"]["local"]).toLowerCase() === "true"){
     let local_mode = 'on-demand';
@@ -391,7 +382,7 @@ exports.setLocalMode = (bsConfig, args) => {
     }
     args.sync = true;
 
-    let localModeInferred = this.searchForOption('--local-mode');
+    let localModeInferred = !(this.searchForOption('--local-mode'));
 
     if (localModeInferred) {
       bsConfig.connection_settings.local_mode_inferred = local_mode;

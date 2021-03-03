@@ -41,21 +41,21 @@ const caps = (bsConfig, zip) => {
     } else {
       reject("Test suite is empty");
     }
-    
+
     // Inferred settings
-    if (bsConfig.connection_settings.local_mode_inferred) {
+    if (bsConfig.connection_settings && bsConfig.connection_settings.local_mode_inferred) {
       obj.local_mode_inferred = bsConfig.connection_settings.local_mode_inferred;
     }
 
-    if (bsConfig.connection_settings.local_inferred) {
+    if (bsConfig.connection_settings && bsConfig.connection_settings.local_inferred) {
       obj.local_inferred = bsConfig.connection_settings.local_inferred;
     }
 
-    if (bsConfig.sync_inferred) {
-      obj.sync_inferred = bsConfig.sync_inferred;
+    if (bsConfig.connection_settings && bsConfig.connection_settings.sync_inferred) {
+      obj.sync_inferred = bsConfig.connection_settings.sync_inferred;
       logger.info('Setting "sync" mode to enable Local testing.');
     }
-    
+
     // Local
     obj.local = false;
     if (bsConfig.connection_settings && bsConfig.connection_settings.local === true) {
@@ -68,7 +68,7 @@ const caps = (bsConfig, zip) => {
       obj.localMode = bsConfig.connection_settings.local_mode;
       logger.info(`Local testing set up in ${obj.localMode} mode.`);
     }
-    
+
     // Local Identifier
     obj.localIdentifier = null;
     if (obj.local === true && (bsConfig.connection_settings.localIdentifier || bsConfig.connection_settings.local_identifier)) {
