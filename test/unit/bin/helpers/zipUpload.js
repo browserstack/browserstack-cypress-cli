@@ -55,7 +55,7 @@ describe("zipUpload", () => {
       });
   });
 
-  it("reject with error (if error present in response) if statusCode != 200", () => {
+  it("reject with error (if error present in response) if statusCode == 401", () => {
     let error = "non 200 code";
 
     let requestStub = sandbox
@@ -82,12 +82,71 @@ describe("zipUpload", () => {
       });
   });
 
-  it("reject with message if statusCode != 200 and error not in response", () => {
+  it("reject with message if statusCode == 401 and error not in response", () => {
     let requestStub = sandbox
       .stub(request, "post")
       .yields(
         null,
         { statusCode: 401 },
+        JSON.stringify({ message: "random message" })
+      );
+
+    const zipUploader = proxyquire("../../../../bin/helpers/zipUpload", {
+      "./utils": {
+        getUserAgent: getUserAgentStub,
+      },
+      request: { post: requestStub },
+    });
+
+    return zipUploader
+      .zipUpload(bsConfig, "./random_file_path")
+      .then(function (data) {
+        chai.assert.fail("Promise error");
+      })
+      .catch((error) => {
+        sinon.assert.calledOnce(requestStub);
+        sinon.assert.calledOnce(getUserAgentStub);
+        sinon.assert.calledOnce(createReadStreamStub);
+        chai.assert.equal(
+          error,
+          Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS
+        );
+      });
+  });
+
+  it("reject with error (if error present in response) if statusCode != 200 and statusCode != 401", () => {
+    let error = "non 200 and non 401 code";
+
+    let requestStub = sandbox
+      .stub(request, "post")
+      .yields(null, { statusCode: 404 }, JSON.stringify({ error: error }));
+
+    const zipUploader = proxyquire("../../../../bin/helpers/zipUpload", {
+      "./utils": {
+        getUserAgent: getUserAgentStub,
+      },
+      request: { post: requestStub },
+    });
+
+    return zipUploader
+      .zipUpload(bsConfig, "./random_file_path")
+      .then(function (data) {
+        chai.assert.fail("Promise error");
+      })
+      .catch((error) => {
+        sinon.assert.calledOnce(requestStub);
+        sinon.assert.calledOnce(getUserAgentStub);
+        sinon.assert.calledOnce(createReadStreamStub);
+        chai.assert.equal(error, "non 200 and non 401 code");
+      });
+  });
+
+  it("reject with message if statusCode != 200 and statusCode != 401 and error not in response", () => {
+    let requestStub = sandbox
+      .stub(request, "post")
+      .yields(
+        null,
+        { statusCode: 404 },
         JSON.stringify({ message: "random message" })
       );
 
