@@ -60,7 +60,6 @@ const caps = (bsConfig, zip) => {
     obj.local = false;
     if (bsConfig.connection_settings && bsConfig.connection_settings.local === true) {
       obj.local = true;
-      logger.info('Setting up Local testing...');
     }
 
     obj.localMode = null;
@@ -162,6 +161,8 @@ const validate = (bsConfig, args) => {
     if( Utils.searchForOption('--local-identifier') && (Utils.isUndefined(args.localIdentifier) || (!Utils.isUndefined(args.localIdentifier) && !args.localIdentifier.trim()))) reject(Constants.validationMessages.INVALID_LOCAL_IDENTIFIER);
 
     if( Utils.searchForOption('--local-mode') && ( Utils.isUndefined(args.localMode) || (!Utils.isUndefined(args.localMode) && !["always-on","on-demand"].includes(args.localMode)))) reject(Constants.validationMessages.INVALID_LOCAL_MODE);
+
+    if( Utils.searchForOption('--local-config-file') && ( Utils.isUndefined(args.localConfigFile) || (!Utils.isUndefined(args.localConfigFile) && !fs.existsSync(args.localConfigFile)))) reject(Constants.validationMessages.INVALID_LOCAL_CONFIG_FILE);
 
     // validate if config file provided exists or not when cypress_config_file provided
     // validate the cypressProjectDir key otherwise.

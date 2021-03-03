@@ -64,6 +64,9 @@ exports.getErrorCodeFromMsg = (errMsg) => {
     case Constants.validationMessages.INVALID_LOCAL_MODE:
       errorCode = 'invalid_local_mode';
       break;
+    case Constants.validationMessages.INVALID_LOCAL_CONFIG_FILE:
+      errorCode = 'invalid_local_config_file';
+      break;
     case Constants.validationMessages.LOCAL_NOT_SET:
       errorCode = 'cypress_json_base_url_no_local';
       break;
@@ -405,6 +408,7 @@ exports.setupLocalTesting = (bsConfig, args) => {
       var bs_local = new browserstack.Local();
       var bs_local_args = this.setLocalArgs(bsConfig, args);
       let that = this;
+      logger.info('Setting up Local testing...');
       bs_local.start(bs_local_args, function (localStartError) {
         if (that.isUndefined(localStartError)) {
           resolve(bs_local);
@@ -418,6 +422,7 @@ exports.setupLocalTesting = (bsConfig, args) => {
             Constants.messageTypes.ERROR,
             errorCode
           );
+          reject(localStartError);
         }
       });
     } else {
@@ -458,7 +463,9 @@ exports.setLocalArgs = (bsConfig, args) => {
   local_args['daemon'] = true;
   local_args['enable-logging-for-api'] = true
   local_args['source'] = `cypress:${usageReporting.cli_version_and_path(bsConfig).version}`;
-
+  if(!this.isUndefined(bsConfig["connection_settings"]["local_config_file"])){
+    local_args['config-file'] = path.resolve(bsConfig["connection_settings"]["local_config_file"]);
+  }
   return local_args;
 };
 
@@ -503,6 +510,12 @@ exports.checkLocalIdentifierRunning = (bsConfig, localIdentifier) => {
       resolve(localIdentifiers.includes(localIdentifier));
     });
   });
+};
+
+exports.setLocalConfigFile = (bsConfig, args) => {
+  if(!this.isUndefined(args.localConfigFile)){
+    bsConfig['connection_settings']['local_config_file'] = args.localConfigFile;
+  }
 };
 
 exports.setHeaded = (bsConfig, args) => {

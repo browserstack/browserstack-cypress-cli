@@ -48,6 +48,9 @@ module.exports = function run(args) {
     //accept the local identifier from env variable if provided
     utils.setLocalIdentifier(bsConfig, args);
 
+    // set Local Config File
+    utils.setLocalConfigFile(bsConfig, args);
+
     // setup sync inferred
     utils.setSyncInferred(bsConfig, args);
 

@@ -217,6 +217,10 @@ var argv = yargs
         'local-mode': {
           describe: Constants.cliMessages.RUN.LOCAL_MODE,
           type: "string"
+        },
+        'local-config-file': {
+          describe: Constants.cliMessages.RUN.LOCAL_CONFIG_FILE,
+          type: "string"
         }
       })
       .help('help')

@@ -58,8 +58,9 @@ const validationMessages = {
   INVALID_DEFAULT_AUTH_PARAMS: "Your username and access key are required to run your tests on BrowserStack. Learn more at https://www.browserstack.com/docs/automate/cypress/authentication",
   LOCAL_NOT_SET: "To test <baseUrlValue> on BrowserStack, you will have to set up Local testing. Read more here: https://www.browserstack.com/docs/automate/cypress/local-testing",
   INCORRECT_DIRECTORY_STRUCTURE: "No tests to run. Note that your Cypress tests should be in the same directory where the cypress.json exists.",
-  INVALID_LOCAL_IDENTIFIER: "When using --local-identifier, a value needs to be supplied. <--local-identifier> <String>. For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
-  INVALID_LOCAL_MODE: "When using --local-mode, a value needs to be supplied. <--local-mode> <\"always-on\" | \"on-demand\">. For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference"
+  INVALID_LOCAL_IDENTIFIER: "When using --local-identifier, a value needs to be supplied. \n--local-identifier <String>.\nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
+  INVALID_LOCAL_MODE: "When using --local-mode, a value needs to be supplied. \n--local-mode (\"always-on\" | \"on-demand\").\nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
+  INVALID_LOCAL_CONFIG_FILE: "When using --local-config-file, a value needs to be supplied. \n--local-config-file \"path to local-config-file.yaml\".\nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference"
 };
 
 const cliMessages = {
@@ -99,8 +100,7 @@ const cliMessages = {
     LOCAL: "Accepted values: (true | false) - create a local testing connection to let you test staging and localhost websites, or sites behind proxies; learn more at browserstack.com/local-testing",
     LOCAL_MODE: 'Accepted values: ("always-on" | "on-demand") - if you choose to keep the binary "always-on", it will speed up your tests by keeping the Local connection warmed up in the background; otherwise, you can choose to have it spawn and killed for every build',
     LOCAL_IDENTIFIER: "Accepted values: String - assign an identifier to your Local process instance",
-    LOCAL_MODE_DEMAND: 'When using --local-mode, a value needs to be supplied. \n--local-mode ("always-on" | "on-demand") \nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference#run-tests',
-    LOCAL_IDENTIFIER_DEMAND: 'When using --local-identifier, a value needs to be supplied. \n--local-identifier <String> \nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference#run-tests'
+    LOCAL_CONFIG_FILE: "Accepted values: String - path to local config-file to your Local process instance"
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",
