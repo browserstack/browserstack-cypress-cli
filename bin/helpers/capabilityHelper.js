@@ -41,26 +41,25 @@ const caps = (bsConfig, zip) => {
     } else {
       reject("Test suite is empty");
     }
-    
+
     // Inferred settings
-    if (bsConfig.connection_settings.local_mode_inferred) {
+    if (bsConfig.connection_settings && bsConfig.connection_settings.local_mode_inferred) {
       obj.local_mode_inferred = bsConfig.connection_settings.local_mode_inferred;
     }
 
-    if (bsConfig.connection_settings.local_inferred) {
+    if (bsConfig.connection_settings && bsConfig.connection_settings.local_inferred) {
       obj.local_inferred = bsConfig.connection_settings.local_inferred;
     }
 
-    if (bsConfig.sync_inferred) {
-      obj.sync_inferred = bsConfig.sync_inferred;
+    if (bsConfig.connection_settings && bsConfig.connection_settings.sync_inferred) {
+      obj.sync_inferred = bsConfig.connection_settings.sync_inferred;
       logger.info('Setting "sync" mode to enable Local testing.');
     }
-    
+
     // Local
     obj.local = false;
     if (bsConfig.connection_settings && bsConfig.connection_settings.local === true) {
       obj.local = true;
-      logger.info('Setting up Local testing...');
     }
 
     obj.localMode = null;
@@ -69,7 +68,7 @@ const caps = (bsConfig, zip) => {
       obj.localMode = bsConfig.connection_settings.local_mode;
       logger.info(`Local testing set up in ${obj.localMode} mode.`);
     }
-    
+
     // Local Identifier
     obj.localIdentifier = null;
     if (obj.local === true && (bsConfig.connection_settings.localIdentifier || bsConfig.connection_settings.local_identifier)) {
@@ -162,6 +161,8 @@ const validate = (bsConfig, args) => {
     if( Utils.searchForOption('--local-identifier') && (Utils.isUndefined(args.localIdentifier) || (!Utils.isUndefined(args.localIdentifier) && !args.localIdentifier.trim()))) reject(Constants.validationMessages.INVALID_LOCAL_IDENTIFIER);
 
     if( Utils.searchForOption('--local-mode') && ( Utils.isUndefined(args.localMode) || (!Utils.isUndefined(args.localMode) && !["always-on","on-demand"].includes(args.localMode)))) reject(Constants.validationMessages.INVALID_LOCAL_MODE);
+
+    if( Utils.searchForOption('--local-config-file') && ( Utils.isUndefined(args.localConfigFile) || (!Utils.isUndefined(args.localConfigFile) && !fs.existsSync(args.localConfigFile)))) reject(Constants.validationMessages.INVALID_LOCAL_CONFIG_FILE);
 
     // validate if config file provided exists or not when cypress_config_file provided
     // validate the cypressProjectDir key otherwise.

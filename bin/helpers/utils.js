@@ -64,6 +64,9 @@ exports.getErrorCodeFromMsg = (errMsg) => {
     case Constants.validationMessages.INVALID_LOCAL_MODE:
       errorCode = 'invalid_local_mode';
       break;
+    case Constants.validationMessages.INVALID_LOCAL_CONFIG_FILE:
+      errorCode = 'invalid_local_config_file';
+      break;
     case Constants.validationMessages.LOCAL_NOT_SET:
       errorCode = 'cypress_json_base_url_no_local';
       break;
@@ -258,7 +261,7 @@ exports.isParallelValid = (value) => {
 }
 
 exports.getUserAgent = () => {
-  return `BStack-Cypress-CLI/1.5.1 (${os.arch()}/${os.platform()}/${os.release()})`;
+  return `BStack-Cypress-CLI/1.7.2 (${os.arch()}/${os.platform()}/${os.release()})`;
 };
 
 exports.isAbsolute = (configPath) => {
@@ -323,21 +326,20 @@ exports.getLocalFlag = (connectionSettings) => {
 };
 
 exports.setLocal = (bsConfig, args) => {
-  let localInferred = this.searchForOption('--local');
-
-  if (localInferred) {
-    bsConfig.connection_settings.local_inferred = localInferred;
-  }
-
+  let localInferred = !(this.searchForOption('--local'));
   if (!this.isUndefined(args.local)) {
     let local = false;
-    if (String(args.local).toLowerCase() === "true" || !this.isUndefined(args.local_mode))
+    if (String(args.local).toLowerCase() === "true" || !this.isUndefined(args.local_mode)) {
       local = true;
+      bsConfig.connection_settings.local_inferred = localInferred;
+    }
     bsConfig["connection_settings"]["local"] = local;
-  }else if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL)) {
+  } else if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL)) {
     let local = false;
-    if (String(process.env.BROWSERSTACK_LOCAL).toLowerCase() === "true")
+    if (String(process.env.BROWSERSTACK_LOCAL).toLowerCase() === "true") {
       local = true;
+      bsConfig.connection_settings.local_inferred = localInferred;
+    }
     bsConfig["connection_settings"]["local"] = local;
     logger.info(
       "Reading local setting from the environment variable BROWSERSTACK_LOCAL"
@@ -362,14 +364,6 @@ exports.setLocalIdentifier = (bsConfig, args) => {
   }
 };
 
-exports.setSyncInferred = (bsConfig, args) => {
-  let syncInferred = this.searchForOption('--sync');
-
-  if (syncInferred) {
-    bsConfig.sync_inferred = syncInferred;
-  }
-};
-
 exports.setLocalMode = (bsConfig, args) => {
   if(String(bsConfig["connection_settings"]["local"]).toLowerCase() === "true"){
     let local_mode = 'on-demand';
@@ -388,7 +382,7 @@ exports.setLocalMode = (bsConfig, args) => {
     }
     args.sync = true;
 
-    let localModeInferred = this.searchForOption('--local-mode');
+    let localModeInferred = !(this.searchForOption('--local-mode'));
 
     if (localModeInferred) {
       bsConfig.connection_settings.local_mode_inferred = local_mode;
@@ -405,6 +399,7 @@ exports.setupLocalTesting = (bsConfig, args) => {
       var bs_local = new browserstack.Local();
       var bs_local_args = this.setLocalArgs(bsConfig, args);
       let that = this;
+      logger.info('Setting up Local testing...');
       bs_local.start(bs_local_args, function (localStartError) {
         if (that.isUndefined(localStartError)) {
           resolve(bs_local);
@@ -418,6 +413,7 @@ exports.setupLocalTesting = (bsConfig, args) => {
             Constants.messageTypes.ERROR,
             errorCode
           );
+          reject(localStartError);
         }
       });
     } else {
@@ -458,7 +454,9 @@ exports.setLocalArgs = (bsConfig, args) => {
   local_args['daemon'] = true;
   local_args['enable-logging-for-api'] = true
   local_args['source'] = `cypress:${usageReporting.cli_version_and_path(bsConfig).version}`;
-  local_args['bs-host'] = 'k8s-devcypress.bsstag.com';
+  if(!this.isUndefined(bsConfig["connection_settings"]["local_config_file"])){
+    local_args['config-file'] = path.resolve(bsConfig["connection_settings"]["local_config_file"]);
+  }
   return local_args;
 };
 
@@ -503,6 +501,12 @@ exports.checkLocalIdentifierRunning = (bsConfig, localIdentifier) => {
       resolve(localIdentifiers.includes(localIdentifier));
     });
   });
+};
+
+exports.setLocalConfigFile = (bsConfig, args) => {
+  if(!this.isUndefined(args.localConfigFile)){
+    bsConfig['connection_settings']['local_config_file'] = args.localConfigFile;
+  }
 };
 
 exports.setHeaded = (bsConfig, args) => {
