@@ -95,7 +95,7 @@ module.exports = function run(args) {
               syncRunner.pollBuildStatus(bsConfig, data).then(async (exitCode) => {
 
                 // stop the Local instance
-                await utils.stopLocalBinary(bsConfig, bs_local);
+                await utils.stopLocalBinary(bsConfig, bs_local, args);
 
                 // Generate custom report!
                 reportGenerator(bsConfig, data.build_id, args, function(){
@@ -114,7 +114,7 @@ module.exports = function run(args) {
             // Build creation failed
             logger.error(err);
             // stop the Local instance
-            await utils.stopLocalBinary(bsConfig, bs_local);
+            await utils.stopLocalBinary(bsConfig, bs_local, args);
 
             utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'build_failed');
           });

@@ -1,6 +1,5 @@
 'use strict';
 const path = require('path');
-const { stub } = require('sinon');
 var sandbox = require('sinon').createSandbox();
 
 const request = require('request');
@@ -354,7 +353,6 @@ describe('utils', () => {
     let args = testObjects.initSampleArgs;
 
     it('should call sendUsageReport', () => {
-      let sandbox = sinon.createSandbox();
       sendUsageReportStub = sandbox
         .stub(utils, 'sendUsageReport')
         .callsFake(function () {
@@ -362,6 +360,8 @@ describe('utils', () => {
         });
       utils.configCreated(args);
       sinon.assert.calledOnce(sendUsageReportStub);
+      sandbox.restore();
+      sinon.restore();
     });
   });
 
@@ -837,11 +837,18 @@ describe('utils', () => {
   });
 
   describe('setupLocalTesting' ,() => {
-    afterEach(function () {
+        
+    beforeEach(function () {
       sinon.restore();
+      sandbox.restore();
     });
 
-    it('if the localArgs is passed with no key then error is raised', () => {
+    afterEach(function () {
+      sinon.restore();
+      sandbox.restore();
+    });
+
+    it('if local is true and localIdentifier is not running and start error is raised', () => {
       let bsConfig = {
         auth: {
           access_key: "xyz"
@@ -856,33 +863,62 @@ describe('utils', () => {
       checkLocalIdentifierRunningStub.returns(Promise.resolve(false));
       let setLocalArgsStub = sinon.stub(utils,"setLocalArgs");
       setLocalArgsStub.returns({});
-      return utils.setupLocalTesting(bsConfig,args).catch((error) => {
+      let localBinaryStartStub = sandbox.stub().yields(
+         'Key is required to start local testing!'
+      );
+      let getLocalBinaryStub = sandbox.stub(utils, 'getLocalBinary').returns({
+        start: localBinaryStartStub
+      });
+      let sendUsageReportStub = sandbox
+      .stub(utils, 'sendUsageReport')
+      .callsFake(function () {
+        return 'end';
+      });
+      utils.setupLocalTesting(bsConfig,args).catch((error) => {
         sinon.match(error, "Key is required to start local testing!")
+        sinon.assert.calledOnce(sendUsageReportStub);
+        sinon.assert.calledOnce(getLocalBinaryStub);
       });
     });
 
-    it('if the local_args is passed with invalid key then error is raised', () => {
+    it('if local is true and localIdentifier is not running and start error is not raised', () => {
       let bsConfig = {
         auth: {
-          access_key: "xyz"
+          access_key: 'xyz',
         },
         connection_settings: {
           local: true,
-          local_identifier: "xyz"
+          local_identifier: 'xyz',
         },
       };
       let args = {};
       let localArgs = {
-        key: "abc",
-        localIdentifier: "abc",
-        daemon: true
-      }
-      let checkLocalIdentifierRunningStub = sinon.stub(utils, "checkLocalIdentifierRunning");
+        key: 'abc',
+        localIdentifier: 'abc',
+        daemon: true,
+      };
+      let checkLocalIdentifierRunningStub = sinon.stub(
+        utils,
+        'checkLocalIdentifierRunning'
+      );
       checkLocalIdentifierRunningStub.returns(Promise.resolve(false));
-      let setLocalArgsStub = sinon.stub(utils,"setLocalArgs");
+      let setLocalArgsStub = sinon.stub(utils, 'setLocalArgs');
       setLocalArgsStub.returns(localArgs);
-      return utils.setupLocalTesting(bsConfig,args).catch((error) => {
-        sinon.match(error, "You provided an invalid key")
+
+      let localBinaryStartStub = sandbox.stub().yields(undefined);
+
+      let getLocalBinaryStub = sandbox.stub(utils, 'getLocalBinary').returns({
+        start: localBinaryStartStub,
+      });
+
+      let sendUsageReportStub = sandbox
+        .stub(utils, 'sendUsageReport')
+        .callsFake(function () {
+          return 'end';
+        });
+      utils.setupLocalTesting(bsConfig, args).catch((result) => {
+        expect(result).to.eq(undefined);
+        sinon.assert.calledOnce(getLocalBinaryStub);
       });
     });
 
@@ -931,10 +967,14 @@ describe('utils', () => {
   });
 
   describe('stopLocalBinary' , () => {
+    afterEach(function () {
+      sinon.restore();
+      sandbox.restore();
+    });
     it('stopLocalBinary promise gets resolve with undefined' ,() => {
       let bsConfig = {
         connection_settings: {
-          local_mode: true
+          local: true
         }
       };
       return utils.stopLocalBinary(bsConfig).then((result) => {
@@ -969,6 +1009,45 @@ describe('utils', () => {
         expect(result).to.be.eq(undefined);
       });
     });
+    
+    it('if the bs_local isRunning is true and local_mode is not always-on and there is no stop error, then gets resolve with undefined' ,() => {
+      let bsConfig = {
+        connection_settings: {
+          local_mode: "on-demand"
+        }
+      };
+      let bs_local = new browserstack.Local();
+      let isRunningStub = sinon.stub(bs_local,"isRunning");
+      isRunningStub.returns(true);
+      sinon.stub(bs_local,"stop").yields(undefined);
+      return utils.stopLocalBinary(bsConfig, bs_local).then((result) => {
+        expect(result).to.be.eq(undefined);
+      });
+    });
+
+    it('if the bs_local isRunning is true and local_mode is not always-on and there is stop error, then gets resolve with stop error' ,() => {
+      let bsConfig = {
+        connection_settings: {
+          local_mode: "on-demand"
+        }
+      };
+      let bs_local = new browserstack.Local();
+      let isRunningStub = sinon.stub(bs_local,"isRunning");
+      isRunningStub.returns(true);
+      let error = new Error('Local Stop Error');
+      let stopStub = sinon.stub(bs_local,"stop").yields(error);
+      let sendUsageReportStub = sandbox
+        .stub(utils, 'sendUsageReport')
+        .callsFake(function () {
+          return 'end';
+        });
+      return utils.stopLocalBinary(bsConfig, bs_local, {}).then((result) => {
+        expect(result).to.be.eq(error);
+        sinon.assert.calledOnce(sendUsageReportStub);
+        sinon.assert.calledOnce(stopStub);
+      });
+    });
+
   });
 
   describe('generateLocalIdentifier', () => {
@@ -1216,6 +1295,10 @@ describe('utils', () => {
       args = {
         cypressConfigFile: 'args_cypress_config_file',
       };
+    });
+
+    afterEach(function(){
+      sinon.restore();
     });
 
     it('has user provided ccf flag', () => {
