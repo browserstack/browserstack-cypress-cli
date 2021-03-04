@@ -348,14 +348,16 @@ exports.setLocal = (bsConfig, args) => {
 };
 
 exports.setLocalIdentifier = (bsConfig, args) => {
-  if (!this.isUndefined(args.local_identifier)){
-    bsConfig["connection_settings"]["local_identifier"] = args.local_identifier;
+  if (!this.isUndefined(args.localIdentifier)){
+    bsConfig["connection_settings"]["local_identifier"] = args.localIdentifier;
+    bsConfig['connection_settings']['local_mode'] = "always-on";
   } else if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL_IDENTIFIER)) {
     bsConfig["connection_settings"]["local_identifier"] =
       process.env.BROWSERSTACK_LOCAL_IDENTIFIER;
     logger.info(
       "Reading local identifier from the environment variable BROWSERSTACK_LOCAL_IDENTIFIER"
     );
+    bsConfig['connection_settings']['local_mode'] = 'always-on';
   } else if (
       bsConfig['connection_settings']['local'] &&
       this.isUndefined(bsConfig["connection_settings"]["local_identifier"])
@@ -396,7 +398,7 @@ exports.setupLocalTesting = (bsConfig, args) => {
       bsConfig, bsConfig['connection_settings']['local_identifier']
     );
     if (bsConfig['connection_settings']['local'] && !localIdentifierRunning){
-      var bs_local = new browserstack.Local();
+      var bs_local = this.getLocalBinary();
       var bs_local_args = this.setLocalArgs(bsConfig, args);
       let that = this;
       logger.info('Setting up Local testing...');
@@ -422,7 +424,7 @@ exports.setupLocalTesting = (bsConfig, args) => {
   });
 };
 
-exports.stopLocalBinary = (bsConfig, bs_local) => {
+exports.stopLocalBinary = (bsConfig, bs_local, args) => {
   return new Promise((resolve, reject) => {
     if (!this.isUndefined(bs_local) && bs_local.isRunning() && bsConfig['connection_settings']['local_mode'].toLowerCase() != "always-on") {
       let that = this;
@@ -430,8 +432,8 @@ exports.stopLocalBinary = (bsConfig, bs_local) => {
         if (that.isUndefined(localStopError)) {
           resolve();
         } else {
-          let message = `name: ${localStartError.name}, message: ${localStartError.message}, extra: ${localStartError.extra}`,
-              errorCode = "local_stop_error";
+          let message = `name: ${localStopError.name}, message: ${localStopError.message}, extra: ${localStopError.extra}`,
+            errorCode = 'local_stop_error';
           that.sendUsageReport(
             bsConfig,
             args,
@@ -439,12 +441,17 @@ exports.stopLocalBinary = (bsConfig, bs_local) => {
             Constants.messageTypes.ERROR,
             errorCode
           );
+          resolve(localStopError);
         }
       });
     } else {
       resolve();
     }
   });
+};
+
+exports.getLocalBinary = () => {
+  return new browserstack.Local();
 };
 
 exports.setLocalArgs = (bsConfig, args) => {

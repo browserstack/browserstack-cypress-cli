@@ -1,6 +1,8 @@
 'use strict';
 const path = require('path');
+var sandbox = require('sinon').createSandbox();
 
+const request = require('request');
 const chai = require('chai'),
   expect = chai.expect,
   sinon = require('sinon'),
@@ -8,13 +10,14 @@ const chai = require('chai'),
   glob = require('glob'),
   chalk = require('chalk'),
   fs = require('fs');
-
+const getmac = require('getmac').default;
+const usageReporting = require('../../../../bin/helpers/usageReporting');
 const utils = require('../../../../bin/helpers/utils'),
   constant = require('../../../../bin/helpers/constants'),
   logger = require('../../../../bin/helpers/logger').winstonLogger,
   testObjects = require('../../support/fixtures/testObjects'),
   syncLogger = require("../../../../bin/helpers/logger").syncCliLogger;
-
+const browserstack = require('browserstack-local');
 chai.use(chaiAsPromised);
 logger.transports['console.info'].silent = true;
 
@@ -73,6 +76,26 @@ describe('utils', () => {
           'Please use --config-file <path to browserstack.json>.'
         )
       ).to.eq('bstack_json_path_invalid');
+      expect(
+        utils.getErrorCodeFromMsg(
+          constant.validationMessages.INVALID_LOCAL_IDENTIFIER
+        )
+      ).to.eq('invalid_local_identifier');
+      expect(
+        utils.getErrorCodeFromMsg(
+          constant.validationMessages.INVALID_LOCAL_MODE
+        )
+      ).to.eq('invalid_local_mode');
+      expect(
+        utils.getErrorCodeFromMsg(
+          constant.validationMessages.INVALID_LOCAL_CONFIG_FILE
+        )
+      ).to.eq('invalid_local_config_file');
+      expect(
+        utils.getErrorCodeFromMsg(
+          "Invalid browserstack.json file."
+        )
+      ).to.eq("bstack_json_invalid");
     });
   });
 
@@ -330,7 +353,6 @@ describe('utils', () => {
     let args = testObjects.initSampleArgs;
 
     it('should call sendUsageReport', () => {
-      let sandbox = sinon.createSandbox();
       sendUsageReportStub = sandbox
         .stub(utils, 'sendUsageReport')
         .callsFake(function () {
@@ -338,6 +360,8 @@ describe('utils', () => {
         });
       utils.configCreated(args);
       sinon.assert.calledOnce(sendUsageReportStub);
+      sandbox.restore();
+      sinon.restore();
     });
   });
 
@@ -642,12 +666,24 @@ describe('utils', () => {
   });
 
   describe('setLocal', () => {
-    beforeEach(function () {
+    afterEach(function () {
+      sinon.restore();
       delete process.env.BROWSERSTACK_LOCAL;
     });
 
-    afterEach(function () {
-      delete process.env.BROWSERSTACK_LOCAL;
+    it('bsconfig connection_settings local_inferred as true if serachforOption returns false with args local true', () => {
+      let bsConfig = {
+        connection_settings: {
+        }
+      };
+      let args = {
+        local: true,
+        local_mode: false
+      };
+      let searchForOptionStub = sinon.stub(utils,"searchForOption");
+      searchForOptionStub.returns(false);
+      utils.setLocal(bsConfig,args);
+      expect(bsConfig.connection_settings.local_inferred).to.be.eq(true);
     });
 
     it('should not change local in bsConfig if process.env.BROWSERSTACK_LOCAL is undefined', () => {
@@ -656,7 +692,21 @@ describe('utils', () => {
           local: true,
         },
       };
-      utils.setLocal(bsConfig);
+      let args = {};
+      utils.setLocal(bsConfig,args);
+      expect(bsConfig.connection_settings.local).to.be.eq(true);
+    });
+
+    it('should change local to true in bsConfig if process.env.BROWSERSTACK_LOCAL is set to true', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: false,
+        },
+      };
+      let args = {
+      };
+      process.env.BROWSERSTACK_LOCAL = true;
+      utils.setLocal(bsConfig,args);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
     });
 
@@ -666,9 +716,25 @@ describe('utils', () => {
           local: true,
         },
       };
+      let args = {};
       process.env.BROWSERSTACK_LOCAL = false;
-      utils.setLocal(bsConfig);
+      utils.setLocal(bsConfig,args);
       expect(bsConfig.connection_settings.local).to.be.eq(false);
+    });
+
+    it('should change local_inferred to true in bsConfig if process.env.BROWSERSTACK_LOCAL is set to true', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: false,
+          local_inferred: false,
+        },
+      };
+      let args = {};
+      process.env.BROWSERSTACK_LOCAL = true;
+      let searchForOptionStub = sinon.stub(utils, 'searchForOption');
+      searchForOptionStub.returns(false);
+      utils.setLocal(bsConfig, args);
+      expect(bsConfig.connection_settings.local_inferred).to.be.eq(true);
     });
 
     it('should change local to true in bsConfig if process.env.BROWSERSTACK_LOCAL is set to true', () => {
@@ -677,18 +743,322 @@ describe('utils', () => {
           local: false,
         },
       };
+      let args = {};
       process.env.BROWSERSTACK_LOCAL = true;
-      utils.setLocal(bsConfig);
+      utils.setLocal(bsConfig,args);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
     });
 
-    it('should set local to true in bsConfig if process.env.BROWSERSTACK_LOCAL is set to true & local is not set in bsConfig', () => {
+    it('should set local to true in bsConfig if args is set to true & local is not set in bsConfig', () => {
       let bsConfig = {
         connection_settings: {},
       };
-      process.env.BROWSERSTACK_LOCAL = true;
-      utils.setLocal(bsConfig);
+      let args = {
+        local: true
+      }
+      utils.setLocal(bsConfig,args);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
+    });
+  });
+
+  describe('setLocalMode', () => {
+
+    afterEach(() =>{
+      sinon.restore();
+    })
+
+    it('if bsconfig local is true and args localMode is always-on then local_mode should be always-on' , () => {
+      let bsConfig = {
+        connection_settings: {
+          local: true,
+          local_mode: "on-demand"
+        },
+      };
+      let args = {
+        localMode: "always-on"
+      };
+      utils.setLocalMode(bsConfig,args);
+      expect(bsConfig['connection_settings']['local_mode']).to.be.eq("always-on");
+    });
+
+    it('if bsconfig local mode is not always-on then local_mode should be on-demand', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: true
+        },
+      };
+      let args = {};
+      utils.setLocalMode(bsConfig,args);
+      expect(bsConfig['connection_settings']['local_mode']).to.be.eq("on-demand");
+    });
+
+    it('setLocalMode should end up setting args.sync and sync_inferred as true', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: true
+        },
+      };
+      let args = {
+        localMode: "always-on"
+      }
+      utils.setLocalMode(bsConfig,args);
+      expect(args.sync).to.be.eq(true);
+      expect(bsConfig.connection_settings.sync_inferred).to.be.eq(true);
+    });
+
+    it('if local_mode is not provided then the bsConfig local_mode_inferred changes to local_mode', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: true
+        },
+      };
+      let args = {
+      }
+      let searchForOptionStub = sinon.stub(utils,"searchForOption");
+      searchForOptionStub.returns(false);
+      utils.setLocalMode(bsConfig,args);
+      expect(bsConfig.connection_settings.local_mode_inferred).to.be.eq("on-demand");
+    });
+
+    it('if local_mode is provided then the bsConfig local_mode_inferred remains unchanged', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: true,
+          local_mode: "always-on"
+        },
+      };
+      let args = {
+      }
+      let searchForOptionStub = sinon.stub(utils,"searchForOption");
+      searchForOptionStub.returns(true);
+      utils.setLocalMode(bsConfig,args);
+      expect(bsConfig.connection_settings.local_mode_inferred).to.be.undefined;
+    });
+  });
+
+  describe('setupLocalTesting' ,() => {
+        
+    beforeEach(function () {
+      sinon.restore();
+      sandbox.restore();
+    });
+
+    afterEach(function () {
+      sinon.restore();
+      sandbox.restore();
+    });
+
+    it('if local is true and localIdentifier is not running and start error is raised', () => {
+      let bsConfig = {
+        auth: {
+          access_key: "xyz"
+        },
+        connection_settings: {
+          local: true,
+          local_identifier: "xyz"
+        },
+      };
+      let args = {};
+      let checkLocalIdentifierRunningStub = sinon.stub(utils, "checkLocalIdentifierRunning");
+      checkLocalIdentifierRunningStub.returns(Promise.resolve(false));
+      let setLocalArgsStub = sinon.stub(utils,"setLocalArgs");
+      setLocalArgsStub.returns({});
+      let localBinaryStartStub = sandbox.stub().yields(
+         'Key is required to start local testing!'
+      );
+      let getLocalBinaryStub = sandbox.stub(utils, 'getLocalBinary').returns({
+        start: localBinaryStartStub
+      });
+      let sendUsageReportStub = sandbox
+      .stub(utils, 'sendUsageReport')
+      .callsFake(function () {
+        return 'end';
+      });
+      utils.setupLocalTesting(bsConfig,args).catch((error) => {
+        sinon.match(error, "Key is required to start local testing!")
+        sinon.assert.calledOnce(sendUsageReportStub);
+        sinon.assert.calledOnce(getLocalBinaryStub);
+      });
+    });
+
+    it('if local is true and localIdentifier is not running and start error is not raised', () => {
+      let bsConfig = {
+        auth: {
+          access_key: 'xyz',
+        },
+        connection_settings: {
+          local: true,
+          local_identifier: 'xyz',
+        },
+      };
+      let args = {};
+      let localArgs = {
+        key: 'abc',
+        localIdentifier: 'abc',
+        daemon: true,
+      };
+      let checkLocalIdentifierRunningStub = sinon.stub(
+        utils,
+        'checkLocalIdentifierRunning'
+      );
+      checkLocalIdentifierRunningStub.returns(Promise.resolve(false));
+      let setLocalArgsStub = sinon.stub(utils, 'setLocalArgs');
+      setLocalArgsStub.returns(localArgs);
+
+      let localBinaryStartStub = sandbox.stub().yields(undefined);
+
+      let getLocalBinaryStub = sandbox.stub(utils, 'getLocalBinary').returns({
+        start: localBinaryStartStub,
+      });
+
+      let sendUsageReportStub = sandbox
+        .stub(utils, 'sendUsageReport')
+        .callsFake(function () {
+          return 'end';
+        });
+      utils.setupLocalTesting(bsConfig, args).catch((result) => {
+        expect(result).to.eq(undefined);
+        sinon.assert.calledOnce(getLocalBinaryStub);
+      });
+    });
+
+    it('if bsconfig local is true then promise should return a browserstack local object', () => {
+      let bsConfig = {
+        auth: {
+          access_key: "xyz"
+        },
+        connection_settings: {
+          local: true,
+          local_identifier: "xyz"
+        },
+      };
+      let args = {};
+      let checkLocalIdentifierRunningStub = sinon.stub(utils, "checkLocalIdentifierRunning");
+      checkLocalIdentifierRunningStub.returns(Promise.resolve(true));
+      return utils.setupLocalTesting(bsConfig,args).then((result) => {
+        expect(result).to.be.eq(undefined);
+      });
+    });
+  });
+
+  describe('setLocalArgs', () => {
+    it('setting up local args and returning a local_args hash', () => {
+      let bsConfig = {
+        auth: {
+          access_key: "xyz"
+        },
+        connection_settings: {
+          local: true,
+          local_identifier: "on-demand",
+          local_config_file: "./local.yml"
+        },
+      };
+      let args = {};
+      let cliVersionPathStub = sinon.stub(usageReporting, "cli_version_and_path").withArgs(bsConfig);
+      cliVersionPathStub.returns("abc");
+      let local_args = utils.setLocalArgs(bsConfig, args);
+      expect(local_args["key"]).to.be.eq(bsConfig['auth']['access_key']);
+      expect(local_args["localIdentifier"]).to.be.eq(bsConfig["connection_settings"]["local_identifier"]);
+      expect(local_args["daemon"]).to.be.eq(true);
+      expect(local_args["enable-logging-for-api"]).to.be.eq(true);
+      expect(local_args['config-file']).to.be.eq(path.resolve('./local.yml'));
+      sinon.restore();
+    });
+  });
+
+  describe('stopLocalBinary' , () => {
+    afterEach(function () {
+      sinon.restore();
+      sandbox.restore();
+    });
+    it('stopLocalBinary promise gets resolve with undefined' ,() => {
+      let bsConfig = {
+        connection_settings: {
+          local: true
+        }
+      };
+      return utils.stopLocalBinary(bsConfig).then((result) => {
+        expect(result).to.be.eq(undefined);
+      });
+    });
+
+    it('stopLocalBinary promise resolves with undefined if the bs_local isRunning is false' ,() => {
+      let bsConfig = {
+        connection_settings: {
+          local_mode: true
+        }
+      };
+      let bs_local = new browserstack.Local();
+      let isRunningStub = sinon.stub(bs_local,"isRunning");
+      isRunningStub.returns(false);
+      return utils.stopLocalBinary(bsConfig, bs_local).then((result) => {
+        expect(result).to.be.eq(undefined);
+      });
+    });
+
+    it('if the bs_local isRunning is true and local_mode is always-on, then gets resolve with undefined' ,() => {
+      let bsConfig = {
+        connection_settings: {
+          local_mode: "always-on"
+        }
+      };
+      let bs_local = new browserstack.Local();
+      let isRunningStub = sinon.stub(bs_local,"isRunning");
+      isRunningStub.returns(true);
+      return utils.stopLocalBinary(bsConfig, bs_local).then((result) => {
+        expect(result).to.be.eq(undefined);
+      });
+    });
+    
+    it('if the bs_local isRunning is true and local_mode is not always-on and there is no stop error, then gets resolve with undefined' ,() => {
+      let bsConfig = {
+        connection_settings: {
+          local_mode: "on-demand"
+        }
+      };
+      let bs_local = new browserstack.Local();
+      let isRunningStub = sinon.stub(bs_local,"isRunning");
+      isRunningStub.returns(true);
+      sinon.stub(bs_local,"stop").yields(undefined);
+      return utils.stopLocalBinary(bsConfig, bs_local).then((result) => {
+        expect(result).to.be.eq(undefined);
+      });
+    });
+
+    it('if the bs_local isRunning is true and local_mode is not always-on and there is stop error, then gets resolve with stop error' ,() => {
+      let bsConfig = {
+        connection_settings: {
+          local_mode: "on-demand"
+        }
+      };
+      let bs_local = new browserstack.Local();
+      let isRunningStub = sinon.stub(bs_local,"isRunning");
+      isRunningStub.returns(true);
+      let error = new Error('Local Stop Error');
+      let stopStub = sinon.stub(bs_local,"stop").yields(error);
+      let sendUsageReportStub = sandbox
+        .stub(utils, 'sendUsageReport')
+        .callsFake(function () {
+          return 'end';
+        });
+      return utils.stopLocalBinary(bsConfig, bs_local, {}).then((result) => {
+        expect(result).to.be.eq(error);
+        sinon.assert.calledOnce(sendUsageReportStub);
+        sinon.assert.calledOnce(stopStub);
+      });
+    });
+
+  });
+
+  describe('generateLocalIdentifier', () => {
+
+    it('if the mode is always-on it returns getmac() as local-identifier', () => {
+      expect(utils.generateLocalIdentifier("always-on")).to.be.eq(Buffer.from(getmac()).toString("base64"));
+    });
+    it('if the mode is not always-on it returns random uuidv4 as local-identifier', () => {
+      let uuidv41 = utils.generateLocalIdentifier("abc");
+      let uuidv42 = utils.generateLocalIdentifier("abc");
+      expect(uuidv41 != uuidv42).to.be.eq(true);
     });
   });
 
@@ -700,15 +1070,18 @@ describe('utils', () => {
     afterEach(function () {
       delete process.env.BROWSERSTACK_LOCAL_IDENTIFIER;
     });
-    it('should not change local identifier in bsConfig if process.env.BROWSERSTACK_LOCAL_IDENTIFIER is undefined', () => {
+    it('should generate local_identifier if args.localIdentifier & process.env.BROWSERSTACK_LOCAL_IDENTIFIER is undefined', () => {
       let bsConfig = {
         connection_settings: {
-          local_identifier: 'local_identifier',
+          local: true
         },
       };
-      utils.setLocalIdentifier(bsConfig);
+      let args = {};
+      let generateLocalIdentifierStub = sinon.stub(utils,"generateLocalIdentifier");
+      generateLocalIdentifierStub.returns("abc");
+      utils.setLocalIdentifier(bsConfig,args);
       expect(bsConfig.connection_settings.local_identifier).to.be.eq(
-        'local_identifier'
+        "abc"
       );
     });
 
@@ -718,8 +1091,9 @@ describe('utils', () => {
           local_identifier: 'test',
         },
       };
+      let args = {};
       process.env.BROWSERSTACK_LOCAL_IDENTIFIER = 'local_identifier';
-      utils.setLocalIdentifier(bsConfig);
+      utils.setLocalIdentifier(bsConfig,args);
       expect(bsConfig.connection_settings.local_identifier).to.be.eq(
         'local_identifier'
       );
@@ -729,11 +1103,28 @@ describe('utils', () => {
       let bsConfig = {
         connection_settings: {},
       };
+      let args = {};
       process.env.BROWSERSTACK_LOCAL_IDENTIFIER = 'local_identifier';
-      utils.setLocalIdentifier(bsConfig);
+      utils.setLocalIdentifier(bsConfig,args);
       expect(bsConfig.connection_settings.local_identifier).to.be.eq(
         'local_identifier'
       );
+    });
+
+    it('if args localIdentifier is defined then it gets assigned to bsConfig connection_settings local_identifier' , () => {
+      let bsConfig = {
+        local: true,
+        connection_settings: {
+          local_identifier: "abc"
+        }
+      };
+      let args = {
+        localIdentifier: "xyz"
+      };
+      utils.setLocalIdentifier(bsConfig, args);
+      expect(bsConfig.connection_settings.local_identifier).to.be.eq("xyz");
+      expect(bsConfig.connection_settings.local_mode).to.be.eq('always-on');
+
     });
   });
 
@@ -904,6 +1295,10 @@ describe('utils', () => {
       args = {
         cypressConfigFile: 'args_cypress_config_file',
       };
+    });
+
+    afterEach(function(){
+      sinon.restore();
     });
 
     it('has user provided ccf flag', () => {
@@ -1189,6 +1584,16 @@ describe('utils', () => {
       let error = constant.validationMessages.INCORRECT_AUTH_PARAMS;
       expect(utils.isJSONInvalid(error, {})).to.eq(true)
     });
+
+    it('JSON is invalid if local identifier is invalid', () =>{
+      let error = constant.validationMessages.INVALID_LOCAL_IDENTIFIER;
+      expect(utils.isJSONInvalid(error,{})).to.eq(false);
+    });
+
+    it('JSON is invalid if local mode is invalid', () =>{
+      let error = constant.validationMessages.INVALID_LOCAL_MODE;
+      expect(utils.isJSONInvalid(error,{})).to.eq(false);
+    });
   })
 
   describe('#deleteBaseUrlFromError', () => {
@@ -1202,4 +1607,99 @@ describe('utils', () => {
       expect(utils.deleteBaseUrlFromError(error)).not.to.match(/To test on BrowserStack/)
     });
   });
+
+  describe('#checkLocalIdentifierRunning', () => {
+    afterEach(() =>{
+      sinon.restore();
+    });
+    it('if the bsConfig localIdentifier is not present within the response body then function should resolve with false' , () => {
+      const responseObject = {
+        statusCode: 200,
+        headers: {
+          'content-type': 'application/json'
+        }
+      };
+      const responseBody = {
+        status: 'success',
+        instances: [
+          {
+            localIdentifier: 'abcdef',
+          },
+          {
+            localIdentifier: 'ghij',
+          },
+          {
+            localIdentifier: 'lmno',
+          }
+        ]
+      };
+      sinon.stub(request, 'get')
+          .yields(undefined, responseObject, JSON.stringify(responseBody));
+
+      let bsConfig = {
+        auth: {
+        access_key: "abcd",
+        username: "abcd"
+        }
+      };
+
+      let localIdentifier = "abcd";
+      return utils.checkLocalIdentifierRunning(bsConfig, localIdentifier).then((result) => {
+        expect(result).to.be.eq(false);
+      });
+    });
+
+    it('if the bsConfig localIdentifier if present within the response body then the function should resolve with true' , () => {
+      const responseObject = {
+        statusCode: 200,
+        headers: {
+          'content-type': 'application/json'
+        }
+      };
+      const responseBody = {
+        status: 'success',
+        instances: [
+          {
+            localIdentifier: 'abcdef',
+          },
+          {
+            localIdentifier: 'ghij',
+          },
+          {
+            localIdentifier: 'lmno',
+          }
+        ]
+      };
+      sinon.stub(request, 'get')
+          .yields(undefined, responseObject, JSON.stringify(responseBody));
+
+      let bsConfig = {
+        auth: {
+        access_key: "abcd",
+        username: "abcd"
+        }
+      };
+
+      let localIdentifier = "lmno";
+      return utils.checkLocalIdentifierRunning(bsConfig, localIdentifier).then((result) => {
+        expect(result).to.be.eq(true);
+      });
+    });
+  });
+
+  describe('setLocalConfigFile', () => {
+    it('the args localConfigfile should be assigned to bsconfig connection_settigs local_config_file', () => {
+      let bsConfig = {
+        connection_settings: {
+          local_config_file: "efgh"
+        }
+      };
+      let args = {
+        localConfigFile: "abcd"
+      };
+      utils.setLocalConfigFile(bsConfig, args);
+      expect(args.localConfigFile).to.be.eql(bsConfig.connection_settings.local_config_file);
+    });
+  });
+
 });
