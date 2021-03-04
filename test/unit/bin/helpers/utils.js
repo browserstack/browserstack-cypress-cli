@@ -837,7 +837,7 @@ describe('utils', () => {
   });
 
   describe('setupLocalTesting' ,() => {
-        
+
     beforeEach(function () {
       sinon.restore();
       sandbox.restore();
@@ -985,12 +985,13 @@ describe('utils', () => {
     it('stopLocalBinary promise resolves with undefined if the bs_local isRunning is false' ,() => {
       let bsConfig = {
         connection_settings: {
-          local_mode: true
+          local_mode: "on-demand"
         }
       };
-      let bs_local = new browserstack.Local();
-      let isRunningStub = sinon.stub(bs_local,"isRunning");
-      isRunningStub.returns(false);
+      let isRunningStub = sandbox.stub().returns(false);
+      let bs_local = {
+        isRunning: isRunningStub,
+      };
       return utils.stopLocalBinary(bsConfig, bs_local).then((result) => {
         expect(result).to.be.eq(undefined);
       });
@@ -1002,24 +1003,27 @@ describe('utils', () => {
           local_mode: "always-on"
         }
       };
-      let bs_local = new browserstack.Local();
-      let isRunningStub = sinon.stub(bs_local,"isRunning");
-      isRunningStub.returns(true);
+      let isRunningStub = sandbox.stub().returns(true);
+      let bs_local = {
+        isRunning: isRunningStub,
+      }
       return utils.stopLocalBinary(bsConfig, bs_local).then((result) => {
         expect(result).to.be.eq(undefined);
       });
     });
-    
+
     it('if the bs_local isRunning is true and local_mode is not always-on and there is no stop error, then gets resolve with undefined' ,() => {
       let bsConfig = {
         connection_settings: {
           local_mode: "on-demand"
         }
       };
-      let bs_local = new browserstack.Local();
-      let isRunningStub = sinon.stub(bs_local,"isRunning");
-      isRunningStub.returns(true);
-      sinon.stub(bs_local,"stop").yields(undefined);
+      let isRunningStub = sandbox.stub().returns(true);
+      let stopStub = sandbox.stub().yields(undefined);
+      let bs_local = {
+        isRunning: isRunningStub,
+        stop: stopStub
+      }
       return utils.stopLocalBinary(bsConfig, bs_local).then((result) => {
         expect(result).to.be.eq(undefined);
       });
@@ -1031,11 +1035,13 @@ describe('utils', () => {
           local_mode: "on-demand"
         }
       };
-      let bs_local = new browserstack.Local();
-      let isRunningStub = sinon.stub(bs_local,"isRunning");
-      isRunningStub.returns(true);
+      let isRunningStub = sandbox.stub().returns(true);
       let error = new Error('Local Stop Error');
-      let stopStub = sinon.stub(bs_local,"stop").yields(error);
+      let stopStub = sandbox.stub().yields(error);
+      let bs_local = {
+        isRunning: isRunningStub,
+        stop: stopStub
+      }
       let sendUsageReportStub = sandbox
         .stub(utils, 'sendUsageReport')
         .callsFake(function () {
