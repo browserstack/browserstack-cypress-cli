@@ -394,39 +394,40 @@ exports.setLocalMode = (bsConfig, args) => {
 
 exports.setupLocalTesting = (bsConfig, args) => {
   return new Promise(async (resolve, reject) => {
-    let localIdentifierRunning = await this.checkLocalIdentifierRunning(
-      bsConfig, bsConfig['connection_settings']['local_identifier']
-    );
-    if (bsConfig['connection_settings']['local'] && !localIdentifierRunning){
-      var bs_local = this.getLocalBinary();
-      var bs_local_args = this.setLocalArgs(bsConfig, args);
-      let that = this;
-      logger.info('Setting up Local testing...');
-      bs_local.start(bs_local_args, function (localStartError) {
-        if (that.isUndefined(localStartError)) {
-          resolve(bs_local);
-        } else {
-          let message = `name: ${localStartError.name}, message: ${localStartError.message}, extra: ${localStartError.extra}`,
-              errorCode = "local_start_error";
-          that.sendUsageReport(
-            bsConfig,
-            args,
-            message,
-            Constants.messageTypes.ERROR,
-            errorCode
-          );
-          reject(localStartError);
-        }
-      });
-    } else {
-      resolve();
+    if( bsConfig['connection_settings'] && bsConfig['connection_settings']['local'] && String(bsConfig['connection_settings']['local']) === "true" ){
+      let localIdentifierRunning = await this.checkLocalIdentifierRunning(
+        bsConfig, bsConfig['connection_settings']['local_identifier']
+      );
+      if (!localIdentifierRunning){
+        var bs_local = this.getLocalBinary();
+        var bs_local_args = this.setLocalArgs(bsConfig, args);
+        let that = this;
+        logger.info('Setting up Local testing...');
+        bs_local.start(bs_local_args, function (localStartError) {
+          if (that.isUndefined(localStartError)) {
+            resolve(bs_local);
+          } else {
+            let message = `name: ${localStartError.name}, message: ${localStartError.message}, extra: ${localStartError.extra}`,
+                errorCode = "local_start_error";
+            that.sendUsageReport(
+              bsConfig,
+              args,
+              message,
+              Constants.messageTypes.ERROR,
+              errorCode
+            );
+            reject(localStartError);
+          }
+        });
+      } 
     }
+    resolve();
   });
 };
 
 exports.stopLocalBinary = (bsConfig, bs_local, args) => {
   return new Promise((resolve, reject) => {
-    if (!this.isUndefined(bs_local) && bs_local.isRunning() && bsConfig['connection_settings']['local_mode'].toLowerCase() != "always-on") {
+    if (!this.isUndefined(bs_local) && bs_local.isRunning() && bsConfig['connection_settings'] && bsConfig['connection_settings']['local_mode'].toLowerCase() != "always-on") {
       let that = this;
       bs_local.stop(function (localStopError) {
         if (that.isUndefined(localStopError)) {
@@ -479,7 +480,7 @@ exports.generateLocalIdentifier = (mode) => {
 
 exports.checkLocalIdentifierRunning = (bsConfig, localIdentifier) => {
   let options = {
-    url: `${config.localTestingUrl}/list?auth_token=${bsConfig.auth.access_key}&state=running`,
+    url: `${config.localTestingListUrl}?auth_token=${bsConfig.auth.access_key}&state=running`,
     auth: {
       user: bsConfig.auth.username,
       password: bsConfig.auth.access_key,
@@ -491,21 +492,21 @@ exports.checkLocalIdentifierRunning = (bsConfig, localIdentifier) => {
   let that = this;
   return new Promise ( function(resolve, reject) {
       request.get(options, function (err, resp, body) {
-      if(err){
-        reject(err);
-      }
-      let response = JSON.parse(body);
-      let localInstances = [];
-      if(!that.isUndefined(response['instances'])){
-        localInstances = response['instances'];
-      }
-      let localIdentifiers = [];
+        if(err){
+          reject(err);
+        }
+        let response = JSON.parse(body);
+        let localInstances = [];
+        if(!that.isUndefined(response['instances'])){
+          localInstances = response['instances'];
+        }
+        let localIdentifiers = [];
 
-      localInstances.forEach(function(instance){
-        localIdentifiers.push(instance['localIdentifier']);
-      });
+        localInstances.forEach(function(instance){
+          localIdentifiers.push(instance['localIdentifier']);
+        });
 
-      resolve(localIdentifiers.includes(localIdentifier));
+        resolve(localIdentifiers.includes(localIdentifier));
     });
   });
 };

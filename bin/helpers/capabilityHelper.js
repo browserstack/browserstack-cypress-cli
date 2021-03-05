@@ -43,17 +43,19 @@ const caps = (bsConfig, zip) => {
     }
 
     // Inferred settings
-    if (bsConfig.connection_settings && bsConfig.connection_settings.local_mode_inferred) {
-      obj.local_mode_inferred = bsConfig.connection_settings.local_mode_inferred;
-    }
+    if(bsConfig.connection_settings){
+      if (bsConfig.connection_settings.local_mode_inferred) {
+        obj.local_mode_inferred = bsConfig.connection_settings.local_mode_inferred;
+      }
 
-    if (bsConfig.connection_settings && bsConfig.connection_settings.local_inferred) {
-      obj.local_inferred = bsConfig.connection_settings.local_inferred;
-    }
+      if (bsConfig.connection_settings.local_inferred) {
+        obj.local_inferred = bsConfig.connection_settings.local_inferred;
+      }
 
-    if (bsConfig.connection_settings && bsConfig.connection_settings.sync_inferred) {
-      obj.sync_inferred = bsConfig.connection_settings.sync_inferred;
-      logger.info('Setting "sync" mode to enable Local testing.');
+      if (bsConfig.connection_settings.sync_inferred) {
+        obj.sync_inferred = bsConfig.connection_settings.sync_inferred;
+        logger.info('Setting "sync" mode to enable Local testing.');
+      }
     }
 
     // Local
