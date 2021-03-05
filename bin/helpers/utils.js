@@ -420,12 +420,15 @@ exports.setupLocalTesting = (bsConfig, args) => {
               Constants.messageTypes.ERROR,
               errorCode
             );
-            reject(localStartError);
+            reject(Constants.userMessages.LOCAL_START_FAILED);
           }
         });
-      } 
+      } else {
+        resolve();
+      }
+    } else {
+      resolve();
     }
-    resolve();
   });
 };
 

@@ -860,7 +860,7 @@ describe('utils', () => {
         return 'end';
       });
       utils.setupLocalTesting(bsConfig,args).catch((error) => {
-        sinon.match(error, "Key is required to start local testing!")
+        expect(error).to.eq(constant.userMessages.LOCAL_START_FAILED);
         sinon.assert.calledOnce(sendUsageReportStub);
         sinon.assert.calledOnce(getLocalBinaryStub);
       });

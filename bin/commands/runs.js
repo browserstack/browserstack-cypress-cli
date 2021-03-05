@@ -119,11 +119,15 @@ module.exports = function run(args) {
             utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'build_failed');
           });
         }).catch(function (err) {
-          // Zip Upload failed
+          // Zip Upload failed | Local Start failed 
           logger.error(err);
-          logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED);
-          fileHelpers.deleteZip();
-          utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed');
+          if(err === Constants.userMessages.LOCAL_START_FAILED){
+            utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.LOCAL_START_FAILED}`, Constants.messageTypes.ERROR, 'local_start_failed');
+          } else {
+            logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED);
+            fileHelpers.deleteZip();
+            utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed');
+          }
         });
       }).catch(function (err) {
         // Zipping failed
