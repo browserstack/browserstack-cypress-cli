@@ -65,7 +65,9 @@ module.exports = function () {
     },
     "connection_settings": {
       "local": false,
-      "local_identifier": null
+      "local_identifier": null,
+      "local_mode": null,
+      "local_config_file": null
     },
     "disable_usage_reporting": false
   }

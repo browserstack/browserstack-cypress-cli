@@ -671,14 +671,14 @@ describe('utils', () => {
       delete process.env.BROWSERSTACK_LOCAL;
     });
 
-    it('bsconfig connection_settings local_inferred as true if serachforOption returns false with args local true', () => {
+    it('bsconfig connection_settings local_inferred as true if serachforOption returns false with args local-mode true', () => {
       let bsConfig = {
         connection_settings: {
+          "local": false
         }
       };
       let args = {
-        local: true,
-        local_mode: false
+        localMode: "always-on"
       };
       let searchForOptionStub = sinon.stub(utils,"searchForOption");
       searchForOptionStub.returns(false);
@@ -720,21 +720,6 @@ describe('utils', () => {
       process.env.BROWSERSTACK_LOCAL = false;
       utils.setLocal(bsConfig,args);
       expect(bsConfig.connection_settings.local).to.be.eq(false);
-    });
-
-    it('should change local_inferred to true in bsConfig if process.env.BROWSERSTACK_LOCAL is set to true', () => {
-      let bsConfig = {
-        connection_settings: {
-          local: false,
-          local_inferred: false,
-        },
-      };
-      let args = {};
-      process.env.BROWSERSTACK_LOCAL = true;
-      let searchForOptionStub = sinon.stub(utils, 'searchForOption');
-      searchForOptionStub.returns(false);
-      utils.setLocal(bsConfig, args);
-      expect(bsConfig.connection_settings.local_inferred).to.be.eq(true);
     });
 
     it('should change local to true in bsConfig if process.env.BROWSERSTACK_LOCAL is set to true', () => {
@@ -784,7 +769,7 @@ describe('utils', () => {
     it('if bsconfig local mode is not always-on then local_mode should be on-demand', () => {
       let bsConfig = {
         connection_settings: {
-          local: true
+          local: true,
         },
       };
       let args = {};

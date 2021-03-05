@@ -326,24 +326,25 @@ exports.getLocalFlag = (connectionSettings) => {
 };
 
 exports.setLocal = (bsConfig, args) => {
-  let localInferred = !(this.searchForOption('--local'));
+  let localInferred = !(this.searchForOption('--local-mode'));
   if (!this.isUndefined(args.local)) {
     let local = false;
-    if (String(args.local).toLowerCase() === "true" || !this.isUndefined(args.local_mode)) {
+    if (String(args.local).toLowerCase() === 'true') {
       local = true;
-      bsConfig.connection_settings.local_inferred = localInferred;
     }
-    bsConfig["connection_settings"]["local"] = local;
+    bsConfig['connection_settings']['local'] = local;
   } else if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL)) {
     let local = false;
-    if (String(process.env.BROWSERSTACK_LOCAL).toLowerCase() === "true") {
+    if (String(process.env.BROWSERSTACK_LOCAL).toLowerCase() === 'true') {
       local = true;
-      bsConfig.connection_settings.local_inferred = localInferred;
     }
-    bsConfig["connection_settings"]["local"] = local;
+    bsConfig['connection_settings']['local'] = local;
     logger.info(
-      "Reading local setting from the environment variable BROWSERSTACK_LOCAL"
+      'Reading local setting from the environment variable BROWSERSTACK_LOCAL'
     );
+  } else if (!this.isUndefined(args.localMode)) {
+    bsConfig['connection_settings']['local'] = true;
+    bsConfig.connection_settings.local_inferred = localInferred;
   }
 };
 
@@ -369,6 +370,9 @@ exports.setLocalIdentifier = (bsConfig, args) => {
 exports.setLocalMode = (bsConfig, args) => {
   if(String(bsConfig["connection_settings"]["local"]).toLowerCase() === "true"){
     let local_mode = 'on-demand';
+
+    let localModeUndefined= this.isUndefined(bsConfig["connection_settings"]["local_mode"]);
+
     if (!this.isUndefined(args.localMode) && args.localMode == 'always-on') {
       local_mode = 'always-on';
     } else if (
@@ -386,7 +390,7 @@ exports.setLocalMode = (bsConfig, args) => {
 
     let localModeInferred = !(this.searchForOption('--local-mode'));
 
-    if (localModeInferred) {
+    if (localModeInferred && localModeUndefined) {
       bsConfig.connection_settings.local_mode_inferred = local_mode;
     }
   }
