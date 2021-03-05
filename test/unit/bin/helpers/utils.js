@@ -1099,7 +1099,7 @@ describe('utils', () => {
       expect(utils.sanitizeSpecsPattern("pattern3")).to.eq("pattern3");
     });
 
-    it('should return null when --spec is undeffined', () => {
+    it('should return null when --spec is undefined', () => {
       expect(utils.sanitizeSpecsPattern(undefined)).to.eq(undefined);
     });
   });
