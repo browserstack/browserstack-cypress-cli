@@ -674,7 +674,6 @@ describe('utils', () => {
     it('bsconfig connection_settings local_inferred as true if serachforOption returns false with args local-mode true', () => {
       let bsConfig = {
         connection_settings: {
-          "local": false
         }
       };
       let args = {
@@ -1115,7 +1114,19 @@ describe('utils', () => {
       utils.setLocalIdentifier(bsConfig, args);
       expect(bsConfig.connection_settings.local_identifier).to.be.eq("xyz");
       expect(bsConfig.connection_settings.local_mode).to.be.eq('always-on');
+    });
 
+    it('if localIdentifier is defined then local_mode is set to always-on' , () => {
+      let bsConfig = {
+        connection_settings: {
+          local: true,
+          local_identifier: 'abc',
+        },
+      };
+      let args = {}
+      utils.setLocalIdentifier(bsConfig, args);
+      expect(bsConfig.connection_settings.local_identifier).to.be.eq("abc");
+      expect(bsConfig['connection_settings']['local_mode']).to.be.eq('always-on');
     });
   });
 

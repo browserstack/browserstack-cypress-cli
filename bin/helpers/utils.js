@@ -342,7 +342,10 @@ exports.setLocal = (bsConfig, args) => {
     logger.info(
       'Reading local setting from the environment variable BROWSERSTACK_LOCAL'
     );
-  } else if (!this.isUndefined(args.localMode)) {
+  } else if (
+    this.isUndefined(bsConfig['connection_settings']['local']) &&
+    ( !this.isUndefined(args.localMode) || !this.isUndefined(bsConfig['connection_settings']['local_mode']) )
+  ) {
     bsConfig['connection_settings']['local'] = true;
     bsConfig.connection_settings.local_inferred = localInferred;
   }
@@ -358,6 +361,11 @@ exports.setLocalIdentifier = (bsConfig, args) => {
     logger.info(
       "Reading local identifier from the environment variable BROWSERSTACK_LOCAL_IDENTIFIER"
     );
+    bsConfig['connection_settings']['local_mode'] = 'always-on';
+  } else if (
+      bsConfig['connection_settings']['local'] &&
+      !this.isUndefined(bsConfig["connection_settings"]["local_identifier"])
+    ){
     bsConfig['connection_settings']['local_mode'] = 'always-on';
   } else if (
       bsConfig['connection_settings']['local'] &&
