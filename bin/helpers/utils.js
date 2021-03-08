@@ -61,6 +61,9 @@ exports.getErrorCodeFromMsg = (errMsg) => {
     case Constants.validationMessages.INVALID_LOCAL_IDENTIFIER:
       errorCode = 'invalid_local_identifier';
       break;
+    case Constants.validationMessages.INVALID_CLI_LOCAL_IDENTIFIER:
+      errorCode = 'invalid_local_identifier';
+      break;
     case Constants.validationMessages.INVALID_LOCAL_MODE:
       errorCode = 'invalid_local_mode';
       break;
