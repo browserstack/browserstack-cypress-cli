@@ -961,8 +961,16 @@ describe('utils', () => {
           local: true
         }
       };
+      let checkLocalIdentifierRunningStub = sinon.stub(utils, "checkLocalIdentifierRunning");
+      checkLocalIdentifierRunningStub.returns(Promise.resolve(false));
+      let sendUsageReportStub = sandbox
+        .stub(utils, 'sendUsageReport')
+        .callsFake(function () {
+          return 'end';
+        });
       return utils.stopLocalBinary(bsConfig).then((result) => {
         expect(result).to.be.eq(undefined);
+        sinon.assert.calledOnce(sendUsageReportStub);
       });
     });
 
@@ -976,6 +984,8 @@ describe('utils', () => {
       let bs_local = {
         isRunning: isRunningStub,
       };
+      let checkLocalIdentifierRunningStub = sinon.stub(utils, "checkLocalIdentifierRunning");
+      checkLocalIdentifierRunningStub.returns(Promise.resolve(true));
       return utils.stopLocalBinary(bsConfig, bs_local).then((result) => {
         expect(result).to.be.eq(undefined);
       });
@@ -991,6 +1001,8 @@ describe('utils', () => {
       let bs_local = {
         isRunning: isRunningStub,
       }
+      let checkLocalIdentifierRunningStub = sinon.stub(utils, "checkLocalIdentifierRunning");
+      checkLocalIdentifierRunningStub.returns(Promise.resolve(true));
       return utils.stopLocalBinary(bsConfig, bs_local).then((result) => {
         expect(result).to.be.eq(undefined);
       });
@@ -1008,6 +1020,8 @@ describe('utils', () => {
         isRunning: isRunningStub,
         stop: stopStub
       }
+      let checkLocalIdentifierRunningStub = sinon.stub(utils, "checkLocalIdentifierRunning");
+      checkLocalIdentifierRunningStub.returns(Promise.resolve(true));
       return utils.stopLocalBinary(bsConfig, bs_local).then((result) => {
         expect(result).to.be.eq(undefined);
       });
@@ -1022,6 +1036,8 @@ describe('utils', () => {
       let isRunningStub = sandbox.stub().returns(true);
       let error = new Error('Local Stop Error');
       let stopStub = sandbox.stub().yields(error);
+      let checkLocalIdentifierRunningStub = sinon.stub(utils, "checkLocalIdentifierRunning");
+      checkLocalIdentifierRunningStub.returns(Promise.resolve(true));
       let bs_local = {
         isRunning: isRunningStub,
         stop: stopStub
@@ -1032,7 +1048,7 @@ describe('utils', () => {
           return 'end';
         });
       return utils.stopLocalBinary(bsConfig, bs_local, {}).then((result) => {
-        expect(result).to.be.eq(error);
+        expect(result).to.be.eq(constant.userMessages.LOCAL_STOP_FAILED);
         sinon.assert.calledOnce(sendUsageReportStub);
         sinon.assert.calledOnce(stopStub);
       });

@@ -38,7 +38,8 @@ const userMessages = {
   RETRY_LIMIT_EXCEEDED: `Max retries exceeded trying to connect to the host (retries: ${config.retries})`,
   CHECK_DASHBOARD_AT: "Please check the build status at: ",
   CYPRESS_VERSION_CHANGED: "Your build will run using Cypress <actualVersion> instead of Cypress <preferredVersion>. Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions",
-  LOCAL_START_FAILED: "Local Testing setup failed."
+  LOCAL_START_FAILED: "Local Testing setup failed.",
+  LOCAL_STOP_FAILED: "Local Binary stop failed."
 };
 
 const validationMessages = {

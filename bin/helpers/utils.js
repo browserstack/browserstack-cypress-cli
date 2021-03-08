@@ -441,7 +441,21 @@ exports.setupLocalTesting = (bsConfig, args) => {
 };
 
 exports.stopLocalBinary = (bsConfig, bs_local, args) => {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
+    if(bsConfig['connection_settings'] && bsConfig['connection_settings']['local']){
+      let localIdentifierRunning = await this.checkLocalIdentifierRunning(bsConfig,bsConfig["connection_settings"]["local_identifier"]);
+      if(!localIdentifierRunning){
+        let message = `Local Binary not running.`,
+          errorCode = 'local_identifier_error';
+        this.sendUsageReport(
+          bsConfig,
+          args,
+          message,
+          Constants.messageTypes.ERROR,
+          errorCode
+        );
+      }
+    }
     if (!this.isUndefined(bs_local) && bs_local.isRunning() && bsConfig['connection_settings'] && bsConfig['connection_settings']['local_mode'].toLowerCase() != "always-on") {
       let that = this;
       bs_local.stop(function (localStopError) {
@@ -457,7 +471,7 @@ exports.stopLocalBinary = (bsConfig, bs_local, args) => {
             Constants.messageTypes.ERROR,
             errorCode
           );
-          resolve(localStopError);
+          resolve(Constants.userMessages.LOCAL_STOP_FAILED);
         }
       });
     } else {
