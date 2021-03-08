@@ -1587,6 +1587,138 @@ describe('utils', () => {
     });
   })
 
+  describe('#invalidLocalMode', () => {
+    let bsConfig, args;
+    beforeEach(() => {
+      bsConfig = {
+        connection_settings: {}
+      }
+      args = {}
+    });
+
+    context('from bsConfig JSON', () => {
+      beforeEach(() => {
+        sinon.stub(utils,"searchForOption").returns(false);
+      });
+      afterEach(() => {
+        sinon.restore();
+      });
+
+      it('empty string is invalid local mode', () => {
+        bsConfig.connection_settings.local_mode = "";
+        expect(utils.invalidLocalMode(bsConfig, args)).to.eq(true);
+      });
+
+      it('any string other then "on-demand" / "alwasy-on" are invalid local mode', () => {
+        bsConfig.connection_settings.local_mode = "random-string";
+        expect(utils.invalidLocalMode(bsConfig, args)).to.eq(true);
+      });
+
+      it('boolean values are invalid local mode', () => {
+        bsConfig.connection_settings.local_mode = true;
+        expect(utils.invalidLocalMode(bsConfig, args)).to.eq(true);
+        bsConfig.connection_settings.local_mode = false;
+        expect(utils.invalidLocalMode(bsConfig, args)).to.eq(true);
+      });
+
+      it('"on-demand" is a valid local mode', () => {
+        bsConfig.connection_settings.local_mode = "on-demand";
+        expect(utils.invalidLocalMode(bsConfig, args)).to.eq(false);
+      });
+
+      it('"always-on" is a valid local mode', () => {
+        bsConfig.connection_settings.local_mode = "always-on";
+        expect(utils.invalidLocalMode(bsConfig, args)).to.eq(false);
+      });
+    });
+
+    context('from cli args', () => {
+      beforeEach(() => {
+        sinon.stub(utils,"searchForOption").returns(true);
+      });
+      afterEach(() => {
+        sinon.restore();
+      });
+
+      it('empty string is invalid local mode', () => {
+        args.localMode = "";
+        expect(utils.invalidLocalMode(bsConfig, args)).to.eq(true);
+      });
+
+      it('any string other then "on-demand" / "alwasy-on" are invalid local mode', () => {
+        args.localMode = "random-string";
+        expect(utils.invalidLocalMode(bsConfig, args)).to.eq(true);
+      });
+
+      it('boolean values are invalid local mode', () => {
+        args.localMode = true;
+        expect(utils.invalidLocalMode(bsConfig, args)).to.eq(true);
+        args.localMode = false;
+        expect(utils.invalidLocalMode(bsConfig, args)).to.eq(true);
+      });
+
+      it('"on-demand" is a valid local mode', () => {
+        args.localMode = "on-demand";
+        expect(utils.invalidLocalMode(bsConfig, args)).to.eq(false);
+      });
+
+      it('"always-on" is a valid local mode', () => {
+        args.localMode = "always-on";
+        expect(utils.invalidLocalMode(bsConfig, args)).to.eq(false);
+      });
+    });
+  });
+
+  describe('#invalidLocalIdentifier', () => {
+    let bsConfig, args;
+    beforeEach(() => {
+      bsConfig = {
+        connection_settings: {}
+      }
+      args = {}
+    });
+
+    context('from bsConfig JSON', () => {
+      beforeEach(() => {
+        sinon.stub(utils,"searchForOption").returns(false);
+      });
+      afterEach(() => {
+        sinon.restore();
+      });
+
+      it('empty string is invalid local identifier', () => {
+        bsConfig.connection_settings.local_identifier = "";
+        expect(utils.invalidLocalIdentifier(bsConfig, args)).to.eq(true);
+      });
+
+      it('non empty strings are valid local identifier', () => {
+        bsConfig.connection_settings.local_identifier = "local-id";
+        expect(utils.invalidLocalIdentifier(bsConfig, args)).to.eq(false);
+      });
+    });
+
+    context('from cli args', () => {
+      beforeEach(() => {
+        sinon.stub(utils,"searchForOption").returns(true);
+      });
+      afterEach(() => {
+        sinon.restore();
+      });
+
+      it('empty string is invalid local identifier', () => {
+        args.localIdentifier = "";
+        expect(utils.invalidLocalIdentifier(bsConfig, args)).to.eq(true);
+      });
+
+      it('non empty strings are valid local identifier', () => {
+        [true, false, 11111, "11111", "random-id"].forEach(id => {
+          args.localIdentifier = id;
+          expect(utils.invalidLocalIdentifier(bsConfig, args)).to.eq(false);
+        })
+      });
+    });
+  });
+
   describe('#deleteBaseUrlFromError', () => {
     it('Replace baseUrl in Local error string', () => {
       let error = constant.validationMessages.LOCAL_NOT_SET;

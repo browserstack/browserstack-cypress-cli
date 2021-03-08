@@ -1044,6 +1044,78 @@ describe("capabilityHelper.js", () => {
             });
         })
       });
+
+      context("Validation for local identifier", () => {
+        it("should throw error when local identifier is set to empty string", () => {
+          bsConfig.connection_settings = {};
+          bsConfig.connection_settings.local_identifier = "";
+
+          return capabilityHelper
+            .validate(bsConfig, {})
+            .then(function (data) {
+              chai.assert.fail("Promise error");
+            })
+            .catch((error) => {
+              chai.assert.equal(
+                error,
+                Constants.validationMessages.INVALID_LOCAL_IDENTIFIER
+              );
+            });
+        });
+      });
+
+      context("Validation for local mode", () => {
+        it("should throw error when local mode is set to empty string", () => {
+          bsConfig.connection_settings = {};
+          bsConfig.connection_settings.local_mode = "";
+
+          return capabilityHelper
+            .validate(bsConfig, {})
+            .then(function (data) {
+              chai.assert.fail("Promise error");
+            })
+            .catch((error) => {
+              chai.assert.equal(
+                error,
+                Constants.validationMessages.INVALID_LOCAL_MODE
+              );
+            });
+        });
+
+        it("should throw error when local mode is set to boolean value", () => {
+          bsConfig.connection_settings = {};
+          bsConfig.connection_settings.local_mode = true;
+
+          return capabilityHelper
+            .validate(bsConfig, {})
+            .then(function (data) {
+              chai.assert.fail("Promise error");
+            })
+            .catch((error) => {
+              chai.assert.equal(
+                error,
+                Constants.validationMessages.INVALID_LOCAL_MODE
+              );
+            });
+        });
+
+        it("should throw error when local mode is set to strings other then 'on-demand' / 'always-on'", () => {
+          bsConfig.connection_settings = {};
+          bsConfig.connection_settings.local_mode = "random-string";
+
+          return capabilityHelper
+            .validate(bsConfig, {})
+            .then(function (data) {
+              chai.assert.fail("Promise error");
+            })
+            .catch((error) => {
+              chai.assert.equal(
+                error,
+                Constants.validationMessages.INVALID_LOCAL_MODE
+              );
+            });
+        });
+      });
     });
   });
 });

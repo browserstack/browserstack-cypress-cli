@@ -578,6 +578,26 @@ exports.versionChangedMessage = (preferredVersion, actualVersion) => {
   return message
 }
 
+exports.invalidLocalMode = (bsConfig, args) => {
+  let localMode = undefined;
+  if (!this.isUndefined(args.localMode)) {
+    localMode = args.localMode;
+  } else if (!this.isUndefined(bsConfig.connection_settings)) {
+    localMode = bsConfig.connection_settings.local_mode
+  }
+  return (this.searchForOption('--local-mode') || !this.isUndefined(localMode)) && !["always-on","on-demand"].includes(localMode);
+}
+
+exports.invalidLocalIdentifier = (bsConfig, args) => {
+  let localId = undefined;
+  if (this.searchForOption('--local-identifier') && !this.isUndefined(args.localIdentifier)) {
+    localId = !args.localIdentifier.toString().trim();
+  } else if (!this.isUndefined(bsConfig.connection_settings)) {
+    localId = !bsConfig.connection_settings.local_identifier.toString().trim();
+  }
+  return !!localId
+}
+
 exports.isJSONInvalid = (err, args) => {
   let invalid =  true
 

@@ -42,9 +42,6 @@ module.exports = function run(args) {
     //accept the local from env variable if provided
     utils.setLocal(bsConfig, args);
 
-    // set Local Mode (on-demand/ always-on)
-    utils.setLocalMode(bsConfig, args);
-
     //accept the local identifier from env variable if provided
     utils.setLocalIdentifier(bsConfig, args);
 
@@ -62,6 +59,9 @@ module.exports = function run(args) {
 
       // accept the number of parallels
       utils.setParallels(bsConfig, args, specFiles.length);
+
+      // set Local Mode (on-demand/ always-on)
+      utils.setLocalMode(bsConfig, args);
 
       // Archive the spec files
       return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude).then(function (data) {

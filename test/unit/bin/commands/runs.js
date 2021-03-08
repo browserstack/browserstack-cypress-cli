@@ -103,7 +103,6 @@ describe("runs", () => {
       setHeadedStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       setDefaultsStub = sandbox.stub();
-      setLocalModeStub = sandbox.stub();
       setLocalConfigFileStub = sandbox.stub();
     });
 
@@ -137,7 +136,6 @@ describe("runs", () => {
           setDefaults: setDefaultsStub,
           setupLocalTesting: setupLocalTestingStub,
           isJSONInvalid: isJSONInvalidStub,
-          setLocalMode: setLocalModeStub,
           setLocalConfigFile: setLocalConfigFileStub
         },
         '../helpers/capabilityHelper': {
@@ -166,7 +164,6 @@ describe("runs", () => {
           sinon.assert.calledOnce(setUserSpecsStub);
           sinon.assert.calledOnce(setTestEnvsStub);
           sinon.assert.calledOnce(setLocalStub);
-          sinon.assert.calledOnce(setLocalModeStub);
           sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(capabilityValidatorStub);

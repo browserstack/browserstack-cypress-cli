@@ -159,10 +159,8 @@ const validate = (bsConfig, args) => {
     if (!Utils.isUndefined(args) && !Utils.isUndefined(args.parallels) && !Utils.isParallelValid(args.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
 
     // validate local args i.e --local-mode and --local-identifier
-
-    if( Utils.searchForOption('--local-identifier') && (Utils.isUndefined(args.localIdentifier) || (!Utils.isUndefined(args.localIdentifier) && !args.localIdentifier.trim()))) reject(Constants.validationMessages.INVALID_LOCAL_IDENTIFIER);
-
-    if( Utils.searchForOption('--local-mode') && ( Utils.isUndefined(args.localMode) || (!Utils.isUndefined(args.localMode) && !["always-on","on-demand"].includes(args.localMode)))) reject(Constants.validationMessages.INVALID_LOCAL_MODE);
+    if (Utils.invalidLocalMode(bsConfig, args)) reject(Constants.validationMessages.INVALID_LOCAL_MODE);
+    if (Utils.invalidLocalIdentifier(bsConfig, args)) reject(Constants.validationMessages.INVALID_LOCAL_IDENTIFIER);
 
     if( Utils.searchForOption('--local-config-file') && ( Utils.isUndefined(args.localConfigFile) || (!Utils.isUndefined(args.localConfigFile) && !fs.existsSync(args.localConfigFile)))) reject(Constants.validationMessages.INVALID_LOCAL_CONFIG_FILE);
 
