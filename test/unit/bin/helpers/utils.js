@@ -674,7 +674,6 @@ describe('utils', () => {
     it('bsconfig connection_settings local_inferred as true if serachforOption returns false with args local-mode true', () => {
       let bsConfig = {
         connection_settings: {
-          "local": false
         }
       };
       let args = {
