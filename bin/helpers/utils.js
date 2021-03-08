@@ -364,6 +364,11 @@ exports.setLocalIdentifier = (bsConfig, args) => {
     bsConfig['connection_settings']['local_mode'] = 'always-on';
   } else if (
       bsConfig['connection_settings']['local'] &&
+      !this.isUndefined(bsConfig["connection_settings"]["local_identifier"])
+    ){
+    bsConfig['connection_settings']['local_mode'] = 'always-on';
+  } else if (
+      bsConfig['connection_settings']['local'] &&
       this.isUndefined(bsConfig["connection_settings"]["local_identifier"])
     ){
     bsConfig["connection_settings"]["local_identifier"] = this.generateLocalIdentifier(bsConfig['connection_settings']['local_mode']);
