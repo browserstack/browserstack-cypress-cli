@@ -160,7 +160,9 @@ const validate = (bsConfig, args) => {
 
     // validate local args i.e --local-mode and --local-identifier
 
-    if( Utils.searchForOption('--local-identifier') && (Utils.isUndefined(args.localIdentifier) || (!Utils.isUndefined(args.localIdentifier) && !args.localIdentifier.trim()))) reject(Constants.validationMessages.INVALID_LOCAL_IDENTIFIER);
+    if( Utils.searchForOption('--local-identifier') && (Utils.isUndefined(args.localIdentifier) || (!Utils.isUndefined(args.localIdentifier) && !args.localIdentifier.trim()))) reject(Constants.validationMessages.INVALID_CLI_LOCAL_IDENTIFIER);
+    
+    if( Utils.getLocalFlag(bsConfig.connection_settings) && (Utils.isUndefined(bsConfig["connection_settings"]["local_identifier"]) || ( !Utils.isUndefined(bsConfig["connection_settings"]["local_identifier"]) && !bsConfig["connection_settings"]["local_identifier"].trim()))) reject(Constants.validationMessages.INVALID_LOCAL_IDENTIFIER);
 
     if( Utils.searchForOption('--local-mode') && ( Utils.isUndefined(args.localMode) || (!Utils.isUndefined(args.localMode) && !["always-on","on-demand"].includes(args.localMode)))) reject(Constants.validationMessages.INVALID_LOCAL_MODE);
 

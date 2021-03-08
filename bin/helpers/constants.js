@@ -60,9 +60,10 @@ const validationMessages = {
   INVALID_DEFAULT_AUTH_PARAMS: "Your username and access key are required to run your tests on BrowserStack. Learn more at https://www.browserstack.com/docs/automate/cypress/authentication",
   LOCAL_NOT_SET: "To test <baseUrlValue> on BrowserStack, you will have to set up Local testing. Read more here: https://www.browserstack.com/docs/automate/cypress/local-testing",
   INCORRECT_DIRECTORY_STRUCTURE: "No tests to run. Note that your Cypress tests should be in the same directory where the cypress.json exists.",
-  INVALID_LOCAL_IDENTIFIER: "When using --local-identifier, a value needs to be supplied. \n--local-identifier <String>.\nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
+  INVALID_CLI_LOCAL_IDENTIFIER: "When using --local-identifier, a value needs to be supplied. \n--local-identifier <String>.\nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
   INVALID_LOCAL_MODE: "When using --local-mode, a value needs to be supplied. \n--local-mode (\"always-on\" | \"on-demand\").\nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
-  INVALID_LOCAL_CONFIG_FILE: "When using --local-config-file, a value needs to be supplied. \n--local-config-file \"path to local-config-file.yaml\".\nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference"
+  INVALID_LOCAL_CONFIG_FILE: "When using --local-config-file, a value needs to be supplied. \n--local-config-file \"path to local-config-file.yaml\".\nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
+  INVALID_LOCAL_IDENTIFIER: "Invalid value specified for local_identifier. For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference"
 };
 
 const cliMessages = {

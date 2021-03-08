@@ -385,7 +385,7 @@ exports.setLocalMode = (bsConfig, args) => {
       local_mode = 'always-on';
     } else if (
       !this.isUndefined(bsConfig['connection_settings']['local_mode']) &&
-      bsConfig['connection_settings']['local_mode'].toLowerCase() ===
+      String(bsConfig['connection_settings']['local_mode']).toLowerCase() ===
         'always-on'
     ) {
       local_mode = 'always-on';
@@ -611,7 +611,7 @@ exports.isJSONInvalid = (err, args) => {
     return false
   }
 
-  if( err === Constants.validationMessages.INVALID_LOCAL_IDENTIFIER || err === Constants.validationMessages.INVALID_LOCAL_MODE ){
+  if( err === Constants.validationMessages.INVALID_CLI_LOCAL_IDENTIFIER || err === Constants.validationMessages.INVALID_LOCAL_MODE ){
     return false
   }
 
