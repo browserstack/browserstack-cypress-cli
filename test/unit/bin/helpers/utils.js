@@ -83,6 +83,11 @@ describe('utils', () => {
       ).to.eq('invalid_local_identifier');
       expect(
         utils.getErrorCodeFromMsg(
+          constant.validationMessages.INVALID_CLI_LOCAL_IDENTIFIER
+        )
+      ).to.eq('invalid_local_identifier');
+      expect(
+        utils.getErrorCodeFromMsg(
           constant.validationMessages.INVALID_LOCAL_MODE
         )
       ).to.eq('invalid_local_mode');
@@ -1604,7 +1609,7 @@ describe('utils', () => {
     });
 
     it('JSON is invalid if local identifier is invalid', () =>{
-      let error = constant.validationMessages.INVALID_LOCAL_IDENTIFIER;
+      let error = constant.validationMessages.INVALID_CLI_LOCAL_IDENTIFIER;
       expect(utils.isJSONInvalid(error,{})).to.eq(false);
     });
 
