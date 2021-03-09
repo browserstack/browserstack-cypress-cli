@@ -39,7 +39,8 @@ const userMessages = {
   CHECK_DASHBOARD_AT: "Please check the build status at: ",
   CYPRESS_VERSION_CHANGED: "Your build will run using Cypress <actualVersion> instead of Cypress <preferredVersion>. Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions",
   LOCAL_START_FAILED: "Local Testing setup failed.",
-  LOCAL_STOP_FAILED: "Local Binary stop failed."
+  LOCAL_STOP_FAILED: "Local Binary stop failed.",
+  INVALID_LOCAL_MODE_WARNING: "Invalid value specified for local_mode. local_mode: (\"always-on\" | \"on-demand\"). For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference"
 };
 
 const validationMessages = {

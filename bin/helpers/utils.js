@@ -386,6 +386,8 @@ exports.setLocalMode = (bsConfig, args) => {
 
     if (!this.isUndefined(args.localMode) && args.localMode == 'always-on') {
       local_mode = 'always-on';
+    } else if (!localModeUndefined && !["always-on", "on-demand"].includes(bsConfig['connection_settings']['local_mode'])) {
+      bsConfig.connection_settings.user_defined_local_mode_warning = bsConfig['connection_settings']['local_mode'];
     } else if (
       !this.isUndefined(bsConfig['connection_settings']['local_mode']) &&
       String(bsConfig['connection_settings']['local_mode']).toLowerCase() ===

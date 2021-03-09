@@ -68,6 +68,9 @@ const caps = (bsConfig, zip) => {
     // Local Mode
     if (obj.local === true && bsConfig.connection_settings.local_mode) {
       obj.localMode = bsConfig.connection_settings.local_mode;
+      if (bsConfig.connection_settings.user_defined_local_mode_warning) {
+        logger.warn(Constants.userMessages.INVALID_LOCAL_MODE_WARNING);
+      }
       logger.info(`Local testing set up in ${obj.localMode} mode.`);
     }
 
