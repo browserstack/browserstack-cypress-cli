@@ -42,17 +42,46 @@ const caps = (bsConfig, zip) => {
       reject("Test suite is empty");
     }
 
+    // Inferred settings
+    if(bsConfig.connection_settings){
+      if (bsConfig.connection_settings.local_mode_inferred) {
+        obj.local_mode_inferred = bsConfig.connection_settings.local_mode_inferred;
+      }
+
+      if (bsConfig.connection_settings.local_inferred) {
+        obj.local_inferred = bsConfig.connection_settings.local_inferred;
+      }
+
+      if (bsConfig.connection_settings.sync_inferred) {
+        obj.sync_inferred = bsConfig.connection_settings.sync_inferred;
+        logger.info('Setting "sync" mode to enable Local testing.');
+      }
+    }
+
     // Local
     obj.local = false;
-    if (bsConfig.connection_settings && bsConfig.connection_settings.local === true) obj.local = true;
-    logger.info(`Local is set to: ${obj.local} (${obj.local ? Constants.userMessages.LOCAL_TRUE : Constants.userMessages.LOCAL_FALSE})`);
+    if (bsConfig.connection_settings && bsConfig.connection_settings.local === true) {
+      obj.local = true;
+    }
+
+    obj.localMode = null;
+    // Local Mode
+    if (obj.local === true && bsConfig.connection_settings.local_mode) {
+      obj.localMode = bsConfig.connection_settings.local_mode;
+      if (bsConfig.connection_settings.user_defined_local_mode_warning) {
+        logger.warn(Constants.userMessages.INVALID_LOCAL_MODE_WARNING);
+      }
+      logger.info(`Local testing set up in ${obj.localMode} mode.`);
+    }
 
     // Local Identifier
     obj.localIdentifier = null;
     if (obj.local === true && (bsConfig.connection_settings.localIdentifier || bsConfig.connection_settings.local_identifier)) {
       obj.localIdentifier = bsConfig.connection_settings.localIdentifier || bsConfig.connection_settings.local_identifier;
-      logger.log(`Local Identifier is set to: ${obj.localIdentifier}`);
+      logger.info(`Local testing identifier: ${obj.localIdentifier}`);
     }
+
+    logger.info(`Local is set to: ${obj.local} (${obj.local ? Constants.userMessages.LOCAL_TRUE : Constants.userMessages.LOCAL_FALSE})`);
 
     // Project name
     obj.project = "project-name";
@@ -94,9 +123,9 @@ const caps = (bsConfig, zip) => {
 
     if(obj.parallels === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE) obj.parallels = undefined
 
-    if (obj.project) logger.log(`Project name is: ${obj.project}`);
+    if (obj.project) logger.info(`Project name is: ${obj.project}`);
 
-    if (obj.customBuildName) logger.log(`Build name is: ${obj.customBuildName}`);
+    if (obj.customBuildName) logger.info(`Build name is: ${obj.customBuildName}`);
 
     if (obj.callbackURL) logger.info(`callback url is : ${obj.callbackURL}`);
 
@@ -131,6 +160,16 @@ const validate = (bsConfig, args) => {
 
     // if parallels specified via arguments validate only arguments
     if (!Utils.isUndefined(args) && !Utils.isUndefined(args.parallels) && !Utils.isParallelValid(args.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
+
+    // validate local args i.e --local-mode and --local-identifier
+
+    if( Utils.searchForOption('--local-identifier') && (Utils.isUndefined(args.localIdentifier) || (!Utils.isUndefined(args.localIdentifier) && !args.localIdentifier.trim()))) reject(Constants.validationMessages.INVALID_CLI_LOCAL_IDENTIFIER);
+    
+    if( Utils.getLocalFlag(bsConfig.connection_settings) && (Utils.isUndefined(bsConfig["connection_settings"]["local_identifier"]) || ( !Utils.isUndefined(bsConfig["connection_settings"]["local_identifier"]) && !bsConfig["connection_settings"]["local_identifier"].trim()))) reject(Constants.validationMessages.INVALID_LOCAL_IDENTIFIER);
+
+    if( Utils.searchForOption('--local-mode') && ( Utils.isUndefined(args.localMode) || (!Utils.isUndefined(args.localMode) && !["always-on","on-demand"].includes(args.localMode)))) reject(Constants.validationMessages.INVALID_LOCAL_MODE);
+
+    if( Utils.searchForOption('--local-config-file') && ( Utils.isUndefined(args.localConfigFile) || (!Utils.isUndefined(args.localConfigFile) && !fs.existsSync(args.localConfigFile)))) reject(Constants.validationMessages.INVALID_LOCAL_CONFIG_FILE);
 
     // validate if config file provided exists or not when cypress_config_file provided
     // validate the cypressProjectDir key otherwise.

@@ -40,10 +40,16 @@ module.exports = function run(args) {
     utils.setTestEnvs(bsConfig, args);
 
     //accept the local from env variable if provided
-    utils.setLocal(bsConfig);
+    utils.setLocal(bsConfig, args);
+
+    // set Local Mode (on-demand/ always-on)
+    utils.setLocalMode(bsConfig, args);
 
     //accept the local identifier from env variable if provided
-    utils.setLocalIdentifier(bsConfig);
+    utils.setLocalIdentifier(bsConfig, args);
+
+    // set Local Config File
+    utils.setLocalConfigFile(bsConfig, args);
 
     // run test in headed mode
     utils.setHeaded(bsConfig, args);
@@ -61,8 +67,12 @@ module.exports = function run(args) {
       return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude).then(function (data) {
 
         // Uploaded zip file
-        return zipUploader.zipUpload(bsConfig, config.fileName).then(function (zip) {
+        return zipUploader.zipUpload(bsConfig, config.fileName).then(async function (zip) {
           // Create build
+
+          //setup Local Testing
+          let bs_local = await utils.setupLocalTesting(bsConfig, args);
+
           return build.createBuild(bsConfig, zip).then(function (data) {
             let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
             let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
@@ -82,7 +92,11 @@ module.exports = function run(args) {
             }
 
             if (args.sync) {
-              syncRunner.pollBuildStatus(bsConfig, data).then((exitCode) => {
+              syncRunner.pollBuildStatus(bsConfig, data).then(async (exitCode) => {
+
+                // stop the Local instance
+                await utils.stopLocalBinary(bsConfig, bs_local, args);
+
                 // Generate custom report!
                 reportGenerator(bsConfig, data.build_id, args, function(){
                   utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
@@ -96,17 +110,24 @@ module.exports = function run(args) {
             if(!args.sync) logger.info(Constants.userMessages.EXIT_SYNC_CLI_MESSAGE.replace("<build-id>",data.build_id));
             utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
             return;
-          }).catch(function (err) {
+          }).catch(async function (err) {
             // Build creation failed
             logger.error(err);
+            // stop the Local instance
+            await utils.stopLocalBinary(bsConfig, bs_local, args);
+
             utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'build_failed');
           });
         }).catch(function (err) {
-          // Zip Upload failed
+          // Zip Upload failed | Local Start failed 
           logger.error(err);
-          logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED);
-          fileHelpers.deleteZip();
-          utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed');
+          if(err === Constants.userMessages.LOCAL_START_FAILED){
+            utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.LOCAL_START_FAILED}`, Constants.messageTypes.ERROR, 'local_start_failed');
+          } else {
+            logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED);
+            fileHelpers.deleteZip();
+            utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed');
+          }
         });
       }).catch(function (err) {
         // Zipping failed

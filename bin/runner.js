@@ -205,6 +205,22 @@ var argv = yargs
           default: false,
           describe: Constants.cliMessages.RUN.HEADED,
           type: "boolean"
+        },
+        'local': {
+          describe: Constants.cliMessages.RUN.LOCAL,
+          type: "boolean"
+        },
+        'local-identifier': {
+          describe: Constants.cliMessages.RUN.LOCAL_IDENTIFIER,
+          type: "string"
+        },
+        'local-mode': {
+          describe: Constants.cliMessages.RUN.LOCAL_MODE,
+          type: "string"
+        },
+        'local-config-file': {
+          describe: Constants.cliMessages.RUN.LOCAL_CONFIG_FILE,
+          type: "string"
         }
       })
       .help('help')
