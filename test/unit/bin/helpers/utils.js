@@ -1089,6 +1089,21 @@ describe('utils', () => {
 
   });
 
+  describe('sanitizeSpecsPattern', () => {
+
+    it('should wrap pattern around {} when input is csv', () => {
+      expect(utils.sanitizeSpecsPattern("pattern1,pattern2")).to.eq("{pattern1,pattern2}");
+    });
+
+    it('should not wrap pattern around {} when input is single glob pattern', () => {
+      expect(utils.sanitizeSpecsPattern("pattern3")).to.eq("pattern3");
+    });
+
+    it('should return undefined when --spec is undefined', () => {
+      expect(utils.sanitizeSpecsPattern(undefined)).to.eq(undefined);
+    });
+  });
+
   describe('getBrowserCombinations', () => {
 
     it('returns correct number of browserCombinations for one combination', () => {

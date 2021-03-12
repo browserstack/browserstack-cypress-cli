@@ -341,11 +341,15 @@ exports.setHeaded = (bsConfig, args) => {
 
 exports.getNumberOfSpecFiles = (bsConfig, args, cypressJson) => {
   let testFolderPath = cypressJson.integrationFolder || Constants.DEFAULT_CYPRESS_SPEC_PATH;
-  let globSearchPatttern = bsConfig.run_settings.specs || `${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`;
+  let globSearchPattern = this.sanitizeSpecsPattern(bsConfig.run_settings.specs) || `${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`;
   let ignoreFiles = args.exclude || bsConfig.run_settings.exclude;
-  let files = glob.sync(globSearchPatttern, {cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles});
+  let files = glob.sync(globSearchPattern, {cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles});
   return files;
 };
+
+exports.sanitizeSpecsPattern = (pattern) => {
+  return pattern && pattern.split(",").length > 1 ? "{" + pattern + "}" : pattern;
+}
 
 exports.getBrowserCombinations = (bsConfig) => {
   let osBrowserArray = [];
