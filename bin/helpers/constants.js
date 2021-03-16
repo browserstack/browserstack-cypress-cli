@@ -135,7 +135,8 @@ const specFileTypes = ['js', 'ts', 'feature', 'jsx', 'coffee', 'cjsx'];
 
 const DEFAULT_CYPRESS_SPEC_PATH = "cypress/integration"
 
-const SPEC_TOTAL_CHAR_LIMIT = 32243
+const SPEC_TOTAL_CHAR_LIMIT = 32243;
+const METADATA_CHAR_BUFFER_PER_SPEC = 175;
 
 module.exports = Object.freeze({
   syncCLI,
@@ -147,5 +148,6 @@ module.exports = Object.freeze({
   filesToIgnoreWhileUploading,
   specFileTypes,
   DEFAULT_CYPRESS_SPEC_PATH,
-  SPEC_TOTAL_CHAR_LIMIT
+  SPEC_TOTAL_CHAR_LIMIT,
+  METADATA_CHAR_BUFFER_PER_SPEC
 });
