@@ -148,6 +148,23 @@ exports.setParallels = (bsConfig, args, numOfSpecs) => {
   }
 };
 
+exports.warnSpecLimit = (bsConfig, args, specFiles) => {
+  let numberOfSpecFiles = specFiles.length
+  let totalLengthOfSpecFiles = specFiles.join("").length;
+  let expectedCharLength = totalLengthOfSpecFiles + 175 * numberOfSpecFiles;
+
+  if (expectedCharLength > Constants.SPEC_TOTAL_CHAR_LIMIT) {
+    logger.warn(Constants.userMessages.SPEC_LIMIT_WARNING);
+    this.sendUsageReport(
+      bsConfig,
+      args,
+      Constants.userMessages.SPEC_LIMIT_WARNING,
+      Constants.messageTypes.WARNING,
+      null
+    );
+  }
+ }
+
 exports.setDefaults = (bsConfig, args) => {
   // setting setDefaultAuthHash to {} if not present and set via env variables or via args.
   if (this.isUndefined(bsConfig['auth']) && (!this.isUndefined(args.username) || !this.isUndefined(process.env.BROWSERSTACK_USERNAME))) {
@@ -564,6 +581,8 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressJson) => {
   let globSearchPattern = this.sanitizeSpecsPattern(bsConfig.run_settings.specs) || `${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`;
   let ignoreFiles = args.exclude || bsConfig.run_settings.exclude;
   let files = glob.sync(globSearchPattern, {cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles});
+  // warn if specFiles cross our limit
+  this.warnSpecLimit(bsConfig, args, files);
   return files;
 };
 

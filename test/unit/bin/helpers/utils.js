@@ -1431,6 +1431,13 @@ describe('utils', () => {
   });
 
   describe('getNumberOfSpecFiles', () => {
+    let warnSpecLimitStub;
+    beforeEach(() => {
+      warnSpecLimitStub = sinon.stub(utils, 'warnSpecLimit');
+    });
+    afterEach(() => {
+      sinon.restore();
+    });
 
     it('glob search pattern should be equal to bsConfig.run_settings.specs', () => {
       let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
@@ -1444,6 +1451,7 @@ describe('utils', () => {
 
       utils.getNumberOfSpecFiles(bsConfig,{},{});
       sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+      sinon.assert.calledOnce(warnSpecLimitStub);
       sinon.assert.calledOnceWithExactly(getNumberOfSpecFilesStub, 'specs', {
         cwd: 'cypressProjectDir',
         matchBase: true,
@@ -1463,6 +1471,7 @@ describe('utils', () => {
 
       utils.getNumberOfSpecFiles(bsConfig,{},{});
 
+      sinon.assert.calledOnce(warnSpecLimitStub);
       sinon.assert.calledOnceWithExactly(getNumberOfSpecFilesStub, `cypress/integration/**/*.+(${constant.specFileTypes.join("|")})`, {
         cwd: 'cypressProjectDir',
         matchBase: true,
@@ -1482,6 +1491,7 @@ describe('utils', () => {
 
       utils.getNumberOfSpecFiles(bsConfig, {}, { "integrationFolder": "specs"});
 
+      sinon.assert.calledOnce(warnSpecLimitStub);
       sinon.assert.calledOnceWithExactly(
         getNumberOfSpecFilesStub,
         `specs/**/*.+(${constant.specFileTypes.join('|')})`,
@@ -1492,6 +1502,51 @@ describe('utils', () => {
         }
       );
       glob.sync.restore();
+    });
+  });
+
+  describe('warnSpecLimit', () => {
+    let sendUsageReportStub, loggerStub;
+    beforeEach(() => {
+      sendUsageReportStub = sandbox
+        .stub(utils, 'sendUsageReport')
+        .callsFake(function () {
+          return 'end';
+        });
+      loggerStub = sinon.stub(logger, 'warn');
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+      sinon.restore();
+    });
+
+    it('should log when char limit is breached', () => {
+      let specFiles = {
+        length: constant.SPEC_TOTAL_CHAR_LIMIT,
+        join: function() {
+          return {
+            length: constant.SPEC_TOTAL_CHAR_LIMIT
+          }
+        }
+      };
+      utils.warnSpecLimit({}, {}, specFiles);
+      sinon.assert.calledOnce(sendUsageReportStub);
+      sinon.assert.calledOnce(loggerStub);
+    });
+
+    it('should not log when char length is within limit', () => {
+      let specFiles = {
+        length: 1,
+        join: function() {
+          return {
+            length: 1
+          }
+        }
+      };
+      utils.warnSpecLimit({}, {}, specFiles);
+      sinon.assert.notCalled(sendUsageReportStub);
+      sinon.assert.notCalled(loggerStub);
     });
   });
 
