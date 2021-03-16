@@ -63,6 +63,9 @@ module.exports = function run(args) {
       // accept the number of parallels
       utils.setParallels(bsConfig, args, specFiles.length);
 
+      // warn if specFiles cross our limit
+      utils.warnSpecLimit(bsConfig, args, specFiles);
+
       // Archive the spec files
       return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude).then(function (data) {
 

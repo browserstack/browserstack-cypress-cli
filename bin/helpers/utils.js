@@ -149,11 +149,12 @@ exports.setParallels = (bsConfig, args, numOfSpecs) => {
 };
 
 exports.warnSpecLimit = (bsConfig, args, specFiles) => {
-  let numberOfSpecFiles = specFiles.length
-  let totalLengthOfSpecFiles = specFiles.join("").length;
-  let expectedCharLength = totalLengthOfSpecFiles + 175 * numberOfSpecFiles;
-
-  if (expectedCharLength > Constants.SPEC_TOTAL_CHAR_LIMIT) {
+  let expectedCharLength = specFiles.join("").length + 175 * specFiles.length;
+  let parallels = bsConfig['run_settings']['parallels'];
+  let combinations = this.getBrowserCombinations(bsConfig).length;
+  let parallelPerCombination = parallels > combinations ? Math.floor(parallels / combinations) : 1
+  let expectedCharLengthPerParallel = expectedCharLength / parallelPerCombination
+  if (expectedCharLengthPerParallel > Constants.SPEC_TOTAL_CHAR_LIMIT) {
     logger.warn(Constants.userMessages.SPEC_LIMIT_WARNING);
     this.sendUsageReport(
       bsConfig,
@@ -581,8 +582,6 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressJson) => {
   let globSearchPattern = this.sanitizeSpecsPattern(bsConfig.run_settings.specs) || `${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`;
   let ignoreFiles = args.exclude || bsConfig.run_settings.exclude;
   let files = glob.sync(globSearchPattern, {cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles});
-  // warn if specFiles cross our limit
-  this.warnSpecLimit(bsConfig, args, files);
   return files;
 };
 
