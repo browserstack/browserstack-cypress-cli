@@ -1428,6 +1428,12 @@ describe('utils', () => {
       expect(utils.isUndefined(bsConfig.auth)).to.be.true;
       expect(utils.isUndefined(bsConfig.run_settings.npm_dependencies)).to.be.false;
     });
+
+    it ( 'should set connection_settings if its bsConfig.connection_settings is undefined' , () => {
+      let bsConfig = { run_settings: {} };
+      utils.setDefaults(bsConfig, {});
+      expect(utils.isUndefined(bsConfig.connection_settings)).to.be.false;
+    });
   });
 
   describe('getNumberOfSpecFiles', () => {
