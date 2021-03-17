@@ -676,7 +676,7 @@ describe('utils', () => {
       delete process.env.BROWSERSTACK_LOCAL;
     });
 
-    it('bsconfig connection_settings local_inferred as true if serachforOption returns false with args local-mode true', () => {
+    it('bsconfig connection_settings local_inferred as true if args local-mode true', () => {
       let bsConfig = {
         connection_settings: {
         }
@@ -684,8 +684,6 @@ describe('utils', () => {
       let args = {
         localMode: "always-on"
       };
-      let searchForOptionStub = sinon.stub(utils,"searchForOption");
-      searchForOptionStub.returns(false);
       utils.setLocal(bsConfig,args);
       expect(bsConfig.connection_settings.local_inferred).to.be.eq(true);
     });
@@ -726,14 +724,13 @@ describe('utils', () => {
       expect(bsConfig.connection_settings.local).to.be.eq(false);
     });
 
-    it('should change local to true in bsConfig if process.env.BROWSERSTACK_LOCAL is set to true', () => {
+    it('should change local to true in bsConfig if args.local is set to true', () => {
       let bsConfig = {
         connection_settings: {
           local: false,
         },
       };
-      let args = {};
-      process.env.BROWSERSTACK_LOCAL = true;
+      let args = { local: true };
       utils.setLocal(bsConfig,args);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
     });
@@ -748,6 +745,19 @@ describe('utils', () => {
       utils.setLocal(bsConfig,args);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
     });
+
+    it('should set local to true in bsConfig if local is passed as string in bsConfig', () => {
+      let bsConfig = {
+        connection_settings: {
+          local: "true"
+        },
+      };
+      let args = {
+      };
+      utils.setLocal(bsConfig, args);
+      expect(bsConfig.connection_settings.local).to.be.eq(true);
+    });
+
   });
 
   describe('setLocalMode', () => {
