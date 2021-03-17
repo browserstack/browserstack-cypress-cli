@@ -1434,6 +1434,15 @@ describe('utils', () => {
       utils.setDefaults(bsConfig, {});
       expect(utils.isUndefined(bsConfig.connection_settings)).to.be.false;
     });
+
+    it('should not set connection_settings if bsConfig.connection_settings is defined ', () => {
+      let bsConfig = {
+        run_settings: {},
+        connection_settings: "roshan"
+     };
+      utils.setDefaults(bsConfig, {});
+      expect(bsConfig.connection_settings).to.be.eq("roshan");
+    });
   });
 
   describe('getNumberOfSpecFiles', () => {
