@@ -1438,10 +1438,12 @@ describe('utils', () => {
     it('should not set connection_settings if bsConfig.connection_settings is defined ', () => {
       let bsConfig = {
         run_settings: {},
-        connection_settings: "roshan"
+        connection_settings: {
+          local: "false"
+        }
      };
       utils.setDefaults(bsConfig, {});
-      expect(bsConfig.connection_settings).to.be.eq("roshan");
+      expect(bsConfig.connection_settings).to.deep.equal({local: "false"});
     });
   });
 
