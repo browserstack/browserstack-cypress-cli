@@ -335,7 +335,6 @@ exports.getLocalFlag = (connectionSettings) => {
 };
 
 exports.setLocal = (bsConfig, args) => {
-  let localInferred = !(this.searchForOption('--local-mode'));
   if (!this.isUndefined(args.local)) {
     let local = false;
     if (String(args.local).toLowerCase() === 'true') {
@@ -351,12 +350,19 @@ exports.setLocal = (bsConfig, args) => {
     logger.info(
       'Reading local setting from the environment variable BROWSERSTACK_LOCAL'
     );
+  } else if (!this.isUndefined(bsConfig['connection_settings']['local'])) {
+    let local = false;
+    if (String(bsConfig['connection_settings']['local']).toLowerCase() === 'true') {
+      local = true;
+    }
+    bsConfig['connection_settings']['local'] = local;
   } else if (
     this.isUndefined(bsConfig['connection_settings']['local']) &&
-    ( !this.isUndefined(args.localMode) || !this.isUndefined(bsConfig['connection_settings']['local_mode']) )
+    (!this.isUndefined(args.localMode) ||
+      !this.isUndefined(bsConfig['connection_settings']['local_mode']))
   ) {
     bsConfig['connection_settings']['local'] = true;
-    bsConfig.connection_settings.local_inferred = localInferred;
+    bsConfig.connection_settings.local_inferred = true;
   }
 };
 
