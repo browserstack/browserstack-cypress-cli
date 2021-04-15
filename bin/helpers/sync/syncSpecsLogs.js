@@ -31,14 +31,15 @@ let  getOptions = (auth, build_id) => {
 }
 
 let getTableConfig = () => {
+  let terminalWidth = (process.stdout.columns)*0.9;
   return {
     border: getBorderConfig(),
     columns: {
       1: {alignment: 'center', width: 1},
-      2: {alignment: 'left', width: 100}
+      2: {alignment: 'left', width: Math.floor(terminalWidth*0.8)}
     },
     columnDefault: {
-      width: 30,
+      width: Math.floor(terminalWidth*0.2),
     },
     columnCount: 3,
   };
