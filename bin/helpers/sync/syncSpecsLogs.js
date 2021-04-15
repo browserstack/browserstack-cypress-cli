@@ -13,7 +13,7 @@ let specSummary = {
   "specs": [],
   "duration": null
 }
-let terminalWidth = (process.stdout.columns)*0.9;
+let terminalWidth = (process.stdout.columns) * 0.9;
 
 let  getOptions = (auth, build_id) => {
   return {
@@ -38,7 +38,7 @@ let getTableConfig = () => {
       2: {alignment: 'left', width: Math.floor(terminalWidth*0.8)}
     },
     columnDefault: {
-      width: Math.floor(terminalWidth*0.2),
+      width: Math.floor(terminalWidth * 0.2),
     },
     columnCount: 3,
   };
@@ -81,7 +81,7 @@ let printSpecsStatus = (bsConfig, buildDetails) => {
         whileProcess(callback)
       },
       function(err, result) { // when loop ends
-        logger.info(`\n${"-".repeat(terminalWidth)}`)
+        logger.info("\n" + "-".repeat(terminalWidth))
         specSummary.duration =  endTime - startTime
         resolve(specSummary)
       }
@@ -139,7 +139,7 @@ let showSpecsStatus = (data) => {
 
 let printInitialLog = () => {
   logger.info(`\n${Constants.syncCLI.LOGS.INIT_LOG}`)
-  logger.info(`\n${"-".repeat(terminalWidth)}`)
+  logger.info("\n" + "-".repeat(terminalWidth))
   n = Constants.syncCLI.INITIAL_DELAY_MULTIPLIER
 }
 
