@@ -35,7 +35,7 @@ let getTableConfig = () => {
     border: getBorderConfig(),
     columns: {
       1: {alignment: 'center', width: 1},
-      2: {alignment: 'left', width: Math.floor(terminalWidth*0.8)}
+      2: {alignment: 'left', width: Math.floor(terminalWidth * 0.8)}
     },
     columnDefault: {
       width: Math.floor(terminalWidth * 0.2),
