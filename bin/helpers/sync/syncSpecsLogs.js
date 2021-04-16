@@ -13,6 +13,7 @@ let specSummary = {
   "specs": [],
   "duration": null
 }
+let noWrap = utils.searchForOption('--no-wrap')
 let terminalWidth = (process.stdout.columns) * 0.9;
 
 let  getOptions = (auth, build_id) => {
@@ -34,11 +35,11 @@ let getTableConfig = () => {
   return {
     border: getBorderConfig(),
     columns: {
-      1: {alignment: 'center', width: Math.ceil(terminalWidth * 0.01)},
-      2: {alignment: 'left', width: Math.floor(terminalWidth * 0.75)}
+      1: {alignment: 'center', width: noWrap ? 1 : Math.ceil(terminalWidth * 0.01)},
+      2: {alignment: 'left', width: noWrap ? 100 : Math.floor(terminalWidth * 0.75)}
     },
     columnDefault: {
-      width: Math.floor(terminalWidth * 0.2),
+      width: noWrap ? 30 : Math.floor(terminalWidth * 0.2),
     },
     columnCount: 3,
   };
@@ -81,7 +82,7 @@ let printSpecsStatus = (bsConfig, buildDetails) => {
         whileProcess(callback)
       },
       function(err, result) { // when loop ends
-        logger.info("\n" + "-".repeat(terminalWidth))
+        noWrap ? logger.info("\n--------------------------------------------------------------------------------") : logger.info("\n" + "-".repeat(terminalWidth))
         specSummary.duration =  endTime - startTime
         resolve(specSummary)
       }
@@ -139,7 +140,7 @@ let showSpecsStatus = (data) => {
 
 let printInitialLog = () => {
   logger.info(`\n${Constants.syncCLI.LOGS.INIT_LOG}`)
-  logger.info("\n" + "-".repeat(terminalWidth))
+  noWrap ? logger.info("\n--------------------------------------------------------------------------------") : logger.info("\n" + "-".repeat(terminalWidth))
   n = Constants.syncCLI.INITIAL_DELAY_MULTIPLIER
 }
 
