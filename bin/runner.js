@@ -221,6 +221,9 @@ var argv = yargs
         'local-config-file': {
           describe: Constants.cliMessages.RUN.LOCAL_CONFIG_FILE,
           type: "string"
+        },
+        'no-wrap': {
+          describe: Constants.cliMessages.RUN.NO_WRAP
         }
       })
       .help('help')
