@@ -13,7 +13,7 @@ let specSummary = {
   "specs": [],
   "duration": null
 }
-let terminalWidth = (process.stdout.columns) * 0.9;
+let terminalWidth = (process.stdout.columns);
 
 let  getOptions = (auth, build_id) => {
   return {
@@ -34,8 +34,8 @@ let getTableConfig = () => {
   return {
     border: getBorderConfig(),
     columns: {
-      1: {alignment: 'center', width: 1},
-      2: {alignment: 'left', width: Math.floor(terminalWidth * 0.8)}
+      1: {alignment: 'center', width: Math.ceil(terminalWidth * 0.01)},
+      2: {alignment: 'left', width: Math.floor(terminalWidth * 0.70)}
     },
     columnDefault: {
       width: Math.floor(terminalWidth * 0.2),
