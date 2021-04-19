@@ -223,7 +223,9 @@ var argv = yargs
           type: "string"
         },
         'no-wrap': {
-          describe: Constants.cliMessages.RUN.NO_WRAP
+          default: false,
+          describe: Constants.cliMessages.RUN.SYNC_NO_WRAP,
+          type: "boolean"
         }
       })
       .help('help')

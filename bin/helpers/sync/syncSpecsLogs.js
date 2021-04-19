@@ -13,8 +13,12 @@ let specSummary = {
   "specs": [],
   "duration": null
 }
-let noWrap = utils.searchForOption('--no-wrap')
+let noWrap = (process.env.SYNC_NO_WRAP || false);
 let terminalWidth = (process.stdout.columns) * 0.9;
+let lineSeparator = "\n--------------------------------------------------------------------------------";
+if (noWrap) {
+  lineSeparator = "\n" + "-".repeat(terminalWidth);
+}
 
 let  getOptions = (auth, build_id) => {
   return {
@@ -32,14 +36,25 @@ let  getOptions = (auth, build_id) => {
 }
 
 let getTableConfig = () => {
+  let centerWidth = Math.ceil(terminalWidth * 0.01),
+      leftWidth = Math.floor(terminalWidth * 0.75),
+      colWidth = Math.floor(terminalWidth * 0.2);
+
+  // Do not autosize on terminal's width if no-wrap provided
+  if (noWrap) {
+    centerWidth = 1;
+    leftWidth = 100;
+    colWidth = 30;
+  }
+
   return {
     border: getBorderConfig(),
     columns: {
-      1: {alignment: 'center', width: noWrap ? 1 : Math.ceil(terminalWidth * 0.01)},
-      2: {alignment: 'left', width: noWrap ? 100 : Math.floor(terminalWidth * 0.75)}
+      1: {alignment: 'center', width: centerWidth},
+      2: {alignment: 'left', width: leftWidth}
     },
     columnDefault: {
-      width: noWrap ? 30 : Math.floor(terminalWidth * 0.2),
+      width: colWidth,
     },
     columnCount: 3,
   };
@@ -82,7 +97,7 @@ let printSpecsStatus = (bsConfig, buildDetails) => {
         whileProcess(callback)
       },
       function(err, result) { // when loop ends
-        noWrap ? logger.info("\n--------------------------------------------------------------------------------") : logger.info("\n" + "-".repeat(terminalWidth))
+        logger.info(lineSeparator);
         specSummary.duration =  endTime - startTime
         resolve(specSummary)
       }
@@ -140,7 +155,7 @@ let showSpecsStatus = (data) => {
 
 let printInitialLog = () => {
   logger.info(`\n${Constants.syncCLI.LOGS.INIT_LOG}`)
-  noWrap ? logger.info("\n--------------------------------------------------------------------------------") : logger.info("\n" + "-".repeat(terminalWidth))
+  logger.info(lineSeparator);
   n = Constants.syncCLI.INITIAL_DELAY_MULTIPLIER
 }
 
