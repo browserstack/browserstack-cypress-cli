@@ -13,7 +13,7 @@ let specSummary = {
   "specs": [],
   "duration": null
 }
-let noWrap = (process.env.SYNC_NO_WRAP || false);
+let noWrap = (process.env.SYNC_NO_WRAP && (process.env.SYNC_NO_WRAP === 'true'));
 let terminalWidth = (process.stdout.columns) * 0.9;
 let lineSeparator = "\n" + "-".repeat(terminalWidth);
 // Do not show the separator based on terminal width if no-wrap provided.
