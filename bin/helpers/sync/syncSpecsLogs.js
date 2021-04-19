@@ -15,9 +15,10 @@ let specSummary = {
 }
 let noWrap = (process.env.SYNC_NO_WRAP || false);
 let terminalWidth = (process.stdout.columns) * 0.9;
-let lineSeparator = "\n--------------------------------------------------------------------------------";
+let lineSeparator = "\n" + "-".repeat(terminalWidth);
+// Do not show the separator based on terminal width if no-wrap provided.
 if (noWrap) {
-  lineSeparator = "\n" + "-".repeat(terminalWidth);
+  lineSeparator = "\n--------------------------------------------------------------------------------";
 }
 
 let  getOptions = (auth, build_id) => {
