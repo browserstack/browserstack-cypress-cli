@@ -42,6 +42,8 @@ const uploadCypressZip = (bsConfig, filePath) => {
           } else {
             if(resp.statusCode == 401){
               reject(Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS);
+            } else if (resp.statusCode == 413) {
+              reject(Constants.userMessages.ZIP_UPLOAD_LIMIT_EXCEEDED);
             } else {
               reject(Constants.userMessages.ZIP_UPLOADER_NOT_REACHABLE);
             }
