@@ -572,7 +572,7 @@ exports.setHeaded = (bsConfig, args) => {
 };
 
 exports.setNoWrap = (_bsConfig, args) => {
-  if (args.noWrap === true) {
+  if (args.noWrap === true || this.searchForOption('--no-wrap')) {
     process.env.SYNC_NO_WRAP = true;
   } else {
     process.env.SYNC_NO_WRAP = false;

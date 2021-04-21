@@ -13,13 +13,9 @@ let specSummary = {
   "specs": [],
   "duration": null
 }
-let noWrap = (process.env.SYNC_NO_WRAP && (process.env.SYNC_NO_WRAP === 'true'));
+let noWrap = false;
 let terminalWidth = (process.stdout.columns) * 0.9;
 let lineSeparator = "\n" + "-".repeat(terminalWidth);
-// Do not show the separator based on terminal width if no-wrap provided.
-if (noWrap) {
-  lineSeparator = "\n--------------------------------------------------------------------------------";
-}
 
 let  getOptions = (auth, build_id) => {
   return {
@@ -84,7 +80,16 @@ let getBorderConfig = () => {
   }
 }
 
+let setNoWrapParams = () => {
+  noWrap = (process.env.SYNC_NO_WRAP && (process.env.SYNC_NO_WRAP === 'true'));
+  // Do not show the separator based on terminal width if no-wrap provided.
+  if (noWrap) {
+    lineSeparator = "\n--------------------------------------------------------------------------------";
+  }
+};
+
 let printSpecsStatus = (bsConfig, buildDetails) => {
+  setNoWrapParams();
   return new Promise((resolve, reject) => {
     options = getOptions(bsConfig.auth, buildDetails.build_id)
     tableConfig = getTableConfig();
