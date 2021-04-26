@@ -13,7 +13,9 @@ let specSummary = {
   "specs": [],
   "duration": null
 }
-
+let noWrap = false;
+let terminalWidth = (process.stdout.columns) * 0.9;
+let lineSeparator = "\n" + "-".repeat(terminalWidth);
 
 let  getOptions = (auth, build_id) => {
   return {
@@ -31,14 +33,25 @@ let  getOptions = (auth, build_id) => {
 }
 
 let getTableConfig = () => {
+  let centerWidth = Math.ceil(terminalWidth * 0.01),
+      leftWidth = Math.floor(terminalWidth * 0.75),
+      colWidth = Math.floor(terminalWidth * 0.2);
+
+  // Do not autosize on terminal's width if no-wrap provided
+  if (noWrap) {
+    centerWidth = 1;
+    leftWidth = 100;
+    colWidth = 30;
+  }
+
   return {
     border: getBorderConfig(),
     columns: {
-      1: {alignment: 'center', width: 1},
-      2: {alignment: 'left', width: 100}
+      1: {alignment: 'center', width: centerWidth},
+      2: {alignment: 'left', width: leftWidth}
     },
     columnDefault: {
-      width: 30,
+      width: colWidth,
     },
     columnCount: 3,
   };
@@ -67,7 +80,16 @@ let getBorderConfig = () => {
   }
 }
 
+let setNoWrapParams = () => {
+  noWrap = (process.env.SYNC_NO_WRAP && (process.env.SYNC_NO_WRAP === 'true'));
+  // Do not show the separator based on terminal width if no-wrap provided.
+  if (noWrap) {
+    lineSeparator = "\n--------------------------------------------------------------------------------";
+  }
+};
+
 let printSpecsStatus = (bsConfig, buildDetails) => {
+  setNoWrapParams();
   return new Promise((resolve, reject) => {
     options = getOptions(bsConfig.auth, buildDetails.build_id)
     tableConfig = getTableConfig();
@@ -81,7 +103,7 @@ let printSpecsStatus = (bsConfig, buildDetails) => {
         whileProcess(callback)
       },
       function(err, result) { // when loop ends
-        logger.info("\n--------------------------------------------------------------------------------")
+        logger.info(lineSeparator);
         specSummary.duration =  endTime - startTime
         resolve(specSummary)
       }
@@ -139,7 +161,7 @@ let showSpecsStatus = (data) => {
 
 let printInitialLog = () => {
   logger.info(`\n${Constants.syncCLI.LOGS.INIT_LOG}`)
-  logger.info("--------------------------------------------------------------------------------")
+  logger.info(lineSeparator);
   n = Constants.syncCLI.INITIAL_DELAY_MULTIPLIER
 }
 

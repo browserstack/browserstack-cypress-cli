@@ -105,7 +105,8 @@ const cliMessages = {
     LOCAL: "Accepted values: (true | false) - create a local testing connection to let you test staging and localhost websites, or sites behind proxies; learn more at browserstack.com/local-testing",
     LOCAL_MODE: 'Accepted values: ("always-on" | "on-demand") - if you choose to keep the binary "always-on", it will speed up your tests by keeping the Local connection warmed up in the background; otherwise, you can choose to have it spawn and killed for every build',
     LOCAL_IDENTIFIER: "Accepted values: String - assign an identifier to your Local process instance",
-    LOCAL_CONFIG_FILE: "Accepted values: String - path to local config-file to your Local process instance. Learn more at https://www.browserstack.com/local-testing/binary-params"
+    LOCAL_CONFIG_FILE: "Accepted values: String - path to local config-file to your Local process instance. Learn more at https://www.browserstack.com/local-testing/binary-params",
+    SYNC_NO_WRAP: "Wrap the spec names in --sync mode in case of smaller terminal window size pass --no-wrap"
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",

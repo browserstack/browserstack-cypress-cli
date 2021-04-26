@@ -92,11 +92,11 @@ describe("syncSpecsLogs", () => {
       syncSpecsLogs.__set__('getBorderConfig', getBorderConfigStub);
 
       let options = getTableConfig();
-      expect(options.columnDefault.width).to.equal(30);
+      expect(options.columnDefault.width).to.equal(Math.floor(((process.stdout.columns) * 0.9) * 0.2));
       expect(options.columns[1].alignment).to.equal('center');
       expect(options.columns[2].alignment).to.equal('left');
-      expect(options.columns[1].width).to.equal(1);
-      expect(options.columns[2].width).to.equal(100);
+      expect(options.columns[1].width).to.equal(Math.ceil(((process.stdout.columns) * 0.9) * 0.01));
+      expect(options.columns[2].width).to.equal(Math.floor(((process.stdout.columns) * 0.9) * 0.75));
       expect(options.columnCount).to.equal(3);
       expect(getBorderConfigStub.calledOnce).to.be.true;
     });

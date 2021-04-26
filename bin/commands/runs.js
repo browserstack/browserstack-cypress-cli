@@ -54,6 +54,9 @@ module.exports = function run(args) {
     // run test in headed mode
     utils.setHeaded(bsConfig, args);
 
+    // set the no-wrap
+    utils.setNoWrap(bsConfig, args);
+
     // Validate browserstack.json values and parallels specified via arguments
     return capabilityHelper.validate(bsConfig, args).then(function (cypressJson) {
 
@@ -119,7 +122,7 @@ module.exports = function run(args) {
             utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'build_failed');
           });
         }).catch(function (err) {
-          // Zip Upload failed | Local Start failed 
+          // Zip Upload failed | Local Start failed
           logger.error(err);
           if(err === Constants.userMessages.LOCAL_START_FAILED){
             utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.LOCAL_START_FAILED}`, Constants.messageTypes.ERROR, 'local_start_failed');

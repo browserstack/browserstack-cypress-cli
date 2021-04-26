@@ -600,6 +600,44 @@ describe('utils', () => {
     });
   });
 
+  describe('setNoWrap', () => {
+    it('sets the no-wrap to process.env.SYNC_NO_WRAP to true', () => {
+      let args = {
+        noWrap: true
+      };
+      let bsConfig = {
+        run_settings: {}
+      };
+
+      utils.setNoWrap(bsConfig, args);
+      expect(process.env.SYNC_NO_WRAP).to.be.eq('true');
+    });
+
+    it('false to not set the no-wrap to process.env.SYNC_NO_WRAP to true', () => {
+      let args = {
+        noWrap: false
+      };
+      let bsConfig = {
+        run_settings: {}
+      };
+
+      utils.setNoWrap(bsConfig, args);
+      expect(process.env.SYNC_NO_WRAP).to.be.eq('false');
+    });
+
+    it('string to not set the no-wrap to process.env.SYNC_NO_WRAP to true', () => {
+      let args = {
+        noWrap: "true"
+      };
+      let bsConfig = {
+        run_settings: {}
+      };
+
+      utils.setNoWrap(bsConfig, args);
+      expect(process.env.SYNC_NO_WRAP).to.be.eq('false');
+    });
+  });
+
   describe('exportResults', () => {
     it('should export results to log/build_results.txt', () => {
       sinon.stub(fs, 'writeFileSync').returns(true);

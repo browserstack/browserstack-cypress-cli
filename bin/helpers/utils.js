@@ -571,6 +571,14 @@ exports.setHeaded = (bsConfig, args) => {
   }
 };
 
+exports.setNoWrap = (_bsConfig, args) => {
+  if (args.noWrap === true || this.searchForOption('--no-wrap')) {
+    process.env.SYNC_NO_WRAP = true;
+  } else {
+    process.env.SYNC_NO_WRAP = false;
+  }
+}
+
 exports.getNumberOfSpecFiles = (bsConfig, args, cypressJson) => {
   let testFolderPath = cypressJson.integrationFolder || Constants.DEFAULT_CYPRESS_SPEC_PATH;
   let globSearchPattern = this.sanitizeSpecsPattern(bsConfig.run_settings.specs) || `${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`;
