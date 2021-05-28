@@ -148,6 +148,24 @@ exports.setParallels = (bsConfig, args, numOfSpecs) => {
   }
 };
 
+exports.warnSpecLimit = (bsConfig, args, specFiles) => {
+  let expectedCharLength = specFiles.join("").length + Constants.METADATA_CHAR_BUFFER_PER_SPEC * specFiles.length;
+  let parallels = bsConfig.run_settings.parallels;
+  let combinations = this.getBrowserCombinations(bsConfig).length;
+  let parallelPerCombination = parallels > combinations ? Math.floor(parallels / combinations) : 1;
+  let expectedCharLengthPerParallel = Math.floor(expectedCharLength / parallelPerCombination);
+  if (expectedCharLengthPerParallel > Constants.SPEC_TOTAL_CHAR_LIMIT) {
+    logger.warn(Constants.userMessages.SPEC_LIMIT_WARNING);
+    this.sendUsageReport(
+      bsConfig,
+      args,
+      Constants.userMessages.SPEC_LIMIT_WARNING,
+      Constants.messageTypes.WARNING,
+      null
+    );
+  }
+ }
+
 exports.setDefaults = (bsConfig, args) => {
   // setting setDefaultAuthHash to {} if not present and set via env variables or via args.
   if (this.isUndefined(bsConfig['auth']) && (!this.isUndefined(args.username) || !this.isUndefined(process.env.BROWSERSTACK_USERNAME))) {

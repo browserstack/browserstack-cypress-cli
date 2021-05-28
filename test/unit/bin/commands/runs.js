@@ -194,6 +194,7 @@ describe("runs", () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
       setParallelsStub = sandbox.stub();
+      warnSpecLimitStub = sandbox.stub();
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
@@ -236,6 +237,7 @@ describe("runs", () => {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
           setParallels: setParallelsStub,
+          warnSpecLimit: warnSpecLimitStub,
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
@@ -286,6 +288,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setCypressConfigFilenameStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
           sinon.assert.calledOnce(setParallelsStub);
+          sinon.assert.calledOnce(warnSpecLimitStub);
           sinon.assert.calledOnce(setLocalStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setHeadedStub);
@@ -316,6 +319,7 @@ describe("runs", () => {
       sandbox = sinon.createSandbox();
       validateBstackJsonStub = sandbox.stub();
       setParallelsStub = sandbox.stub();
+      warnSpecLimitStub = sandbox.stub();
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
@@ -358,6 +362,7 @@ describe("runs", () => {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
           setParallels: setParallelsStub,
+          warnSpecLimit: warnSpecLimitStub,
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
@@ -408,6 +413,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
           sinon.assert.calledOnce(setParallelsStub);
+          sinon.assert.calledOnce(warnSpecLimitStub);
           sinon.assert.calledOnce(setLocalStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setHeadedStub);
@@ -441,6 +447,7 @@ describe("runs", () => {
       sandbox = sinon.createSandbox();
       validateBstackJsonStub = sandbox.stub();
       setParallelsStub = sandbox.stub();
+      warnSpecLimitStub = sandbox.stub();
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
@@ -485,6 +492,7 @@ describe("runs", () => {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
           setParallels: setParallelsStub,
+          warnSpecLimit: warnSpecLimitStub,
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
@@ -546,6 +554,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
           sinon.assert.calledOnce(setParallelsStub);
+          sinon.assert.calledOnce(warnSpecLimitStub);
           sinon.assert.calledOnce(setLocalStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setHeadedStub);
@@ -579,6 +588,7 @@ describe("runs", () => {
       sandbox = sinon.createSandbox();
       validateBstackJsonStub = sandbox.stub();
       setParallelsStub = sandbox.stub();
+      warnSpecLimitStub = sandbox.stub()
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
@@ -633,6 +643,7 @@ describe("runs", () => {
           setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           setParallels: setParallelsStub,
+          warnSpecLimit: warnSpecLimitStub,
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
           setLocalMode: setLocalModeStub,
@@ -688,6 +699,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
           sinon.assert.calledOnce(setParallelsStub);
+          sinon.assert.calledOnce(warnSpecLimitStub);
           sinon.assert.calledOnce(setLocalStub);
           sinon.assert.calledOnce(setLocalModeStub);
           sinon.assert.calledOnce(setupLocalTestingStub);

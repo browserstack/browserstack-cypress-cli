@@ -1496,7 +1496,6 @@ describe('utils', () => {
   });
 
   describe('getNumberOfSpecFiles', () => {
-
     it('glob search pattern should be equal to bsConfig.run_settings.specs', () => {
       let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
       let bsConfig = {
@@ -1557,6 +1556,108 @@ describe('utils', () => {
         }
       );
       glob.sync.restore();
+    });
+  });
+
+  describe('warnSpecLimit', () => {
+    let sendUsageReportStub, loggerStub;
+    let bsConfig = {run_settings: {}}, args = {};
+    beforeEach(() => {
+      sendUsageReportStub = sandbox
+        .stub(utils, 'sendUsageReport')
+        .callsFake(function () {
+          return 'end';
+        });
+      loggerStub = sinon.stub(logger, 'warn');
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+      sinon.restore();
+    });
+
+    context('limit crossing', () => {
+      it('should log and send to eds for one combination, one parallel', () => {
+        let specFiles = {
+          length: 1,
+          join: function() {
+            return {
+              length: constant.SPEC_TOTAL_CHAR_LIMIT
+            }
+          }
+        };
+        sinon.stub(utils, "getBrowserCombinations").returns(1);
+        bsConfig.run_settings.parallels = 1;
+        utils.warnSpecLimit(bsConfig, args, specFiles);
+        sinon.assert.calledOnce(sendUsageReportStub);
+        sinon.assert.calledOnce(loggerStub);
+      });
+
+      it('should log and send to eds for one combination, two parallel', () => {
+        let specFiles = {
+          length: 1,
+          join: function() {
+            return {
+              length: constant.SPEC_TOTAL_CHAR_LIMIT
+            }
+          }
+        };
+        sinon.stub(utils, "getBrowserCombinations").returns(1);
+        bsConfig.run_settings.parallels = 2;
+        utils.warnSpecLimit(bsConfig, args, specFiles);
+        sinon.assert.calledOnce(sendUsageReportStub);
+        sinon.assert.calledOnce(loggerStub);
+      });
+
+      it('should log and send to eds for multiple combination, multiple parallel', () => {
+        let specFiles = {
+          length: 1,
+          join: function() {
+            return {
+              length: constant.SPEC_TOTAL_CHAR_LIMIT
+            }
+          }
+        };
+        sinon.stub(utils, "getBrowserCombinations").returns(3);
+        bsConfig.run_settings.parallels = 4;
+        utils.warnSpecLimit(bsConfig, args, specFiles);
+        sinon.assert.calledOnce(sendUsageReportStub);
+        sinon.assert.calledOnce(loggerStub);
+      });
+    });
+
+    context('within limit', () => {
+      it('should not log for one combination, one parallel', () => {
+        let specFiles = {
+          length: 1,
+          join: function() {
+            return {
+              length: 1
+            }
+          }
+        };
+        sinon.stub(utils, "getBrowserCombinations").returns(1);
+        bsConfig.run_settings.parallels = 1;
+        utils.warnSpecLimit(bsConfig, args, specFiles);
+        sinon.assert.notCalled(sendUsageReportStub);
+        sinon.assert.notCalled(loggerStub);
+      });
+
+      it('should not log for one combination, multiple parallel', () => {
+        let specFiles = {
+          length: 1,
+          join: function() {
+            return {
+              length: 1
+            }
+          }
+        };
+        sinon.stub(utils, "getBrowserCombinations").returns(1);
+        bsConfig.run_settings.parallels = 2;
+        utils.warnSpecLimit(bsConfig, args, specFiles);
+        sinon.assert.notCalled(sendUsageReportStub);
+        sinon.assert.notCalled(loggerStub);
+      });
     });
   });
 

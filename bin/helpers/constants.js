@@ -41,7 +41,8 @@ const userMessages = {
   CYPRESS_VERSION_CHANGED: "Your build will run using Cypress <actualVersion> instead of Cypress <preferredVersion>. Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions",
   LOCAL_START_FAILED: "Local Testing setup failed.",
   LOCAL_STOP_FAILED: "Local Binary stop failed.",
-  INVALID_LOCAL_MODE_WARNING: "Invalid value specified for local_mode. local_mode: (\"always-on\" | \"on-demand\"). For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference"
+  INVALID_LOCAL_MODE_WARNING: "Invalid value specified for local_mode. local_mode: (\"always-on\" | \"on-demand\"). For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
+  SPEC_LIMIT_WARNING: "You might not see all your results on the dashboard because of high spec count, please consider reducing the number of spec files in this folder."
 };
 
 const validationMessages = {
@@ -136,6 +137,9 @@ const specFileTypes = ['js', 'ts', 'feature', 'jsx', 'coffee', 'cjsx'];
 
 const DEFAULT_CYPRESS_SPEC_PATH = "cypress/integration"
 
+const SPEC_TOTAL_CHAR_LIMIT = 32243;
+const METADATA_CHAR_BUFFER_PER_SPEC = 175;
+
 module.exports = Object.freeze({
   syncCLI,
   userMessages,
@@ -145,5 +149,7 @@ module.exports = Object.freeze({
   allowedFileTypes,
   filesToIgnoreWhileUploading,
   specFileTypes,
-  DEFAULT_CYPRESS_SPEC_PATH
+  DEFAULT_CYPRESS_SPEC_PATH,
+  SPEC_TOTAL_CHAR_LIMIT,
+  METADATA_CHAR_BUFFER_PER_SPEC
 });
