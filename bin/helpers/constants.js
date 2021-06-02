@@ -131,23 +131,24 @@ const messageTypes = {
 
 const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip', 'npmrc', 'xml', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'jsx', 'coffee', 'cjsx', 'csv', 'tsv', 'yml', 'yaml'];
 
-const filesToIgnoreWhileUploading = ['**/node_modules/**',
-                                      'node_modules/**',
-                                      'package-lock.json',
-                                      'package.json',
-                                      'browserstack-package.json',
-                                      'tests.zip',
-                                      'cypress.json',
-                                      '.idea/',
-                                      '*.iml',
-                                      '.vscode/',
-                                      '.npm/',
-                                      '.vscode-test',
-                                      '.yarn/cache',
-                                      '.yarn/unplugged',
-                                      '.yarn/install-state.gz',
-                                      '.pnp.*'
-                                    ]
+const filesToIgnoreWhileUploading = [
+  '**/node_modules/**',
+  'node_modules/**',
+  'package-lock.json',
+  'package.json',
+  'browserstack-package.json',
+  'tests.zip',
+  'cypress.json',
+  '.idea/',
+  '*.iml',
+  '.vscode/',
+  '.npm/',
+  '.vscode-test',
+  '.yarn/cache',
+  '.yarn/unplugged',
+  '.yarn/install-state.gz',
+  '.pnp.*'
+];
 
 const specFileTypes = ['js', 'ts', 'feature', 'jsx', 'coffee', 'cjsx'];
 
