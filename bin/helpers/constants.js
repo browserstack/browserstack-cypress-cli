@@ -139,15 +139,10 @@ const filesToIgnoreWhileUploading = [
   'browserstack-package.json',
   'tests.zip',
   'cypress.json',
-  '.idea/',
-  '*.iml',
-  '.vscode/',
-  '.npm/',
-  '.vscode-test',
-  '.yarn/cache',
-  '.yarn/unplugged',
-  '.yarn/install-state.gz',
-  '.pnp.*'
+  '.idea/**',
+  '.vscode/**',
+  '.npm/**',
+  '.yarn/**',
 ];
 
 const specFileTypes = ['js', 'ts', 'feature', 'jsx', 'coffee', 'cjsx'];
