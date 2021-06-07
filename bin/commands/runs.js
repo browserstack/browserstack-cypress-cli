@@ -77,9 +77,12 @@ module.exports = function run(args) {
           // Create build
 
           //setup Local Testing
+          let startTime = new Date().getTime();
           let bs_local = await utils.setupLocalTesting(bsConfig, args);
+          let endTime = new Date().getTime();
+          let setupTimeForLocalTesting = (endTime - startTime)/1000;
 
-          return build.createBuild(bsConfig, zip).then(function (data) {
+          return build.createBuild(bsConfig, zip, setupTimeForLocalTesting).then(function (data) {
             let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
             let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
             utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);

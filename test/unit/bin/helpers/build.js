@@ -44,7 +44,7 @@ describe("build", () => {
       request: { post: requestStub },
     });
 
-    return build.createBuild(bsConfig, "random_zip_file")
+    return build.createBuild(bsConfig, "random_zip_file", 1.00)
       .then(function (data) {
         chai.assert.fail("Promise error");
       })
@@ -72,7 +72,7 @@ describe("build", () => {
       });
 
       return build
-        .createBuild(bsConfig, "random_zip_file")
+        .createBuild(bsConfig, "random_zip_file", 1.00)
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -100,7 +100,7 @@ describe("build", () => {
       });
 
       return build
-        .createBuild(bsConfig, "random_zip_file")
+        .createBuild(bsConfig, "random_zip_file", 1.00)
         .then(function (data) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
@@ -129,7 +129,7 @@ describe("build", () => {
       });
 
       return build
-        .createBuild(bsConfig, "random_zip_file")
+        .createBuild(bsConfig, "random_zip_file", 1.00)
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -161,7 +161,7 @@ describe("build", () => {
       });
 
       return build
-        .createBuild(bsConfig, "random_zip_file")
+        .createBuild(bsConfig, "random_zip_file", 1.00)
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -197,7 +197,7 @@ describe("build", () => {
     });
 
     return build
-      .createBuild(bsConfig, "random_zip_file")
+      .createBuild(bsConfig, "random_zip_file", 1.00)
       .then(function (data) {
         sinon.assert.calledOnce(requestStub);
         sinon.assert.calledOnce(getUserAgentStub);
