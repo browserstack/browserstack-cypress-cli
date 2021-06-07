@@ -15,6 +15,7 @@ logger.transports["console.info"].silent = true;
 describe("build", () => {
   let bsConfig = testObjects.sampleBsConfig;
   let capsData = testObjects.sampleCapsData;
+  let options = testObjects.sampleBsOptions;
 
   var sandbox;
 
@@ -44,7 +45,7 @@ describe("build", () => {
       request: { post: requestStub },
     });
 
-    return build.createBuild(bsConfig, "random_zip_file", 1.00)
+    return build.createBuild(bsConfig, "random_zip_file", options)
       .then(function (data) {
         chai.assert.fail("Promise error");
       })
@@ -72,7 +73,7 @@ describe("build", () => {
       });
 
       return build
-        .createBuild(bsConfig, "random_zip_file", 1.00)
+        .createBuild(bsConfig, "random_zip_file", options)
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -100,7 +101,7 @@ describe("build", () => {
       });
 
       return build
-        .createBuild(bsConfig, "random_zip_file", 1.00)
+        .createBuild(bsConfig, "random_zip_file", options)
         .then(function (data) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
@@ -129,7 +130,7 @@ describe("build", () => {
       });
 
       return build
-        .createBuild(bsConfig, "random_zip_file", 1.00)
+        .createBuild(bsConfig, "random_zip_file", options)
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -161,7 +162,7 @@ describe("build", () => {
       });
 
       return build
-        .createBuild(bsConfig, "random_zip_file", 1.00)
+        .createBuild(bsConfig, "random_zip_file", options)
         .then(function (data) {
           chai.assert.fail("Promise error");
         })
@@ -197,7 +198,7 @@ describe("build", () => {
     });
 
     return build
-      .createBuild(bsConfig, "random_zip_file", 1.00)
+      .createBuild(bsConfig, "random_zip_file", options)
       .then(function (data) {
         sinon.assert.calledOnce(requestStub);
         sinon.assert.calledOnce(getUserAgentStub);
