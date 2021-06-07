@@ -10,6 +10,10 @@ const sampleBsConfig = {
   }
 };
 
+const sampleBsOptions = {
+  setupTimeForLocalTesting: 1.00
+};
+
 const sampleBsConfigWithParallels = {
   auth: {
     username: "random-username",
@@ -137,6 +141,7 @@ const runSampleArgs = {
 
 module.exports = Object.freeze({
   sampleBsConfig,
+  sampleBsOptions,
   sampleBsConfigWithParallels,
   initSampleArgs,
   buildInfoSampleArgs,

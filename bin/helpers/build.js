@@ -6,9 +6,12 @@ const config = require('./config'),
   Constants = require('../helpers/constants'),
   utils = require('../helpers/utils');
 
-const createBuild = (bsConfig, zip) => {
+const createBuild = (bsConfig, zip, opts) => {
   return new Promise(function (resolve, reject) {
     capabilityHelper.caps(bsConfig, zip).then(function(data){
+      let dataJson = JSON.parse(data);
+      dataJson.setupTimeForLocalTesting = opts.setupTimeForLocalTesting;
+      data = JSON.stringify(dataJson);
       let options = {
         url: config.buildUrl,
         auth: {
