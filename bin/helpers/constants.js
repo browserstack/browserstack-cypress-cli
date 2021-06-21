@@ -126,6 +126,7 @@ const messageTypes = {
   INFO: "info",
   WARNING: "warning",
   UNKNOWN: "unknown",
+  TIMECOMPONENTS: "time_components",
   NULL: null
 }
 

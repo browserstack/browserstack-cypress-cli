@@ -174,7 +174,7 @@ function send(args) {
 
   let bsConfig = args.bstack_config;
   let cli_details = cli_version_and_path(bsConfig);
-  let data = {}
+  let data = utils.isUndefined(args.data) ? {} : args.data;
 
   if (bsConfig && bsConfig.run_settings) {
     data.cypress_version = bsConfig.run_settings.cypress_version
