@@ -713,13 +713,15 @@ describe("runs", () => {
           sinon.assert.calledOnce(exportResultsStub);
           sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnce(setDefaultsStub);
-          sinon.assert.calledOnceWithExactly(
-            sendUsageReportStub,
-            bsConfig,
-            args,
-            `${message}\n${dashboardLink}`,
-            messageType,
-            errorCode
+          sinon.assert.match(
+            sendUsageReportStub.getCall(0).args,
+            [
+              bsConfig,
+              args,
+              `${message}\n${dashboardLink}`,
+              messageType,
+              errorCode
+            ]
           );
         });
     });
