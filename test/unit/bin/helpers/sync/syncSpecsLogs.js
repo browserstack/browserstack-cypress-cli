@@ -249,7 +249,6 @@ describe("syncSpecsLogs", () => {
       syncSpecsLogs.__set__('endTime', endTime);
       syncSpecsLogs.__set__('specSummary', specSummary);
 
-
       return printSpecsStatus({}, {}).then((specSummary) => {
         expect(getOptions.calledOnce).to.be.true;
         expect(getTableConfig.calledOnce).to.be.true;

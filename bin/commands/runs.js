@@ -64,10 +64,11 @@ module.exports = function run(args) {
     // set the no-wrap
     utils.setNoWrap(bsConfig, args);
     markBlockEnd('setConfig');
-    
+
     // Validate browserstack.json values and parallels specified via arguments
     markBlockStart('validateConfig');
     return capabilityHelper.validate(bsConfig, args).then(function (cypressJson) {
+
       markBlockStart('preArchiveSteps');
       //get the number of spec files
       let specFiles = utils.getNumberOfSpecFiles(bsConfig, args, cypressJson);
@@ -82,12 +83,15 @@ module.exports = function run(args) {
       // Archive the spec files
       markBlockStart('archive');
       return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude).then(function (data) {
+
         markBlockEnd('archive');
         // Uploaded zip file
         markBlockStart('zipUpload');
         return zipUploader.zipUpload(bsConfig, config.fileName).then(async function (zip) {
-          // Create build
+
           markBlockEnd('zipUpload');
+          // Create build
+
           //setup Local Testing
           markBlockStart('localSetup');
           let bs_local = await utils.setupLocalTesting(bsConfig, args);
@@ -95,6 +99,7 @@ module.exports = function run(args) {
           markBlockStart('createBuild');
           return build.createBuild(bsConfig, zip).then(function (data) {
             markBlockEnd('createBuild');
+            markBlockEnd('total');
             let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
             let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
             utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
