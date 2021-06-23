@@ -29,7 +29,7 @@ const markBlockDiff = (blockName, startTime, stopTime) => {
 const getTimeComponents = () => {
   const data = convertDotToNestedObject(sessionTimes.logTimes);
 
-  return JSON.stringify(data);
+  return data;
 };
 
 const convertDotToNestedObject = (dotNotationObject) => {

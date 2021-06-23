@@ -83,11 +83,11 @@ describe('timeComponents', () => {
   });
 
   describe('getTimeComponents', () => {
-    it('should call convertDotToNestedObject and return stringified data', () => {
+    it('should call convertDotToNestedObject and return data', () => {
       let convertDotToNestedObjectStub = sinon.stub().returns({sampleBlock: 100}),
         convertDotToNestedObjectUnset = timeComponents.__set__('convertDotToNestedObject', convertDotToNestedObjectStub);
 
-      expect(getTimeComponents()).to.equal('{"sampleBlock":100}');
+      expect(getTimeComponents()).to.deep.equal({sampleBlock:100});
 
       convertDotToNestedObjectUnset();
     });

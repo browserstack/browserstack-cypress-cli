@@ -130,7 +130,7 @@ module.exports = function run(args) {
             logger.info(dashboardLink);
             if(!args.sync) logger.info(Constants.userMessages.EXIT_SYNC_CLI_MESSAGE.replace("<build-id>",data.build_id));
             utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
-            utils.sendUsageReport(bsConfig, args, 'Time Components', Constants.messageTypes.TIMECOMPONENTS, null, getTimeComponents());
+            utils.sendUsageReport(bsConfig, args, `buildId: ${data.build_id}`, Constants.messageTypes.TIMECOMPONENTS, null, getTimeComponents());
             return;
           }).catch(async function (err) {
             // Build creation failed

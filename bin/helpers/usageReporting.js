@@ -6,7 +6,8 @@ const cp = require("child_process"),
   path = require('path');
 
 const config = require('./config'),
-  fileLogger = require('./logger').fileLogger;
+  fileLogger = require('./logger').fileLogger,
+  utils = require('./utils');
 
 function get_version(package_name) {
   try {
@@ -176,8 +177,13 @@ function send(args) {
   let cli_details = cli_version_and_path(bsConfig);
   let data = utils.isUndefined(args.data) ? {} : args.data;
 
-  if (bsConfig && bsConfig.run_settings) {
-    data.cypress_version = bsConfig.run_settings.cypress_version
+  if (bsConfig) {
+    if (bsConfig.run_settings) {
+      data.cypress_version = bsConfig.run_settings.cypress_version;
+    }
+    if (bsConfig.connection_settings && bsConfig.connection_settings.local_mode) {
+      data.local_mode = bsConfig.connection_settings.local_mode;
+    }
   }
 
   delete args.bstack_config;
