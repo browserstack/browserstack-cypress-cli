@@ -129,8 +129,19 @@ module.exports = function run(args) {
             logger.info(message);
             logger.info(dashboardLink);
             if(!args.sync) logger.info(Constants.userMessages.EXIT_SYNC_CLI_MESSAGE.replace("<build-id>",data.build_id));
-            utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
-            utils.sendUsageReport(bsConfig, args, `buildId: ${data.build_id}`, Constants.messageTypes.TIMECOMPONENTS, null, getTimeComponents());
+            let dataToSend = {
+              time_components: getTimeComponents(),
+              build_id: data.build_id,
+            };
+            if (bsConfig && bsConfig.connection_settings) {
+              if (bsConfig.connection_settings.local_mode) {
+                dataToSend.local_mode = bsConfig.connection_settings.local_mode;
+              }
+              if (bsConfig.connection_settings.usedAutoLocal) {
+                dataToSend.used_auto_local = bsConfig.connection_settings.usedAutoLocal;
+              }
+            }
+            utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, dataToSend);
             return;
           }).catch(async function (err) {
             // Build creation failed

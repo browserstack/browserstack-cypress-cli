@@ -450,6 +450,7 @@ exports.setupLocalTesting = (bsConfig, args) => {
         bsConfig, bsConfig['connection_settings']['local_identifier']
       );
       if (!localIdentifierRunning){
+        bsConfig.connection_settings.usedAutoLocal = true;
         var bs_local = this.getLocalBinary();
         var bs_local_args = this.setLocalArgs(bsConfig, args);
         let that = this;

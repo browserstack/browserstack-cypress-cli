@@ -34,7 +34,7 @@ function local_cypress_version(bsConfig) {
   // 1. check version of Cypress installed in local project
   // 2. check version of Cypress installed globally if not present in project
 
-  if (bsConfig && bsConfig.run_settings.cypressProjectDir) {
+  if (bsConfig && bsConfig.run_settings && bsConfig.run_settings.cypressProjectDir) {
     let version = get_version(path.join(bsConfig.run_settings.cypressProjectDir, 'node_modules', '.bin', 'cypress'));
     if (!version) {
       version = get_version('cypress');
@@ -81,7 +81,7 @@ function cli_version_and_path(bsConfig) {
   // 1. check version of Cypress installed in local project
   // 2. check version of Cypress installed globally if not present in project
 
-  if (bsConfig && bsConfig.run_settings.cypressProjectDir) {
+  if (bsConfig && bsConfig.run_settings && bsConfig.run_settings.cypressProjectDir) {
     let _path = path.join(bsConfig.run_settings.cypressProjectDir, 'node_modules', 'browserstack-cypress');
     let version = get_version(_path);
     if (!version) {
@@ -177,13 +177,8 @@ function send(args) {
   let cli_details = cli_version_and_path(bsConfig);
   let data = utils.isUndefined(args.data) ? {} : args.data;
 
-  if (bsConfig) {
-    if (bsConfig.run_settings) {
-      data.cypress_version = bsConfig.run_settings.cypress_version;
-    }
-    if (bsConfig.connection_settings && bsConfig.connection_settings.local_mode) {
-      data.local_mode = bsConfig.connection_settings.local_mode;
-    }
+  if (bsConfig && bsConfig.run_settings) {
+    data.cypress_version = bsConfig.run_settings.cypress_version
   }
 
   delete args.bstack_config;
