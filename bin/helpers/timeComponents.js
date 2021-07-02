@@ -46,7 +46,11 @@ const convertDotToNestedObject = (dotNotationObject) => {
       }
       currentKey = currentKey[dotKeys[i]];
     }
-    currentKey[dotKeys[dotKeys.length - 1]] = dotNotationObject[key];
+    if (isUndefined(currentKey[dotKeys[dotKeys.length - 1]]) || Number.isInteger(currentKey[dotKeys[dotKeys.length - 1]])) {
+      currentKey[dotKeys[dotKeys.length - 1]] = dotNotationObject[key];
+    } else {
+      currentKey[dotKeys[dotKeys.length - 1]].total = dotNotationObject[key];
+    }
   });
 
   return nestedObject;

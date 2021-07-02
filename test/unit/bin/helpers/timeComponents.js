@@ -103,7 +103,8 @@ describe('timeComponents', () => {
       {'block1.block2.block3.block4.block5': 50},
       {block1:10,'block2.block3':20},
       {block1:10,'block2.block3':30,'block2.block4':40},
-      {'block1.block2':10,'block2':20,'block1.block2.block3':30,'block2.block3':30,block4:40}
+      {'block1.block2':10,'block2':20,'block1.block2.block3':30,'block2.block3':30,block4:40},
+      {'block1.block2':10, 'block1.block3':20, 'block1':20}
     ];
     let outputs = [
       {},
@@ -114,7 +115,8 @@ describe('timeComponents', () => {
       {block1:{block2:{block3:{block4:{block5:50}}}}},
       {block1:10,block2:{block3:20}},
       {block1:10, block2:{block3:30,block4:40}},
-      {block1:{block2:{total:10,block3:30}},block2:{total:20,block3:30},block4:40}
+      {block1:{block2:{total:10,block3:30}},block2:{total:20,block3:30},block4:40},
+      {block1:{block2:10,block3:20,total:20}}
     ];
     
     it('should convert dotted object to nested object', () => {

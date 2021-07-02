@@ -81,15 +81,17 @@ module.exports = function run(args) {
 
       markBlockEnd('preArchiveSteps');
       // Archive the spec files
-      markBlockStart('archive');
+      markBlockStart('zip');
+      markBlockStart('zip.archive');
       return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude).then(function (data) {
 
-        markBlockEnd('archive');
+        markBlockEnd('zip.archive');
         // Uploaded zip file
-        markBlockStart('zipUpload');
+        markBlockStart('zip.zipUpload');
         return zipUploader.zipUpload(bsConfig, config.fileName).then(async function (zip) {
 
-          markBlockEnd('zipUpload');
+          markBlockEnd('zip.zipUpload');
+          markBlockEnd('zip');
           // Create build
 
           //setup Local Testing
