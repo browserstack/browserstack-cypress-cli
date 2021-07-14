@@ -266,13 +266,51 @@ exports.setUserSpecs = (bsConfig, args) => {
   }
 }
 
-// env option must be set only from command line args as a string
 exports.setTestEnvs = (bsConfig, args) => {
+  // env option must be set only from command line args as a string
   if (!this.isUndefined(args.env)) {
     bsConfig.run_settings.env = this.fixCommaSeparatedString(args.env);
   } else {
     bsConfig.run_settings.env = null;
   }
+
+  // set env vars which start with CYPRESS_ and cypress_
+  let pattern = /^cypress_/i;
+  let matchingKeys = this.getKeysMatchingPattern(process.env, pattern);
+  if (matchingKeys) {
+    let envKeys = [];
+    matchingKeys.forEach((envVar) => {
+      envKeys.push(`${envVar}=${process.env.envVar}`);
+    });
+
+    if (bsConfig.run_settings.env !== null) {
+      bsConfig.run_settings.env = `${bsConfig.run_settings.env},${envKeys.join(',')}`;
+    } else {
+      bsConfig.run_settings.env = matchingKeys.join(',');
+    }
+  }
+
+  // set env vars which are defined in system_env_vars key
+  if(!this.undefined(bsConfig.run_settings.system_env_vars)) {
+    let system_env_vars = bsConfig.run_settings.system_env_vars;
+    let envKeys = [];
+    system_env_vars.forEach((envVar) => {
+      envKeys.push(`${envVar}=${process.env.envVar}`);
+    });
+
+    if (bsConfig.run_settings.env !== null) {
+      bsConfig.run_settings.env = `${bsConfig.run_settings.env},${system_env_vars.join(',')}`;
+    } else {
+      bsConfig.run_settings.env = system_env_vars.join(',');
+    }
+  }
+}
+
+exports.getKeysMatchingPattern = (obj, pattern) => {
+  let matchingKeys = Object.keys(obj).filter(function(key) {
+    return pattern.test(key);
+  });
+  return matchingKeys;
 }
 
 exports.fixCommaSeparatedString = (string) => {
