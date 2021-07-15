@@ -61,7 +61,6 @@ module.exports = function () {
       },
       "package_config_options": {
       },
-      "system_env_vars": [],
       "headless": true
     },
     "connection_settings": {

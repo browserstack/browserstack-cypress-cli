@@ -93,32 +93,10 @@ const caps = (bsConfig, zip) => {
     obj.projectNotifyURL = null;
 
     if (bsConfig.run_settings) {
-      obj.project = bsConfig.run_settings.project || bsConfig.run_settings.project_name;
-      obj.customBuildName = bsConfig.run_settings.build_name || bsConfig.run_settings.customBuildName;
-      obj.callbackURL = bsConfig.run_settings.callback_url;
-      obj.projectNotifyURL = bsConfig.run_settings.project_notify_URL;
-      obj.parallels = bsConfig.run_settings.parallels;
-
-      if (!Utils.isUndefined(bsConfig.run_settings.cypress_config_filename)) {
-        obj.cypress_config_filename = bsConfig.run_settings.cypress_config_filename;
-      }
-
-      if (!Utils.isUndefined(bsConfig.run_settings.specs)){
-        obj.specs = bsConfig.run_settings.specs;
-      }
-
-      if (!Utils.isUndefined(bsConfig.run_settings.env)){
-        obj.env = bsConfig.run_settings.env;
-      }
-      if (!Utils.isUndefined(bsConfig.run_settings.cypress_version)){
-        obj.cypress_version = bsConfig.run_settings.cypress_version;
-      }
-
-      if (!Utils.isUndefined(bsConfig.run_settings.headless) && String(bsConfig.run_settings.headless) === "false"){
-        obj.headless = bsConfig.run_settings.headless;
-      } else {
+      if (!(!Utils.isUndefined(bsConfig.run_settings.headless) && String(bsConfig.run_settings.headless) === "false")) {
         logger.info(`Running your tests in headless mode. Use --headed arg to run in headful mode.`);
       }
+      obj.run_settings = bsConfig.run_settings;
     }
 
     if(obj.parallels === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE) obj.parallels = undefined
