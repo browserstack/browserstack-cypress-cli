@@ -277,31 +277,31 @@ exports.setTestEnvs = (bsConfig, args) => {
   // set env vars which start with CYPRESS_ and cypress_
   let pattern = /^cypress_/i;
   let matchingKeys = this.getKeysMatchingPattern(process.env, pattern);
-  if (matchingKeys) {
+  if (matchingKeys && matchingKeys.length) {
     let envKeys = [];
     matchingKeys.forEach((envVar) => {
-      envKeys.push(`${envVar}=${process.env.envVar}`);
+      envKeys.push(`${envVar}=${process.env[envVar]}`);
     });
 
     if (bsConfig.run_settings.env !== null) {
       bsConfig.run_settings.env = `${bsConfig.run_settings.env},${envKeys.join(',')}`;
     } else {
-      bsConfig.run_settings.env = matchingKeys.join(',');
+      bsConfig.run_settings.env = envKeys.join(',');
     }
   }
 
   // set env vars which are defined in system_env_vars key
-  if(!this.undefined(bsConfig.run_settings.system_env_vars)) {
+  if(!this.isUndefined(bsConfig.run_settings.system_env_vars) && Array.isArray(bsConfig.run_settings.system_env_vars) && bsConfig.run_settings.system_env_vars.length) {
     let system_env_vars = bsConfig.run_settings.system_env_vars;
     let envKeys = [];
     system_env_vars.forEach((envVar) => {
-      envKeys.push(`${envVar}=${process.env.envVar}`);
+      envKeys.push(`${envVar}=${process.env[envVar]}`);
     });
 
     if (bsConfig.run_settings.env !== null) {
-      bsConfig.run_settings.env = `${bsConfig.run_settings.env},${system_env_vars.join(',')}`;
+      bsConfig.run_settings.env = `${bsConfig.run_settings.env},${envKeys.join(',')}`;
     } else {
-      bsConfig.run_settings.env = system_env_vars.join(',');
+      bsConfig.run_settings.env = envKeys.join(',');
     }
   }
 }
