@@ -358,7 +358,7 @@ describe('utils', () => {
     let args = testObjects.initSampleArgs;
 
     it('should call sendUsageReport', () => {
-      sendUsageReportStub = sandbox
+      let sendUsageReportStub = sandbox
         .stub(utils, 'sendUsageReport')
         .callsFake(function () {
           return 'end';
@@ -508,7 +508,35 @@ describe('utils', () => {
   });
 
   describe('setTestEnvs', () => {
-    it('sets env only from args', () => {
+    it('set env only from args', () => {
+      let argsEnv = 'env3=value3, env4=value4';
+      let bsConfig = {
+        run_settings: {
+        },
+      };
+      let args = {
+        env: argsEnv,
+      };
+
+      utils.setTestEnvs(bsConfig, args);
+      expect(bsConfig.run_settings.env).to.be.eq('env3=value3,env4=value4');
+    });
+
+    it('set env only from browserstack.json env param', () => {
+      let bsConfig = {
+        run_settings: {
+          env: 'env1=value1, env2=value2',
+        },
+      };
+      let args = {
+        env: null
+      };
+
+      utils.setTestEnvs(bsConfig, args);
+      expect(bsConfig.run_settings.env).to.be.eq('env1=value1,env2=value2');
+    });
+
+    it('merges env from args and browserstack.json env param', () => {
       let argsEnv = 'env3=value3, env4=value4';
       let bsConfig = {
         run_settings: {
@@ -520,10 +548,25 @@ describe('utils', () => {
       };
 
       utils.setTestEnvs(bsConfig, args);
-      expect(bsConfig.run_settings.env).to.be.eq('env3=value3,env4=value4');
+      expect(bsConfig.run_settings.env).to.be.eq('env1=value1,env2=value2,env3=value3,env4=value4');
     });
 
-    it('sets env from args without spaces in it', () => {
+    it('merges env from args and browserstack.json env param but give preceedence to args', () => {
+      let argsEnv = 'env1=value0, env4=value4';
+      let bsConfig = {
+        run_settings: {
+          env: 'env1=value1, env2=value2',
+        },
+      };
+      let args = {
+        env: argsEnv,
+      };
+
+      utils.setTestEnvs(bsConfig, args);
+      expect(bsConfig.run_settings.env).to.be.eq('env1=value0,env2=value2,env4=value4');
+    });
+
+    it('handle spaces passed while specifying env', () => {
       let argsEnv = 'env3=value3 , env4=value4';
       let bsConfig = {
         run_settings: {
@@ -535,14 +578,35 @@ describe('utils', () => {
       };
 
       utils.setTestEnvs(bsConfig, args);
-      expect(bsConfig.run_settings.env).to.be.eq('env3=value3,env4=value4');
+      expect(bsConfig.run_settings.env).to.be.eq('env1=value1,env2=value2,env3=value3,env4=value4');
     });
 
-    it('does not set env if not specified in args', () => {
+    it('set vars passed in system_env_vars', () => {
+      process.env.ENV1 = 'env1';
+      process.env.ENV2 = 'env2'
       let argsEnv = 'env3=value3 , env4=value4';
       let bsConfig = {
         run_settings: {
           env: 'env1=value1 , env2=value2',
+          system_env_vars: ['ENV1', 'ENV2']
+        },
+      };
+      let args = {
+        env: argsEnv,
+      };
+
+      utils.setTestEnvs(bsConfig, args);
+      expect(bsConfig.run_settings.env).to.be.eq('env1=value1,env2=value2,ENV1=env1,ENV2=env2,env3=value3,env4=value4');
+      delete process.env.ENV1;
+      delete process.env.ENV2;
+    });
+
+    it('set vars defined on machine as CYPRESS_ or cypress_', () => {
+      process.env.CYPRESS_TEST_1 = 'env1';
+      process.env.cypress_test_2 = 'env2'
+      let bsConfig = {
+        run_settings: {
+          env: null
         },
       };
       let args = {
@@ -550,7 +614,28 @@ describe('utils', () => {
       };
 
       utils.setTestEnvs(bsConfig, args);
-      expect(bsConfig.run_settings.env).to.be.eq(null);
+      expect(bsConfig.run_settings.env).to.be.eq('CYPRESS_TEST_1=env1,cypress_test_2=env2');
+      delete process.env.CYPRESS_TEST_1;
+      delete process.env.cypress_test_2;
+    });
+
+    it('set vars defined on machine as CYPRESS_ or cypress_ with args and env set in browserstack.json', () => {
+      process.env.CYPRESS_TEST_1 = 'env1';
+      process.env.cypress_test_2 = 'env2'
+      let argsEnv = 'env3=value3 , env4=value4';
+      let bsConfig = {
+        run_settings: {
+          env: 'env1=value1 , env2=value2'
+        },
+      };
+      let args = {
+        env: argsEnv,
+      };
+
+      utils.setTestEnvs(bsConfig, args);
+      expect(bsConfig.run_settings.env).to.be.eq('env1=value1,env2=value2,CYPRESS_TEST_1=env1,cypress_test_2=env2,env3=value3,env4=value4');
+      delete process.env.CYPRESS_TEST_1;
+      delete process.env.cypress_test_2;
     });
   });
 

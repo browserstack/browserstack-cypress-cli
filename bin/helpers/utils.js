@@ -267,42 +267,47 @@ exports.setUserSpecs = (bsConfig, args) => {
 }
 
 exports.setTestEnvs = (bsConfig, args) => {
-  // env option must be set only from command line args as a string
-  if (!this.isUndefined(args.env)) {
-    bsConfig.run_settings.env = this.fixCommaSeparatedString(args.env);
-  } else {
-    bsConfig.run_settings.env = null;
+  let envKeys = {};
+
+  // set env vars which are defined in env key as a string
+  if(!this.isUndefined(bsConfig.run_settings.env)) {
+    let bstackJsonEnvVars = this.fixCommaSeparatedString(bsConfig.run_settings.env).split(',');
+    bstackJsonEnvVars.forEach((envVar) => {
+      let env = envVar.split("=");
+      envKeys[env[0]] = env[1];
+    });
+  }
+
+  // set env vars which are defined in system_env_vars key
+  if(!this.isUndefined(bsConfig.run_settings.system_env_vars) && Array.isArray(bsConfig.run_settings.system_env_vars) && bsConfig.run_settings.system_env_vars.length) {
+    let systemEnvVars = bsConfig.run_settings.system_env_vars;
+    systemEnvVars.forEach((envVar) => {
+      envKeys[envVar] = process.env[envVar];
+    });
   }
 
   // set env vars which start with CYPRESS_ and cypress_
   let pattern = /^cypress_/i;
   let matchingKeys = this.getKeysMatchingPattern(process.env, pattern);
   if (matchingKeys && matchingKeys.length) {
-    let envKeys = [];
     matchingKeys.forEach((envVar) => {
-      envKeys.push(`${envVar}=${process.env[envVar]}`);
+      envKeys[envVar] = process.env[envVar];
     });
-
-    if (bsConfig.run_settings.env !== null) {
-      bsConfig.run_settings.env = `${bsConfig.run_settings.env},${envKeys.join(',')}`;
-    } else {
-      bsConfig.run_settings.env = envKeys.join(',');
-    }
   }
 
-  // set env vars which are defined in system_env_vars key
-  if(!this.isUndefined(bsConfig.run_settings.system_env_vars) && Array.isArray(bsConfig.run_settings.system_env_vars) && bsConfig.run_settings.system_env_vars.length) {
-    let system_env_vars = bsConfig.run_settings.system_env_vars;
-    let envKeys = [];
-    system_env_vars.forEach((envVar) => {
-      envKeys.push(`${envVar}=${process.env[envVar]}`);
+  // set env vars passed from command line args as a string
+  if (!this.isUndefined(args.env)) {
+    let argsEnvVars = this.fixCommaSeparatedString(args.env).split(',');
+    argsEnvVars.forEach((envVar) => {
+      let env = envVar.split("=");
+      envKeys[env[0]] = env[1];
     });
+  }
 
-    if (bsConfig.run_settings.env !== null) {
-      bsConfig.run_settings.env = `${bsConfig.run_settings.env},${envKeys.join(',')}`;
-    } else {
-      bsConfig.run_settings.env = envKeys.join(',');
-    }
+  if (Object.keys(envKeys).length === 0) {
+    bsConfig.run_settings.env = null;  
+  } else {
+    bsConfig.run_settings.env = Object.keys(envKeys).map(key => (`${key}=${envKeys[key]}`)).join(',');
   }
 }
 
