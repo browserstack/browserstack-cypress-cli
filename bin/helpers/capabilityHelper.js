@@ -93,10 +93,18 @@ const caps = (bsConfig, zip) => {
     obj.projectNotifyURL = null;
 
     if (bsConfig.run_settings) {
+      obj.project = bsConfig.run_settings.project || bsConfig.run_settings.project_name || obj.project;
+      obj.customBuildName = bsConfig.run_settings.build_name || bsConfig.run_settings.customBuildName || obj.customBuildName;
+      obj.callbackURL = bsConfig.run_settings.callback_url;
+      obj.projectNotifyURL = bsConfig.run_settings.project_notify_URL;
+      obj.parallels = bsConfig.run_settings.parallels;
+
       if (!(!Utils.isUndefined(bsConfig.run_settings.headless) && String(bsConfig.run_settings.headless) === "false")) {
         logger.info(`Running your tests in headless mode. Use --headed arg to run in headful mode.`);
       }
-      obj.run_settings = bsConfig.run_settings;
+
+      // send run_settings as is for other capabilities
+      obj.run_settings = JSON.stringify(bsConfig.run_settings);
     }
 
     if(obj.parallels === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE) obj.parallels = undefined
