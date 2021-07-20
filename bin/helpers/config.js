@@ -15,6 +15,7 @@ if(config.env !== "production") {
 config.cypress_v1 = `${config.rails_host}/automate/cypress/v1`;
 config.buildUrl = `${config.cypress_v1}/builds/`;
 config.buildStopUrl = `${config.cypress_v1}/builds/stop/`;
+config.checkMd5sum = `${config.cypress_v1}/md5sumcheck/`;
 config.fileName = "tests.zip";
 config.retries = 5;
 config.networkErrorExitCode = 2;
