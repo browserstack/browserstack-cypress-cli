@@ -21,6 +21,7 @@ const userMessages = {
   CONFIG_FILE_CREATED: "BrowserStack Config File created, you can now run browserstack-cypress --config-file run",
   CONFIG_FILE_EXISTS: "File already exists, delete the browserstack.json file manually. skipping...",
   DIR_NOT_FOUND: "Given path does not exist. Failed to create browserstack.json in %s",
+  MD5_CHECK_FAILED: "There was some issue while checking if zip is already uploaded.",
   ZIP_DELETE_FAILED: "Could not delete tests.zip successfully.",
   ZIP_DELETED: "Deleted tests.zip successfully.",
   API_DEPRECATED: "This version of API is deprecated, please use latest version of API.",
@@ -111,6 +112,7 @@ const cliMessages = {
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",
+    FORCE_UPLOAD: "Ignore already upload check and upload tests",
     USERNAME: "Your BrowserStack username",
     ACCESS_KEY: "Your BrowserStack access key",
     NO_NPM_WARNING: "No NPM warning if npm_dependencies is empty",
@@ -145,6 +147,21 @@ const filesToIgnoreWhileUploading = [
   '.yarn/**',
 ];
 
+const readDirOptions = {
+  cwd: '.',
+  matchBase: true,
+  ignore: [],
+  dot: true,
+  stat: true,
+  pattern: ''
+}
+
+const hashingOptions = {
+  parallel: 10,
+  algo: 'md5',
+  encoding: 'hex',
+};
+
 const specFileTypes = ['js', 'ts', 'feature', 'jsx', 'coffee', 'cjsx'];
 
 const DEFAULT_CYPRESS_SPEC_PATH = "cypress/integration"
@@ -160,6 +177,8 @@ module.exports = Object.freeze({
   messageTypes,
   allowedFileTypes,
   filesToIgnoreWhileUploading,
+  readDirOptions,
+  hashingOptions,
   specFileTypes,
   DEFAULT_CYPRESS_SPEC_PATH,
   SPEC_TOTAL_CHAR_LIMIT,

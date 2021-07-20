@@ -597,6 +597,23 @@ exports.setNoWrap = (_bsConfig, args) => {
   }
 }
 
+exports.getFilesToIgnore = (runSettings, excludeFiles, logging = true) => {
+  let ignoreFiles = Constants.filesToIgnoreWhileUploading;
+
+  // exclude files asked by the user
+  // args will take precedence over config file
+  if (!this.isUndefined(excludeFiles)) {
+    let excludePatterns = this.fixCommaSeparatedString(excludeFiles).split(',');
+    ignoreFiles = ignoreFiles.concat(excludePatterns);
+    if (logging) logger.info(`Excluding files matching: ${JSON.stringify(excludePatterns)}`);
+  } else if (!this.isUndefined(runSettings.exclude) && runSettings.exclude.length) {
+    ignoreFiles = ignoreFiles.concat(runSettings.exclude);
+    if (logging) logger.info(`Excluding files matching: ${JSON.stringify(runSettings.exclude)}`);
+  }
+
+  return ignoreFiles;
+}
+
 exports.getNumberOfSpecFiles = (bsConfig, args, cypressJson) => {
   let testFolderPath = cypressJson.integrationFolder || Constants.DEFAULT_CYPRESS_SPEC_PATH;
   let globSearchPattern = this.sanitizeSpecsPattern(bsConfig.run_settings.specs) || `${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`;

@@ -7,8 +7,11 @@ const config = require("./config"),
   utils = require("./utils"),
   fileHelpers = require("./fileHelpers");
 
-const uploadCypressZip = (bsConfig, filePath) => {
+const uploadCypressZip = (bsConfig, filePath, md5data) => {
   return new Promise(function (resolve, reject) {
+    if (md5data.zipUrlPresent) {
+      return resolve({ zip_url: md5data.zipUrl });
+    }
     logger.info(Constants.userMessages.UPLOADING_TESTS);
     let options = {
       url: config.uploadUrl,
@@ -19,7 +22,8 @@ const uploadCypressZip = (bsConfig, filePath) => {
       formData: {
         file: fs.createReadStream(filePath),
         filetype: 'zip',
-        filename: 'tests'
+        filename: 'tests',
+        zipMd5sum: md5data.md5sum ? md5data.md5sum : '',
       },
       headers: {
         "User-Agent": utils.getUserAgent(),

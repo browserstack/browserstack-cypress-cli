@@ -43,7 +43,7 @@ describe("zipUpload", () => {
     });
 
     return zipUploader
-      .zipUpload(bsConfig, "./random_file_path")
+      .zipUpload(bsConfig, "./random_file_path",{})
       .then(function (data) {
         chai.assert.fail("Promise error");
       })
@@ -70,7 +70,7 @@ describe("zipUpload", () => {
     });
 
     return zipUploader
-      .zipUpload(bsConfig, "./random_file_path")
+      .zipUpload(bsConfig, "./random_file_path", {})
       .then(function (data) {
         chai.assert.fail("Promise error");
       })
@@ -99,7 +99,7 @@ describe("zipUpload", () => {
     });
 
     return zipUploader
-      .zipUpload(bsConfig, "./random_file_path")
+      .zipUpload(bsConfig, "./random_file_path", {})
       .then(function (data) {
         chai.assert.fail("Promise error");
       })
@@ -129,7 +129,7 @@ describe("zipUpload", () => {
     });
 
     return zipUploader
-      .zipUpload(bsConfig, "./random_file_path")
+      .zipUpload(bsConfig, "./random_file_path", {})
       .then(function (data) {
         chai.assert.fail("Promise error");
       })
@@ -158,7 +158,7 @@ describe("zipUpload", () => {
     });
 
     return zipUploader
-      .zipUpload(bsConfig, "./random_file_path")
+      .zipUpload(bsConfig, "./random_file_path", {})
       .then(function (data) {
         chai.assert.fail("Promise error");
       })
@@ -190,12 +190,42 @@ describe("zipUpload", () => {
     });
 
     return zipUploader
-      .zipUpload(bsConfig, "./random_file_path")
+      .zipUpload(bsConfig, "./random_file_path", {})
       .then(function (data) {
         sinon.assert.calledOnce(requestStub);
         sinon.assert.calledOnce(getUserAgentStub);
         sinon.assert.calledOnce(createReadStreamStub);
         sinon.assert.calledOnce(deleteZipStub);
+        chai.assert.equal(data.zip_url, zip_url);
+      })
+      .catch((error) => {
+        chai.assert.isNotOk(error, "Promise error");
+      });
+  });
+
+  it("resolve early if zip url already present", () => {
+    let zip_url = "uploaded zip url";
+    let requestStub = sandbox
+      .stub(request, "post")
+      .yields(null, { statusCode: 200 }, JSON.stringify({ zip_url: zip_url }));
+
+    const zipUploader = proxyquire('../../../../bin/helpers/zipUpload', {
+      './utils': {
+        getUserAgent: getUserAgentStub,
+      },
+      request: {post: requestStub},
+      './fileHelpers': {
+        deleteZip: deleteZipStub,
+      },
+    });
+
+    return zipUploader
+      .zipUpload(bsConfig, "./random_file_path", { zipUrlPresent: true, zipUrl: zip_url })
+      .then(function (data) {
+        sinon.assert.notCalled(requestStub);
+        sinon.assert.notCalled(getUserAgentStub);
+        sinon.assert.notCalled(createReadStreamStub);
+        sinon.assert.notCalled(deleteZipStub);
         chai.assert.equal(data.zip_url, zip_url);
       })
       .catch((error) => {

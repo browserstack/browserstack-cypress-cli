@@ -204,6 +204,7 @@ describe("runs", () => {
       setTestEnvsStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
+      checkUploadedStub = sandbox.stub();
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
       });
@@ -266,11 +267,15 @@ describe("runs", () => {
         '../helpers/fileHelpers': {
           deleteZip: deleteZipStub,
         },
+        '../helpers/checkUploaded': {
+          checkUploadedMd5: checkUploadedStub,
+        },
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
-      setupLocalTestingStub.returns(Promise.resolve("nothing"))
+      setupLocalTestingStub.returns(Promise.resolve("nothing"));
       capabilityValidatorStub.returns(Promise.resolve(Constants.validationMessages.VALIDATED));
+      checkUploadedStub.returns(Promise.resolve({ zipUrlPresent: false }));
       archiverStub.returns(Promise.reject("random-error"));
 
       return runs(args)
@@ -328,6 +333,7 @@ describe("runs", () => {
       setTestEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
+      checkUploadedStub = sandbox.stub();
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
       });
@@ -394,11 +400,15 @@ describe("runs", () => {
         '../helpers/zipUpload': {
           zipUpload: zipUploadStub,
         },
+        '../helpers/checkUploaded': {
+          checkUploadedMd5: checkUploadedStub,
+        },
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
       capabilityValidatorStub.returns(Promise.resolve(Constants.validationMessages.VALIDATED));
       setupLocalTestingStub.returns(Promise.resolve("nothing"));
+      checkUploadedStub.returns(Promise.resolve({ zipUrlPresent: false }))
       archiverStub.returns(Promise.resolve("Zipping completed"));
       zipUploadStub.returns(Promise.reject("random-error"));
 
@@ -456,6 +466,7 @@ describe("runs", () => {
       setTestEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
+      checkUploadedStub = sandbox.stub();
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
       });
@@ -528,6 +539,9 @@ describe("runs", () => {
         '../helpers/build': {
           createBuild: createBuildStub,
         },
+        '../helpers/checkUploaded': {
+          checkUploadedMd5: checkUploadedStub,
+        },
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -536,6 +550,7 @@ describe("runs", () => {
         Promise.resolve(Constants.validationMessages.VALIDATED)
       );
       archiverStub.returns(Promise.resolve("Zipping completed"));
+      checkUploadedStub.returns(Promise.resolve({ zipUrlPresent: false }));
       zipUploadStub.returns(Promise.resolve("zip uploaded"));
       stopLocalBinaryStub.returns(Promise.resolve("nothing"));
       createBuildStub.returns(Promise.reject("random-error"));
@@ -597,6 +612,7 @@ describe("runs", () => {
       setTestEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
+      checkUploadedStub = sandbox.stub();
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
       });
@@ -676,6 +692,9 @@ describe("runs", () => {
         '../helpers/config': {
           dashboardUrl: dashboardUrl,
         },
+        '../helpers/checkUploaded': {
+          checkUploadedMd5: checkUploadedStub,
+        },
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -684,6 +703,7 @@ describe("runs", () => {
         Promise.resolve(Constants.validationMessages.VALIDATED)
       );
       archiverStub.returns(Promise.resolve("Zipping completed"));
+      checkUploadedStub.returns(Promise.resolve({ zipUrlPresent: false }))
       zipUploadStub.returns(Promise.resolve("zip uploaded"));
       createBuildStub.returns(Promise.resolve({ message: 'Success', build_id: 'random_build_id', dashboard_url: dashboardUrl }));
 
