@@ -269,13 +269,8 @@ exports.setUserSpecs = (bsConfig, args) => {
 exports.setTestEnvs = (bsConfig, args) => {
   let envKeys = {};
 
-  // set env vars which are defined in env key as a string
-  if(!this.isUndefined(bsConfig.run_settings.env)) {
-    let bstackJsonEnvVars = this.fixCommaSeparatedString(bsConfig.run_settings.env).split(',');
-    bstackJsonEnvVars.forEach((envVar) => {
-      let env = envVar.split("=");
-      envKeys[env[0]] = env[1];
-    });
+  if(bsConfig.run_settings.env && Object.keys(bsConfig.run_settings.env).length !== 0) {
+    envKeys = bsConfig.run_settings.env;
   }
 
   // set env vars which are defined in system_env_vars key

@@ -525,7 +525,10 @@ describe('utils', () => {
     it('set env only from browserstack.json env param', () => {
       let bsConfig = {
         run_settings: {
-          env: 'env1=value1, env2=value2',
+          env: {
+            env1: 'value1',
+            env2: 'value2',
+          }
         },
       };
       let args = {
@@ -540,7 +543,10 @@ describe('utils', () => {
       let argsEnv = 'env3=value3, env4=value4';
       let bsConfig = {
         run_settings: {
-          env: 'env1=value1, env2=value2',
+          env: {
+            env1: 'value1',
+            env2: 'value2',
+          }
         },
       };
       let args = {
@@ -555,7 +561,10 @@ describe('utils', () => {
       let argsEnv = 'env1=value0, env4=value4';
       let bsConfig = {
         run_settings: {
-          env: 'env1=value1, env2=value2',
+          env: {
+            env1: 'value1',
+            env2: 'value2',
+          }
         },
       };
       let args = {
@@ -570,7 +579,10 @@ describe('utils', () => {
       let argsEnv = 'env3=value3 , env4=value4';
       let bsConfig = {
         run_settings: {
-          env: 'env1=value1 , env2=value2',
+          env: {
+            env1: 'value1',
+            env2: 'value2',
+          }
         },
       };
       let args = {
@@ -587,7 +599,10 @@ describe('utils', () => {
       let argsEnv = 'env3=value3 , env4=value4';
       let bsConfig = {
         run_settings: {
-          env: 'env1=value1 , env2=value2',
+          env: {
+            env1: 'value1',
+            env2: 'value2',
+          },
           system_env_vars: ['ENV1', 'ENV2']
         },
       };
@@ -625,7 +640,10 @@ describe('utils', () => {
       let argsEnv = 'env3=value3 , env4=value4';
       let bsConfig = {
         run_settings: {
-          env: 'env1=value1 , env2=value2'
+          env: {
+            env1: 'value1',
+            env2: 'value2',
+          }
         },
       };
       let args = {
