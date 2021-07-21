@@ -68,7 +68,7 @@ module.exports = function run(args) {
     // Validate browserstack.json values and parallels specified via arguments
     markBlockStart('validateConfig');
     return capabilityHelper.validate(bsConfig, args).then(function (cypressJson) {
-
+      markBlockEnd('validateConfig');
       markBlockStart('preArchiveSteps');
       //get the number of spec files
       let specFiles = utils.getNumberOfSpecFiles(bsConfig, args, cypressJson);
