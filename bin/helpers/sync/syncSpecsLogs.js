@@ -103,6 +103,9 @@ let printSpecsStatus = (bsConfig, buildDetails) => {
         whileProcess(callback)
       },
       function(err, result) { // when loop ends
+        if (err) {
+          utils.sendUsageReport(bsConfig, {}, `buildId: ${buildDetails.build_id}`, 'error', 'sync_cli_error', err);
+        }
         logger.info(lineSeparator);
         specSummary.duration =  endTime - startTime
         resolve(specSummary)
