@@ -39,6 +39,9 @@ module.exports = function run(args) {
     // accept the env list from command line and set it
     utils.setTestEnvs(bsConfig, args);
 
+    // accept the system env list from bsconf and set it
+    utils.setSystemEnvs(bsConfig);
+
     //accept the local from env variable if provided
     utils.setLocal(bsConfig, args);
 

@@ -273,6 +273,25 @@ exports.setTestEnvs = (bsConfig, args) => {
     envKeys = bsConfig.run_settings.env;
   }
 
+  // set env vars passed from command line args as a string
+  if (!this.isUndefined(args.env)) {
+    let argsEnvVars = this.fixCommaSeparatedString(args.env).split(',');
+    argsEnvVars.forEach((envVar) => {
+      let env = envVar.split("=");
+      envKeys[env[0]] = env[1];
+    });
+  }
+
+  if (Object.keys(envKeys).length === 0) {
+    bsConfig.run_settings.env = null;
+  } else {
+    bsConfig.run_settings.env = Object.keys(envKeys).map(key => (`${key}=${envKeys[key]}`)).join(',');
+  }
+}
+
+exports.setSystemEnvs = (bsConfig) => {
+  let envKeys = {};
+
   // set env vars which are defined in system_env_vars key
   if(!this.isUndefined(bsConfig.run_settings.system_env_vars) && Array.isArray(bsConfig.run_settings.system_env_vars) && bsConfig.run_settings.system_env_vars.length) {
     let systemEnvVars = bsConfig.run_settings.system_env_vars;
@@ -290,19 +309,10 @@ exports.setTestEnvs = (bsConfig, args) => {
     });
   }
 
-  // set env vars passed from command line args as a string
-  if (!this.isUndefined(args.env)) {
-    let argsEnvVars = this.fixCommaSeparatedString(args.env).split(',');
-    argsEnvVars.forEach((envVar) => {
-      let env = envVar.split("=");
-      envKeys[env[0]] = env[1];
-    });
-  }
-
   if (Object.keys(envKeys).length === 0) {
-    bsConfig.run_settings.env = null;  
+    bsConfig.run_settings.system_env_vars = null;
   } else {
-    bsConfig.run_settings.env = Object.keys(envKeys).map(key => (`${key}=${envKeys[key]}`)).join(',');
+    bsConfig.run_settings.system_env_vars = Object.keys(envKeys).map(key => (`${key}=${envKeys[key]}`));
   }
 }
 
