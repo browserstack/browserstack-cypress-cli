@@ -14,16 +14,19 @@ var syncSpecsLogs = rewire("../../../../../bin/helpers/sync/syncSpecsLogs.js");
 var logger = require("../../../../../bin/helpers/logger").syncCliLogger;
 var Constants = require("../../../../../bin/helpers/constants.js");
 var config = require("../../../../../bin/helpers/config.js");
+var utils = require("../../../../../bin/helpers/utils");
 
 describe("syncSpecsLogs", () => {
   var sandbox;
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
+    sinon.stub(utils, 'sendUsageReport');
   });
 
   afterEach(() => {
     sandbox.restore();
+    utils.sendUsageReport.restore();
   });
 
   context("getCombinationName", () => {

@@ -5,6 +5,7 @@ const chai = require("chai"),
 const Constants = require("../../../../bin/helpers/constants"),
   logger = require("../../../../bin/helpers/logger").winstonLogger,
   testObjects = require("../../support/fixtures/testObjects");
+const { initTimeComponents, markBlockStart, markBlockEnd } = require("../../../../bin/helpers/timeComponents");
 const { setHeaded, setupLocalTesting, stopLocalBinary, setUserSpecs, setLocalConfigFile } = require("../../../../bin/helpers/utils");
 
 const proxyquire = require("proxyquire").noCallThru();
@@ -634,6 +635,10 @@ describe("runs", () => {
       setNoWrapStub = sandbox.stub();
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
       setLocalConfigFileStub = sandbox.stub();
+      getTimeComponentsStub = sandbox.stub().returns({});
+      initTimeComponentsStub = sandbox.stub();
+      markBlockStartStub = sandbox.stub();
+      markBlockEndStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -646,6 +651,7 @@ describe("runs", () => {
       let errorCode = null;
       let message = `Success! ${Constants.userMessages.BUILD_CREATED} with build id: random_build_id`;
       let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${dashboardUrl}`;
+      let data = {time_components: {}, build_id: 'random_build_id'}
 
       const runs = proxyquire('../../../../bin/commands/runs', {
         '../helpers/utils': {
@@ -672,7 +678,7 @@ describe("runs", () => {
           setDefaults: setDefaultsStub,
           isUndefined: isUndefinedStub,
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
-          setLocalConfigFile: setLocalConfigFileStub
+          setLocalConfigFile: setLocalConfigFileStub,
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -695,6 +701,12 @@ describe("runs", () => {
         '../helpers/checkUploaded': {
           checkUploadedMd5: checkUploadedStub,
         },
+        '../helpers/timeComponents': {
+          initTimeComponents: initTimeComponentsStub,
+          getTimeComponents: getTimeComponentsStub,
+          markBlockStart: markBlockStartStub,
+          markBlockEnd: markBlockEndStub,
+        }
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -733,13 +745,16 @@ describe("runs", () => {
           sinon.assert.calledOnce(exportResultsStub);
           sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnce(setDefaultsStub);
-          sinon.assert.calledOnceWithExactly(
-            sendUsageReportStub,
-            bsConfig,
-            args,
-            `${message}\n${dashboardLink}`,
-            messageType,
-            errorCode
+          sinon.assert.match(
+            sendUsageReportStub.getCall(0).args,
+            [
+              bsConfig,
+              args,
+              `${message}\n${dashboardLink}`,
+              messageType,
+              errorCode,
+              data
+            ]
           );
         });
     });

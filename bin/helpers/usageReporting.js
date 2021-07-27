@@ -6,7 +6,8 @@ const cp = require("child_process"),
   path = require('path');
 
 const config = require('./config'),
-  fileLogger = require('./logger').fileLogger;
+  fileLogger = require('./logger').fileLogger,
+  utils = require('./utils');
 
 function get_version(package_name) {
   try {
@@ -33,7 +34,7 @@ function local_cypress_version(bsConfig) {
   // 1. check version of Cypress installed in local project
   // 2. check version of Cypress installed globally if not present in project
 
-  if (bsConfig && bsConfig.run_settings.cypressProjectDir) {
+  if (bsConfig && bsConfig.run_settings && bsConfig.run_settings.cypressProjectDir) {
     let version = get_version(path.join(bsConfig.run_settings.cypressProjectDir, 'node_modules', '.bin', 'cypress'));
     if (!version) {
       version = get_version('cypress');
@@ -80,7 +81,7 @@ function cli_version_and_path(bsConfig) {
   // 1. check version of Cypress installed in local project
   // 2. check version of Cypress installed globally if not present in project
 
-  if (bsConfig && bsConfig.run_settings.cypressProjectDir) {
+  if (bsConfig && bsConfig.run_settings && bsConfig.run_settings.cypressProjectDir) {
     let _path = path.join(bsConfig.run_settings.cypressProjectDir, 'node_modules', 'browserstack-cypress');
     let version = get_version(_path);
     if (!version) {
@@ -174,7 +175,7 @@ function send(args) {
 
   let bsConfig = args.bstack_config;
   let cli_details = cli_version_and_path(bsConfig);
-  let data = {}
+  let data = utils.isUndefined(args.data) ? {} : args.data;
 
   if (bsConfig && bsConfig.run_settings) {
     data.cypress_version = bsConfig.run_settings.cypress_version
