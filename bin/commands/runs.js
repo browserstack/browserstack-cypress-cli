@@ -110,8 +110,13 @@ module.exports = function run(args) {
             }
 
             if (bsConfig.run_settings.cypress_version && bsConfig.run_settings.cypress_version !== data.cypress_version) {
-              let versionMessage = utils.versionChangedMessage(bsConfig.run_settings.cypress_version, data.cypress_version)
-              logger.warn(versionMessage);
+              if (bsConfig.run_settings.cypress_version.match(LATEST_VERSION_SYNTAX_REGEX)) {
+                let versionMessage = utils.latestSyntaxToActualVersionMessage(bsConfig.run_settings.cypress_version, data.cypress_version);
+                logger.info(versionMessage);
+              } else {
+                let versionMessage = utils.versionChangedMessage(bsConfig.run_settings.cypress_version, data.cypress_version);
+                logger.warn(versionMessage);
+              }
             }
 
             if (!args.disableNpmWarning && bsConfig.run_settings.npm_dependencies && Object.keys(bsConfig.run_settings.npm_dependencies).length <= 0) {
