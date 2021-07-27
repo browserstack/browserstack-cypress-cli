@@ -110,7 +110,7 @@ module.exports = function run(args) {
             }
 
             if (bsConfig.run_settings.cypress_version && bsConfig.run_settings.cypress_version !== data.cypress_version) {
-              if (bsConfig.run_settings.cypress_version.match(LATEST_VERSION_SYNTAX_REGEX)) {
+              if (bsConfig.run_settings.cypress_version.match(Constants.LATEST_VERSION_SYNTAX_REGEX)) {
                 let versionMessage = utils.latestSyntaxToActualVersionMessage(bsConfig.run_settings.cypress_version, data.cypress_version);
                 logger.info(versionMessage);
               } else {
