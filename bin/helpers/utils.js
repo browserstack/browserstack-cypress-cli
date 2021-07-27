@@ -278,7 +278,7 @@ exports.setTestEnvs = (bsConfig, args) => {
     let argsEnvVars = this.fixCommaSeparatedString(args.env).split(',');
     argsEnvVars.forEach((envVar) => {
       let env = envVar.split("=");
-      envKeys[env[0]] = env[1];
+      envKeys[env[0]] = env.slice(1,).join('=');
     });
   }
 
