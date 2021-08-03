@@ -9,14 +9,21 @@ const archiver = require("../helpers/archiver"),
   utils = require("../helpers/utils"),
   fileHelpers = require("../helpers/fileHelpers"),
   syncRunner = require("../helpers/syncRunner"),
-  reportGenerator = require('../helpers/reporterHTML').reportGenerator;
+  reportGenerator = require('../helpers/reporterHTML').reportGenerator,
+  {initTimeComponents, markBlockStart, markBlockEnd, getTimeComponents} = require('../helpers/timeComponents');
 
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
   //Delete build_results.txt from log folder if already present.
+  initTimeComponents();
+  markBlockStart('deleteOldResults');
   utils.deleteResults();
+  markBlockEnd('deleteOldResults');
 
+  markBlockStart('validateBstackJson');
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
+    markBlockEnd('validateBstackJson');
+    markBlockStart('setConfig');
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
     utils.setDefaults(bsConfig, args);
@@ -59,10 +66,13 @@ module.exports = function run(args) {
 
     // set the no-wrap
     utils.setNoWrap(bsConfig, args);
+    markBlockEnd('setConfig');
 
     // Validate browserstack.json values and parallels specified via arguments
+    markBlockStart('validateConfig');
     return capabilityHelper.validate(bsConfig, args).then(function (cypressJson) {
-
+      markBlockEnd('validateConfig');
+      markBlockStart('preArchiveSteps');
       //get the number of spec files
       let specFiles = utils.getNumberOfSpecFiles(bsConfig, args, cypressJson);
 
@@ -72,17 +82,29 @@ module.exports = function run(args) {
       // warn if specFiles cross our limit
       utils.warnSpecLimit(bsConfig, args, specFiles);
 
+      markBlockEnd('preArchiveSteps');
       // Archive the spec files
+      markBlockStart('zip');
+      markBlockStart('zip.archive');
       return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude).then(function (data) {
 
+        markBlockEnd('zip.archive');
         // Uploaded zip file
+        markBlockStart('zip.zipUpload');
         return zipUploader.zipUpload(bsConfig, config.fileName).then(async function (zip) {
+
+          markBlockEnd('zip.zipUpload');
+          markBlockEnd('zip');
           // Create build
 
           //setup Local Testing
+          markBlockStart('localSetup');
           let bs_local = await utils.setupLocalTesting(bsConfig, args);
-
+          markBlockEnd('localSetup');
+          markBlockStart('createBuild');
           return build.createBuild(bsConfig, zip).then(function (data) {
+            markBlockEnd('createBuild');
+            markBlockEnd('total');
             let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
             let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
             utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
@@ -117,7 +139,19 @@ module.exports = function run(args) {
             logger.info(message);
             logger.info(dashboardLink);
             if(!args.sync) logger.info(Constants.userMessages.EXIT_SYNC_CLI_MESSAGE.replace("<build-id>",data.build_id));
-            utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
+            let dataToSend = {
+              time_components: getTimeComponents(),
+              build_id: data.build_id,
+            };
+            if (bsConfig && bsConfig.connection_settings) {
+              if (bsConfig.connection_settings.local_mode) {
+                dataToSend.local_mode = bsConfig.connection_settings.local_mode;
+              }
+              if (bsConfig.connection_settings.usedAutoLocal) {
+                dataToSend.used_auto_local = bsConfig.connection_settings.usedAutoLocal;
+              }
+            }
+            utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, dataToSend);
             return;
           }).catch(async function (err) {
             // Build creation failed

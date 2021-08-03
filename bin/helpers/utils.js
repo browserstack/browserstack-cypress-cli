@@ -107,7 +107,8 @@ exports.sendUsageReport = (
   args,
   message,
   message_type,
-  error_code
+  error_code,
+  data
 ) => {
   usageReporting.send({
     cli_args: args,
@@ -115,6 +116,7 @@ exports.sendUsageReport = (
     message_type: message_type,
     error_code: error_code,
     bstack_config: bsConfig,
+    data,
   });
 };
 
@@ -496,6 +498,7 @@ exports.setupLocalTesting = (bsConfig, args) => {
         bsConfig, bsConfig['connection_settings']['local_identifier']
       );
       if (!localIdentifierRunning){
+        bsConfig.connection_settings.usedAutoLocal = true;
         var bs_local = this.getLocalBinary();
         var bs_local_args = this.setLocalArgs(bsConfig, args);
         let that = this;
