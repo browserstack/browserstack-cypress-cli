@@ -1,4 +1,4 @@
-
+'use strict';
 const glob = require('readdir-glob'),
   Constants = require('./constants'),
   crypto = require('crypto'),

@@ -1,3 +1,4 @@
+'use strict';
 const chai = require("chai"),
   chaiAsPromised = require("chai-as-promised"),
   sinon = require("sinon"),
@@ -24,7 +25,7 @@ describe("md5util", () => {
   });
 
   context("folderStats", () => {
-    let fakeEvent;
+    let fakeEvent, globStub;
     const hashHelper = rewire("../../../../bin/helpers/hashUtil");
 
     beforeEach(() => {

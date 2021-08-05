@@ -1,3 +1,4 @@
+'use strict';
 const chai = require("chai"),
   chaiAsPromised = require("chai-as-promised"),
   sinon = require("sinon"),
@@ -26,8 +27,8 @@ describe("checkUploaded", () => {
   });
 
   context("checkUploadedMd5", () => {
+    let checkSpecsMd5Stub;
     beforeEach(() => {
-      getUserAgentStub = sandbox.stub().returns("random user-agent");
       checkSpecsMd5Stub = sandbox.stub().returns(Promise.resolve("random_md5sum"));
     });
 

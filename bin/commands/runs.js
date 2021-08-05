@@ -83,17 +83,16 @@ module.exports = function run(args) {
       markBlockStart('checkAlreadyUploaded');
       return checkUploaded.checkUploadedMd5(bsConfig, args).then(function (md5data) {
         markBlockEnd('checkAlreadyUploaded');
-        
+
         // Archive the spec files
         markBlockStart('zip');
         markBlockStart('zip.archive');
         return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude, md5data).then(function (data) {
-
           markBlockEnd('zip.archive');
+
           // Uploaded zip file
           markBlockStart('zip.zipUpload');
           return zipUploader.zipUpload(bsConfig, config.fileName, md5data).then(async function (zip) {
-
             markBlockEnd('zip.zipUpload');
             markBlockEnd('zip');
             // Create build
@@ -187,6 +186,7 @@ module.exports = function run(args) {
       }).catch(function (err) {
         // md5 check failed
         logger.error(err);
+        logger.error(Constants.userMessages.FAILED_MD5_CHECK);
         utils.sendUsageReport(bsConfig, args, Constants.userMessages.MD5_CHECK_FAILED, Constants.messageTypes.ERROR, 'zip_already_uploaded_failed');
       });
     }).catch(function (err) {
