@@ -226,6 +226,16 @@ var argv = yargs
           default: false,
           describe: Constants.cliMessages.RUN.SYNC_NO_WRAP,
           type: "boolean"
+        },
+        'reporter': {
+          default: undefined,
+          describe: Constants.cliMessages.RUN.REPORTER,
+          type: "string"
+        },
+        'reporter-options': {
+          default: undefined,
+          describe: Constants.cliMessages.RUN.REPORTER_OPTIONS,
+          type: "string"
         }
       })
       .help('help')

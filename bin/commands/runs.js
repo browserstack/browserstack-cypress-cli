@@ -10,7 +10,8 @@ const archiver = require("../helpers/archiver"),
   fileHelpers = require("../helpers/fileHelpers"),
   syncRunner = require("../helpers/syncRunner"),
   reportGenerator = require('../helpers/reporterHTML').reportGenerator,
-  {initTimeComponents, markBlockStart, markBlockEnd, getTimeComponents} = require('../helpers/timeComponents');
+  {initTimeComponents, markBlockStart, markBlockEnd, getTimeComponents} = require('../helpers/timeComponents'),
+  downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts;
 
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
@@ -67,6 +68,9 @@ module.exports = function run(args) {
     // set the no-wrap
     utils.setNoWrap(bsConfig, args);
     markBlockEnd('setConfig');
+
+    // set other cypress configs e.g. reporter and reporter-options
+    utils.setCypressConfigs(bsConfig, args);
 
     // Validate browserstack.json values and parallels specified via arguments
     markBlockStart('validateConfig');
@@ -127,6 +131,9 @@ module.exports = function run(args) {
 
                 // stop the Local instance
                 await utils.stopLocalBinary(bsConfig, bs_local, args);
+
+                // download build artifacts
+                await downloadBuildArtifacts(bsConfig, data.build_id, args);
 
                 // Generate custom report!
                 reportGenerator(bsConfig, data.build_id, args, function(){

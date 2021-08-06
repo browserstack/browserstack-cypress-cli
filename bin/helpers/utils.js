@@ -140,6 +140,7 @@ exports.setParallels = (bsConfig, args, numOfSpecs) => {
   let maxParallels = browserCombinations.length * numOfSpecs;
   if (numOfSpecs <= 0) {
     bsConfig['run_settings']['parallels'] = browserCombinations.length;
+    bsConfig['run_settings']['specs_count'] = numOfSpecs;
     return;
   }
   if (bsConfig['run_settings']['parallels'] > maxParallels && bsConfig['run_settings']['parallels'] != -1 ) {
@@ -147,6 +148,7 @@ exports.setParallels = (bsConfig, args, numOfSpecs) => {
       `Using ${maxParallels} machines instead of ${bsConfig['run_settings']['parallels']} that you configured as there are ${numOfSpecs} specs to be run on ${browserCombinations.length} browser combinations.`
     );
     bsConfig['run_settings']['parallels'] = maxParallels;
+    bsConfig['run_settings']['specs_count'] = numOfSpecs;
   }
 };
 
@@ -722,3 +724,25 @@ exports.deleteBaseUrlFromError = (err) => {
   return err.replace(/To test ([\s\S]*)on BrowserStack/g, 'To test on BrowserStack');
 }
 
+// blindly send other passed configs with run_settings and handle at backend
+exports.setCypressConfigs = (bsConfig, args) => {
+  if (!this.isUndefined(args.reporter)) {
+    bsConfig["run_settings"]["reporter"] = args.reporter;
+  }
+  if (!this.isUndefined(args.reporterOptions)) {
+    bsConfig["run_settings"]["reporter_options"] = args.reporterOptions;
+  }
+}
+
+exports.getCypressJSON = (bsConfig) => {
+  if (
+    bsConfig.runSettings.cypress_config_file &&
+    bsConfig.runSettings.cypress_config_filename !== 'false'
+  ) {
+    let cypressJSON = JSON.parse(
+      fs.readFileSync(bsConfig.runSettings.cypressConfigFilePath)
+    );
+    return cypressJSON;
+  }
+  return undefined;
+}
