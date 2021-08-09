@@ -38,7 +38,7 @@ const batchHashFile = (fileBatch) => {
     files = files.map((batch) => {
       return (res) => Promise.all(batch.map(hashFile)).then((data) => res.concat(data));
     });
-    hash = files.reduce((acc, curr) => acc.then(curr), Promise.resolve([]));
+    let hash = files.reduce((acc, curr) => acc.then(curr), Promise.resolve([]));
     return hash;
   });
 };
