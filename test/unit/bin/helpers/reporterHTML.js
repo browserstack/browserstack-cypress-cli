@@ -1,6 +1,9 @@
+const { expect } = require("chai");
 const chai = require("chai"),
   chaiAsPromised = require("chai-as-promised"),
-  sinon = require('sinon');
+  sinon = require('sinon'),
+  rewire = require('rewire'),
+  axios = require('axios');
 
 const fs = require('fs'),
       path = require('path'),
@@ -267,6 +270,71 @@ describe("reportHTML", () => {
       sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
       sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+    });
+  });
+
+  describe("Modify Cypress Report Data", ()=> {
+    const reporterHTML = rewire('../../../../bin/helpers/reporterHTML');
+    const cypressReportData = reporterHTML.__get__('cypressReportData');
+    const cypress_report_data = {
+      rows: {
+        "todo.spec.js": {
+          "sessions": [
+              {
+                "tests": {
+                    "config_json": "config_json",
+                    "result_json": "result_json",
+                  }
+              }
+          ]
+        }
+      }
+    }
+    it("Generate Report Data for each combination in a separate promise ", async ()=>{
+      let configResponse = { data: {
+        tests: [
+          {
+            clientId: "r3",
+            title:[
+              "file_name",
+              "test_case"
+            ]
+          }
+        ]
+      } }
+      let resultsResponse = { data: {
+        tests: [
+          {
+            clientId: "r3",
+            state: "passed",
+            attempts:[
+              {
+                "state": "passed",
+                "wallClockDuration": 62
+              }
+            ]
+          }
+        ]
+      } }
+      let expectedResponse = { 
+        rows:{ 
+          "todo.spec.js": {
+            "sessions":[{
+              "tests":[{
+                "name":"test_case",
+                "status":"passed",
+                "duration":"0.06"}]
+              }]
+            }
+          }
+        }
+      let axiosGetStub = sandbox.stub(axios, "get")
+      let axiosConfigStub = axiosGetStub.withArgs("config_json").resolves(configResponse);
+      let axiosResultStub = axiosGetStub.withArgs("result_json").resolves(resultsResponse);
+      let result = await cypressReportData(cypress_report_data);
+      sinon.assert.calledOnce(axiosConfigStub);
+      sinon.assert.calledOnce(axiosResultStub);
+      expect(JSON.stringify(result)).to.be.equal(JSON.stringify(expectedResponse));
     });
   });
 });
