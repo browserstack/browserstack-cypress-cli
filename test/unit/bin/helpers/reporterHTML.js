@@ -276,7 +276,8 @@ describe("reportHTML", () => {
   describe("Modify Cypress Report Data", ()=> {
     const reporterHTML = rewire('../../../../bin/helpers/reporterHTML');
     const cypressReportData = reporterHTML.__get__('cypressReportData');
-    const cypress_report_data = {
+    const cypress_report_data_with_config = {
+      cypress_version: "6.8.0",
       rows: {
         "todo.spec.js": {
           "sessions": [
@@ -290,7 +291,22 @@ describe("reportHTML", () => {
         }
       }
     }
-    it("Generate Report Data for each combination in a separate promise ", async ()=>{
+    const cypress_report_data_without_config = {
+      cypress_version: "5.6.0",
+      rows: {
+        "todo.spec.js": {
+          "sessions": [
+              {
+                "tests": {
+                    "config_json": "config_json",
+                    "result_json": "result_json",
+                  }
+              }
+          ]
+        }
+      }
+    }
+    it("Generate Report Data for cypress version > 6", async ()=>{
       let configResponse = { data: {
         tests: [
           {
@@ -317,6 +333,7 @@ describe("reportHTML", () => {
         ]
       } }
       let expectedResponse = { 
+        cypress_version: "6.8.0",
         rows:{ 
           "todo.spec.js": {
             "sessions":[{
@@ -331,8 +348,47 @@ describe("reportHTML", () => {
       let axiosGetStub = sandbox.stub(axios, "get")
       let axiosConfigStub = axiosGetStub.withArgs("config_json").resolves(configResponse);
       let axiosResultStub = axiosGetStub.withArgs("result_json").resolves(resultsResponse);
-      let result = await cypressReportData(cypress_report_data);
+      let result = await cypressReportData(cypress_report_data_with_config);
       sinon.assert.calledOnce(axiosConfigStub);
+      sinon.assert.calledOnce(axiosResultStub);
+      expect(JSON.stringify(result)).to.be.equal(JSON.stringify(expectedResponse));
+    });
+
+    it("Generate Report Data for cypress version < 6", async ()=>{
+      let resultsResponse = { data: {
+        tests: [
+          {
+            clientId: "r3",
+            state: "passed",
+            title:[
+              "file_name",
+              "test_case"
+            ],
+            attempts:[
+              {
+                "state": "passed",
+                "wallClockDuration": 62
+              }
+            ]
+          }
+        ]
+      } }
+      let expectedResponse = { 
+        cypress_version: "5.6.0",
+        rows:{ 
+          "todo.spec.js": {
+            "sessions":[{
+              "tests":[{
+                "name":"test_case",
+                "status":"passed",
+                "duration":"0.06"}]
+              }]
+            }
+          }
+        }
+      let axiosGetStub = sandbox.stub(axios, "get")
+      let axiosResultStub = axiosGetStub.withArgs("result_json").resolves(resultsResponse);
+      let result = await cypressReportData(cypress_report_data_without_config);
       sinon.assert.calledOnce(axiosResultStub);
       expect(JSON.stringify(result)).to.be.equal(JSON.stringify(expectedResponse));
     });

@@ -223,7 +223,11 @@ async function cypressReportData(report_data) {
     let specSessions = report_data.rows[spec]["sessions"];
     if (specSessions.length > 0) {
       for (let combination of specSessions) {
-        combinationPromises.push(generateCypressCombinationSpecReportData(combination));
+        if(utils.isUndefined(report_data.cypress_version) || report_data.cypress_version < "6"){
+          combinationPromises.push(generateCypressCombinationSpecReportDataWithoutConfigJson(combination));
+        }else{
+          combinationPromises.push(generateCypressCombinationSpecReportDataWithConfigJson(combination));
+        }
       }
     }
   }
@@ -231,16 +235,27 @@ async function cypressReportData(report_data) {
   return report_data;
 }
 
-function generateCypressCombinationSpecReportData(combination){
+function generateCypressCombinationSpecReportDataWithConfigJson(combination){
   return new Promise(async (resolve, reject) => {
       try {
+        let configJsonError, resultsJsonError;
         let [configJsonResponse, resultsJsonResponse] = await axios.all([
-            axios.get(combination.tests.config_json),
-            axios.get(combination.tests.result_json)
+            axios.get(combination.tests.config_json).catch(function (error) {
+              configJsonError = true;
+            }),
+            axios.get(combination.tests.result_json).catch(function(error){
+              resultsJsonError = true;
+            })
           ]);
+        if(resultsJsonError || configJsonError){
+          resolve();
+        }
         let tests = {};
         let configJson = configJsonResponse.data;
         let resultsJson = resultsJsonResponse.data;
+        if(utils.isUndefined(configJson.tests) || utils.isUndefined(resultsJson.tests)){
+          resolve();
+        }
         configJson.tests.forEach((test) => {
           tests[test["clientId"]] = test;
         });
@@ -259,6 +274,36 @@ function generateCypressCombinationSpecReportData(combination){
               tests[testId]["attempts"].pop()["wallClockDuration"] / 1000
             ).toFixed(2),
           });
+        });
+        combination.tests = sessionTests;
+        resolve(combination.tests);
+      } catch (error) { reject(error) }
+  })
+}
+
+function generateCypressCombinationSpecReportDataWithoutConfigJson(combination){
+  return new Promise(async (resolve, reject) => {
+      try {
+        let resultsJsonError;
+        let resultsJsonResponse = await axios.get(combination.tests.result_json).catch(function(error){
+              resultsJsonError = true;
+            });
+        if(resultsJsonError || utils.isUndefined(resultsJsonResponse)){
+          resolve();
+        }
+        let resultsJson = resultsJsonResponse.data;
+        let sessionTests = [];
+        if(utils.isUndefined(resultsJson.tests)){
+          resolve();
+        }
+        resultsJson.tests.forEach((test) => {
+          sessionTests.push({
+            name: test["title"].pop(),
+            status: test["state"],
+            duration: parseFloat(
+              test["attempts"].pop()["wallClockDuration"] / 1000
+            ).toFixed(2)
+          })
         });
         combination.tests = sessionTests;
         resolve(combination.tests);
