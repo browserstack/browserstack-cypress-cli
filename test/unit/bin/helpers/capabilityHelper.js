@@ -69,7 +69,7 @@ describe("capabilityHelper.js", () => {
       return capabilityHelper
         .caps(bsConfig, { zip_url: zip_url })
         .then(function (data) {
-          chai.assert.equal(JSON.parse(data).cypress_version, cypress_version);
+          chai.assert.equal(JSON.parse(JSON.parse(data).run_settings).cypress_version, cypress_version);
         })
         .catch((error) => {
           chai.assert.fail("Promise error");
@@ -309,7 +309,7 @@ describe("capabilityHelper.js", () => {
         return capabilityHelper
           .caps(bsConfig, { zip_url: zip_url })
           .then(function (data) {
-            let parsed_data = JSON.parse(data);
+            let parsed_data = JSON.parse(JSON.parse(data).run_settings);
             chai.assert.equal(parsed_data.specs, specsList);
             chai.assert.equal(parsed_data.env, undefined);
           })
@@ -341,7 +341,7 @@ describe("capabilityHelper.js", () => {
         return capabilityHelper
           .caps(bsConfig, { zip_url: zip_url })
           .then(function (data) {
-            let parsed_data = JSON.parse(data);
+            let parsed_data = JSON.parse(JSON.parse(data).run_settings);
             chai.assert.equal(parsed_data.env, envList);
             chai.assert.equal(parsed_data.specs, undefined);
           })
@@ -375,7 +375,7 @@ describe("capabilityHelper.js", () => {
         return capabilityHelper
           .caps(bsConfig, { zip_url: zip_url })
           .then(function (data) {
-            let parsed_data = JSON.parse(data);
+            let parsed_data = JSON.parse(JSON.parse(data).run_settings);
             chai.assert.equal(parsed_data.specs, specsList);
             chai.assert.equal(parsed_data.env, envList);
           })
@@ -405,7 +405,7 @@ describe("capabilityHelper.js", () => {
         return capabilityHelper
           .caps(bsConfig, { zip_url: zip_url })
           .then(function (data) {
-            let parsed_data = JSON.parse(data);
+            let parsed_data = JSON.parse(JSON.parse(data).run_settings);
             chai.assert.equal(parsed_data.specs, undefined);
             chai.assert.equal(parsed_data.env, undefined);
           })
@@ -439,7 +439,7 @@ describe("capabilityHelper.js", () => {
         return capabilityHelper
           .caps(bsConfig, { zip_url: zip_url })
           .then(function (data) {
-            let parsed_data = JSON.parse(data);
+            let parsed_data = JSON.parse(JSON.parse(data).run_settings);
             chai.assert.equal(parsed_data.headless, headless);
             chai.assert.equal(parsed_data.env, undefined);
           })
@@ -471,7 +471,7 @@ describe("capabilityHelper.js", () => {
         return capabilityHelper
           .caps(bsConfig, { zip_url: zip_url })
           .then(function (data) {
-            let parsed_data = JSON.parse(data);
+            let parsed_data = JSON.parse(JSON.parse(data).run_settings);
             chai.assert.equal(parsed_data.headless, headless);
             chai.assert.equal(parsed_data.env, undefined);
           })
