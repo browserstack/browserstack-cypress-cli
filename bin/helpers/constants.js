@@ -43,7 +43,9 @@ const userMessages = {
   LOCAL_STOP_FAILED: "Local Binary stop failed.",
   INVALID_LOCAL_MODE_WARNING: "Invalid value specified for local_mode. local_mode: (\"always-on\" | \"on-demand\"). For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
   SPEC_LIMIT_WARNING: "You might not see all your results on the dashboard because of high spec count, please consider reducing the number of spec files in this folder.",
-  DOWNLOAD_BUILD_ARTIFACTS: "Downloading build artifacts for the build <build-id> failed."
+  DOWNLOAD_BUILD_ARTIFACTS_FAILED: "Downloading build artifacts for the build <build-id> failed for <machine-count> machines.",
+  ASYNC_DOWNLOADS: "Test artifacts as specified under 'downloads' can be downloaded after the build has completed its run, using 'browserstack-cypress generate-downloads <build-id>'",
+  DOWNLOAD_BUILD_ARTIFACTS_SUCCESS: "Your build artifact(s) have been successfully downloaded in '<user-path>/build_artifacts/<build-id>' directory"
 };
 
 const validationMessages = {
@@ -84,17 +86,13 @@ const cliMessages = {
     INFO: "Check status of your build.",
     STOP: "Stop your build.",
     DEMAND: "Requires a build id.",
-    DESC: "Path to BrowserStack config",
-    CONFIG_DEMAND: "config file is required",
     INFO_MESSAGE: "Getting information for buildId ",
     STOP_MESSAGE: "Stopping build with given buildId ",
   },
   RUN: {
     PARALLEL_DESC: "The maximum number of parallels to use to run your test suite",
     INFO: "Run your tests on BrowserStack.",
-    DESC: "Path to BrowserStack config",
     CYPRESS_DESC: "Path to Cypress config file",
-    CONFIG_DEMAND: "config file is required",
     CYPRESS_CONFIG_DEMAND: "Cypress config file is required",
     BUILD_NAME: "The build name you want to use to name your test runs",
     EXCLUDE: "Exclude files matching a pattern from zipping and uploading",
@@ -117,9 +115,14 @@ const cliMessages = {
     USERNAME: "Your BrowserStack username",
     ACCESS_KEY: "Your BrowserStack access key",
     NO_NPM_WARNING: "No NPM warning if npm_dependencies is empty",
+    CONFIG_DEMAND: "config file is required",
+    CONFIG_FILE_PATH: "Path to BrowserStack config",
   },
   GENERATE_REPORT: {
     INFO: "Generates the build report"
+  },
+  GENERATE_DOWNLOADS: {
+    INFO: "Downloads the build artifacts"
   },
 };
 

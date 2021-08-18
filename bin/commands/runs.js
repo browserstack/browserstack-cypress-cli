@@ -141,11 +141,13 @@ module.exports = function run(args) {
                   utils.handleSyncExit(exitCode, data.dashboard_url);
                 });
               });
+            } else {
+              logger.info(Constants.userMessages.ASYNC_DOWNLOADS.replace('<build-id>', data.build_id));
             }
 
             logger.info(message);
             logger.info(dashboardLink);
-            if(!args.sync) logger.info(Constants.userMessages.EXIT_SYNC_CLI_MESSAGE.replace("<build-id>",data.build_id));
+            if(!args.sync) logger.info(Constants.userMessages.EXIT_SYNC_CLI_MESSAGE.replace("<build-id>", data.build_id));
             let dataToSend = {
               time_components: getTimeComponents(),
               build_id: data.build_id,
