@@ -1984,4 +1984,63 @@ describe('utils', () => {
     });
   });
 
+  describe('setCypressConfigs', () => {
+    it('set reporter arg in run_settings', () => {
+      let bsConfig = {
+        run_settings: {
+        }
+      };
+      let args = {
+        reporter: "mocha",
+        'reporter-options': "random-string"
+      };
+      utils.setCypressConfigs(bsConfig, args);
+      expect(bsConfig.run_settings.reporter).to.be.eql("mocha");
+    });
+
+    it('set reporter-options arg in run_settings', () => {
+      let bsConfig = {
+        run_settings: {
+        }
+      };
+      let args = {
+        'reporterOptions': "random-string"
+      };
+      utils.setCypressConfigs(bsConfig, args);
+      expect(bsConfig.run_settings.reporter_options).to.be.eql("random-string");
+    });
+  });
+
+  describe('getCypressJSON', () => {
+    let sampleJson = {
+      a: "b"
+    };
+
+    beforeEach(() => {
+      sinon.stub(fs, 'readFileSync').returns(JSON.stringify(sampleJson));
+    });
+
+    afterEach(() => {
+      fs.readFileSync.restore();
+    });
+
+    it('return undefined if param not present', () => {
+      let bsConfig = {
+        run_settings: {
+        }
+      };
+      expect(utils.getCypressJSON(bsConfig)).to.be.eql(undefined);
+    });
+
+    it('read file and return json if param present', () => {
+      let bsConfig = {
+        run_settings: {
+          cypress_config_file: './cypress.json'
+        }
+      };
+
+      expect(utils.getCypressJSON(bsConfig)).to.be.eql(sampleJson);
+    });
+  });
+
 });

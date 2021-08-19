@@ -104,6 +104,7 @@ describe("runs", () => {
       setLocalIdentifierStub = sandbox.stub();
       setHeadedStub = sandbox.stub();
       setNoWrapStub = sandbox.stub();
+      setCypressConfigsStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       setDefaultsStub = sandbox.stub();
       setLocalModeStub = sandbox.stub();
@@ -137,6 +138,7 @@ describe("runs", () => {
           setLocalIdentifier: setLocalIdentifierStub,
           setHeaded: setHeadedStub,
           setNoWrap: setNoWrapStub,
+          setCypressConfigs: setCypressConfigsStub,
           deleteResults: deleteResultsStub,
           setDefaults: setDefaultsStub,
           setupLocalTesting: setupLocalTestingStub,
@@ -176,6 +178,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setCypressConfigsStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(getErrorCodeFromMsgStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
@@ -221,6 +224,7 @@ describe("runs", () => {
       setLocalIdentifierStub = sandbox.stub();
       setHeadedStub = sandbox.stub();
       setNoWrapStub = sandbox.stub();
+      setCypressConfigsStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
       setDefaultsStub = sandbox.stub();
@@ -257,6 +261,7 @@ describe("runs", () => {
           setLocalIdentifier: setLocalIdentifierStub,
           setHeaded: setHeadedStub,
           setNoWrap: setNoWrapStub,
+          setCypressConfigs: setCypressConfigsStub,
           deleteResults: deleteResultsStub,
           setDefaults: setDefaultsStub,
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
@@ -299,6 +304,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setCypressConfigsStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(archiverStub);
@@ -349,6 +355,7 @@ describe("runs", () => {
       setLocalIdentifierStub = sandbox.stub();
       setHeadedStub = sandbox.stub();
       setNoWrapStub = sandbox.stub();
+      setCypressConfigsStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
       setDefaultsStub = sandbox.stub();
@@ -386,6 +393,7 @@ describe("runs", () => {
           setLocalIdentifier: setLocalIdentifierStub,
           setHeaded: setHeadedStub,
           setNoWrap: setNoWrapStub,
+          setCypressConfigs: setCypressConfigsStub,
           deleteResults: deleteResultsStub,
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
           setDefaults: setDefaultsStub,
@@ -427,6 +435,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setCypressConfigsStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(archiverStub);
@@ -481,6 +490,7 @@ describe("runs", () => {
       setLocalIdentifierStub = sandbox.stub();
       setHeadedStub = sandbox.stub();
       setNoWrapStub = sandbox.stub();
+      setCypressConfigsStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
       setDefaultsStub = sandbox.stub();
@@ -519,6 +529,7 @@ describe("runs", () => {
           setLocalIdentifier: setLocalIdentifierStub,
           setHeaded: setHeadedStub,
           setNoWrap: setNoWrapStub,
+          setCypressConfigs: setCypressConfigsStub,
           deleteResults: deleteResultsStub,
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
           setDefaults: setDefaultsStub,
@@ -571,6 +582,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setCypressConfigsStub);
           sinon.assert.calledOnce(archiverStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(zipUploadStub);
@@ -630,6 +642,7 @@ describe("runs", () => {
       setLocalIdentifierStub = sandbox.stub();
       setHeadedStub = sandbox.stub();
       setNoWrapStub = sandbox.stub();
+      setCypressConfigsStub = sandbox.stub();
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
       setLocalConfigFileStub = sandbox.stub();
       getTimeComponentsStub = sandbox.stub().returns({});
@@ -671,6 +684,7 @@ describe("runs", () => {
           setLocalIdentifier: setLocalIdentifierStub,
           setHeaded: setHeadedStub,
           setNoWrap: setNoWrapStub,
+          setCypressConfigs: setCypressConfigsStub,
           exportResults: exportResultsStub,
           deleteResults: deleteResultsStub,
           setDefaults: setDefaultsStub,
@@ -732,6 +746,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setCypressConfigsStub);
           sinon.assert.calledOnce(archiverStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(zipUploadStub);
