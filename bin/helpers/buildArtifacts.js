@@ -1,8 +1,7 @@
 'use strict';
 
 const fs = require('fs'),
-      path = require('path'),
-      https = require('https');
+      path = require('path');
 
 const axios = require('axios'),
   unzipper = require('unzipper');
@@ -86,28 +85,45 @@ const createDirectories = async (buildId, data) => {
 }
 
 const downloadAndUnzip = async (filePath, fileName, url) => {
-  return new Promise(async (resolve, reject) => {
-    let tmpFilePath = path.join(filePath, fileName);
-    https.get(url, function(response) {
-      response.on('data', function (data) {
-        fs.appendFileSync(tmpFilePath, data);
+  let tmpFilePath = path.join(filePath, fileName);
+  const writer = fs.createWriteStream(tmpFilePath);
+
+  return axios({
+    method: 'get',
+    url: url,
+    responseType: 'stream',
+  }).then(response => {
+
+    //ensure that the user can call `then()` only when the file has
+    //been downloaded entirely.
+
+    return new Promise(async (resolve, reject) => {
+      response.data.pipe(writer);
+      let error = null;
+      writer.on('error', err => {
+        error = err;
+        writer.close();
+        reject(err);
       });
-      response.on('end', function() {
-        fs.createReadStream(tmpFilePath).pipe(unzipper.Extract({ path: filePath })
-          .on('close', function () {
-            fs.unlinkSync(tmpFilePath);
-            resolve();
-          })
-          .on('error', function(err) {
-            process.env.BUILD_ARTIFACTS_FAIL_COUNT = Number(process.env.BUILD_ARTIFACTS_FAIL_COUNT) + 1;
-            reject(err);
-          })
-        );
+      writer.on('close', async () => {
+        if (!error) {
+          await unzipFile(filePath, fileName);
+          fs.unlinkSync(tmpFilePath);
+          resolve(true);
+        }
+        //no need to call the reject here, as it will have been called in the
+        //'error' stream;
       });
-      response.on('error', function () {
-        reject();
-      })
     });
+  });
+}
+
+const unzipFile = async (filePath, fileName) => {
+  return new Promise( async (resolve, reject) => {
+    await unzipper.Open.file(path.join(filePath, fileName))
+      .then(d => d.extract({path: filePath, concurrency: 5}))
+      .catch((err) => reject(err));
+    resolve();
   });
 }
 
@@ -182,8 +198,15 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args) => {
     messageType = Constants.messageTypes.ERROR;
     errorCode = 'api_failed_build_artifacts';
 
-    logger.error('Downloading the build artifacts failed.');
-    logger.error(err);
+    if (process.env.BUILD_ARTIFACTS_FAIL_COUNT > 0) {
+      messageType = Constants.messageTypes.ERROR;
+      message = Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_FAILED.replace('<build-id>', buildId).replace('<machine-count>', process.env.BUILD_ARTIFACTS_FAIL_COUNT);
+      logger.error(message);
+    } else {
+      logger.error('Downloading the build artifacts failed.');
+      logger.error(err);
+    }
+
     utils.sendUsageReport(bsConfig, args, err, messageType, errorCode);
   }
 };

@@ -132,6 +132,9 @@ module.exports = function run(args) {
                 // stop the Local instance
                 await utils.stopLocalBinary(bsConfig, bs_local, args);
 
+                // waiting for 5 secs for upload to complete (as a safety measure)
+                await new Promise(resolve => setTimeout(resolve, 5000));
+
                 // download build artifacts
                 await downloadBuildArtifacts(bsConfig, data.build_id, args);
 
