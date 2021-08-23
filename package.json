@@ -36,6 +36,7 @@
     "url": "https://github.com/browserstack/browserstack-cypress-cli/issues"
   },
   "devDependencies": {
+    "axios": "^0.21.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "custom-env": "^2.0.1",
