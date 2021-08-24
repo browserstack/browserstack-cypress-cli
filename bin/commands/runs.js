@@ -136,7 +136,9 @@ module.exports = function run(args) {
                 await new Promise(resolve => setTimeout(resolve, 5000));
 
                 // download build artifacts
-                await downloadBuildArtifacts(bsConfig, data.build_id, args);
+                if (!utils.isUndefined(bsConfig.run_settings.downloads) && bsConfig.run_settings.downloads.length) {
+                  await downloadBuildArtifacts(bsConfig, data.build_id, args);
+                }
 
                 // Generate custom report!
                 reportGenerator(bsConfig, data.build_id, args, function(){
