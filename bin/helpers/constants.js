@@ -107,8 +107,8 @@ const cliMessages = {
     LOCAL_IDENTIFIER: "Accepted values: String - assign an identifier to your Local process instance",
     LOCAL_CONFIG_FILE: "Accepted values: String - path to local config-file to your Local process instance. Learn more at https://www.browserstack.com/local-testing/binary-params",
     SYNC_NO_WRAP: "Wrap the spec names in --sync mode in case of smaller terminal window size pass --no-wrap",
-    REPORTER: "REPORTER",
-    REPORTER_OPTIONS: "REPORTER_OPTIONS",
+    REPORTER: "Specify the custom reporter to use",
+    REPORTER_OPTIONS: "Specify reporter options for custom reporter",
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",
