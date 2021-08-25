@@ -150,7 +150,7 @@ const sendUpdatesToBstack = async (bsConfig, buildId, args, options) => {
   }
 
   try {
-    await axios.put(url, data, options);
+    await axios.post(url, data, options);
   } catch (err) {
     utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'api_failed_build_artifacts_status_update');
   }
