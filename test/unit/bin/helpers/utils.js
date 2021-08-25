@@ -507,6 +507,46 @@ describe('utils', () => {
     });
   });
 
+  describe("getFilesToIgnore", () => {
+    it("no args, no exclude in runSettings", () => {
+      chai.expect(utils.getFilesToIgnore({}, undefined)).to.be.eql(constant.filesToIgnoreWhileUploading);
+    });
+
+    it("args passed, no exclude in runSettings", () => {
+      let excludeFiles = "file1.js, file2.json";
+      let argsToArray = utils.fixCommaSeparatedString(excludeFiles).split(',');
+      chai.expect(utils.getFilesToIgnore({}, excludeFiles)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
+
+      excludeFiles = "file1.js,file2.json";
+      argsToArray = utils.fixCommaSeparatedString(excludeFiles).split(',');
+      chai.expect(utils.getFilesToIgnore({}, excludeFiles)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
+
+      excludeFiles = " file1.js , file2.json ";
+      argsToArray = utils.fixCommaSeparatedString(excludeFiles).split(',');
+      chai.expect(utils.getFilesToIgnore({}, excludeFiles)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
+    });
+
+    it("args passed, exclude added in runSettings", () => {
+      // args preceed over config file
+      let excludeFiles = "file1.js, file2.json ";
+      let argsToArray = utils.fixCommaSeparatedString(excludeFiles).split(',');
+
+      let runSettings = { exclude: [] };
+      chai.expect(utils.getFilesToIgnore(runSettings, excludeFiles)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
+
+      runSettings = { exclude: ["sample1.js", "sample2.json"] };
+      chai.expect(utils.getFilesToIgnore(runSettings, excludeFiles)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
+    });
+
+    it("no args, exclude added in runSettings", () => {
+      let runSettings = { exclude: [] };
+      chai.expect(utils.getFilesToIgnore(runSettings, undefined)).to.be.eql(constant.filesToIgnoreWhileUploading);
+
+      runSettings = { exclude: ["sample1.js", "sample2.json"] };
+      chai.expect(utils.getFilesToIgnore(runSettings, undefined)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(runSettings.exclude));
+    });
+  });
+
   describe('setTestEnvs', () => {
     it('set env only from args', () => {
       let argsEnv = 'env3=value3, env4=value4';

@@ -201,6 +201,11 @@ var argv = yargs
           describe: Constants.cliMessages.RUN.SYNC_DESCRIPTION,
           type: "boolean"
         },
+        'force-upload': {
+          default: false,
+          describe: Constants.cliMessages.COMMON.FORCE_UPLOAD,
+          type: "boolean"
+        },
         'headed': {
           default: false,
           describe: Constants.cliMessages.RUN.HEADED,
