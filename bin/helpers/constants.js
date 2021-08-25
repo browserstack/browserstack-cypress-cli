@@ -149,6 +149,7 @@ const filesToIgnoreWhileUploading = [
   '.vscode/**',
   '.npm/**',
   '.yarn/**',
+  'build_artifacts/**'
 ];
 
 const specFileTypes = ['js', 'ts', 'feature', 'jsx', 'coffee', 'cjsx'];
