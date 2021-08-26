@@ -197,12 +197,14 @@ var argv = yargs
           describe: Constants.cliMessages.RUN.SYNC_NO_WRAP,
           type: "boolean"
         },
-        'reporter': {
+        'r': {
+          alias: 'reporter',
           default: undefined,
           describe: Constants.cliMessages.RUN.REPORTER,
           type: "string"
         },
-        'reporter-options': {
+        'o': {
+          alias: 'reporter-options',
           default: undefined,
           describe: Constants.cliMessages.RUN.REPORTER_OPTIONS,
           type: "string"
