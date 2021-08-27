@@ -91,6 +91,7 @@ describe("runs", () => {
       setCypressConfigFilenameStub = sandbox.stub();
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
+      setSystemEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setupLocalTestingStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
@@ -141,7 +142,8 @@ describe("runs", () => {
           setupLocalTesting: setupLocalTestingStub,
           isJSONInvalid: isJSONInvalidStub,
           setLocalMode: setLocalModeStub,
-          setLocalConfigFile: setLocalConfigFileStub
+          setLocalConfigFile: setLocalConfigFileStub,
+          setSystemEnvs: setSystemEnvsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub
@@ -168,6 +170,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setCypressConfigFilenameStub);
           sinon.assert.calledOnce(setUserSpecsStub);
           sinon.assert.calledOnce(setTestEnvsStub);
+          sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setLocalStub);
           sinon.assert.calledOnce(setLocalModeStub);
           sinon.assert.calledOnce(setLocalConfigFileStub);
@@ -203,6 +206,7 @@ describe("runs", () => {
       setCypressConfigFilenameStub = sandbox.stub();
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
+      setSystemEnvsStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       checkUploadedStub = sandbox.stub();
@@ -257,7 +261,8 @@ describe("runs", () => {
           deleteResults: deleteResultsStub,
           setDefaults: setDefaultsStub,
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
-          setLocalConfigFile: setLocalConfigFileStub
+          setLocalConfigFile: setLocalConfigFileStub,
+          setSystemEnvs: setSystemEnvsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -306,6 +311,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(deleteZipStub);
           sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnce(setDefaultsStub);
+          sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -332,6 +338,7 @@ describe("runs", () => {
       setCypressConfigFilenameStub = sandbox.stub();
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
+      setSystemEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       checkUploadedStub = sandbox.stub();
@@ -376,6 +383,7 @@ describe("runs", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
+          setSystemEnvs: setSystemEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
@@ -436,6 +444,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(zipUploadStub);
           sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnce(setDefaultsStub);
+          sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -465,6 +474,7 @@ describe("runs", () => {
       setCypressConfigFilenameStub = sandbox.stub();
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
+      setSystemEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       checkUploadedStub = sandbox.stub();
@@ -511,6 +521,7 @@ describe("runs", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
+          setSystemEnvs: setSystemEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub,
           setLocal: setLocalStub,
@@ -583,6 +594,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(sendUsageReportStub);
           sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnce(setDefaultsStub);
+          sinon.assert.calledOnce(setSystemEnvsStub);
 
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
@@ -611,6 +623,7 @@ describe("runs", () => {
       setCypressConfigFilenameStub = sandbox.stub();
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
+      setSystemEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       checkUploadedStub = sandbox.stub();
@@ -663,6 +676,7 @@ describe("runs", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
+          setSystemEnvs: setSystemEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           setParallels: setParallelsStub,
           warnSpecLimit: warnSpecLimitStub,
@@ -745,6 +759,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(exportResultsStub);
           sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnce(setDefaultsStub);
+          sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.match(
             sendUsageReportStub.getCall(0).args,
             [
