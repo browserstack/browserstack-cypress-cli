@@ -7,8 +7,11 @@ const archiver = require("archiver"),
   utils = require('../helpers/utils'),
   path = require('path');
 
-const archiveSpecs = (runSettings, filePath, excludeFiles) => {
+const archiveSpecs = (runSettings, filePath, excludeFiles, md5data) => {
   return new Promise(function (resolve, reject) {
+    if (md5data.zipUrlPresent) {
+      return resolve('Zipping not required');
+    }
     var output = fs.createWriteStream(filePath);
 
     var cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
@@ -41,8 +44,7 @@ const archiveSpecs = (runSettings, filePath, excludeFiles) => {
 
     archive.pipe(output);
 
-    let ignoreFiles = getFilesToIgnore(runSettings, excludeFiles);
-
+    let ignoreFiles = utils.getFilesToIgnore(runSettings, excludeFiles);
     archive.glob(`**/*.+(${Constants.allowedFileTypes.join("|")})`, { cwd: cypressFolderPath, matchBase: true, ignore: ignoreFiles, dot:true });
 
     let packageJSON = {};
@@ -76,23 +78,6 @@ const archiveSpecs = (runSettings, filePath, excludeFiles) => {
 
     archive.finalize();
   });
-}
-
-const getFilesToIgnore = (runSettings, excludeFiles) => {
-  let ignoreFiles = Constants.filesToIgnoreWhileUploading;
-
-  // exclude files asked by the user
-  // args will take precedence over config file
-  if (!utils.isUndefined(excludeFiles)) {
-    let excludePatterns = utils.fixCommaSeparatedString(excludeFiles).split(',');
-    ignoreFiles = ignoreFiles.concat(excludePatterns);
-    logger.info(`Excluding files matching: ${JSON.stringify(excludePatterns)}`);
-  } else if (!utils.isUndefined(runSettings.exclude) && runSettings.exclude.length) {
-    ignoreFiles = ignoreFiles.concat(runSettings.exclude);
-    logger.info(`Excluding files matching: ${JSON.stringify(runSettings.exclude)}`);
-  }
-
-  return ignoreFiles;
 }
 
 exports.archive = archiveSpecs

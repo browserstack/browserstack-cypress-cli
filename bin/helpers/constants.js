@@ -21,10 +21,12 @@ const userMessages = {
   CONFIG_FILE_CREATED: "BrowserStack Config File created, you can now run browserstack-cypress --config-file run",
   CONFIG_FILE_EXISTS: "File already exists, delete the browserstack.json file manually. skipping...",
   DIR_NOT_FOUND: "Given path does not exist. Failed to create browserstack.json in %s",
+  MD5_CHECK_FAILED: "There was some issue while checking if zip is already uploaded.",
   ZIP_DELETE_FAILED: "Could not delete tests.zip successfully.",
   ZIP_DELETED: "Deleted tests.zip successfully.",
   API_DEPRECATED: "This version of API is deprecated, please use latest version of API.",
   FAILED_TO_ZIP: "Failed to zip files.",
+  FAILED_MD5_CHECK: "Something went wrong - you can retry running browserstack-cypress with ‘--force-upload’ parameter, or contact BrowserStack Support.",
   VISIT_DASHBOARD: "Visit the Automate dashboard for real-time test reporting:",
   CONFLICTING_INIT_ARGUMENTS: "Conflicting arguments given. You can use --path only with a file name, and not with a file path.",
   NO_PARALLELS: "Your specs will run sequentially on a single machine. Read more about running your specs in parallel here: https://www.browserstack.com/docs/automate/cypress/run-tests-in-parallel",
@@ -112,6 +114,7 @@ const cliMessages = {
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",
+    FORCE_UPLOAD: "Force the upload of your test files even if BrowserStack has detected no changes in your suite since you last ran",
     USERNAME: "Your BrowserStack username",
     ACCESS_KEY: "Your BrowserStack access key",
     NO_NPM_WARNING: "No NPM warning if npm_dependencies is empty",
@@ -152,6 +155,21 @@ const filesToIgnoreWhileUploading = [
   'build_artifacts/**'
 ];
 
+const readDirOptions = {
+  cwd: '.',
+  matchBase: true,
+  ignore: [],
+  dot: true,
+  stat: true,
+  pattern: ''
+}
+
+const hashingOptions = {
+  parallel: 10,
+  algo: 'md5',
+  encoding: 'hex',
+};
+
 const specFileTypes = ['js', 'ts', 'feature', 'jsx', 'coffee', 'cjsx'];
 
 const DEFAULT_CYPRESS_SPEC_PATH = "cypress/integration"
@@ -167,6 +185,8 @@ module.exports = Object.freeze({
   messageTypes,
   allowedFileTypes,
   filesToIgnoreWhileUploading,
+  readDirOptions,
+  hashingOptions,
   specFileTypes,
   DEFAULT_CYPRESS_SPEC_PATH,
   SPEC_TOTAL_CHAR_LIMIT,
