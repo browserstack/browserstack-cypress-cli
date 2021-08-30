@@ -139,7 +139,7 @@ module.exports = function run(args) {
                   await new Promise(resolve => setTimeout(resolve, 5000));
 
                   // download build artifacts
-                  if (!utils.isUndefined(bsConfig.run_settings.downloads) && bsConfig.run_settings.downloads.length) {
+                  if (bsConfig.run_settings.downloads && bsConfig.run_settings.downloads.length) {
                     await downloadBuildArtifacts(bsConfig, data.build_id, args);
                   }
 
@@ -149,8 +149,8 @@ module.exports = function run(args) {
                     utils.handleSyncExit(exitCode, data.dashboard_url);
                   });
                 });
-              } else if(!utils.isUndefined(bsConfig.run_settings.downloads) && bsConfig.run_settings.downloads.length) {
-                  logger.info(Constants.userMessages.ASYNC_DOWNLOADS.replace('<build-id>', data.build_id));
+              } else if (bsConfig.run_settings.downloads && bsConfig.run_settings.downloads.length) {
+                logger.info(Constants.userMessages.ASYNC_DOWNLOADS.replace('<build-id>', data.build_id));
               }
 
               logger.info(message);
