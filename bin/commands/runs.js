@@ -22,7 +22,7 @@ module.exports = function run(args) {
   markBlockEnd('deleteOldResults');
 
   markBlockStart('validateBstackJson');
-  return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
+  return utils.validateBstackJson(bsConfigPath).then(async function (bsConfig) {
     markBlockEnd('validateBstackJson');
     markBlockStart('setConfig');
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
@@ -67,6 +67,12 @@ module.exports = function run(args) {
 
     // set the no-wrap
     utils.setNoWrap(bsConfig, args);
+
+    //set browsers
+    await utils.setBrowsers(bsConfig, args);
+
+    //set config (--config)
+    utils.setConfig(bsConfig, args);
     markBlockEnd('setConfig');
 
     // Validate browserstack.json values and parallels specified via arguments

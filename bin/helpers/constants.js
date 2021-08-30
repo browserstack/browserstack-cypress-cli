@@ -68,7 +68,8 @@ const validationMessages = {
   INVALID_CLI_LOCAL_IDENTIFIER: "When using --local-identifier, a value needs to be supplied. \n--local-identifier <String>.\nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
   INVALID_LOCAL_MODE: "When using --local-mode, a value needs to be supplied. \n--local-mode (\"always-on\" | \"on-demand\").\nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
   INVALID_LOCAL_CONFIG_FILE: "Using --local-config-file requires an input of the form /path/to/config-file.yml.\nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
-  INVALID_LOCAL_IDENTIFIER: "Invalid value specified for local_identifier. For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference"
+  INVALID_LOCAL_IDENTIFIER: "Invalid value specified for local_identifier. For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
+  INVALID_BROWSER_ARGS: "Aborting as an unacceptable value was passed for --browser. Read more at https://www.browserstack.com/docs/automate/cypress/cli-reference"
 };
 
 const cliMessages = {
@@ -109,7 +110,9 @@ const cliMessages = {
     LOCAL_MODE: 'Accepted values: ("always-on" | "on-demand") - if you choose to keep the binary "always-on", it will speed up your tests by keeping the Local connection warmed up in the background; otherwise, you can choose to have it spawn and killed for every build',
     LOCAL_IDENTIFIER: "Accepted values: String - assign an identifier to your Local process instance",
     LOCAL_CONFIG_FILE: "Accepted values: String - path to local config-file to your Local process instance. Learn more at https://www.browserstack.com/local-testing/binary-params",
-    SYNC_NO_WRAP: "Wrap the spec names in --sync mode in case of smaller terminal window size pass --no-wrap"
+    SYNC_NO_WRAP: "Wrap the spec names in --sync mode in case of smaller terminal window size pass --no-wrap",
+    BROWSER_DESCRIPTION: "Specify the browsers you need to run your tests on.",
+    CONFIG_DESCRIPTION: "Set configuration values. Separate multiple values with a comma. The values set here override any values set in your configuration file."
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",

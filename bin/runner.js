@@ -151,7 +151,7 @@ var argv = yargs
           type: "boolean"
         },
         'p': {
-          alias: 'parallels',
+          alias: ['parallels', 'parallel'],
           describe: Constants.cliMessages.RUN.PARALLEL_DESC,
           type: "number",
           default: undefined
@@ -169,7 +169,7 @@ var argv = yargs
           default: undefined
         },
         'b': {
-          alias: 'build-name',
+          alias: ['build-name', 'ci-build-id'],
           describe: Constants.cliMessages.RUN.BUILD_NAME,
           type: "string",
           default: undefined
@@ -231,6 +231,17 @@ var argv = yargs
           default: false,
           describe: Constants.cliMessages.RUN.SYNC_NO_WRAP,
           type: "boolean"
+        },
+        'browser': {
+          describe: Constants.cliMessages.RUN.BROWSER_DESCRIPTION,
+          type: "string",
+          default: undefined
+        },
+        'c': {
+          alias: 'config',
+          describe: Constants.cliMessages.RUN.CONFIG_DESCRIPTION,
+          type: "string",
+          default: undefined
         }
       })
       .help('help')
