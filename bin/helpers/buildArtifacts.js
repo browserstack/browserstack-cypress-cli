@@ -28,8 +28,12 @@ const parseAndDownloadArtifacts = async (buildId, data) => {
         let fileName = 'build_artifacts.zip';
         BUILD_ARTIFACTS_TOTAL_COUNT += 1;
         all_promises.push(downloadAndUnzip(filePath, fileName, data[comb][sessionId]).catch((error) => {
-          BUILD_ARTIFACTS_FAIL_COUNT = BUILD_ARTIFACTS_FAIL_COUNT + 1;
-          reject(error);
+          BUILD_ARTIFACTS_FAIL_COUNT += 1;
+          // delete malformed zip if present
+          let tmpFilePath = path.join(filePath, fileName);
+          if(fs.existsSync(tmpFilePath)){
+            fs.unlinkSync(tmpFilePath);
+          }
         }));
       }
     }
