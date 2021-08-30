@@ -752,14 +752,15 @@ exports.setOtherConfigs = (bsConfig, args) => {
 }
 
 exports.getCypressJSON = (bsConfig) => {
-  if (
-    bsConfig.run_settings.cypress_config_file &&
-    bsConfig.run_settings.cypress_config_filename !== 'false'
-  ) {
-    let cypressJSON = JSON.parse(
+  let cypressJSON = undefined;
+  if (bsConfig.run_settings.cypress_config_file && bsConfig.run_settings.cypress_config_filename !== 'false') {
+    cypressJSON = JSON.parse(
       fs.readFileSync(bsConfig.run_settings.cypressConfigFilePath)
     );
-    return cypressJSON;
+  } else if (bsConfig.run_settings.cypressProjectDir) {
+    cypressJSON = JSON.parse(
+      fs.readFileSync(path.join(bsConfig.run_settings.cypressProjectDir, 'cypress.json'))
+    );
   }
-  return undefined;
+  return cypressJSON;
 }

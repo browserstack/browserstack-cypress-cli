@@ -12,6 +12,9 @@ const logger = require('./logger').winstonLogger,
       config = require("./config");
 
 
+let BUILD_ARTIFACTS_TOTAL_COUNT = 0;
+let BUILD_ARTIFACTS_FAIL_COUNT = 0;
+
 const parseAndDownloadArtifacts = async (buildId, data) => {
   return new Promise(async (resolve, reject) => {
     let all_promises = [];
@@ -23,9 +26,9 @@ const parseAndDownloadArtifacts = async (buildId, data) => {
         let sessionId = sessions[j];
         let filePath = path.join('./', 'build_artifacts', buildId, comb, sessionId);
         let fileName = 'build_artifacts.zip';
-        process.env.BUILD_ARTIFACTS_TOTAL_COUNT = Number(process.env.BUILD_ARTIFACTS_TOTAL_COUNT) + 1
+        BUILD_ARTIFACTS_TOTAL_COUNT += 1;
         all_promises.push(downloadAndUnzip(filePath, fileName, data[comb][sessionId]).catch((error) => {
-          process.env.BUILD_ARTIFACTS_FAIL_COUNT = Number(process.env.BUILD_ARTIFACTS_FAIL_COUNT) + 1;
+          BUILD_ARTIFACTS_FAIL_COUNT = BUILD_ARTIFACTS_FAIL_COUNT + 1;
           reject(error);
         }));
       }
@@ -142,8 +145,8 @@ const sendUpdatesToBstack = async (bsConfig, buildId, args, options) => {
   let data = {
     feature_usage: {
       downloads: {
-        eligible_download_folders: Number(process.env.BUILD_ARTIFACTS_TOTAL_COUNT),
-        successfully_downloaded_folders: Number(process.env.BUILD_ARTIFACTS_TOTAL_COUNT) - Number(process.env.BUILD_ARTIFACTS_FAIL_COUNT)
+        eligible_download_folders: BUILD_ARTIFACTS_TOTAL_COUNT,
+        successfully_downloaded_folders: BUILD_ARTIFACTS_TOTAL_COUNT - BUILD_ARTIFACTS_FAIL_COUNT
       },
       reporter: reporter
     }
@@ -157,8 +160,8 @@ const sendUpdatesToBstack = async (bsConfig, buildId, args, options) => {
 }
 
 exports.downloadBuildArtifacts = async (bsConfig, buildId, args) => {
-  process.env.BUILD_ARTIFACTS_FAIL_COUNT = 0;
-  process.env.BUILD_ARTIFACTS_TOTAL_COUNT = 0;
+  BUILD_ARTIFACTS_FAIL_COUNT = 0;
+  BUILD_ARTIFACTS_TOTAL_COUNT = 0;
 
   let url = `${config.buildUrl}${buildId}/build_artifacts`;
   let options = {
@@ -182,9 +185,9 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args) => {
       await createDirectories(buildId, buildDetails);
       await parseAndDownloadArtifacts(buildId, buildDetails);
 
-      if (process.env.BUILD_ARTIFACTS_FAIL_COUNT > 0) {
+      if (BUILD_ARTIFACTS_FAIL_COUNT > 0) {
         messageType = Constants.messageTypes.ERROR;
-        message = Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_FAILED.replace('<build-id>', buildId).replace('<machine-count>', process.env.BUILD_ARTIFACTS_FAIL_COUNT);
+        message = Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_FAILED.replace('<build-id>', buildId).replace('<machine-count>', BUILD_ARTIFACTS_FAIL_COUNT);
         logger.error(message);
       } else {
         messageType = Constants.messageTypes.SUCCESS;
@@ -198,13 +201,12 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args) => {
     messageType = Constants.messageTypes.ERROR;
     errorCode = 'api_failed_build_artifacts';
 
-    if (process.env.BUILD_ARTIFACTS_FAIL_COUNT > 0) {
+    if (BUILD_ARTIFACTS_FAIL_COUNT > 0) {
       messageType = Constants.messageTypes.ERROR;
-      message = Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_FAILED.replace('<build-id>', buildId).replace('<machine-count>', process.env.BUILD_ARTIFACTS_FAIL_COUNT);
+      message = Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_FAILED.replace('<build-id>', buildId).replace('<machine-count>', BUILD_ARTIFACTS_FAIL_COUNT);
       logger.error(message);
     } else {
       logger.error('Downloading the build artifacts failed.');
-      logger.error(err);
     }
 
     utils.sendUsageReport(bsConfig, args, err, messageType, errorCode);
