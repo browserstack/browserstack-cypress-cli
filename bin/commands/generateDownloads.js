@@ -33,6 +33,6 @@ module.exports = async function generateDownloads(args) {
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
-    utils.sendUsageReport(bsConfig, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err));
+    utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err));
   });
 };
