@@ -2024,7 +2024,7 @@ describe('utils', () => {
     });
   });
 
-  describe('setCypressConfigs', () => {
+  describe('setOtherConfigs', () => {
     it('set reporter arg in run_settings', () => {
       let bsConfig = {
         run_settings: {
@@ -2034,7 +2034,7 @@ describe('utils', () => {
         reporter: "mocha",
         'reporter-options': "random-string"
       };
-      utils.setCypressConfigs(bsConfig, args);
+      utils.setOtherConfigs(bsConfig, args);
       expect(bsConfig.run_settings.reporter).to.be.eql("mocha");
     });
 
@@ -2046,7 +2046,7 @@ describe('utils', () => {
       let args = {
         'reporterOptions': "random-string"
       };
-      utils.setCypressConfigs(bsConfig, args);
+      utils.setOtherConfigs(bsConfig, args);
       expect(bsConfig.run_settings.reporter_options).to.be.eql("random-string");
     });
   });

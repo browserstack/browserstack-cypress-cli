@@ -68,10 +68,10 @@ module.exports = function run(args) {
 
     // set the no-wrap
     utils.setNoWrap(bsConfig, args);
-    markBlockEnd('setConfig');
 
     // set other cypress configs e.g. reporter and reporter-options
-    utils.setCypressConfigs(bsConfig, args);
+    utils.setOtherConfigs(bsConfig, args);
+    markBlockEnd('setConfig');
 
     // Validate browserstack.json values and parallels specified via arguments
     markBlockStart('validateConfig');

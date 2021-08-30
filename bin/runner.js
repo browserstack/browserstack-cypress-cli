@@ -119,10 +119,7 @@ var argv = yargs
     argv = yargs
       .usage('usage: $0 run <options>')
       .options({
-        ...configFileOptions,
-        ...disableUsageReportingOptions,
-        ...usernameOptions,
-        ...accessKeyOptions,
+        ...commonBuildOptions,
         'ccf': {
           alias: 'cypress-config-file',
           describe: Constants.cliMessages.RUN.CYPRESS_DESC,

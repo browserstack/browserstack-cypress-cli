@@ -742,7 +742,7 @@ exports.deleteBaseUrlFromError = (err) => {
 }
 
 // blindly send other passed configs with run_settings and handle at backend
-exports.setCypressConfigs = (bsConfig, args) => {
+exports.setOtherConfigs = (bsConfig, args) => {
   if (!this.isUndefined(args.reporter)) {
     bsConfig["run_settings"]["reporter"] = args.reporter;
   }
