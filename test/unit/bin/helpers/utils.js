@@ -2083,4 +2083,19 @@ describe('utils', () => {
     });
   });
 
+  describe('nonEmptyArray', () => {
+    it('return true if non empty array', () => {
+      expect(utils.nonEmptyArray([1, 2, 3])).to.be.eql(true);
+      expect(utils.nonEmptyArray(["abc"])).to.be.eql(true);
+    });
+
+    it('return false if empty array', () => {
+      expect(utils.nonEmptyArray([])).to.be.eql(false);
+    });
+
+    it('return false if null', () => {
+      expect(utils.nonEmptyArray(null)).to.be.eql(false);
+    });
+  });
+
 });

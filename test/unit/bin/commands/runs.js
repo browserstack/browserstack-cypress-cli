@@ -5,8 +5,6 @@ const chai = require("chai"),
 const Constants = require("../../../../bin/helpers/constants"),
   logger = require("../../../../bin/helpers/logger").winstonLogger,
   testObjects = require("../../support/fixtures/testObjects");
-const { initTimeComponents, markBlockStart, markBlockEnd } = require("../../../../bin/helpers/timeComponents");
-const { setHeaded, setupLocalTesting, stopLocalBinary, setUserSpecs, setLocalConfigFile } = require("../../../../bin/helpers/utils");
 
 const proxyquire = require("proxyquire").noCallThru();
 
@@ -665,6 +663,8 @@ describe("runs", () => {
       initTimeComponentsStub = sandbox.stub();
       markBlockStartStub = sandbox.stub();
       markBlockEndStub = sandbox.stub();
+      stopLocalBinaryStub = sandbox.stub();
+      nonEmptyArrayStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -707,6 +707,8 @@ describe("runs", () => {
           isUndefined: isUndefinedStub,
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
           setLocalConfigFile: setLocalConfigFileStub,
+          stopLocalBinary: stopLocalBinaryStub,
+          nonEmptyArray: nonEmptyArrayStub,
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -745,6 +747,8 @@ describe("runs", () => {
       archiverStub.returns(Promise.resolve("Zipping completed"));
       checkUploadedStub.returns(Promise.resolve({ zipUrlPresent: false }))
       zipUploadStub.returns(Promise.resolve("zip uploaded"));
+      stopLocalBinaryStub.returns(Promise.resolve("nothing"));
+      nonEmptyArrayStub.returns(false);
       createBuildStub.returns(Promise.resolve({ message: 'Success', build_id: 'random_build_id', dashboard_url: dashboardUrl }));
 
       return runs(args)

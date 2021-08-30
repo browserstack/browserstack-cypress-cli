@@ -335,6 +335,13 @@ exports.isUndefined = value => (value === undefined || value === null);
 
 exports.isFloat = (value) => Number(value) && Number(value) % 1 !== 0;
 
+exports.nonEmptyArray = (value) => {
+  if(!this.isUndefined(value) && value && value.length) {
+    return true;
+  }
+  return false;
+}
+
 exports.isParallelValid = (value) => {
   return this.isUndefined(value) || !(isNaN(value) || this.isFloat(value) || parseInt(value, 10) === 0 || parseInt(value, 10) < -1) || value === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE;
 }

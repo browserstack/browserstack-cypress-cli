@@ -139,7 +139,7 @@ module.exports = function run(args) {
                   await new Promise(resolve => setTimeout(resolve, 5000));
 
                   // download build artifacts
-                  if (bsConfig.run_settings.downloads && bsConfig.run_settings.downloads.length) {
+                  if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
                     await downloadBuildArtifacts(bsConfig, data.build_id, args);
                   }
 
@@ -149,7 +149,7 @@ module.exports = function run(args) {
                     utils.handleSyncExit(exitCode, data.dashboard_url);
                   });
                 });
-              } else if (bsConfig.run_settings.downloads && bsConfig.run_settings.downloads.length) {
+              } else if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
                 logger.info(Constants.userMessages.ASYNC_DOWNLOADS.replace('<build-id>', data.build_id));
               }
 
