@@ -268,13 +268,61 @@ exports.setUserSpecs = (bsConfig, args) => {
   }
 }
 
-// env option must be set only from command line args as a string
 exports.setTestEnvs = (bsConfig, args) => {
-  if (!this.isUndefined(args.env)) {
-    bsConfig.run_settings.env = this.fixCommaSeparatedString(args.env);
-  } else {
-    bsConfig.run_settings.env = null;
+  let envKeys = {};
+
+  if(bsConfig.run_settings.env && Object.keys(bsConfig.run_settings.env).length !== 0) {
+    envKeys = bsConfig.run_settings.env;
   }
+
+  // set env vars passed from command line args as a string
+  if (!this.isUndefined(args.env)) {
+    let argsEnvVars = this.fixCommaSeparatedString(args.env).split(',');
+    argsEnvVars.forEach((envVar) => {
+      let env = envVar.split("=");
+      envKeys[env[0]] = env.slice(1,).join('=');
+    });
+  }
+
+  if (Object.keys(envKeys).length === 0) {
+    bsConfig.run_settings.env = null;
+  } else {
+    bsConfig.run_settings.env = Object.keys(envKeys).map(key => (`${key}=${envKeys[key]}`)).join(',');
+  }
+}
+
+exports.setSystemEnvs = (bsConfig) => {
+  let envKeys = {};
+
+  // set env vars which are defined in system_env_vars key
+  if(!this.isUndefined(bsConfig.run_settings.system_env_vars) && Array.isArray(bsConfig.run_settings.system_env_vars) && bsConfig.run_settings.system_env_vars.length) {
+    let systemEnvVars = bsConfig.run_settings.system_env_vars;
+    systemEnvVars.forEach((envVar) => {
+      envKeys[envVar] = process.env[envVar];
+    });
+  }
+
+  // set env vars which start with CYPRESS_ and cypress_
+  let pattern = /^cypress_/i;
+  let matchingKeys = this.getKeysMatchingPattern(process.env, pattern);
+  if (matchingKeys && matchingKeys.length) {
+    matchingKeys.forEach((envVar) => {
+      envKeys[envVar] = process.env[envVar];
+    });
+  }
+
+  if (Object.keys(envKeys).length === 0) {
+    bsConfig.run_settings.system_env_vars = null;
+  } else {
+    bsConfig.run_settings.system_env_vars = Object.keys(envKeys).map(key => (`${key}=${envKeys[key]}`));
+  }
+}
+
+exports.getKeysMatchingPattern = (obj, pattern) => {
+  let matchingKeys = Object.keys(obj).filter(function(key) {
+    return pattern.test(key);
+  });
+  return matchingKeys;
 }
 
 exports.fixCommaSeparatedString = (string) => {
