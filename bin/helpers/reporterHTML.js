@@ -101,7 +101,7 @@ let reportGenerator = (bsConfig, buildId, args, cb) => {
     },
   };
 
-  return request.get(options, function (err, resp, body) {
+  return request.get(options, async function (err, resp, body) {
     let message = null;
     let messageType = null;
     let errorCode = null;
@@ -164,7 +164,7 @@ let reportGenerator = (bsConfig, buildId, args, cb) => {
     } else {
       messageType = Constants.messageTypes.SUCCESS;
       message = `Report for build: ${buildId} was successfully created.`;
-      renderReportHTML(build);
+      await renderReportHTML(build);
       logger.info(message);
     }
     utils.sendUsageReport(bsConfig, args, message, messageType, errorCode);
