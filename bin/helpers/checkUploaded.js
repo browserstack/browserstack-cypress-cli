@@ -22,22 +22,7 @@ const checkSpecsMd5 = (runSettings, excludeFiles) => {
     hashHelper.hashWrapper(options).then(function (data) {
       const outputHash = crypto.createHash(Constants.hashingOptions.algo);
       outputHash.update(data);
-      let packageJSON = {};
-
-      if (typeof runSettings.package_config_options === 'object') {
-        Object.assign(packageJSON, runSettings.package_config_options);
-      }
-
-      if (typeof runSettings.npm_dependencies === 'object') {
-        Object.assign(packageJSON, {
-          devDependencies: runSettings.npm_dependencies,
-        });
-      }
-
-      if (Object.keys(packageJSON).length > 0) {
-        let packageJSONString = JSON.stringify(packageJSON);
-        outputHash.update(packageJSONString);
-      }
+      outputHash.update(checkPackageMd5(runSettings));
 
       if (
         runSettings.cypress_config_file &&
@@ -56,6 +41,27 @@ const checkSpecsMd5 = (runSettings, excludeFiles) => {
   });
 };
 
+const checkPackageMd5 = (runSettings) => {
+  const outputHash = crypto.createHash(Constants.hashingOptions.algo);
+  let packageJSON = {};
+  if (typeof runSettings.package_config_options === 'object') {
+    Object.assign(packageJSON, runSettings.package_config_options);
+  }
+
+  if (typeof runSettings.npm_dependencies === 'object') {
+    Object.assign(packageJSON, {
+      devDependencies: runSettings.npm_dependencies,
+    });
+  }
+
+  if (Object.keys(packageJSON).length > 0) {
+    let packageJSONString = JSON.stringify(packageJSON);
+    outputHash.update(packageJSONString);
+  }
+
+  return outputHash.digest(Constants.hashingOptions.encoding)
+};
+
 const checkUploadedMd5 = (bsConfig, args) => {
   return new Promise(function (resolve) {
     let obj = {
@@ -66,7 +72,8 @@ const checkUploadedMd5 = (bsConfig, args) => {
     }
     checkSpecsMd5(bsConfig.run_settings, args.exclude).then(function (md5data) {
       Object.assign(obj, {md5sum: md5data});
-      let data = JSON.stringify({ zip_md5sum: md5data });
+      let package_md5sum = checkPackageMd5(bsConfig.run_settings);
+      let data = JSON.stringify({ zip_md5sum: md5data, instrument_package_md5sum: package_md5sum});
 
       let options = {
         url: config.checkMd5sum,
