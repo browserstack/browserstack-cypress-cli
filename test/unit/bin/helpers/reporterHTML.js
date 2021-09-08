@@ -269,7 +269,7 @@ describe("reportHTML", () => {
 
       sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
-      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+      sendUsageReportStub.calledOnceWithExactly(bsConfig, args, message, messageType, errorCode);
     });
   });
 
