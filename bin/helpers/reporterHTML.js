@@ -297,11 +297,12 @@ function generateCypressCombinationSpecReportDataWithoutConfigJson(combination){
           resolve();
         }
         resultsJson.tests.forEach((test) => {
+          durationKey = utils.isUndefined(test["attempts"]) ? test : test["attempts"].pop()
           sessionTests.push({
             name: test["title"].pop(),
             status: test["state"],
             duration: parseFloat(
-              test["attempts"].pop()["wallClockDuration"] / 1000
+              durationKey["wallClockDuration"] / 1000
             ).toFixed(2)
           })
         });
