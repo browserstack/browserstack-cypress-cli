@@ -107,7 +107,8 @@ exports.sendUsageReport = (
   args,
   message,
   message_type,
-  error_code
+  error_code,
+  data
 ) => {
   usageReporting.send({
     cli_args: args,
@@ -115,6 +116,7 @@ exports.sendUsageReport = (
     message_type: message_type,
     error_code: error_code,
     bstack_config: bsConfig,
+    data,
   });
 };
 
@@ -147,6 +149,24 @@ exports.setParallels = (bsConfig, args, numOfSpecs) => {
     bsConfig['run_settings']['parallels'] = maxParallels;
   }
 };
+
+exports.warnSpecLimit = (bsConfig, args, specFiles) => {
+  let expectedCharLength = specFiles.join("").length + Constants.METADATA_CHAR_BUFFER_PER_SPEC * specFiles.length;
+  let parallels = bsConfig.run_settings.parallels;
+  let combinations = this.getBrowserCombinations(bsConfig).length;
+  let parallelPerCombination = parallels > combinations ? Math.floor(parallels / combinations) : 1;
+  let expectedCharLengthPerParallel = Math.floor(expectedCharLength / parallelPerCombination);
+  if (expectedCharLengthPerParallel > Constants.SPEC_TOTAL_CHAR_LIMIT) {
+    logger.warn(Constants.userMessages.SPEC_LIMIT_WARNING);
+    this.sendUsageReport(
+      bsConfig,
+      args,
+      Constants.userMessages.SPEC_LIMIT_WARNING,
+      Constants.messageTypes.WARNING,
+      null
+    );
+  }
+ }
 
 exports.setDefaults = (bsConfig, args) => {
   // setting setDefaultAuthHash to {} if not present and set via env variables or via args.
@@ -248,13 +268,61 @@ exports.setUserSpecs = (bsConfig, args) => {
   }
 }
 
-// env option must be set only from command line args as a string
 exports.setTestEnvs = (bsConfig, args) => {
-  if (!this.isUndefined(args.env)) {
-    bsConfig.run_settings.env = this.fixCommaSeparatedString(args.env);
-  } else {
-    bsConfig.run_settings.env = null;
+  let envKeys = {};
+
+  if(bsConfig.run_settings.env && Object.keys(bsConfig.run_settings.env).length !== 0) {
+    envKeys = bsConfig.run_settings.env;
   }
+
+  // set env vars passed from command line args as a string
+  if (!this.isUndefined(args.env)) {
+    let argsEnvVars = this.fixCommaSeparatedString(args.env).split(',');
+    argsEnvVars.forEach((envVar) => {
+      let env = envVar.split("=");
+      envKeys[env[0]] = env.slice(1,).join('=');
+    });
+  }
+
+  if (Object.keys(envKeys).length === 0) {
+    bsConfig.run_settings.env = null;
+  } else {
+    bsConfig.run_settings.env = Object.keys(envKeys).map(key => (`${key}=${envKeys[key]}`)).join(',');
+  }
+}
+
+exports.setSystemEnvs = (bsConfig) => {
+  let envKeys = {};
+
+  // set env vars which are defined in system_env_vars key
+  if(!this.isUndefined(bsConfig.run_settings.system_env_vars) && Array.isArray(bsConfig.run_settings.system_env_vars) && bsConfig.run_settings.system_env_vars.length) {
+    let systemEnvVars = bsConfig.run_settings.system_env_vars;
+    systemEnvVars.forEach((envVar) => {
+      envKeys[envVar] = process.env[envVar];
+    });
+  }
+
+  // set env vars which start with CYPRESS_ and cypress_
+  let pattern = /^cypress_/i;
+  let matchingKeys = this.getKeysMatchingPattern(process.env, pattern);
+  if (matchingKeys && matchingKeys.length) {
+    matchingKeys.forEach((envVar) => {
+      envKeys[envVar] = process.env[envVar];
+    });
+  }
+
+  if (Object.keys(envKeys).length === 0) {
+    bsConfig.run_settings.system_env_vars = null;
+  } else {
+    bsConfig.run_settings.system_env_vars = Object.keys(envKeys).map(key => (`${key}=${envKeys[key]}`));
+  }
+}
+
+exports.getKeysMatchingPattern = (obj, pattern) => {
+  let matchingKeys = Object.keys(obj).filter(function(key) {
+    return pattern.test(key);
+  });
+  return matchingKeys;
 }
 
 exports.fixCommaSeparatedString = (string) => {
@@ -430,6 +498,7 @@ exports.setupLocalTesting = (bsConfig, args) => {
         bsConfig, bsConfig['connection_settings']['local_identifier']
       );
       if (!localIdentifierRunning){
+        bsConfig.connection_settings.usedAutoLocal = true;
         var bs_local = this.getLocalBinary();
         var bs_local_args = this.setLocalArgs(bsConfig, args);
         let that = this;
@@ -571,6 +640,31 @@ exports.setHeaded = (bsConfig, args) => {
   }
 };
 
+exports.setNoWrap = (_bsConfig, args) => {
+  if (args.noWrap === true || this.searchForOption('--no-wrap')) {
+    process.env.SYNC_NO_WRAP = true;
+  } else {
+    process.env.SYNC_NO_WRAP = false;
+  }
+}
+
+exports.getFilesToIgnore = (runSettings, excludeFiles, logging = true) => {
+  let ignoreFiles = Constants.filesToIgnoreWhileUploading;
+
+  // exclude files asked by the user
+  // args will take precedence over config file
+  if (!this.isUndefined(excludeFiles)) {
+    let excludePatterns = this.fixCommaSeparatedString(excludeFiles).split(',');
+    ignoreFiles = ignoreFiles.concat(excludePatterns);
+    if (logging) logger.info(`Excluding files matching: ${JSON.stringify(excludePatterns)}`);
+  } else if (!this.isUndefined(runSettings.exclude) && runSettings.exclude.length) {
+    ignoreFiles = ignoreFiles.concat(runSettings.exclude);
+    if (logging) logger.info(`Excluding files matching: ${JSON.stringify(runSettings.exclude)}`);
+  }
+
+  return ignoreFiles;
+}
+
 exports.getNumberOfSpecFiles = (bsConfig, args, cypressJson) => {
   let testFolderPath = cypressJson.integrationFolder || Constants.DEFAULT_CYPRESS_SPEC_PATH;
   let globSearchPattern = this.sanitizeSpecsPattern(bsConfig.run_settings.specs) || `${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`;
@@ -619,6 +713,12 @@ exports.getNetworkErrorMessage = (dashboard_url) => {
 
 exports.versionChangedMessage = (preferredVersion, actualVersion) => {
   let message = Constants.userMessages.CYPRESS_VERSION_CHANGED.replace("<preferredVersion>", preferredVersion);
+  message = message.replace("<actualVersion>", actualVersion);
+  return message
+}
+
+exports.latestSyntaxToActualVersionMessage = (latestSyntaxVersion, actualVersion) => {
+  let message = Constants.userMessages.LATEST_SYNTAX_TO_ACTUAL_VERSION_MESSAGE.replace("<latestSyntaxVersion>", latestSyntaxVersion);
   message = message.replace("<actualVersion>", actualVersion);
   return message
 }

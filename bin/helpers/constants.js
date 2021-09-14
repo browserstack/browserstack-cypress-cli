@@ -17,13 +17,16 @@ const userMessages = {
   BUILD_REPORT_MESSAGE: "See the entire build report here:",
   ZIP_UPLOADER_NOT_REACHABLE: "Could not reach BrowserStack APIs. Please check your network or see if you need to whitelist *.browserstack.com",
   ZIP_UPLOAD_FAILED: "Zip Upload failed.",
+  ZIP_UPLOAD_LIMIT_EXCEEDED: "The directory size which contains the cypress config file is more than 200 MB. For more info, check out https://www.browserstack.com/docs/automate/cypress/exclude-files",
   CONFIG_FILE_CREATED: "BrowserStack Config File created, you can now run browserstack-cypress --config-file run",
   CONFIG_FILE_EXISTS: "File already exists, delete the browserstack.json file manually. skipping...",
   DIR_NOT_FOUND: "Given path does not exist. Failed to create browserstack.json in %s",
+  MD5_CHECK_FAILED: "There was some issue while checking if zip is already uploaded.",
   ZIP_DELETE_FAILED: "Could not delete tests.zip successfully.",
   ZIP_DELETED: "Deleted tests.zip successfully.",
   API_DEPRECATED: "This version of API is deprecated, please use latest version of API.",
   FAILED_TO_ZIP: "Failed to zip files.",
+  FAILED_MD5_CHECK: "Something went wrong - you can retry running browserstack-cypress with ‘--force-upload’ parameter, or contact BrowserStack Support.",
   VISIT_DASHBOARD: "Visit the Automate dashboard for real-time test reporting:",
   CONFLICTING_INIT_ARGUMENTS: "Conflicting arguments given. You can use --path only with a file name, and not with a file path.",
   NO_PARALLELS: "Your specs will run sequentially on a single machine. Read more about running your specs in parallel here: https://www.browserstack.com/docs/automate/cypress/run-tests-in-parallel",
@@ -40,7 +43,9 @@ const userMessages = {
   CYPRESS_VERSION_CHANGED: "Your build will run using Cypress <actualVersion> instead of Cypress <preferredVersion>. Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions",
   LOCAL_START_FAILED: "Local Testing setup failed.",
   LOCAL_STOP_FAILED: "Local Binary stop failed.",
-  INVALID_LOCAL_MODE_WARNING: "Invalid value specified for local_mode. local_mode: (\"always-on\" | \"on-demand\"). For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference"
+  INVALID_LOCAL_MODE_WARNING: "Invalid value specified for local_mode. local_mode: (\"always-on\" | \"on-demand\"). For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
+  SPEC_LIMIT_WARNING: "You might not see all your results on the dashboard because of high spec count, please consider reducing the number of spec files in this folder.",
+  LATEST_SYNTAX_TO_ACTUAL_VERSION_MESSAGE: "Your build will run using Cypress <actualVersion> as you had specified <latestSyntaxVersion>. Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions"
 };
 
 const validationMessages = {
@@ -104,10 +109,12 @@ const cliMessages = {
     LOCAL: "Accepted values: (true | false) - create a local testing connection to let you test staging and localhost websites, or sites behind proxies; learn more at browserstack.com/local-testing",
     LOCAL_MODE: 'Accepted values: ("always-on" | "on-demand") - if you choose to keep the binary "always-on", it will speed up your tests by keeping the Local connection warmed up in the background; otherwise, you can choose to have it spawn and killed for every build',
     LOCAL_IDENTIFIER: "Accepted values: String - assign an identifier to your Local process instance",
-    LOCAL_CONFIG_FILE: "Accepted values: String - path to local config-file to your Local process instance. Learn more at https://www.browserstack.com/local-testing/binary-params"
+    LOCAL_CONFIG_FILE: "Accepted values: String - path to local config-file to your Local process instance. Learn more at https://www.browserstack.com/local-testing/binary-params",
+    SYNC_NO_WRAP: "Wrap the spec names in --sync mode in case of smaller terminal window size pass --no-wrap"
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",
+    FORCE_UPLOAD: "Force the upload of your test files even if BrowserStack has detected no changes in your suite since you last ran",
     USERNAME: "Your BrowserStack username",
     ACCESS_KEY: "Your BrowserStack access key",
     NO_NPM_WARNING: "No NPM warning if npm_dependencies is empty",
@@ -126,13 +133,45 @@ const messageTypes = {
   NULL: null
 }
 
-const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip', 'npmrc', 'xml', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'jsx', 'coffee', 'cjsx', 'csv', 'tsv'];
+const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip', 'npmrc', 'xml', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'jsx', 'coffee', 'cjsx', 'csv', 'tsv', 'yml', 'yaml', 'env'];
 
-const filesToIgnoreWhileUploading = ['**/node_modules/**', 'node_modules/**', 'package-lock.json', 'package.json', 'browserstack-package.json', 'tests.zip', 'cypress.json']
+const filesToIgnoreWhileUploading = [
+  '**/node_modules/**',
+  'node_modules/**',
+  'package-lock.json',
+  'package.json',
+  'browserstack-package.json',
+  'tests.zip',
+  'cypress.json',
+  '.idea/**',
+  '.vscode/**',
+  '.npm/**',
+  '.yarn/**',
+];
+
+const readDirOptions = {
+  cwd: '.',
+  matchBase: true,
+  ignore: [],
+  dot: true,
+  stat: true,
+  pattern: ''
+}
+
+const hashingOptions = {
+  parallel: 10,
+  algo: 'md5',
+  encoding: 'hex',
+};
 
 const specFileTypes = ['js', 'ts', 'feature', 'jsx', 'coffee', 'cjsx'];
 
 const DEFAULT_CYPRESS_SPEC_PATH = "cypress/integration"
+
+const SPEC_TOTAL_CHAR_LIMIT = 32243;
+const METADATA_CHAR_BUFFER_PER_SPEC = 175;
+
+const LATEST_VERSION_SYNTAX_REGEX = /\d*.latest(.\d*)?/gm
 
 module.exports = Object.freeze({
   syncCLI,
@@ -142,6 +181,11 @@ module.exports = Object.freeze({
   messageTypes,
   allowedFileTypes,
   filesToIgnoreWhileUploading,
+  readDirOptions,
+  hashingOptions,
   specFileTypes,
-  DEFAULT_CYPRESS_SPEC_PATH
+  DEFAULT_CYPRESS_SPEC_PATH,
+  SPEC_TOTAL_CHAR_LIMIT,
+  METADATA_CHAR_BUFFER_PER_SPEC,
+  LATEST_VERSION_SYNTAX_REGEX
 });

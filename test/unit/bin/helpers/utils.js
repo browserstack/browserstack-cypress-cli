@@ -358,7 +358,7 @@ describe('utils', () => {
     let args = testObjects.initSampleArgs;
 
     it('should call sendUsageReport', () => {
-      sendUsageReportStub = sandbox
+      let sendUsageReportStub = sandbox
         .stub(utils, 'sendUsageReport')
         .callsFake(function () {
           return 'end';
@@ -507,12 +507,51 @@ describe('utils', () => {
     });
   });
 
+  describe("getFilesToIgnore", () => {
+    it("no args, no exclude in runSettings", () => {
+      chai.expect(utils.getFilesToIgnore({}, undefined)).to.be.eql(constant.filesToIgnoreWhileUploading);
+    });
+
+    it("args passed, no exclude in runSettings", () => {
+      let excludeFiles = "file1.js, file2.json";
+      let argsToArray = utils.fixCommaSeparatedString(excludeFiles).split(',');
+      chai.expect(utils.getFilesToIgnore({}, excludeFiles)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
+
+      excludeFiles = "file1.js,file2.json";
+      argsToArray = utils.fixCommaSeparatedString(excludeFiles).split(',');
+      chai.expect(utils.getFilesToIgnore({}, excludeFiles)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
+
+      excludeFiles = " file1.js , file2.json ";
+      argsToArray = utils.fixCommaSeparatedString(excludeFiles).split(',');
+      chai.expect(utils.getFilesToIgnore({}, excludeFiles)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
+    });
+
+    it("args passed, exclude added in runSettings", () => {
+      // args preceed over config file
+      let excludeFiles = "file1.js, file2.json ";
+      let argsToArray = utils.fixCommaSeparatedString(excludeFiles).split(',');
+
+      let runSettings = { exclude: [] };
+      chai.expect(utils.getFilesToIgnore(runSettings, excludeFiles)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
+
+      runSettings = { exclude: ["sample1.js", "sample2.json"] };
+      chai.expect(utils.getFilesToIgnore(runSettings, excludeFiles)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
+    });
+
+    it("no args, exclude added in runSettings", () => {
+      let runSettings = { exclude: [] };
+      chai.expect(utils.getFilesToIgnore(runSettings, undefined)).to.be.eql(constant.filesToIgnoreWhileUploading);
+
+      runSettings = { exclude: ["sample1.js", "sample2.json"] };
+      chai.expect(utils.getFilesToIgnore(runSettings, undefined)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(runSettings.exclude));
+    });
+  });
+
   describe('setTestEnvs', () => {
-    it('sets env only from args', () => {
+    it('set env only from args', () => {
       let argsEnv = 'env3=value3, env4=value4';
       let bsConfig = {
         run_settings: {
-          env: 'env1=value1, env2=value2',
         },
       };
       let args = {
@@ -523,11 +562,31 @@ describe('utils', () => {
       expect(bsConfig.run_settings.env).to.be.eq('env3=value3,env4=value4');
     });
 
-    it('sets env from args without spaces in it', () => {
-      let argsEnv = 'env3=value3 , env4=value4';
+    it('set env only from browserstack.json env param', () => {
       let bsConfig = {
         run_settings: {
-          env: 'env1=value1 , env2=value2',
+          env: {
+            env1: 'value1',
+            env2: 'value2',
+          }
+        },
+      };
+      let args = {
+        env: null
+      };
+
+      utils.setTestEnvs(bsConfig, args);
+      expect(bsConfig.run_settings.env).to.be.eq('env1=value1,env2=value2');
+    });
+
+    it('merges env from args and browserstack.json env param', () => {
+      let argsEnv = 'env3=value3, env4=value4';
+      let bsConfig = {
+        run_settings: {
+          env: {
+            env1: 'value1',
+            env2: 'value2',
+          }
         },
       };
       let args = {
@@ -535,22 +594,81 @@ describe('utils', () => {
       };
 
       utils.setTestEnvs(bsConfig, args);
-      expect(bsConfig.run_settings.env).to.be.eq('env3=value3,env4=value4');
+      expect(bsConfig.run_settings.env).to.be.eq('env1=value1,env2=value2,env3=value3,env4=value4');
     });
 
-    it('does not set env if not specified in args', () => {
-      let argsEnv = 'env3=value3 , env4=value4';
+    it('merges env from args and browserstack.json env param but give preceedence to args', () => {
+      let argsEnv = 'env1=value0, env4=value4';
       let bsConfig = {
         run_settings: {
-          env: 'env1=value1 , env2=value2',
+          env: {
+            env1: 'value1',
+            env2: 'value2',
+          }
         },
       };
       let args = {
-        env: null,
+        env: argsEnv,
       };
 
       utils.setTestEnvs(bsConfig, args);
-      expect(bsConfig.run_settings.env).to.be.eq(null);
+      expect(bsConfig.run_settings.env).to.be.eq('env1=value0,env2=value2,env4=value4');
+    });
+
+    it('handle spaces passed while specifying env', () => {
+      let argsEnv = 'env3=value3 , env4=value4';
+      let bsConfig = {
+        run_settings: {
+          env: {
+            env1: 'value1',
+            env2: 'value2',
+          }
+        },
+      };
+      let args = {
+        env: argsEnv,
+      };
+
+      utils.setTestEnvs(bsConfig, args);
+      expect(bsConfig.run_settings.env).to.be.eq('env1=value1,env2=value2,env3=value3,env4=value4');
+    });
+  });
+
+  describe('setSystemEnvs', () => {
+    it('set vars passed in system_env_vars', () => {
+      process.env.ENV1 = 'env1';
+      process.env.ENV2 = 'env2';
+      let bsConfig = {
+        run_settings: {
+          env: {
+            env1: 'value1',
+            env2: 'value2',
+          },
+          system_env_vars: ['ENV1', 'ENV2']
+        },
+      };
+
+      utils.setSystemEnvs(bsConfig);
+      expect(bsConfig.run_settings.system_env_vars).to.be.an('array').that.includes('ENV1=env1');
+      expect(bsConfig.run_settings.system_env_vars).to.be.an('array').that.includes('ENV2=env2');
+      delete process.env.ENV1;
+      delete process.env.ENV2;
+    });
+
+    it('set vars defined on machine as CYPRESS_ or cypress_', () => {
+      process.env.CYPRESS_TEST_1 = 'env1';
+      process.env.cypress_test_2 = 'env2';
+      let bsConfig = {
+        run_settings: {
+          env: null
+        },
+      };
+
+      utils.setSystemEnvs(bsConfig);
+      expect(bsConfig.run_settings.system_env_vars).to.be.an('array').that.includes('CYPRESS_TEST_1=env1');
+      expect(bsConfig.run_settings.system_env_vars).to.be.an('array').that.includes('cypress_test_2=env2');
+      delete process.env.CYPRESS_TEST_1;
+      delete process.env.cypress_test_2;
     });
   });
 
@@ -597,6 +715,44 @@ describe('utils', () => {
 
       utils.setHeaded(bsConfig, args);
       expect(bsConfig.run_settings.headless).to.be.eq(undefined);
+    });
+  });
+
+  describe('setNoWrap', () => {
+    it('sets the no-wrap to process.env.SYNC_NO_WRAP to true', () => {
+      let args = {
+        noWrap: true
+      };
+      let bsConfig = {
+        run_settings: {}
+      };
+
+      utils.setNoWrap(bsConfig, args);
+      expect(process.env.SYNC_NO_WRAP).to.be.eq('true');
+    });
+
+    it('false to not set the no-wrap to process.env.SYNC_NO_WRAP to true', () => {
+      let args = {
+        noWrap: false
+      };
+      let bsConfig = {
+        run_settings: {}
+      };
+
+      utils.setNoWrap(bsConfig, args);
+      expect(process.env.SYNC_NO_WRAP).to.be.eq('false');
+    });
+
+    it('string to not set the no-wrap to process.env.SYNC_NO_WRAP to true', () => {
+      let args = {
+        noWrap: "true"
+      };
+      let bsConfig = {
+        run_settings: {}
+      };
+
+      utils.setNoWrap(bsConfig, args);
+      expect(process.env.SYNC_NO_WRAP).to.be.eq('false');
     });
   });
 
@@ -1458,7 +1614,6 @@ describe('utils', () => {
   });
 
   describe('getNumberOfSpecFiles', () => {
-
     it('glob search pattern should be equal to bsConfig.run_settings.specs', () => {
       let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
       let bsConfig = {
@@ -1519,6 +1674,108 @@ describe('utils', () => {
         }
       );
       glob.sync.restore();
+    });
+  });
+
+  describe('warnSpecLimit', () => {
+    let sendUsageReportStub, loggerStub;
+    let bsConfig = {run_settings: {}}, args = {};
+    beforeEach(() => {
+      sendUsageReportStub = sandbox
+        .stub(utils, 'sendUsageReport')
+        .callsFake(function () {
+          return 'end';
+        });
+      loggerStub = sinon.stub(logger, 'warn');
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+      sinon.restore();
+    });
+
+    context('limit crossing', () => {
+      it('should log and send to eds for one combination, one parallel', () => {
+        let specFiles = {
+          length: 1,
+          join: function() {
+            return {
+              length: constant.SPEC_TOTAL_CHAR_LIMIT
+            }
+          }
+        };
+        sinon.stub(utils, "getBrowserCombinations").returns(1);
+        bsConfig.run_settings.parallels = 1;
+        utils.warnSpecLimit(bsConfig, args, specFiles);
+        sinon.assert.calledOnce(sendUsageReportStub);
+        sinon.assert.calledOnce(loggerStub);
+      });
+
+      it('should log and send to eds for one combination, two parallel', () => {
+        let specFiles = {
+          length: 1,
+          join: function() {
+            return {
+              length: constant.SPEC_TOTAL_CHAR_LIMIT
+            }
+          }
+        };
+        sinon.stub(utils, "getBrowserCombinations").returns(1);
+        bsConfig.run_settings.parallels = 2;
+        utils.warnSpecLimit(bsConfig, args, specFiles);
+        sinon.assert.calledOnce(sendUsageReportStub);
+        sinon.assert.calledOnce(loggerStub);
+      });
+
+      it('should log and send to eds for multiple combination, multiple parallel', () => {
+        let specFiles = {
+          length: 1,
+          join: function() {
+            return {
+              length: constant.SPEC_TOTAL_CHAR_LIMIT
+            }
+          }
+        };
+        sinon.stub(utils, "getBrowserCombinations").returns(3);
+        bsConfig.run_settings.parallels = 4;
+        utils.warnSpecLimit(bsConfig, args, specFiles);
+        sinon.assert.calledOnce(sendUsageReportStub);
+        sinon.assert.calledOnce(loggerStub);
+      });
+    });
+
+    context('within limit', () => {
+      it('should not log for one combination, one parallel', () => {
+        let specFiles = {
+          length: 1,
+          join: function() {
+            return {
+              length: 1
+            }
+          }
+        };
+        sinon.stub(utils, "getBrowserCombinations").returns(1);
+        bsConfig.run_settings.parallels = 1;
+        utils.warnSpecLimit(bsConfig, args, specFiles);
+        sinon.assert.notCalled(sendUsageReportStub);
+        sinon.assert.notCalled(loggerStub);
+      });
+
+      it('should not log for one combination, multiple parallel', () => {
+        let specFiles = {
+          length: 1,
+          join: function() {
+            return {
+              length: 1
+            }
+          }
+        };
+        sinon.stub(utils, "getBrowserCombinations").returns(1);
+        bsConfig.run_settings.parallels = 2;
+        utils.warnSpecLimit(bsConfig, args, specFiles);
+        sinon.assert.notCalled(sendUsageReportStub);
+        sinon.assert.notCalled(loggerStub);
+      });
     });
   });
 
@@ -1630,6 +1887,14 @@ describe('utils', () => {
       let preferredVersion = "v1", actualVersion = "v2";
       let message = constant.userMessages.CYPRESS_VERSION_CHANGED.replace("<preferredVersion>", preferredVersion).replace("<actualVersion>", actualVersion);
       expect(utils.versionChangedMessage(preferredVersion, actualVersion)).to.eq(message)
+    });
+  })
+
+  describe('#latestSyntaxToActualVersionMessage', () => {
+    it('should return proper info message with placeholders replaced', () => {
+      let latestSyntaxVersion = "7.latest", actualVersion = "7.6.0";
+      let message = constant.userMessages.LATEST_SYNTAX_TO_ACTUAL_VERSION_MESSAGE.replace("<latestSyntaxVersion>", latestSyntaxVersion).replace("<actualVersion>", actualVersion);
+      expect(utils.latestSyntaxToActualVersionMessage(latestSyntaxVersion, actualVersion)).to.eq(message)
     });
   })
 

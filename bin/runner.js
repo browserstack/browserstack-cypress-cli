@@ -201,6 +201,11 @@ var argv = yargs
           describe: Constants.cliMessages.RUN.SYNC_DESCRIPTION,
           type: "boolean"
         },
+        'force-upload': {
+          default: false,
+          describe: Constants.cliMessages.COMMON.FORCE_UPLOAD,
+          type: "boolean"
+        },
         'headed': {
           default: false,
           describe: Constants.cliMessages.RUN.HEADED,
@@ -221,6 +226,11 @@ var argv = yargs
         'local-config-file': {
           describe: Constants.cliMessages.RUN.LOCAL_CONFIG_FILE,
           type: "string"
+        },
+        'no-wrap': {
+          default: false,
+          describe: Constants.cliMessages.RUN.SYNC_NO_WRAP,
+          type: "boolean"
         }
       })
       .help('help')
