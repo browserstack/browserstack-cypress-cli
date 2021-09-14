@@ -4,7 +4,8 @@ const fs = require('fs'),
       logger = require('./logger').winstonLogger,
       utils = require("./utils"),
       Constants = require('./constants'),
-      config = require("./config");
+      config = require("./config"),
+      axios = require("axios");
 
 let templatesDir = path.join(__dirname, '../', 'templates');
 
@@ -100,7 +101,7 @@ let reportGenerator = (bsConfig, buildId, args, cb) => {
     },
   };
 
-  return request.get(options, function (err, resp, body) {
+  return request.get(options, async function (err, resp, body) {
     let message = null;
     let messageType = null;
     let errorCode = null;
@@ -163,7 +164,7 @@ let reportGenerator = (bsConfig, buildId, args, cb) => {
     } else {
       messageType = Constants.messageTypes.SUCCESS;
       message = `Report for build: ${buildId} was successfully created.`;
-      renderReportHTML(build);
+      await renderReportHTML(build);
       logger.info(message);
     }
     utils.sendUsageReport(bsConfig, args, message, messageType, errorCode);
@@ -173,7 +174,7 @@ let reportGenerator = (bsConfig, buildId, args, cb) => {
   });
 }
 
-function renderReportHTML(report_data) {
+async function renderReportHTML(report_data) {
   let resultsDir = 'results';
   let metaCharSet = `<meta charset="utf-8">`;
   let metaViewPort = `<meta name="viewport" content="width=device-width, initial-scale=1"> `;
@@ -194,12 +195,17 @@ function renderReportHTML(report_data) {
   }
 
   // Writing the JSON used in creating the HTML file.
-  fs.writeFileSync(`${resultsDir}/browserstack-cypress-report.json`, JSON.stringify(report_data), () => {
-    if(err) {
-      return logger.error(err);
+  let reportData = await cypressReportData(report_data);
+  fs.writeFileSync(
+    `${resultsDir}/browserstack-cypress-report.json`,
+    JSON.stringify(reportData),
+    () => {
+      if (err) {
+        return logger.error(err);
+      }
+      logger.info("The JSON file is saved");
     }
-    logger.info("The JSON file is saved");
-  });
+  );
 
   // Writing the HTML file generated from the JSON data.
   fs.writeFileSync(`${resultsDir}/browserstack-cypress-report.html`, html, () => {
@@ -208,6 +214,102 @@ function renderReportHTML(report_data) {
     }
     logger.info("The HTML file was saved!");
   });
+}
+
+async function cypressReportData(report_data) {
+  specFiles = Object.keys(report_data.rows);
+  combinationPromises = [];
+  for (let spec of specFiles) {
+    let specSessions = report_data.rows[spec]["sessions"];
+    if (specSessions.length > 0) {
+      for (let combination of specSessions) {
+        if(utils.isUndefined(report_data.cypress_version) || report_data.cypress_version < "6"){
+          combinationPromises.push(generateCypressCombinationSpecReportDataWithoutConfigJson(combination));
+        }else{
+          combinationPromises.push(generateCypressCombinationSpecReportDataWithConfigJson(combination));
+        }
+      }
+    }
+  }
+  await Promise.all(combinationPromises);
+  return report_data;
+}
+
+function generateCypressCombinationSpecReportDataWithConfigJson(combination){
+  return new Promise(async (resolve, reject) => {
+      try {
+        let configJsonError, resultsJsonError;
+        let [configJsonResponse, resultsJsonResponse] = await axios.all([
+            axios.get(combination.tests.config_json).catch(function (error) {
+              configJsonError = true;
+            }),
+            axios.get(combination.tests.result_json).catch(function(error){
+              resultsJsonError = true;
+            })
+          ]);
+        if(resultsJsonError || configJsonError){
+          resolve();
+        }
+        let tests = {};
+        let configJson = configJsonResponse.data;
+        let resultsJson = resultsJsonResponse.data;
+        if(utils.isUndefined(configJson.tests) || utils.isUndefined(resultsJson.tests)){
+          resolve();
+        }
+        configJson.tests.forEach((test) => {
+          tests[test["clientId"]] = test;
+        });
+        resultsJson.tests.forEach((test) => {
+          tests[test["clientId"]] = Object.assign(
+            tests[test["clientId"]],
+            test
+          );
+        });
+        let sessionTests = [];
+        Object.keys(tests).forEach((testId) => {
+          sessionTests.push({
+            name: tests[testId]["title"].pop(),
+            status: tests[testId]["state"],
+            duration: parseFloat(
+              tests[testId]["attempts"].pop()["wallClockDuration"] / 1000
+            ).toFixed(2),
+          });
+        });
+        combination.tests = sessionTests;
+        resolve(combination.tests);
+      } catch (error) { reject(error) }
+  })
+}
+
+function generateCypressCombinationSpecReportDataWithoutConfigJson(combination){
+  return new Promise(async (resolve, reject) => {
+      try {
+        let resultsJsonError;
+        let resultsJsonResponse = await axios.get(combination.tests.result_json).catch(function(error){
+              resultsJsonError = true;
+            });
+        if(resultsJsonError || utils.isUndefined(resultsJsonResponse)){
+          resolve();
+        }
+        let resultsJson = resultsJsonResponse.data;
+        let sessionTests = [];
+        if(utils.isUndefined(resultsJson.tests)){
+          resolve();
+        }
+        resultsJson.tests.forEach((test) => {
+          durationKey = utils.isUndefined(test["attempts"]) ? test : test["attempts"].pop()
+          sessionTests.push({
+            name: test["title"].pop(),
+            status: test["state"],
+            duration: parseFloat(
+              durationKey["wallClockDuration"] / 1000
+            ).toFixed(2)
+          })
+        });
+        combination.tests = sessionTests;
+        resolve(combination.tests);
+      } catch (error) { reject(error) }
+  })
 }
 
 exports.reportGenerator = reportGenerator;
