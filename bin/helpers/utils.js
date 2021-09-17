@@ -726,6 +726,12 @@ exports.versionChangedMessage = (preferredVersion, actualVersion) => {
   return message
 }
 
+exports.latestSyntaxToActualVersionMessage = (latestSyntaxVersion, actualVersion) => {
+  let message = Constants.userMessages.LATEST_SYNTAX_TO_ACTUAL_VERSION_MESSAGE.replace("<latestSyntaxVersion>", latestSyntaxVersion);
+  message = message.replace("<actualVersion>", actualVersion);
+  return message
+}
+
 exports.isJSONInvalid = (err, args) => {
   let invalid =  true
 

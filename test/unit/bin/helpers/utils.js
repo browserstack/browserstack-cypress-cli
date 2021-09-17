@@ -1890,6 +1890,14 @@ describe('utils', () => {
     });
   })
 
+  describe('#latestSyntaxToActualVersionMessage', () => {
+    it('should return proper info message with placeholders replaced', () => {
+      let latestSyntaxVersion = "7.latest", actualVersion = "7.6.0";
+      let message = constant.userMessages.LATEST_SYNTAX_TO_ACTUAL_VERSION_MESSAGE.replace("<latestSyntaxVersion>", latestSyntaxVersion).replace("<actualVersion>", actualVersion);
+      expect(utils.latestSyntaxToActualVersionMessage(latestSyntaxVersion, actualVersion)).to.eq(message)
+    });
+  })
+
   describe('#isJSONInvalid', () => {
     it('JSON is valid when error is parallel misconfiguration', () => {
       let error = constant.validationMessages.INVALID_PARALLELS_CONFIGURATION;

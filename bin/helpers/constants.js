@@ -47,7 +47,8 @@ const userMessages = {
   SPEC_LIMIT_WARNING: "You might not see all your results on the dashboard because of high spec count, please consider reducing the number of spec files in this folder.",
   DOWNLOAD_BUILD_ARTIFACTS_FAILED: "Downloading build artifacts for the build <build-id> failed for <machine-count> machines.",
   ASYNC_DOWNLOADS: "Test artifacts as specified under 'downloads' can be downloaded after the build has completed its run, using 'browserstack-cypress generate-downloads <build-id>'",
-  DOWNLOAD_BUILD_ARTIFACTS_SUCCESS: "Your build artifact(s) have been successfully downloaded in '<user-path>/build_artifacts/<build-id>' directory"
+  DOWNLOAD_BUILD_ARTIFACTS_SUCCESS: "Your build artifact(s) have been successfully downloaded in '<user-path>/build_artifacts/<build-id>' directory",
+  LATEST_SYNTAX_TO_ACTUAL_VERSION_MESSAGE: "Your build will run using Cypress <actualVersion> as you had specified <latestSyntaxVersion>. Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions"
 };
 
 const validationMessages = {
@@ -181,6 +182,8 @@ const usageReportingConstants = {
   GENERATE_DOWNLOADS: 'generate-downloads called',
 }
 
+const LATEST_VERSION_SYNTAX_REGEX = /\d*.latest(.\d*)?/gm
+
 module.exports = Object.freeze({
   syncCLI,
   userMessages,
@@ -195,5 +198,6 @@ module.exports = Object.freeze({
   DEFAULT_CYPRESS_SPEC_PATH,
   SPEC_TOTAL_CHAR_LIMIT,
   METADATA_CHAR_BUFFER_PER_SPEC,
-  usageReportingConstants
+  usageReportingConstants,
+  LATEST_VERSION_SYNTAX_REGEX
 });

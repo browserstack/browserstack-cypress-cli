@@ -161,8 +161,8 @@ describe("checkUploaded", () => {
         .then(function (data) {
           chai.assert.equal(data, 'random_md5sum')
           sinon.assert.calledOnce(hashElementstub);
-          sinon.assert.calledOnce(digestStub);
-          sinon.assert.calledOnce(updateStub);
+          sinon.assert.calledTwice(digestStub);
+          sinon.assert.calledTwice(updateStub);
         })
         .catch((error) => {
           chai.assert.fail("Promise error");
@@ -188,8 +188,8 @@ describe("checkUploaded", () => {
         .then(function (data) {
           chai.assert.equal(data, 'random_md5sum')
           sinon.assert.calledOnce(hashElementstub);
-          sinon.assert.calledOnce(digestStub);
-          sinon.assert.calledThrice(updateStub);
+          sinon.assert.called(digestStub);
+          sinon.assert.callCount(updateStub, 4);
         })
         .catch((error) => {
           chai.assert.fail("Promise error");
