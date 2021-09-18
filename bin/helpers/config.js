@@ -17,6 +17,8 @@ config.buildUrl = `${config.cypress_v1}/builds/`;
 config.buildStopUrl = `${config.cypress_v1}/builds/stop/`;
 config.checkMd5sum = `${config.cypress_v1}/md5sumcheck/`;
 config.fileName = "tests.zip";
+config.packageFileName = "bstackPackages.tar.gz";
+config.packageDirName = "tmpBstackPackages";
 config.retries = 5;
 config.networkErrorExitCode = 2;
 

@@ -10,6 +10,7 @@ const archiver = require("../helpers/archiver"),
   fileHelpers = require("../helpers/fileHelpers"),
   syncRunner = require("../helpers/syncRunner"),
   checkUploaded = require("../helpers/checkUploaded"),
+  packageInstaller = require("../helpers/packageInstaller"),
   reportGenerator = require('../helpers/reporterHTML').reportGenerator,
   {initTimeComponents, markBlockStart, markBlockEnd, getTimeComponents} = require('../helpers/timeComponents');
 
@@ -87,109 +88,119 @@ module.exports = function run(args) {
       return checkUploaded.checkUploadedMd5(bsConfig, args).then(function (md5data) {
         markBlockEnd('checkAlreadyUploaded');
 
-        // Archive the spec files
-        markBlockStart('zip');
-        markBlockStart('zip.archive');
-        return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude, md5data).then(function (data) {
-          markBlockEnd('zip.archive');
+        markBlockStart('packageInstaller');
+        return packageInstaller.packageWrappper(bsConfig, config.packageDirName, config.packageFileName, md5data, args).then(function (packageData) {
+          markBlockEnd('packageInstaller');
 
-          // Uploaded zip file
-          markBlockStart('zip.zipUpload');
-          return zipUploader.zipUpload(bsConfig, config.fileName, md5data).then(async function (zip) {
-            markBlockEnd('zip.zipUpload');
-            markBlockEnd('zip');
-            // Create build
+          // Archive the spec files
+          markBlockStart('zip');
+          markBlockStart('zip.archive');
+          return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude, md5data).then(function (data) {
+            markBlockEnd('zip.archive');
 
-            //setup Local Testing
-            markBlockStart('localSetup');
-            let bs_local = await utils.setupLocalTesting(bsConfig, args);
-            markBlockEnd('localSetup');
-            markBlockStart('createBuild');
-            return build.createBuild(bsConfig, zip).then(function (data) {
-              markBlockEnd('createBuild');
-              markBlockEnd('total');
-              let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
-              let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
-              utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
-              if ((utils.isUndefined(bsConfig.run_settings.parallels) && utils.isUndefined(args.parallels)) || (!utils.isUndefined(bsConfig.run_settings.parallels) && bsConfig.run_settings.parallels == Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE)) {
-                logger.warn(Constants.userMessages.NO_PARALLELS);
-              }
+            // Uploaded zip file
+            markBlockStart('zip.zipUpload');
+            return zipUploader.zipUpload(bsConfig, md5data, packageData).then(async function (zip) {
+              markBlockEnd('zip.zipUpload');
+              markBlockEnd('zip');
 
-              if (bsConfig.run_settings.cypress_version && bsConfig.run_settings.cypress_version !== data.cypress_version) {
-                if (bsConfig.run_settings.cypress_version.match(Constants.LATEST_VERSION_SYNTAX_REGEX)) {
-                  let versionMessage = utils.latestSyntaxToActualVersionMessage(bsConfig.run_settings.cypress_version, data.cypress_version);
-                  logger.info(versionMessage);
-                } else {
-                  let versionMessage = utils.versionChangedMessage(bsConfig.run_settings.cypress_version, data.cypress_version);
-                  logger.warn(versionMessage);
+              // Create build
+              //setup Local Testing
+              markBlockStart('localSetup');
+              let bs_local = await utils.setupLocalTesting(bsConfig, args);
+              markBlockEnd('localSetup');
+              markBlockStart('createBuild');
+              return build.createBuild(bsConfig, zip).then(function (data) {
+                markBlockEnd('createBuild');
+                markBlockEnd('total');
+                let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
+                let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
+                utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
+                if ((utils.isUndefined(bsConfig.run_settings.parallels) && utils.isUndefined(args.parallels)) || (!utils.isUndefined(bsConfig.run_settings.parallels) && bsConfig.run_settings.parallels == Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE)) {
+                  logger.warn(Constants.userMessages.NO_PARALLELS);
                 }
-              }
 
-              if (!args.disableNpmWarning && bsConfig.run_settings.npm_dependencies && Object.keys(bsConfig.run_settings.npm_dependencies).length <= 0) {
-                logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES);
-                logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES_READ_MORE);
-              }
+                if (bsConfig.run_settings.cypress_version && bsConfig.run_settings.cypress_version !== data.cypress_version) {
+                  if (bsConfig.run_settings.cypress_version.match(Constants.LATEST_VERSION_SYNTAX_REGEX)) {
+                    let versionMessage = utils.latestSyntaxToActualVersionMessage(bsConfig.run_settings.cypress_version, data.cypress_version);
+                    logger.info(versionMessage);
+                  } else {
+                    let versionMessage = utils.versionChangedMessage(bsConfig.run_settings.cypress_version, data.cypress_version);
+                    logger.warn(versionMessage);
+                  }
+                }
 
-              if (args.sync) {
-                syncRunner.pollBuildStatus(bsConfig, data).then(async (exitCode) => {
+                if (!args.disableNpmWarning && bsConfig.run_settings.npm_dependencies && Object.keys(bsConfig.run_settings.npm_dependencies).length <= 0) {
+                  logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES);
+                  logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES_READ_MORE);
+                }
 
-                  // stop the Local instance
-                  await utils.stopLocalBinary(bsConfig, bs_local, args);
+                if (args.sync) {
+                  syncRunner.pollBuildStatus(bsConfig, data).then(async (exitCode) => {
 
-                  // Generate custom report!
-                  reportGenerator(bsConfig, data.build_id, args, function(){
-                    utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
-                    utils.handleSyncExit(exitCode, data.dashboard_url);
+                    // stop the Local instance
+                    await utils.stopLocalBinary(bsConfig, bs_local, args);
+
+                    // Generate custom report!
+                    reportGenerator(bsConfig, data.build_id, args, function(){
+                      utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
+                      utils.handleSyncExit(exitCode, data.dashboard_url);
+                    });
                   });
-                });
-              }
+                }
 
-              logger.info(message);
-              logger.info(dashboardLink);
-              if(!args.sync) logger.info(Constants.userMessages.EXIT_SYNC_CLI_MESSAGE.replace("<build-id>",data.build_id));
-              let dataToSend = {
-                time_components: getTimeComponents(),
-                build_id: data.build_id,
-              };
-              if (bsConfig && bsConfig.connection_settings) {
-                if (bsConfig.connection_settings.local_mode) {
-                  dataToSend.local_mode = bsConfig.connection_settings.local_mode;
+                logger.info(message);
+                logger.info(dashboardLink);
+                if(!args.sync) logger.info(Constants.userMessages.EXIT_SYNC_CLI_MESSAGE.replace("<build-id>",data.build_id));
+                let dataToSend = {
+                  time_components: getTimeComponents(),
+                  build_id: data.build_id,
+                };
+                if (bsConfig && bsConfig.connection_settings) {
+                  if (bsConfig.connection_settings.local_mode) {
+                    dataToSend.local_mode = bsConfig.connection_settings.local_mode;
+                  }
+                  if (bsConfig.connection_settings.usedAutoLocal) {
+                    dataToSend.used_auto_local = bsConfig.connection_settings.usedAutoLocal;
+                  }
                 }
-                if (bsConfig.connection_settings.usedAutoLocal) {
-                  dataToSend.used_auto_local = bsConfig.connection_settings.usedAutoLocal;
-                }
-              }
-              utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, dataToSend);
-              return;
-            }).catch(async function (err) {
-              // Build creation failed
+                utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, dataToSend);
+                return;
+              }).catch(async function (err) {
+                // Build creation failed
+                logger.error(err);
+                // stop the Local instance
+                await utils.stopLocalBinary(bsConfig, bs_local, args);
+
+                utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'build_failed');
+              });
+            }).catch(function (err) {
+              // Zip Upload failed | Local Start failed
               logger.error(err);
-              // stop the Local instance
-              await utils.stopLocalBinary(bsConfig, bs_local, args);
-
-              utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'build_failed');
+              if(err === Constants.userMessages.LOCAL_START_FAILED){
+                utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.LOCAL_START_FAILED}`, Constants.messageTypes.ERROR, 'local_start_failed');
+              } else {
+                logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED);
+                fileHelpers.deleteZip();
+                utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed');
+              }
             });
           }).catch(function (err) {
-            // Zip Upload failed | Local Start failed
+            // Zipping failed
             logger.error(err);
-            if(err === Constants.userMessages.LOCAL_START_FAILED){
-              utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.LOCAL_START_FAILED}`, Constants.messageTypes.ERROR, 'local_start_failed');
-            } else {
-              logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED);
+            logger.error(Constants.userMessages.FAILED_TO_ZIP);
+            utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.FAILED_TO_ZIP}`, Constants.messageTypes.ERROR, 'zip_creation_failed');
+            try {
               fileHelpers.deleteZip();
-              utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed');
+            } catch (err) {
+              utils.sendUsageReport(bsConfig, args, Constants.userMessages.ZIP_DELETE_FAILED, Constants.messageTypes.ERROR, 'zip_deletion_failed');
             }
           });
         }).catch(function (err) {
-          // Zipping failed
+          // package installer failed
           logger.error(err);
-          logger.error(Constants.userMessages.FAILED_TO_ZIP);
-          utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.FAILED_TO_ZIP}`, Constants.messageTypes.ERROR, 'zip_creation_failed');
-          try {
-            fileHelpers.deleteZip();
-          } catch (err) {
-            utils.sendUsageReport(bsConfig, args, Constants.userMessages.ZIP_DELETE_FAILED, Constants.messageTypes.ERROR, 'zip_deletion_failed');
-          }
+          logger.error(Constants.userMessages.FAILED_CREATE_NPM_ARCHIVE);
+          utils.sendUsageReport(bsConfig, args, Constants.userMessages.FAILED_CREATE_NPM_ARCHIVE, Constants.messageTypes.ERROR, 'npm_package_archive_failed');
         });
       }).catch(function (err) {
         // md5 check failed

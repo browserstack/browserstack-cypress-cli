@@ -42,6 +42,11 @@ const caps = (bsConfig, zip) => {
       reject("Test suite is empty");
     }
 
+    // Npm package
+    if (zip.npm_package_url && zip.npm_package_url.split("://")[1].length !== 0) {
+      obj.npm_package_suite = zip.npm_package_url.split("://")[1];
+    }
+
     // Inferred settings
     if(bsConfig.connection_settings){
       if (bsConfig.connection_settings.local_mode_inferred) {

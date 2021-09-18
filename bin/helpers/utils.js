@@ -12,6 +12,7 @@ const usageReporting = require("./usageReporting"),
   Constants = require("./constants"),
   chalk = require('chalk'),
   syncCliLogger = require("../helpers/logger").syncCliLogger,
+  fileHelpers = require("./fileHelpers"),
   config = require("../helpers/config");
 
 const request = require('request');
@@ -331,6 +332,8 @@ exports.fixCommaSeparatedString = (string) => {
 
 exports.isUndefined = value => (value === undefined || value === null);
 
+exports.isTrueString = value => (!this.isUndefined(value) && value.toString().toLowerCase() === 'true');
+
 exports.isFloat = (value) => Number(value) && Number(value) % 1 !== 0;
 
 exports.isParallelValid = (value) => {
@@ -393,6 +396,80 @@ exports.isCypressProjDirValid = (cypressProjDir, integrationFoldDir) => {
   let childTokens = integrationFolderDir.split(path.sep).filter((i) => i.length);
   return parentTokens.every((t, i) => childTokens[i] === t);
 };
+
+exports.generateUploadParams = (bsConfig, filePath, md5data, fileDetails) => {
+  let options = {
+    url: config.uploadUrl,
+    auth: {
+      user: bsConfig.auth.username,
+      password: bsConfig.auth.access_key
+    },
+    formData: {
+      file: fs.createReadStream(filePath),
+      filetype: fileDetails.filetype,
+      filename: fileDetails.filename,
+      zipMd5sum: md5data ? md5data : '',
+    },
+    headers: {
+      "User-Agent": exports.getUserAgent(),
+    }
+  }
+  return options
+}
+
+exports.sortJsonKeys = (unordered) => {
+  const ordered = Object.keys(unordered).sort().reduce(
+    (obj, key) => {
+      obj[key] = unordered[key];
+      return obj;
+    },
+    {}
+  );
+  return ordered
+}
+
+exports.generateUploadOptions = (type, md5data, packageData) => {
+  let options = {}
+  switch (type) {
+    case 'zip':
+      options =  {
+        archivePresent: true,
+        md5ReturnKey: "zip_url",
+        urlPresent: md5data.zipUrlPresent,
+        md5Data: md5data.zip_md5sum,
+        url: md5data.zipUrl,
+        propogateError: true,
+        fileDetails: {
+          filetype: "zip",
+          filename: "tests"
+        },
+        messages: {
+          uploading: Constants.userMessages.UPLOADING_TESTS
+        },
+        cleanupMethod: fileHelpers.deleteZip,
+      }
+      break;
+    case 'npm':
+      options = {
+        archivePresent: packageData.packageArchieveCreated,
+        md5ReturnKey: "npm_package_url",
+        urlPresent: md5data.packageUrlPresent,
+        md5Data: md5data.npm_package_md5sum,
+        url: md5data.npmPackageUrl,
+        propogateError: false,
+        fileDetails: {
+          filetype: "tar.gz",
+          filename: "bstackPackages"
+        },
+        messages: {
+          uploading: Constants.userMessages.UPLOADING_NPM_PACKAGES
+        },
+        cleanupMethod: fileHelpers.deletePackageArchieve,
+      }
+      break;
+  }
+  return options
+}
 
 exports.getLocalFlag = (connectionSettings) => {
   return (

@@ -45,12 +45,12 @@ const checkPackageMd5 = (runSettings) => {
   const outputHash = crypto.createHash(Constants.hashingOptions.algo);
   let packageJSON = {};
   if (typeof runSettings.package_config_options === 'object') {
-    Object.assign(packageJSON, runSettings.package_config_options);
+    Object.assign(packageJSON, utils.sortJsonKeys(runSettings.package_config_options));
   }
 
   if (typeof runSettings.npm_dependencies === 'object') {
     Object.assign(packageJSON, {
-      devDependencies: runSettings.npm_dependencies,
+      devDependencies: utils.sortJsonKeys(runSettings.npm_dependencies),
     });
   }
 
@@ -66,14 +66,22 @@ const checkUploadedMd5 = (bsConfig, args) => {
   return new Promise(function (resolve) {
     let obj = {
       zipUrlPresent: false,
+      packageUrlPresent: false,
     };
-    if (args["force-upload"]) {
+    if (args["force-upload"] && !utils.isTrueString(bsConfig.run_settings.local_npm_install)) {
       return resolve(obj);
     }
-    checkSpecsMd5(bsConfig.run_settings, args.exclude).then(function (md5data) {
-      Object.assign(obj, {md5sum: md5data});
-      let package_md5sum = checkPackageMd5(bsConfig.run_settings);
-      let data = JSON.stringify({ zip_md5sum: md5data, instrument_package_md5sum: package_md5sum});
+    checkSpecsMd5(bsConfig.run_settings, args.exclude).then(function (zip_md5sum) {
+      let npm_package_md5sum = checkPackageMd5(bsConfig.run_settings);
+      let data = {};
+      if (!args["force-upload"]) {
+        Object.assign(data, { zip_md5sum:"sad" });
+        Object.assign(obj, { zip_md5sum });
+      }
+      if (utils.isTrueString(bsConfig.run_settings.local_npm_install)) {
+        Object.assign(data, { npm_package_md5sum:"as" });
+        Object.assign(obj, { npm_package_md5sum });
+      }
 
       let options = {
         url: config.checkMd5sum,
@@ -85,7 +93,7 @@ const checkUploadedMd5 = (bsConfig, args) => {
           'Content-Type': 'application/json',
           "User-Agent": utils.getUserAgent(),
         },
-        body: data
+        body: JSON.stringify(data)
       };
 
       request.post(options, function (err, resp, body) {
@@ -98,14 +106,19 @@ const checkUploadedMd5 = (bsConfig, args) => {
           } catch (error) {
             zipData = {};
           }
-          if (resp.statusCode === 200 && !utils.isUndefined(zipData.zipUrl)) {
-            Object.assign(obj, zipData, {zipUrlPresent: true});
+          if (resp.statusCode === 200) {
+            if (!utils.isUndefined(zipData.zipUrl)) {
+              Object.assign(obj, zipData, {zipUrlPresent: true});
+            }
+            if (!utils.isUndefined(zipData.npmPackageUrl)) {
+              Object.assign(obj, zipData, {packageUrlPresent: true});
+            }
           }
           resolve(obj);
         }
       });
-    }).catch((error) => {
-      resolve({zipUrlPresent: false});
+    }).catch((_error) => {
+      resolve({zipUrlPresent: false, packageUrlPresent: false});
     });
   });
 };

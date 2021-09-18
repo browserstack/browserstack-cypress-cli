@@ -35,6 +35,18 @@ exports.deleteZip = () => {
   }
 };
 
+exports.deletePackageArchieve = () => {
+  try {
+    fs.removeSync(config.packageFileName);
+    fs.removeSync(config.packageDirName);
+    logger.info(Constants.userMessages.NPM_DELETED);
+    return 0;
+  } catch (err) {
+    logger.info(Constants.userMessages.NPM_DELETE_FAILED);
+    return 1;
+  }
+};
+
 exports.dirExists = function (filePath, cb) {
   let exists = false;
   if (fs.existsSync(path.dirname(filePath), cb)) {
