@@ -15,7 +15,8 @@ let specSummary = {
 }
 let noWrap = false;
 let terminalWidth = (process.stdout.columns) * 0.9;
-let lineSeparator = "\n" + "-".repeat(terminalWidth);
+let lineSeparator = Constants.syncCLI.DEFAULT_LINE_SEP;
+if (!utils.isUndefined(terminalWidth)) lineSeparator = "\n" + "-".repeat(terminalWidth);
 
 let  getOptions = (auth, build_id) => {
   return {
@@ -38,7 +39,7 @@ let getTableConfig = () => {
       colWidth = Math.floor(terminalWidth * 0.2);
 
   // Do not autosize on terminal's width if no-wrap provided
-  if (noWrap) {
+  if (noWrap || utils.isUndefined(terminalWidth)) {
     centerWidth = 1;
     leftWidth = 100;
     colWidth = 30;
@@ -84,7 +85,7 @@ let setNoWrapParams = () => {
   noWrap = (process.env.SYNC_NO_WRAP && (process.env.SYNC_NO_WRAP === 'true'));
   // Do not show the separator based on terminal width if no-wrap provided.
   if (noWrap) {
-    lineSeparator = "\n--------------------------------------------------------------------------------";
+    lineSeparator = Constants.syncCLI.DEFAULT_LINE_SEP;
   }
 };
 
