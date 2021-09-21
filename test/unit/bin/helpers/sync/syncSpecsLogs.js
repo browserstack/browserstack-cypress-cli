@@ -94,12 +94,26 @@ describe("syncSpecsLogs", () => {
       var getBorderConfigStub = sandbox.stub();
       syncSpecsLogs.__set__('getBorderConfig', getBorderConfigStub);
 
-      let options = getTableConfig();
+      let options = getTableConfig((process.stdout.columns) * 0.9);
       expect(options.columnDefault.width).to.equal(Math.floor(((process.stdout.columns) * 0.9) * 0.2));
       expect(options.columns[1].alignment).to.equal('center');
       expect(options.columns[2].alignment).to.equal('left');
       expect(options.columns[1].width).to.equal(Math.ceil(((process.stdout.columns) * 0.9) * 0.01));
       expect(options.columns[2].width).to.equal(Math.floor(((process.stdout.columns) * 0.9) * 0.75));
+      expect(options.columnCount).to.equal(3);
+      expect(getBorderConfigStub.calledOnce).to.be.true;
+    });
+
+    it('should return proper table config option for spec table if process.stdout.columns is not defined', () => {
+      var getBorderConfigStub = sandbox.stub();
+      syncSpecsLogs.__set__('getBorderConfig', getBorderConfigStub);
+
+      let options = getTableConfig(NaN);
+      expect(options.columnDefault.width).to.equal(30);
+      expect(options.columns[1].alignment).to.equal('center');
+      expect(options.columns[2].alignment).to.equal('left');
+      expect(options.columns[1].width).to.equal(1);
+      expect(options.columns[2].width).to.equal(100);
       expect(options.columnCount).to.equal(3);
       expect(getBorderConfigStub.calledOnce).to.be.true;
     });
