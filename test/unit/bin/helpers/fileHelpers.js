@@ -45,6 +45,22 @@ describe("fileHelpers", () => {
     expect(dataMock).to.eql(1);
   });
 
+  it("callback fn is executed after file write", () => {
+    let dataMock = 0;
+
+    let callbackStub = sandbox.stub().callsFake(() => {
+      dataMock = 1;
+    });
+
+    const fileExtraStub = sinon.stub(fs,'writeFile');
+    fileExtraStub.yields(true);
+    fileHelpers.write({path: "./random_path", file: "random"}, "writing successful", {}, callbackStub);
+    
+    sinon.assert.calledOnce(callbackStub);
+    sinon.assert.calledOnce(fileExtraStub);
+    expect(dataMock).to.eql(1);
+  });
+
   it("callback fn is executed after fileExists returns error", () => {
     let dataMock = undefined;
 

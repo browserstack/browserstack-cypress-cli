@@ -2032,4 +2032,78 @@ describe('utils', () => {
     });
   });
 
+  describe('setConfig', () => {
+    it('the args config should be assigned to bsconfig run_settings config', () => {
+      let bsConfig = {
+        run_settings: {
+        }
+      };
+      let args = {
+        config: "pageLoadTimeout=60000"
+      };
+      utils.setConfig(bsConfig, args);
+      expect(args.config).to.be.eql(bsConfig.run_settings.config);
+    });
+  });
+
+  describe('setBrowsers', () => {
+    it('the args browser should override the bsconfig browsers', async () => {
+      let bsConfig = {
+        browsers: [
+          {
+            "browser": "chrome",
+            "os": "Windows 10",
+            "versions": ["latest", "latest-1"]
+          },
+          {
+            "browser": "chrome",
+            "os": "Windows 10",
+            "versions": ["latest", "latest-1"]
+          },
+        ]
+      };
+      let args = {
+        browser: "chrome@91:Windows 10,chrome:OS X Mojave"
+      };
+      let browserResult = [
+        {
+          "browser": "chrome",
+          "os": "Windows 10",
+          "versions": ["91"]
+        },
+        {
+          "browser": "chrome",
+          "os": "OS X Mojave",
+          "versions": ["latest"]
+        },
+      ]
+      await utils.setBrowsers(bsConfig, args);
+      expect(bsConfig.browsers).to.be.eql(browserResult);
+    });
+    it('the args browser should throw an error in case of exception raised', async () => {
+      let bsConfig = {
+        browsers: [
+          {
+            "browser": "chrome",
+            "os": "Windows 10",
+            "versions": ["latest", "latest-1"]
+          },
+          {
+            "browser": "chrome",
+            "os": "Windows 10",
+            "versions": ["latest", "latest-1"]
+          },
+        ]
+      };
+      let args = {
+        browser: ":Windows 10"
+      };
+      try {
+        await utils.setBrowsers(bsConfig, args);
+      } catch(err){{
+        expect(err).to.be.eql(constant.validationMessages.INVALID_BROWSER_ARGS);
+      }}
+    });
+  });
+
 });
