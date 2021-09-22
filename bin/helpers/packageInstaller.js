@@ -2,8 +2,9 @@
 const npm = require('global-npm'),
   archiver = require("archiver"),
   path = require('path'),
-  fs = require("fs-extra"),
-  fileHelpers = require("./fileHelpers"),
+  fs = require('fs-extra'),
+  fileHelpers = require('./fileHelpers'),
+  process = require('process'),
   utils = require('./utils');
 
 const setupPackageFolder = (runSettings, directoryPath) => {
@@ -99,6 +100,7 @@ const packageWrappper = (bsConfig, packageDir, packageFile, md5data, args) => {
       return resolve(obj);
     }
     return setupPackageFolder(bsConfig.run_settings, packageDir).then((_result) => {
+      process.env.CYPRESS_INSTALL_BINARY = 0
       return packageInstall(packageDir);
     }).then((_result) => {
       return packageArchiver(packageDir, packageFile);

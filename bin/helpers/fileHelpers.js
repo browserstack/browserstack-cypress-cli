@@ -4,6 +4,7 @@ const fs = require('fs-extra'),
 
 const logger = require('./logger').winstonLogger,
   Constants = require('../helpers/constants'),
+  process = require('process'),
   config = require('../helpers/config');
 
 exports.write = function (f, message, args, cb) {
@@ -37,6 +38,7 @@ exports.deleteZip = () => {
 
 exports.deletePackageArchieve = () => {
   try {
+    delete process.env.CYPRESS_INSTALL_BINARY;
     fs.removeSync(config.packageFileName);
     fs.removeSync(config.packageDirName);
     logger.info(Constants.userMessages.NPM_DELETED);
