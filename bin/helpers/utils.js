@@ -754,11 +754,11 @@ exports.setBrowsers = async (bsConfig, args) => {
         browsersList.forEach((browser)=>{
           let browserHash = {}
           let osBrowserDetails =  browser.split(':')
-          browserHash['os'] = osBrowserDetails[1]
+          browserHash['os'] = osBrowserDetails[1].trim()
           let browserDetails = osBrowserDetails[0].split('@')
-          browserHash['browser'] = browserDetails[0]
+          browserHash['browser'] = browserDetails[0].trim()
           browserHash['versions'] = []
-          browserHash['versions'].push(this.isUndefined(browserDetails[1]) ? "latest" : browserDetails[1])
+          browserHash['versions'].push(this.isUndefined(browserDetails[1]) ? "latest" : browserDetails[1].trim())
           bsConfig["browsers"].push(browserHash)
         });
       } catch(err){
