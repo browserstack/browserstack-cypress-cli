@@ -140,6 +140,7 @@ exports.setParallels = (bsConfig, args, numOfSpecs) => {
   let maxParallels = browserCombinations.length * numOfSpecs;
   if (numOfSpecs <= 0) {
     bsConfig['run_settings']['parallels'] = browserCombinations.length;
+    bsConfig['run_settings']['specs_count'] = numOfSpecs;
     return;
   }
   if (bsConfig['run_settings']['parallels'] > maxParallels && bsConfig['run_settings']['parallels'] != -1 ) {
@@ -147,6 +148,7 @@ exports.setParallels = (bsConfig, args, numOfSpecs) => {
       `Using ${maxParallels} machines instead of ${bsConfig['run_settings']['parallels']} that you configured as there are ${numOfSpecs} specs to be run on ${browserCombinations.length} browser combinations.`
     );
     bsConfig['run_settings']['parallels'] = maxParallels;
+    bsConfig['run_settings']['specs_count'] = numOfSpecs;
   }
 };
 
@@ -332,6 +334,13 @@ exports.fixCommaSeparatedString = (string) => {
 exports.isUndefined = value => (value === undefined || value === null);
 
 exports.isFloat = (value) => Number(value) && Number(value) % 1 !== 0;
+
+exports.nonEmptyArray = (value) => {
+  if(!this.isUndefined(value) && value && value.length) {
+    return true;
+  }
+  return false;
+}
 
 exports.isParallelValid = (value) => {
   return this.isUndefined(value) || !(isNaN(value) || this.isFloat(value) || parseInt(value, 10) === 0 || parseInt(value, 10) < -1) || value === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE;
@@ -745,3 +754,26 @@ exports.deleteBaseUrlFromError = (err) => {
   return err.replace(/To test ([\s\S]*)on BrowserStack/g, 'To test on BrowserStack');
 }
 
+// blindly send other passed configs with run_settings and handle at backend
+exports.setOtherConfigs = (bsConfig, args) => {
+  if (!this.isUndefined(args.reporter)) {
+    bsConfig["run_settings"]["reporter"] = args.reporter;
+  }
+  if (!this.isUndefined(args.reporterOptions)) {
+    bsConfig["run_settings"]["reporter_options"] = args.reporterOptions;
+  }
+}
+
+exports.getCypressJSON = (bsConfig) => {
+  let cypressJSON = undefined;
+  if (bsConfig.run_settings.cypress_config_file && bsConfig.run_settings.cypress_config_filename !== 'false') {
+    cypressJSON = JSON.parse(
+      fs.readFileSync(bsConfig.run_settings.cypressConfigFilePath)
+    );
+  } else if (bsConfig.run_settings.cypressProjectDir) {
+    cypressJSON = JSON.parse(
+      fs.readFileSync(path.join(bsConfig.run_settings.cypressProjectDir, 'cypress.json'))
+    );
+  }
+  return cypressJSON;
+}

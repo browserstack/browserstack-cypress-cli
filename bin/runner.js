@@ -4,6 +4,52 @@ const yargs = require('yargs'),
   logger = require("./helpers/logger").winstonLogger,
   Constants = require('./helpers/constants');
 
+
+const disableUsageReportingOptions = {
+  'disable-usage-reporting': {
+    default: undefined,
+    description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
+    type: "boolean"
+  },
+}
+
+const usernameOptions = {
+  'u': {
+    alias: 'username',
+    describe: Constants.cliMessages.COMMON.USERNAME,
+    type: "string",
+    default: undefined
+  },
+}
+
+const accessKeyOptions = {
+  'k': {
+    alias: 'key',
+    describe: Constants.cliMessages.COMMON.ACCESS_KEY,
+    type: "string",
+    default: undefined
+  },
+}
+
+const configFileOptions = {
+  'cf': {
+    alias: 'config-file',
+    describe: Constants.cliMessages.COMMON.CONFIG_FILE_PATH,
+    default: 'browserstack.json',
+    type: 'string',
+    nargs: 1,
+    demand: true,
+    demand: Constants.cliMessages.COMMON.CONFIG_DEMAND
+  },
+}
+
+const commonBuildOptions = {
+  ...configFileOptions,
+  ...disableUsageReportingOptions,
+  ...usernameOptions,
+  ...accessKeyOptions,
+}
+
 function checkCommands(yargs, argv, numRequired) {
   if (argv._.length < numRequired) {
     yargs.showHelp()
@@ -24,16 +70,12 @@ var argv = yargs
     argv = yargs
       .usage("usage: $0 init [filename] [options]")
       .options({
+        ...disableUsageReportingOptions,
         'p': {
           alias: "path",
           default: false,
           description: Constants.cliMessages.INIT.DESC,
           type: "string",
-        },
-        'disable-usage-reporting': {
-          default: undefined,
-          description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
-          type: "boolean"
         },
       })
       .help("help")
@@ -48,32 +90,7 @@ var argv = yargs
       .usage('usage: $0 <buildId>')
       .demand(1, Constants.cliMessages.BUILD.DEMAND)
       .options({
-        'cf': {
-          alias: 'config-file',
-          describe: Constants.cliMessages.BUILD.DESC,
-          default: 'browserstack.json',
-          type: 'string',
-          nargs: 1,
-          demand: true,
-          demand: Constants.cliMessages.BUILD.CONFIG_DEMAND
-        },
-        'disable-usage-reporting': {
-          default: undefined,
-          description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
-          type: "boolean"
-        },
-        'u': {
-          alias: 'username',
-          describe: Constants.cliMessages.COMMON.USERNAME,
-          type: "string",
-          default: undefined
-        },
-        'k': {
-          alias: 'key',
-          describe: Constants.cliMessages.COMMON.ACCESS_KEY,
-          type: "string",
-          default: undefined
-        },
+        ...commonBuildOptions,
       })
       .help('help')
       .wrap(null)
@@ -88,32 +105,7 @@ var argv = yargs
       .usage('usage: $0 <buildId>')
       .demand(1, Constants.cliMessages.BUILD.DEMAND)
       .options({
-        'cf': {
-          alias: 'config-file',
-          describe: Constants.cliMessages.BUILD.DESC,
-          default: 'browserstack.json',
-          type: 'string',
-          nargs: 1,
-          demand: true,
-          demand: Constants.cliMessages.BUILD.CONFIG_DEMAND
-        },
-        'disable-usage-reporting': {
-          default: undefined,
-          description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
-          type: "boolean"
-        },
-        'u': {
-          alias: 'username',
-          describe: Constants.cliMessages.COMMON.USERNAME,
-          type: "string",
-          default: undefined
-        },
-        'k': {
-          alias: 'key',
-          describe: Constants.cliMessages.COMMON.ACCESS_KEY,
-          type: "string",
-          default: undefined
-        },
+        ...commonBuildOptions,
       })
       .help('help')
       .wrap(null)
@@ -127,15 +119,7 @@ var argv = yargs
     argv = yargs
       .usage('usage: $0 run <options>')
       .options({
-        'cf': {
-          alias: 'config-file',
-          describe: Constants.cliMessages.RUN.DESC,
-          default: 'browserstack.json',
-          type: 'string',
-          nargs: 1,
-          demand: true,
-          demand: Constants.cliMessages.RUN.CONFIG_DEMAND
-        },
+        ...commonBuildOptions,
         'ccf': {
           alias: 'cypress-config-file',
           describe: Constants.cliMessages.RUN.CYPRESS_DESC,
@@ -145,27 +129,10 @@ var argv = yargs
           demand: true,
           demand: Constants.cliMessages.RUN.CYPRESS_CONFIG_DEMAND
         },
-        'disable-usage-reporting': {
-          default: undefined,
-          description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
-          type: "boolean"
-        },
         'p': {
           alias: 'parallels',
           describe: Constants.cliMessages.RUN.PARALLEL_DESC,
           type: "number",
-          default: undefined
-        },
-        'u': {
-          alias: 'username',
-          describe: Constants.cliMessages.COMMON.USERNAME,
-          type: "string",
-          default: undefined
-        },
-        'k': {
-          alias: 'key',
-          describe: Constants.cliMessages.COMMON.ACCESS_KEY,
-          type: "string",
           default: undefined
         },
         'b': {
@@ -231,7 +198,19 @@ var argv = yargs
           default: false,
           describe: Constants.cliMessages.RUN.SYNC_NO_WRAP,
           type: "boolean"
-        }
+        },
+        'r': {
+          alias: 'reporter',
+          default: undefined,
+          describe: Constants.cliMessages.RUN.REPORTER,
+          type: "string"
+        },
+        'o': {
+          alias: 'reporter-options',
+          default: undefined,
+          describe: Constants.cliMessages.RUN.REPORTER_OPTIONS,
+          type: "string"
+        },
       })
       .help('help')
       .wrap(null)
@@ -245,32 +224,7 @@ var argv = yargs
       .usage('usage: $0 generate-report <buildId>')
       .demand(1, Constants.cliMessages.BUILD.DEMAND)
       .options({
-        'cf': {
-          alias: 'config-file',
-          describe: Constants.cliMessages.BUILD.DESC,
-          default: 'browserstack.json',
-          type: 'string',
-          nargs: 1,
-          demand: true,
-          demand: Constants.cliMessages.BUILD.CONFIG_DEMAND
-        },
-        'disable-usage-reporting': {
-          default: undefined,
-          description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
-          type: "boolean"
-        },
-        'u': {
-          alias: 'username',
-          describe: Constants.cliMessages.COMMON.USERNAME,
-          type: "string",
-          default: undefined
-        },
-        'k': {
-          alias: 'key',
-          describe: Constants.cliMessages.COMMON.ACCESS_KEY,
-          type: "string",
-          default: undefined
-        },
+        ...commonBuildOptions,
       })
       .help('help')
       .wrap(null)
@@ -278,6 +232,21 @@ var argv = yargs
     if (checkCommands(yargs, argv, 1)) {
       logger.info(Constants.cliMessages.BUILD.INFO_MESSAGE + argv._[1]);
       return require('./commands/generateReport')(argv);
+    }
+  })
+  .command('generate-downloads', Constants.cliMessages.GENERATE_DOWNLOADS.INFO, function(yargs) {
+    argv = yargs
+      .usage('usage: $0 generate-downloads <buildId>')
+      .demand(1, Constants.cliMessages.BUILD.DEMAND)
+      .options({
+        ...commonBuildOptions,
+      })
+      .help('help')
+      .wrap(null)
+      .argv
+    if (checkCommands(yargs, argv, 1)) {
+      logger.info(Constants.cliMessages.BUILD.INFO_MESSAGE + argv._[1]);
+      return require('./commands/generateDownloads')(argv);
     }
   })
   .help('help')
