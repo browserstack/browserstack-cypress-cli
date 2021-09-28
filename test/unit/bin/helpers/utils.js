@@ -2164,7 +2164,6 @@ describe('utils', () => {
       );
     });
   });
-  å;
 
   describe('setOtherConfigs', () => {
     it('set reporter arg in run_settings', () => {
