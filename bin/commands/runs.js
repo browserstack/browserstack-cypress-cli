@@ -88,7 +88,7 @@ module.exports = function run(args) {
       utils.warnSpecLimit(bsConfig, args, specFiles);
       markBlockEnd('preArchiveSteps');
       markBlockStart('checkAlreadyUploaded');
-      return checkUploaded.checkUploadedMd5(bsConfig, args).then(function (md5data) {
+      return checkUploaded.checkUploadedMd5(bsConfig, args, {markBlockStart, markBlockEnd}).then(function (md5data) {
         markBlockEnd('checkAlreadyUploaded');
 
         // Archive the spec files

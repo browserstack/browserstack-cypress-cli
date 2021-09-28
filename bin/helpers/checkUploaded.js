@@ -10,7 +10,7 @@ const crypto = require('crypto'),
   utils = require('./utils');
 
 
-const checkSpecsMd5 = (runSettings, excludeFiles) => {
+const checkSpecsMd5 = (runSettings, excludeFiles, instrumentBlocks) => {
   return new Promise(function (resolve, reject) {
     let cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
     let ignoreFiles = utils.getFilesToIgnore(runSettings, excludeFiles, false);
@@ -19,7 +19,7 @@ const checkSpecsMd5 = (runSettings, excludeFiles) => {
       ignore: ignoreFiles,
       pattern: `**/*.+(${Constants.allowedFileTypes.join("|")})`
     };
-    hashHelper.hashWrapper(options).then(function (data) {
+    hashHelper.hashWrapper(options, instrumentBlocks).then(function (data) {
       const outputHash = crypto.createHash(Constants.hashingOptions.algo);
       outputHash.update(data);
       outputHash.update(checkPackageMd5(runSettings));
@@ -62,7 +62,7 @@ const checkPackageMd5 = (runSettings) => {
   return outputHash.digest(Constants.hashingOptions.encoding)
 };
 
-const checkUploadedMd5 = (bsConfig, args) => {
+const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
   return new Promise(function (resolve) {
     let obj = {
       zipUrlPresent: false,
@@ -70,9 +70,13 @@ const checkUploadedMd5 = (bsConfig, args) => {
     if (args["force-upload"]) {
       return resolve(obj);
     }
-    checkSpecsMd5(bsConfig.run_settings, args.exclude).then(function (md5data) {
+    instrumentBlocks.markBlockStart("checkAlreadyUploaded.md5Total");
+    checkSpecsMd5(bsConfig.run_settings, args.exclude, instrumentBlocks).then(function (md5data) {
       Object.assign(obj, {md5sum: md5data});
+      instrumentBlocks.markBlockStart("checkAlreadyUploaded.md5Package");
       let package_md5sum = checkPackageMd5(bsConfig.run_settings);
+      instrumentBlocks.markBlockEnd("checkAlreadyUploaded.md5Package");
+      instrumentBlocks.markBlockEnd("checkAlreadyUploaded.md5Total");
       let data = JSON.stringify({ zip_md5sum: md5data, instrument_package_md5sum: package_md5sum});
 
       let options = {
@@ -88,6 +92,7 @@ const checkUploadedMd5 = (bsConfig, args) => {
         body: data
       };
 
+      instrumentBlocks.markBlockStart("checkAlreadyUploaded.railsCheck");
       request.post(options, function (err, resp, body) {
         if (err) {
           resolve(obj);
@@ -101,6 +106,7 @@ const checkUploadedMd5 = (bsConfig, args) => {
           if (resp.statusCode === 200 && !utils.isUndefined(zipData.zipUrl)) {
             Object.assign(obj, zipData, {zipUrlPresent: true});
           }
+          instrumentBlocks.markBlockEnd("checkAlreadyUploaded.railsCheck");
           resolve(obj);
         }
       });
