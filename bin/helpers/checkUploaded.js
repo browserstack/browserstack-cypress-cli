@@ -95,6 +95,7 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
       instrumentBlocks.markBlockStart("checkAlreadyUploaded.railsCheck");
       request.post(options, function (err, resp, body) {
         if (err) {
+          instrumentBlocks.markBlockEnd("checkAlreadyUploaded.railsCheck");
           resolve(obj);
         } else {
           let zipData = null;
