@@ -102,6 +102,7 @@ describe("runs", () => {
       setLocalIdentifierStub = sandbox.stub();
       setHeadedStub = sandbox.stub();
       setNoWrapStub = sandbox.stub();
+      setOtherConfigsStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       setDefaultsStub = sandbox.stub();
       setLocalModeStub = sandbox.stub();
@@ -137,6 +138,7 @@ describe("runs", () => {
           setLocalIdentifier: setLocalIdentifierStub,
           setHeaded: setHeadedStub,
           setNoWrap: setNoWrapStub,
+          setOtherConfigs: setOtherConfigsStub,
           deleteResults: deleteResultsStub,
           setDefaults: setDefaultsStub,
           setupLocalTesting: setupLocalTestingStub,
@@ -179,6 +181,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
           sinon.assert.calledOnce(setConfigStub);
+          sinon.assert.calledOnce(setOtherConfigsStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(getErrorCodeFromMsgStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
@@ -225,6 +228,7 @@ describe("runs", () => {
       setLocalIdentifierStub = sandbox.stub();
       setHeadedStub = sandbox.stub();
       setNoWrapStub = sandbox.stub();
+      setOtherConfigsStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
       setDefaultsStub = sandbox.stub();
@@ -263,6 +267,7 @@ describe("runs", () => {
           setLocalIdentifier: setLocalIdentifierStub,
           setHeaded: setHeadedStub,
           setNoWrap: setNoWrapStub,
+          setOtherConfigs: setOtherConfigsStub,
           deleteResults: deleteResultsStub,
           setDefaults: setDefaultsStub,
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
@@ -311,6 +316,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setOtherConfigsStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(archiverStub);
@@ -362,6 +368,7 @@ describe("runs", () => {
       setLocalIdentifierStub = sandbox.stub();
       setHeadedStub = sandbox.stub();
       setNoWrapStub = sandbox.stub();
+      setOtherConfigsStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
       setDefaultsStub = sandbox.stub();
@@ -401,6 +408,7 @@ describe("runs", () => {
           setLocalIdentifier: setLocalIdentifierStub,
           setHeaded: setHeadedStub,
           setNoWrap: setNoWrapStub,
+          setOtherConfigs: setOtherConfigsStub,
           deleteResults: deleteResultsStub,
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
           setDefaults: setDefaultsStub,
@@ -448,6 +456,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setOtherConfigsStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(archiverStub);
@@ -503,6 +512,7 @@ describe("runs", () => {
       setLocalIdentifierStub = sandbox.stub();
       setHeadedStub = sandbox.stub();
       setNoWrapStub = sandbox.stub();
+      setOtherConfigsStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
       setDefaultsStub = sandbox.stub();
@@ -543,6 +553,7 @@ describe("runs", () => {
           setLocalIdentifier: setLocalIdentifierStub,
           setHeaded: setHeadedStub,
           setNoWrap: setNoWrapStub,
+          setOtherConfigs: setOtherConfigsStub,
           deleteResults: deleteResultsStub,
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
           setDefaults: setDefaultsStub,
@@ -601,6 +612,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setOtherConfigsStub);
           sinon.assert.calledOnce(archiverStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(zipUploadStub);
@@ -661,6 +673,7 @@ describe("runs", () => {
       setLocalIdentifierStub = sandbox.stub();
       setHeadedStub = sandbox.stub();
       setNoWrapStub = sandbox.stub();
+      setOtherConfigsStub = sandbox.stub();
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
       setLocalConfigFileStub = sandbox.stub();
       getTimeComponentsStub = sandbox.stub().returns({});
@@ -669,6 +682,8 @@ describe("runs", () => {
       markBlockEndStub = sandbox.stub();
       setConfigStub = sandbox.stub();
       setBrowsersStub = sandbox.stub();
+      stopLocalBinaryStub = sandbox.stub();
+      nonEmptyArrayStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -704,6 +719,7 @@ describe("runs", () => {
           setLocalIdentifier: setLocalIdentifierStub,
           setHeaded: setHeadedStub,
           setNoWrap: setNoWrapStub,
+          setOtherConfigs: setOtherConfigsStub,
           exportResults: exportResultsStub,
           deleteResults: deleteResultsStub,
           setDefaults: setDefaultsStub,
@@ -711,7 +727,9 @@ describe("runs", () => {
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
           setLocalConfigFile: setLocalConfigFileStub,
           setBrowsers: setBrowsersStub,
-          setConfig: setConfigStub
+          setConfig: setConfigStub,
+          stopLocalBinary: stopLocalBinaryStub,
+          nonEmptyArray: nonEmptyArrayStub,
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -750,6 +768,8 @@ describe("runs", () => {
       archiverStub.returns(Promise.resolve("Zipping completed"));
       checkUploadedStub.returns(Promise.resolve({ zipUrlPresent: false }))
       zipUploadStub.returns(Promise.resolve("zip uploaded"));
+      stopLocalBinaryStub.returns(Promise.resolve("nothing"));
+      nonEmptyArrayStub.returns(false);
       createBuildStub.returns(Promise.resolve({ message: 'Success', build_id: 'random_build_id', dashboard_url: dashboardUrl }));
 
       return runs(args)
@@ -771,6 +791,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setOtherConfigsStub);
           sinon.assert.calledOnce(archiverStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(zipUploadStub);
