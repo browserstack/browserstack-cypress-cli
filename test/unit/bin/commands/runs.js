@@ -630,6 +630,7 @@ describe("runs", () => {
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
+      generateUniqueHashStub =  sandbox.stub().returns('random_hash');
       setCypressConfigFilenameStub = sandbox.stub();
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
@@ -678,7 +679,7 @@ describe("runs", () => {
       let errorCode = null;
       let message = `Success! ${Constants.userMessages.BUILD_CREATED} with build id: random_build_id`;
       let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${dashboardUrl}`;
-      let data = {time_components: {}, build_id: 'random_build_id'}
+      let data = {time_components: {}, unique_id: 'random_hash', build_id: 'random_build_id'}
 
       const runs = proxyquire('../../../../bin/commands/runs', {
         '../helpers/utils': {
@@ -702,6 +703,7 @@ describe("runs", () => {
           setHeaded: setHeadedStub,
           setNoWrap: setNoWrapStub,
           setOtherConfigs: setOtherConfigsStub,
+          generateUniqueHash: generateUniqueHashStub,
           exportResults: exportResultsStub,
           deleteResults: deleteResultsStub,
           setDefaults: setDefaultsStub,
@@ -773,6 +775,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
           sinon.assert.calledOnce(setOtherConfigsStub);
+          sinon.assert.calledOnce(generateUniqueHashStub);
           sinon.assert.calledOnce(archiverStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(zipUploadStub);

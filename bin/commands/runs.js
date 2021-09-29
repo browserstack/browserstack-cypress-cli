@@ -164,6 +164,7 @@ module.exports = function run(args) {
               if(!args.sync) logger.info(Constants.userMessages.EXIT_SYNC_CLI_MESSAGE.replace("<build-id>", data.build_id));
               let dataToSend = {
                 time_components: getTimeComponents(),
+                unique_id: utils.generateUniqueHash(),
                 build_id: data.build_id,
               };
               if (bsConfig && bsConfig.connection_settings) {

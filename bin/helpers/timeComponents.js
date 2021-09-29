@@ -1,7 +1,7 @@
 'use strict'
 
 const { isUndefined } = require('./utils');
-const os = require('os');
+
 
 let sessionTimes = {
   referenceTimes: {
@@ -32,22 +32,9 @@ const instrumentEventTime = (eventName) => {
   sessionTimes.eventTime[eventName] = new Date(new Date().toUTCString());
 }
 
-const getMacAdd = () => {
-  const loopback = /(?:[0]{2}[:-]){5}[0]{2}/
-  const interFaceList = os.networkInterfaces();
-  for (let inter in interFaceList){
-    for (const address of interFaceList[inter]) {
-      if (loopback.test(address.mac) === false) {
-        return {macAdress : address.mac}
-      }
-    }
-  }
-}
-
 const getTimeComponents = () => {
   const data = convertDotToNestedObject(sessionTimes.logTimes);
-  const mac = getMacAdd()
-  return Object.assign(data, mac, sessionTimes.eventTime);
+  return Object.assign(data, sessionTimes.eventTime);
 };
 
 const convertDotToNestedObject = (dotNotationObject) => {
