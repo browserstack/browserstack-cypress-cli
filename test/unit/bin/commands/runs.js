@@ -661,6 +661,7 @@ describe("runs", () => {
       setLocalConfigFileStub = sandbox.stub();
       getTimeComponentsStub = sandbox.stub().returns({});
       initTimeComponentsStub = sandbox.stub();
+      instrumentEventTimeStub = sandbox.stub();
       markBlockStartStub = sandbox.stub();
       markBlockEndStub = sandbox.stub();
       stopLocalBinaryStub = sandbox.stub();
@@ -733,6 +734,7 @@ describe("runs", () => {
         },
         '../helpers/timeComponents': {
           initTimeComponents: initTimeComponentsStub,
+          instrumentEventTime: instrumentEventTimeStub,
           getTimeComponents: getTimeComponentsStub,
           markBlockStart: markBlockStartStub,
           markBlockEnd: markBlockEndStub,

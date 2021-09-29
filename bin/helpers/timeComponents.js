@@ -1,16 +1,18 @@
 'use strict'
 
 const { isUndefined } = require('./utils');
+const os = require('os');
 
 let sessionTimes = {
   referenceTimes: {
     absoluteStartTime: Date.now()
   }, // Absolute times which needs to be used later to calculate logTimes
   logTimes: {}, // Time Difference in ms which we need to push to EDS
+  eventTime: {}, // Time for particular events
 };
 
 const initTimeComponents = () => {
-  sessionTimes = {referenceTimes: {absoluteStartTime: Date.now()}, logTimes: {}};
+  sessionTimes = {referenceTimes: {absoluteStartTime: Date.now()}, logTimes: {}, eventTime: {}};
 };
 
 const markBlockStart = (blockName) => {
@@ -26,10 +28,26 @@ const markBlockDiff = (blockName, startTime, stopTime) => {
   sessionTimes.logTimes[blockName] = stopTime - startTime;
 }
 
+const instrumentEventTime = (eventName) => {
+  sessionTimes.eventTime[eventName] = new Date(new Date().toUTCString());
+}
+
+const getMacAdd = () => {
+  const loopback = /(?:[0]{2}[:-]){5}[0]{2}/
+  const interFaceList = os.networkInterfaces();
+  for (let inter in interFaceList){
+    for (const address of interFaceList[inter]) {
+      if (loopback.test(address.mac) === false) {
+        return {macAdress : address.mac}
+      }
+    }
+  }
+}
+
 const getTimeComponents = () => {
   const data = convertDotToNestedObject(sessionTimes.logTimes);
-
-  return data;
+  const mac = getMacAdd()
+  return Object.assign(data, mac, sessionTimes.eventTime);
 };
 
 const convertDotToNestedObject = (dotNotationObject) => {
@@ -58,6 +76,7 @@ const convertDotToNestedObject = (dotNotationObject) => {
 
 module.exports = {
   initTimeComponents,
+  instrumentEventTime,
   markBlockStart,
   markBlockEnd,
   markBlockDiff,

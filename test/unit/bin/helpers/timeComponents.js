@@ -8,6 +8,8 @@ const chai = require("chai"),
 let timeComponents = rewire('../../../../bin/helpers/timeComponents');
 
 let initTimeComponents = timeComponents.__get__('initTimeComponents');
+let instrumentEventTime = timeComponents.__get__('instrumentEventTime');
+let getMacAdd = timeComponents.__get__('getMacAdd');
 let markBlockStart = timeComponents.__get__('markBlockStart');
 let markBlockEnd = timeComponents.__get__('markBlockEnd');
 let markBlockDiff = timeComponents.__get__('markBlockDiff');
@@ -21,6 +23,15 @@ describe('timeComponents', () => {
       initTimeComponents();
       let sessionTimes = timeComponents.__get__('sessionTimes');
       expect(Object.keys(sessionTimes.logTimes).length).to.equal(0);
+    });
+  });
+
+  describe('instrumentEventTime', () => {
+    it('should set reset sessionTimes object', () => {
+      initTimeComponents();
+      instrumentEventTime('cliTest');
+      let sessionTimes = timeComponents.__get__('sessionTimes');
+      expect(Object.keys(sessionTimes.eventTime)).to.include('cliTest');
     });
   });
 
@@ -86,12 +97,67 @@ describe('timeComponents', () => {
     it('should call convertDotToNestedObject and return data', () => {
       let convertDotToNestedObjectStub = sinon.stub().returns({sampleBlock: 100}),
         convertDotToNestedObjectUnset = timeComponents.__set__('convertDotToNestedObject', convertDotToNestedObjectStub);
+      let getMacAddObjectStub = sinon.stub().returns({macAdress: "ra:nd:om:01:23:45"}),
+        getMacAddObjectUnset = timeComponents.__set__('getMacAdd', getMacAddObjectStub);
 
-      expect(getTimeComponents()).to.deep.equal({sampleBlock:100});
+      expect(getTimeComponents()).to.deep.equal({sampleBlock:100, macAdress: "ra:nd:om:01:23:45"});
 
       convertDotToNestedObjectUnset();
+      getMacAddObjectUnset();
     });
   });
+
+  describe('getMacAdd', () => {
+    it('should return non zero mac address', () => {
+      let interfaceList = {
+        lo0: [
+          {
+            address: 'fe80::1',
+            netmask: 'ffff:ffff:ffff:ffff::',
+            family: 'IPv6',
+            mac: '00:00:00:00:00:00',
+            internal: true,
+            cidr: 'fe80::1/64',
+            scopeid: 1
+          }
+        ],
+        en5: [
+          {
+            address: 'fe80::1',
+            netmask: 'ffff:ffff:ffff:ffff::',
+            family: 'IPv6',
+            mac: '00:00:00:00:00:00',
+            internal: true,
+            cidr: 'fe80::1/64',
+            scopeid: 1
+          },
+          {
+            address: 'fe80::aede:48ff:fe00:1122',
+            netmask: 'ffff:ffff:ffff:ffff::',
+            family: 'IPv6',
+            mac: 'ra:nd:om:01:23:45',
+            internal: false,
+            cidr: 'fe80::aede:48ff:fe00:1122/64',
+            scopeid: 7
+          }
+        ],
+        en0: [
+          {
+            address: '192.168.29.250',
+            netmask: '255.255.255.0',
+            family: 'IPv4',
+            mac: '00:00:00:00:00:00',
+            internal: false,
+            cidr: '192.168.29.250/24'
+          }
+        ]
+      };
+      timeComponents.__set__({
+        os: { networkInterfaces: () => interfaceList },
+      });
+      expect(getMacAdd()).to.deep.equal({ macAdress: 'ra:nd:om:01:23:45' });;
+    })
+  })
 
   describe('convertDotToNestedObject', () => {
     let inputs = [
