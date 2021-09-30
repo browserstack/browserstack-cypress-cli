@@ -5,7 +5,7 @@ const chai = require("chai"),
 const Constants = require("../../../../bin/helpers/constants"),
   logger = require("../../../../bin/helpers/logger").winstonLogger,
   testObjects = require("../../support/fixtures/testObjects");
-
+ 
 const proxyquire = require("proxyquire").noCallThru();
 
 chai.use(chaiAsPromised);
@@ -107,6 +107,8 @@ describe("runs", () => {
       setDefaultsStub = sandbox.stub();
       setLocalModeStub = sandbox.stub();
       setLocalConfigFileStub = sandbox.stub();
+      setBrowsersStub = sandbox.stub();
+      setConfigStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -143,7 +145,9 @@ describe("runs", () => {
           isJSONInvalid: isJSONInvalidStub,
           setLocalMode: setLocalModeStub,
           setLocalConfigFile: setLocalConfigFileStub,
-          setSystemEnvs: setSystemEnvsStub
+          setSystemEnvs: setSystemEnvsStub,
+          setBrowsers: setBrowsersStub,
+          setConfig: setConfigStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub
@@ -176,6 +180,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setConfigStub);
           sinon.assert.calledOnce(setOtherConfigsStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(getErrorCodeFromMsgStub);
@@ -228,6 +233,8 @@ describe("runs", () => {
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
       setDefaultsStub = sandbox.stub();
       setLocalConfigFileStub = sandbox.stub();
+      setBrowsersStub = sandbox.stub();
+      setConfigStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -265,7 +272,9 @@ describe("runs", () => {
           setDefaults: setDefaultsStub,
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
           setLocalConfigFile: setLocalConfigFileStub,
-          setSystemEnvs: setSystemEnvsStub
+          setSystemEnvs: setSystemEnvsStub,
+          setBrowsers: setBrowsersStub,
+          setConfig: setConfigStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -364,6 +373,8 @@ describe("runs", () => {
       getNumberOfSpecFilesStub = sandbox.stub().returns([]);
       setDefaultsStub = sandbox.stub();
       setLocalConfigFileStub = sandbox.stub();
+      setConfigStub = sandbox.stub();
+      setBrowsersStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -401,7 +412,9 @@ describe("runs", () => {
           deleteResults: deleteResultsStub,
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
           setDefaults: setDefaultsStub,
-          setLocalConfigFile: setLocalConfigFileStub
+          setLocalConfigFile: setLocalConfigFileStub,
+          setBrowsers: setBrowsersStub,
+          setConfig: setConfigStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -505,6 +518,8 @@ describe("runs", () => {
       setDefaultsStub = sandbox.stub();
       stopLocalBinaryStub = sandbox.stub();
       setLocalConfigFileStub = sandbox.stub();
+      setConfigStub = sandbox.stub();
+      setBrowsersStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -543,7 +558,9 @@ describe("runs", () => {
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
           setDefaults: setDefaultsStub,
           stopLocalBinary: stopLocalBinaryStub,
-          setLocalConfigFile: setLocalConfigFileStub
+          setLocalConfigFile: setLocalConfigFileStub,
+          setBrowsers: setBrowsersStub,
+          setConfig: setConfigStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -663,6 +680,8 @@ describe("runs", () => {
       initTimeComponentsStub = sandbox.stub();
       markBlockStartStub = sandbox.stub();
       markBlockEndStub = sandbox.stub();
+      setConfigStub = sandbox.stub();
+      setBrowsersStub = sandbox.stub();
       stopLocalBinaryStub = sandbox.stub();
       nonEmptyArrayStub = sandbox.stub();
     });
@@ -707,6 +726,8 @@ describe("runs", () => {
           isUndefined: isUndefinedStub,
           getNumberOfSpecFiles: getNumberOfSpecFilesStub,
           setLocalConfigFile: setLocalConfigFileStub,
+          setBrowsers: setBrowsersStub,
+          setConfig: setConfigStub,
           stopLocalBinary: stopLocalBinaryStub,
           nonEmptyArray: nonEmptyArrayStub,
         },
