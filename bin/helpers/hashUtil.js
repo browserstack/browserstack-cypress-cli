@@ -4,12 +4,16 @@ const glob = require('readdir-glob'),
   crypto = require('crypto'),
   fs = require('fs');
 
-const hashWrapper = (options) => {
+const hashWrapper = (options, instrumentBlocks) => {
+  instrumentBlocks.markBlockStart("checkAlreadyUploaded.md5Stats");
   return folderStats(options).then((files) => {
+    instrumentBlocks.markBlockEnd("checkAlreadyUploaded.md5Stats");
+    instrumentBlocks.markBlockStart("checkAlreadyUploaded.md5Batch");
     return batchHashFile(files);
   }).then((hashes) => {
     const combinedHash = crypto.createHash(Constants.hashingOptions.algo);
     hashes.forEach((hash) => combinedHash.update(hash));
+    instrumentBlocks.markBlockEnd("checkAlreadyUploaded.md5Batch");
     return combinedHash.digest(Constants.hashingOptions.encoding);
   });
 }
