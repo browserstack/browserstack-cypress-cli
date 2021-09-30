@@ -15,7 +15,8 @@ let specSummary = {
 }
 let noWrap = false;
 let terminalWidth = (process.stdout.columns) * 0.9;
-let lineSeparator = "\n" + "-".repeat(terminalWidth);
+let lineSeparator = Constants.syncCLI.DEFAULT_LINE_SEP;
+if (!isNaN(terminalWidth)) lineSeparator = "\n" + "-".repeat(terminalWidth);
 
 let  getOptions = (auth, build_id) => {
   return {
@@ -32,13 +33,13 @@ let  getOptions = (auth, build_id) => {
   };
 }
 
-let getTableConfig = () => {
-  let centerWidth = Math.ceil(terminalWidth * 0.01),
-      leftWidth = Math.floor(terminalWidth * 0.75),
-      colWidth = Math.floor(terminalWidth * 0.2);
+let getTableConfig = (termWidth) => {
+  let centerWidth = Math.ceil(termWidth * 0.01),
+      leftWidth = Math.floor(termWidth * 0.75),
+      colWidth = Math.floor(termWidth * 0.2);
 
   // Do not autosize on terminal's width if no-wrap provided
-  if (noWrap) {
+  if (noWrap || isNaN(termWidth)) {
     centerWidth = 1;
     leftWidth = 100;
     colWidth = 30;
@@ -84,7 +85,7 @@ let setNoWrapParams = () => {
   noWrap = (process.env.SYNC_NO_WRAP && (process.env.SYNC_NO_WRAP === 'true'));
   // Do not show the separator based on terminal width if no-wrap provided.
   if (noWrap) {
-    lineSeparator = "\n--------------------------------------------------------------------------------";
+    lineSeparator = Constants.syncCLI.DEFAULT_LINE_SEP;
   }
 };
 
@@ -92,7 +93,7 @@ let printSpecsStatus = (bsConfig, buildDetails) => {
   setNoWrapParams();
   return new Promise((resolve, reject) => {
     options = getOptions(bsConfig.auth, buildDetails.build_id)
-    tableConfig = getTableConfig();
+    tableConfig = getTableConfig(terminalWidth);
     stream = tableStream(tableConfig);
 
     async.whilst(

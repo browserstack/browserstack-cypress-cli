@@ -16,7 +16,7 @@ const utils = require('../../../../bin/helpers/utils'),
   constant = require('../../../../bin/helpers/constants'),
   logger = require('../../../../bin/helpers/logger').winstonLogger,
   testObjects = require('../../support/fixtures/testObjects'),
-  syncLogger = require("../../../../bin/helpers/logger").syncCliLogger;
+  syncLogger = require('../../../../bin/helpers/logger').syncCliLogger;
 const browserstack = require('browserstack-local');
 chai.use(chaiAsPromised);
 logger.transports['console.info'].silent = true;
@@ -97,10 +97,8 @@ describe('utils', () => {
         )
       ).to.eq('invalid_local_config_file');
       expect(
-        utils.getErrorCodeFromMsg(
-          "Invalid browserstack.json file."
-        )
-      ).to.eq("bstack_json_invalid");
+        utils.getErrorCodeFromMsg('Invalid browserstack.json file.')
+      ).to.eq('bstack_json_invalid');
     });
   });
 
@@ -171,7 +169,7 @@ describe('utils', () => {
     var sandbox;
     beforeEach(() => {
       sandbox = sinon.createSandbox();
-      sandbox.stub(utils,'getBrowserCombinations').returns(['a','b']);
+      sandbox.stub(utils, 'getBrowserCombinations').returns(['a', 'b']);
     });
 
     afterEach(() => {
@@ -186,7 +184,7 @@ describe('utils', () => {
         },
       };
 
-      utils.setParallels(bsConfig, {parallels: 100}, 100);
+      utils.setParallels(bsConfig, { parallels: 100 }, 100);
       expect(bsConfig['run_settings']['parallels']).to.be.eq(100);
     });
 
@@ -196,7 +194,7 @@ describe('utils', () => {
           parallels: 10,
         },
       };
-      utils.setParallels(bsConfig, {parallels: undefined}, 10);
+      utils.setParallels(bsConfig, { parallels: undefined }, 10);
       expect(bsConfig['run_settings']['parallels']).to.be.eq(10);
     });
 
@@ -206,7 +204,7 @@ describe('utils', () => {
           parallels: 10,
         },
       };
-      utils.setParallels(bsConfig, {parallels: undefined}, 0);
+      utils.setParallels(bsConfig, { parallels: undefined }, 0);
       expect(bsConfig['run_settings']['parallels']).to.be.eq(2);
     });
 
@@ -216,7 +214,7 @@ describe('utils', () => {
           parallels: -1,
         },
       };
-      utils.setParallels(bsConfig, {parallels: undefined}, 2);
+      utils.setParallels(bsConfig, { parallels: undefined }, 2);
       expect(bsConfig['run_settings']['parallels']).to.be.eq(-1);
     });
 
@@ -226,10 +224,9 @@ describe('utils', () => {
           parallels: 100,
         },
       };
-      utils.setParallels(bsConfig, {parallels: undefined}, 2);
+      utils.setParallels(bsConfig, { parallels: undefined }, 2);
       expect(bsConfig['run_settings']['parallels']).to.be.eq(4);
     });
-
   });
 
   describe('getErrorCodeFromErr', () => {
@@ -240,10 +237,10 @@ describe('utils', () => {
     });
 
     it(`should return value depending on validation messages`, () => {
-      expect(utils.getErrorCodeFromErr({code: 'SyntaxError'})).to.eq(
+      expect(utils.getErrorCodeFromErr({ code: 'SyntaxError' })).to.eq(
         'bstack_json_parse_error'
       );
-      expect(utils.getErrorCodeFromErr({code: 'EACCES'})).to.eq(
+      expect(utils.getErrorCodeFromErr({ code: 'EACCES' })).to.eq(
         'bstack_json_no_permission'
       );
     });
@@ -255,21 +252,36 @@ describe('utils', () => {
     });
   });
 
-  describe("validateBstackJson", () => {
-    it("should reject with SyntaxError for empty file", () => {
-      let bsConfigPath = path.join(process.cwd(), 'test', 'test_files', 'dummy_bstack.json');
-      return utils.validateBstackJson(bsConfigPath).catch((error)=>{
-        sinon.match(error, "Invalid browserstack.json file")
+  describe('validateBstackJson', () => {
+    it('should reject with SyntaxError for empty file', () => {
+      let bsConfigPath = path.join(
+        process.cwd(),
+        'test',
+        'test_files',
+        'dummy_bstack.json'
+      );
+      return utils.validateBstackJson(bsConfigPath).catch((error) => {
+        sinon.match(error, 'Invalid browserstack.json file');
       });
     });
-    it("should resolve with data for valid json", () => {
-      let bsConfigPath = path.join(process.cwd(), 'test', 'test_files', 'dummy_bstack_2.json');
+    it('should resolve with data for valid json', () => {
+      let bsConfigPath = path.join(
+        process.cwd(),
+        'test',
+        'test_files',
+        'dummy_bstack_2.json'
+      );
       expect(utils.validateBstackJson(bsConfigPath)).to.be.eventually.eql({});
     });
-    it("should reject with SyntaxError for invalid json file", () => {
-      let bsConfigPath = path.join(process.cwd(), 'test', 'test_files', 'dummy_bstack_3.json');
+    it('should reject with SyntaxError for invalid json file', () => {
+      let bsConfigPath = path.join(
+        process.cwd(),
+        'test',
+        'test_files',
+        'dummy_bstack_3.json'
+      );
       return utils.validateBstackJson(bsConfigPath).catch((error) => {
-        sinon.match(error, "Invalid browserstack.json file")
+        sinon.match(error, 'Invalid browserstack.json file');
       });
     });
   });
@@ -507,43 +519,61 @@ describe('utils', () => {
     });
   });
 
-  describe("getFilesToIgnore", () => {
-    it("no args, no exclude in runSettings", () => {
-      chai.expect(utils.getFilesToIgnore({}, undefined)).to.be.eql(constant.filesToIgnoreWhileUploading);
+  describe('getFilesToIgnore', () => {
+    it('no args, no exclude in runSettings', () => {
+      chai
+        .expect(utils.getFilesToIgnore({}, undefined))
+        .to.be.eql(constant.filesToIgnoreWhileUploading);
     });
 
-    it("args passed, no exclude in runSettings", () => {
-      let excludeFiles = "file1.js, file2.json";
+    it('args passed, no exclude in runSettings', () => {
+      let excludeFiles = 'file1.js, file2.json';
       let argsToArray = utils.fixCommaSeparatedString(excludeFiles).split(',');
-      chai.expect(utils.getFilesToIgnore({}, excludeFiles)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
+      chai
+        .expect(utils.getFilesToIgnore({}, excludeFiles))
+        .to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
 
-      excludeFiles = "file1.js,file2.json";
+      excludeFiles = 'file1.js,file2.json';
       argsToArray = utils.fixCommaSeparatedString(excludeFiles).split(',');
-      chai.expect(utils.getFilesToIgnore({}, excludeFiles)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
+      chai
+        .expect(utils.getFilesToIgnore({}, excludeFiles))
+        .to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
 
-      excludeFiles = " file1.js , file2.json ";
+      excludeFiles = ' file1.js , file2.json ';
       argsToArray = utils.fixCommaSeparatedString(excludeFiles).split(',');
-      chai.expect(utils.getFilesToIgnore({}, excludeFiles)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
+      chai
+        .expect(utils.getFilesToIgnore({}, excludeFiles))
+        .to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
     });
 
-    it("args passed, exclude added in runSettings", () => {
+    it('args passed, exclude added in runSettings', () => {
       // args preceed over config file
-      let excludeFiles = "file1.js, file2.json ";
+      let excludeFiles = 'file1.js, file2.json ';
       let argsToArray = utils.fixCommaSeparatedString(excludeFiles).split(',');
 
       let runSettings = { exclude: [] };
-      chai.expect(utils.getFilesToIgnore(runSettings, excludeFiles)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
+      chai
+        .expect(utils.getFilesToIgnore(runSettings, excludeFiles))
+        .to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
 
-      runSettings = { exclude: ["sample1.js", "sample2.json"] };
-      chai.expect(utils.getFilesToIgnore(runSettings, excludeFiles)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
+      runSettings = { exclude: ['sample1.js', 'sample2.json'] };
+      chai
+        .expect(utils.getFilesToIgnore(runSettings, excludeFiles))
+        .to.be.eql(constant.filesToIgnoreWhileUploading.concat(argsToArray));
     });
 
-    it("no args, exclude added in runSettings", () => {
+    it('no args, exclude added in runSettings', () => {
       let runSettings = { exclude: [] };
-      chai.expect(utils.getFilesToIgnore(runSettings, undefined)).to.be.eql(constant.filesToIgnoreWhileUploading);
+      chai
+        .expect(utils.getFilesToIgnore(runSettings, undefined))
+        .to.be.eql(constant.filesToIgnoreWhileUploading);
 
-      runSettings = { exclude: ["sample1.js", "sample2.json"] };
-      chai.expect(utils.getFilesToIgnore(runSettings, undefined)).to.be.eql(constant.filesToIgnoreWhileUploading.concat(runSettings.exclude));
+      runSettings = { exclude: ['sample1.js', 'sample2.json'] };
+      chai
+        .expect(utils.getFilesToIgnore(runSettings, undefined))
+        .to.be.eql(
+          constant.filesToIgnoreWhileUploading.concat(runSettings.exclude)
+        );
     });
   });
 
@@ -551,8 +581,7 @@ describe('utils', () => {
     it('set env only from args', () => {
       let argsEnv = 'env3=value3, env4=value4';
       let bsConfig = {
-        run_settings: {
-        },
+        run_settings: {},
       };
       let args = {
         env: argsEnv,
@@ -568,11 +597,11 @@ describe('utils', () => {
           env: {
             env1: 'value1',
             env2: 'value2',
-          }
+          },
         },
       };
       let args = {
-        env: null
+        env: null,
       };
 
       utils.setTestEnvs(bsConfig, args);
@@ -586,7 +615,7 @@ describe('utils', () => {
           env: {
             env1: 'value1',
             env2: 'value2',
-          }
+          },
         },
       };
       let args = {
@@ -594,7 +623,9 @@ describe('utils', () => {
       };
 
       utils.setTestEnvs(bsConfig, args);
-      expect(bsConfig.run_settings.env).to.be.eq('env1=value1,env2=value2,env3=value3,env4=value4');
+      expect(bsConfig.run_settings.env).to.be.eq(
+        'env1=value1,env2=value2,env3=value3,env4=value4'
+      );
     });
 
     it('merges env from args and browserstack.json env param but give preceedence to args', () => {
@@ -604,7 +635,7 @@ describe('utils', () => {
           env: {
             env1: 'value1',
             env2: 'value2',
-          }
+          },
         },
       };
       let args = {
@@ -612,7 +643,9 @@ describe('utils', () => {
       };
 
       utils.setTestEnvs(bsConfig, args);
-      expect(bsConfig.run_settings.env).to.be.eq('env1=value0,env2=value2,env4=value4');
+      expect(bsConfig.run_settings.env).to.be.eq(
+        'env1=value0,env2=value2,env4=value4'
+      );
     });
 
     it('handle spaces passed while specifying env', () => {
@@ -622,7 +655,7 @@ describe('utils', () => {
           env: {
             env1: 'value1',
             env2: 'value2',
-          }
+          },
         },
       };
       let args = {
@@ -630,7 +663,9 @@ describe('utils', () => {
       };
 
       utils.setTestEnvs(bsConfig, args);
-      expect(bsConfig.run_settings.env).to.be.eq('env1=value1,env2=value2,env3=value3,env4=value4');
+      expect(bsConfig.run_settings.env).to.be.eq(
+        'env1=value1,env2=value2,env3=value3,env4=value4'
+      );
     });
   });
 
@@ -644,13 +679,17 @@ describe('utils', () => {
             env1: 'value1',
             env2: 'value2',
           },
-          system_env_vars: ['ENV1', 'ENV2']
+          system_env_vars: ['ENV1', 'ENV2'],
         },
       };
 
       utils.setSystemEnvs(bsConfig);
-      expect(bsConfig.run_settings.system_env_vars).to.be.an('array').that.includes('ENV1=env1');
-      expect(bsConfig.run_settings.system_env_vars).to.be.an('array').that.includes('ENV2=env2');
+      expect(bsConfig.run_settings.system_env_vars)
+        .to.be.an('array')
+        .that.includes('ENV1=env1');
+      expect(bsConfig.run_settings.system_env_vars)
+        .to.be.an('array')
+        .that.includes('ENV2=env2');
       delete process.env.ENV1;
       delete process.env.ENV2;
     });
@@ -660,13 +699,17 @@ describe('utils', () => {
       process.env.cypress_test_2 = 'env2';
       let bsConfig = {
         run_settings: {
-          env: null
+          env: null,
         },
       };
 
       utils.setSystemEnvs(bsConfig);
-      expect(bsConfig.run_settings.system_env_vars).to.be.an('array').that.includes('CYPRESS_TEST_1=env1');
-      expect(bsConfig.run_settings.system_env_vars).to.be.an('array').that.includes('cypress_test_2=env2');
+      expect(bsConfig.run_settings.system_env_vars)
+        .to.be.an('array')
+        .that.includes('CYPRESS_TEST_1=env1');
+      expect(bsConfig.run_settings.system_env_vars)
+        .to.be.an('array')
+        .that.includes('cypress_test_2=env2');
       delete process.env.CYPRESS_TEST_1;
       delete process.env.cypress_test_2;
     });
@@ -695,10 +738,10 @@ describe('utils', () => {
   describe('setHeaded', () => {
     it('sets the headless to false', () => {
       let args = {
-        headed: true
+        headed: true,
       };
       let bsConfig = {
-        run_settings: {}
+        run_settings: {},
       };
 
       utils.setHeaded(bsConfig, args);
@@ -707,10 +750,10 @@ describe('utils', () => {
 
     it('sets the headless to false', () => {
       let args = {
-        headed: false
+        headed: false,
       };
       let bsConfig = {
-        run_settings: {}
+        run_settings: {},
       };
 
       utils.setHeaded(bsConfig, args);
@@ -721,10 +764,10 @@ describe('utils', () => {
   describe('setNoWrap', () => {
     it('sets the no-wrap to process.env.SYNC_NO_WRAP to true', () => {
       let args = {
-        noWrap: true
+        noWrap: true,
       };
       let bsConfig = {
-        run_settings: {}
+        run_settings: {},
       };
 
       utils.setNoWrap(bsConfig, args);
@@ -733,10 +776,10 @@ describe('utils', () => {
 
     it('false to not set the no-wrap to process.env.SYNC_NO_WRAP to true', () => {
       let args = {
-        noWrap: false
+        noWrap: false,
       };
       let bsConfig = {
-        run_settings: {}
+        run_settings: {},
       };
 
       utils.setNoWrap(bsConfig, args);
@@ -745,10 +788,10 @@ describe('utils', () => {
 
     it('string to not set the no-wrap to process.env.SYNC_NO_WRAP to true', () => {
       let args = {
-        noWrap: "true"
+        noWrap: 'true',
       };
       let bsConfig = {
-        run_settings: {}
+        run_settings: {},
       };
 
       utils.setNoWrap(bsConfig, args);
@@ -784,27 +827,42 @@ describe('utils', () => {
 
   describe('isCypressProjDirValid', () => {
     it('should return true when cypressProjDir and integrationFoldDir is same', () => {
-      expect(utils.isCypressProjDirValid('/absolute/path', '/absolute/path')).to.be.true;
+      expect(utils.isCypressProjDirValid('/absolute/path', '/absolute/path')).to
+        .be.true;
 
       // should be as below for windows but path.resolve thinks windows path as a filename when run on linux/mac
       // expect(utils.isCypressProjDirValid('C:\\absolute\\path', 'C:\\absolute\\path')).to.be.true;
-      expect(utils.isCypressProjDirValid('/C/absolute/path', '/C/absolute/path')).to.be.true;
+      expect(
+        utils.isCypressProjDirValid('/C/absolute/path', '/C/absolute/path')
+      ).to.be.true;
     });
 
     it('should return true when integrationFoldDir is child directory of cypressProjDir', () => {
-      expect(utils.isCypressProjDirValid('/absolute/path', '/absolute/path/childpath')).to.be.true;
+      expect(
+        utils.isCypressProjDirValid(
+          '/absolute/path',
+          '/absolute/path/childpath'
+        )
+      ).to.be.true;
 
       // should be as below for windows but path.resolve thinks windows path as a filename when run on linux/mac
       // expect(utils.isCypressProjDirValid('C:\\absolute\\path', 'C:\\absolute\\path\\childpath')).to.be.true;
-      expect(utils.isCypressProjDirValid('/C/absolute/path', '/C/absolute/path/childpath')).to.be.true;
+      expect(
+        utils.isCypressProjDirValid(
+          '/C/absolute/path',
+          '/C/absolute/path/childpath'
+        )
+      ).to.be.true;
     });
 
     it('should return false when integrationFoldDir is not child directory of cypressProjDir', () => {
-      expect(utils.isCypressProjDirValid('/absolute/path', '/absolute')).to.be.false;
+      expect(utils.isCypressProjDirValid('/absolute/path', '/absolute')).to.be
+        .false;
 
       // should be as below for windows but path.resolve thinks windows path as a filename when run on linux/mac
       // expect(utils.isCypressProjDirValid('C:\\absolute\\path', 'C:\\absolute')).to.be.false;
-      expect(utils.isCypressProjDirValid('/C/absolute/path', '/C/absolute')).to.be.false;
+      expect(utils.isCypressProjDirValid('/C/absolute/path', '/C/absolute')).to
+        .be.false;
     });
   });
 
@@ -818,11 +876,11 @@ describe('utils', () => {
     });
 
     it('should return false if connectionSettings.local is false', () => {
-      expect(utils.getLocalFlag({local: false})).to.be.false;
+      expect(utils.getLocalFlag({ local: false })).to.be.false;
     });
 
     it('should return true if connectionSettings.local is true', () => {
-      expect(utils.getLocalFlag({local: true})).to.be.true;
+      expect(utils.getLocalFlag({ local: true })).to.be.true;
     });
   });
 
@@ -834,13 +892,12 @@ describe('utils', () => {
 
     it('bsconfig connection_settings local_inferred as true if args local-mode true', () => {
       let bsConfig = {
-        connection_settings: {
-        }
+        connection_settings: {},
       };
       let args = {
-        localMode: "always-on"
+        localMode: 'always-on',
       };
-      utils.setLocal(bsConfig,args);
+      utils.setLocal(bsConfig, args);
       expect(bsConfig.connection_settings.local_inferred).to.be.eq(true);
     });
 
@@ -851,7 +908,7 @@ describe('utils', () => {
         },
       };
       let args = {};
-      utils.setLocal(bsConfig,args);
+      utils.setLocal(bsConfig, args);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
     });
 
@@ -861,10 +918,9 @@ describe('utils', () => {
           local: false,
         },
       };
-      let args = {
-      };
+      let args = {};
       process.env.BROWSERSTACK_LOCAL = true;
-      utils.setLocal(bsConfig,args);
+      utils.setLocal(bsConfig, args);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
     });
 
@@ -876,7 +932,7 @@ describe('utils', () => {
       };
       let args = {};
       process.env.BROWSERSTACK_LOCAL = false;
-      utils.setLocal(bsConfig,args);
+      utils.setLocal(bsConfig, args);
       expect(bsConfig.connection_settings.local).to.be.eq(false);
     });
 
@@ -887,7 +943,7 @@ describe('utils', () => {
         },
       };
       let args = { local: true };
-      utils.setLocal(bsConfig,args);
+      utils.setLocal(bsConfig, args);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
     });
 
@@ -896,44 +952,43 @@ describe('utils', () => {
         connection_settings: {},
       };
       let args = {
-        local: true
-      }
-      utils.setLocal(bsConfig,args);
+        local: true,
+      };
+      utils.setLocal(bsConfig, args);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
     });
 
     it('should set local to true in bsConfig if local is passed as string in bsConfig', () => {
       let bsConfig = {
         connection_settings: {
-          local: "true"
+          local: 'true',
         },
       };
-      let args = {
-      };
+      let args = {};
       utils.setLocal(bsConfig, args);
       expect(bsConfig.connection_settings.local).to.be.eq(true);
     });
-
   });
 
   describe('setLocalMode', () => {
-
-    afterEach(() =>{
+    afterEach(() => {
       sinon.restore();
-    })
+    });
 
-    it('if bsconfig local is true and args localMode is always-on then local_mode should be always-on' , () => {
+    it('if bsconfig local is true and args localMode is always-on then local_mode should be always-on', () => {
       let bsConfig = {
         connection_settings: {
           local: true,
-          local_mode: "on-demand"
+          local_mode: 'on-demand',
         },
       };
       let args = {
-        localMode: "always-on"
+        localMode: 'always-on',
       };
-      utils.setLocalMode(bsConfig,args);
-      expect(bsConfig['connection_settings']['local_mode']).to.be.eq("always-on");
+      utils.setLocalMode(bsConfig, args);
+      expect(bsConfig['connection_settings']['local_mode']).to.be.eq(
+        'always-on'
+      );
     });
 
     it('if bsconfig local mode is not always-on then local_mode should be on-demand', () => {
@@ -943,20 +998,22 @@ describe('utils', () => {
         },
       };
       let args = {};
-      utils.setLocalMode(bsConfig,args);
-      expect(bsConfig['connection_settings']['local_mode']).to.be.eq("on-demand");
+      utils.setLocalMode(bsConfig, args);
+      expect(bsConfig['connection_settings']['local_mode']).to.be.eq(
+        'on-demand'
+      );
     });
 
     it('setLocalMode should end up setting args.sync and sync_inferred as true', () => {
       let bsConfig = {
         connection_settings: {
-          local: true
+          local: true,
         },
       };
       let args = {
-        localMode: "always-on"
-      }
-      utils.setLocalMode(bsConfig,args);
+        localMode: 'always-on',
+      };
+      utils.setLocalMode(bsConfig, args);
       expect(args.sync).to.be.eq(true);
       expect(bsConfig.connection_settings.sync_inferred).to.be.eq(true);
     });
@@ -964,35 +1021,34 @@ describe('utils', () => {
     it('if local_mode is not provided then the bsConfig local_mode_inferred changes to local_mode', () => {
       let bsConfig = {
         connection_settings: {
-          local: true
+          local: true,
         },
       };
-      let args = {
-      }
-      let searchForOptionStub = sinon.stub(utils,"searchForOption");
+      let args = {};
+      let searchForOptionStub = sinon.stub(utils, 'searchForOption');
       searchForOptionStub.returns(false);
-      utils.setLocalMode(bsConfig,args);
-      expect(bsConfig.connection_settings.local_mode_inferred).to.be.eq("on-demand");
+      utils.setLocalMode(bsConfig, args);
+      expect(bsConfig.connection_settings.local_mode_inferred).to.be.eq(
+        'on-demand'
+      );
     });
 
     it('if local_mode is provided then the bsConfig local_mode_inferred remains unchanged', () => {
       let bsConfig = {
         connection_settings: {
           local: true,
-          local_mode: "always-on"
+          local_mode: 'always-on',
         },
       };
-      let args = {
-      }
-      let searchForOptionStub = sinon.stub(utils,"searchForOption");
+      let args = {};
+      let searchForOptionStub = sinon.stub(utils, 'searchForOption');
       searchForOptionStub.returns(true);
-      utils.setLocalMode(bsConfig,args);
+      utils.setLocalMode(bsConfig, args);
       expect(bsConfig.connection_settings.local_mode_inferred).to.be.undefined;
     });
   });
 
-  describe('setupLocalTesting' ,() => {
-
+  describe('setupLocalTesting', () => {
     beforeEach(function () {
       sinon.restore();
       sandbox.restore();
@@ -1006,30 +1062,33 @@ describe('utils', () => {
     it('if local is true and localIdentifier is not running and start error is raised', () => {
       let bsConfig = {
         auth: {
-          access_key: "xyz"
+          access_key: 'xyz',
         },
         connection_settings: {
           local: true,
-          local_identifier: "xyz"
+          local_identifier: 'xyz',
         },
       };
       let args = {};
-      let checkLocalIdentifierRunningStub = sinon.stub(utils, "checkLocalIdentifierRunning");
-      checkLocalIdentifierRunningStub.returns(Promise.resolve(false));
-      let setLocalArgsStub = sinon.stub(utils,"setLocalArgs");
-      setLocalArgsStub.returns({});
-      let localBinaryStartStub = sandbox.stub().yields(
-         'Key is required to start local testing!'
+      let checkLocalIdentifierRunningStub = sinon.stub(
+        utils,
+        'checkLocalIdentifierRunning'
       );
+      checkLocalIdentifierRunningStub.returns(Promise.resolve(false));
+      let setLocalArgsStub = sinon.stub(utils, 'setLocalArgs');
+      setLocalArgsStub.returns({});
+      let localBinaryStartStub = sandbox
+        .stub()
+        .yields('Key is required to start local testing!');
       let getLocalBinaryStub = sandbox.stub(utils, 'getLocalBinary').returns({
-        start: localBinaryStartStub
+        start: localBinaryStartStub,
       });
       let sendUsageReportStub = sandbox
-      .stub(utils, 'sendUsageReport')
-      .callsFake(function () {
-        return 'end';
-      });
-      utils.setupLocalTesting(bsConfig,args).catch((error) => {
+        .stub(utils, 'sendUsageReport')
+        .callsFake(function () {
+          return 'end';
+        });
+      utils.setupLocalTesting(bsConfig, args).catch((error) => {
         expect(error).to.eq(constant.userMessages.LOCAL_START_FAILED);
         sinon.assert.calledOnce(sendUsageReportStub);
         sinon.assert.calledOnce(getLocalBinaryStub);
@@ -1080,17 +1139,20 @@ describe('utils', () => {
     it('if bsconfig local is true then promise should return a browserstack local object', () => {
       let bsConfig = {
         auth: {
-          access_key: "xyz"
+          access_key: 'xyz',
         },
         connection_settings: {
           local: true,
-          local_identifier: "xyz"
+          local_identifier: 'xyz',
         },
       };
       let args = {};
-      let checkLocalIdentifierRunningStub = sinon.stub(utils, "checkLocalIdentifierRunning");
+      let checkLocalIdentifierRunningStub = sinon.stub(
+        utils,
+        'checkLocalIdentifierRunning'
+      );
       checkLocalIdentifierRunningStub.returns(Promise.resolve(true));
-      return utils.setupLocalTesting(bsConfig,args).then((result) => {
+      return utils.setupLocalTesting(bsConfig, args).then((result) => {
         expect(result).to.be.eq(undefined);
       });
     });
@@ -1100,39 +1162,46 @@ describe('utils', () => {
     it('setting up local args and returning a local_args hash', () => {
       let bsConfig = {
         auth: {
-          access_key: "xyz"
+          access_key: 'xyz',
         },
         connection_settings: {
           local: true,
-          local_identifier: "on-demand",
-          local_config_file: "./local.yml"
+          local_identifier: 'on-demand',
+          local_config_file: './local.yml',
         },
       };
       let args = {};
-      let cliVersionPathStub = sinon.stub(usageReporting, "cli_version_and_path").withArgs(bsConfig);
-      cliVersionPathStub.returns("abc");
+      let cliVersionPathStub = sinon
+        .stub(usageReporting, 'cli_version_and_path')
+        .withArgs(bsConfig);
+      cliVersionPathStub.returns('abc');
       let local_args = utils.setLocalArgs(bsConfig, args);
-      expect(local_args["key"]).to.be.eq(bsConfig['auth']['access_key']);
-      expect(local_args["localIdentifier"]).to.be.eq(bsConfig["connection_settings"]["local_identifier"]);
-      expect(local_args["daemon"]).to.be.eq(true);
-      expect(local_args["enable-logging-for-api"]).to.be.eq(true);
+      expect(local_args['key']).to.be.eq(bsConfig['auth']['access_key']);
+      expect(local_args['localIdentifier']).to.be.eq(
+        bsConfig['connection_settings']['local_identifier']
+      );
+      expect(local_args['daemon']).to.be.eq(true);
+      expect(local_args['enable-logging-for-api']).to.be.eq(true);
       expect(local_args['config-file']).to.be.eq(path.resolve('./local.yml'));
       sinon.restore();
     });
   });
 
-  describe('stopLocalBinary' , () => {
+  describe('stopLocalBinary', () => {
     afterEach(function () {
       sinon.restore();
       sandbox.restore();
     });
-    it('stopLocalBinary promise gets resolve with undefined' ,() => {
+    it('stopLocalBinary promise gets resolve with undefined', () => {
       let bsConfig = {
         connection_settings: {
-          local: true
-        }
+          local: true,
+        },
       };
-      let checkLocalIdentifierRunningStub = sinon.stub(utils, "checkLocalIdentifierRunning");
+      let checkLocalIdentifierRunningStub = sinon.stub(
+        utils,
+        'checkLocalIdentifierRunning'
+      );
       checkLocalIdentifierRunningStub.returns(Promise.resolve(false));
       let sendUsageReportStub = sandbox
         .stub(utils, 'sendUsageReport')
@@ -1145,74 +1214,86 @@ describe('utils', () => {
       });
     });
 
-    it('stopLocalBinary promise resolves with undefined if the bs_local isRunning is false' ,() => {
+    it('stopLocalBinary promise resolves with undefined if the bs_local isRunning is false', () => {
       let bsConfig = {
         connection_settings: {
-          local_mode: "on-demand"
-        }
+          local_mode: 'on-demand',
+        },
       };
       let isRunningStub = sandbox.stub().returns(false);
       let bs_local = {
         isRunning: isRunningStub,
       };
-      let checkLocalIdentifierRunningStub = sinon.stub(utils, "checkLocalIdentifierRunning");
+      let checkLocalIdentifierRunningStub = sinon.stub(
+        utils,
+        'checkLocalIdentifierRunning'
+      );
       checkLocalIdentifierRunningStub.returns(Promise.resolve(true));
       return utils.stopLocalBinary(bsConfig, bs_local).then((result) => {
         expect(result).to.be.eq(undefined);
       });
     });
 
-    it('if the bs_local isRunning is true and local_mode is always-on, then gets resolve with undefined' ,() => {
+    it('if the bs_local isRunning is true and local_mode is always-on, then gets resolve with undefined', () => {
       let bsConfig = {
         connection_settings: {
-          local_mode: "always-on"
-        }
+          local_mode: 'always-on',
+        },
       };
       let isRunningStub = sandbox.stub().returns(true);
       let bs_local = {
         isRunning: isRunningStub,
-      }
-      let checkLocalIdentifierRunningStub = sinon.stub(utils, "checkLocalIdentifierRunning");
+      };
+      let checkLocalIdentifierRunningStub = sinon.stub(
+        utils,
+        'checkLocalIdentifierRunning'
+      );
       checkLocalIdentifierRunningStub.returns(Promise.resolve(true));
       return utils.stopLocalBinary(bsConfig, bs_local).then((result) => {
         expect(result).to.be.eq(undefined);
       });
     });
 
-    it('if the bs_local isRunning is true and local_mode is not always-on and there is no stop error, then gets resolve with undefined' ,() => {
+    it('if the bs_local isRunning is true and local_mode is not always-on and there is no stop error, then gets resolve with undefined', () => {
       let bsConfig = {
         connection_settings: {
-          local_mode: "on-demand"
-        }
+          local_mode: 'on-demand',
+        },
       };
       let isRunningStub = sandbox.stub().returns(true);
       let stopStub = sandbox.stub().yields(undefined);
       let bs_local = {
         isRunning: isRunningStub,
-        stop: stopStub
-      }
-      let checkLocalIdentifierRunningStub = sinon.stub(utils, "checkLocalIdentifierRunning");
+        stop: stopStub,
+      };
+      let checkLocalIdentifierRunningStub = sinon.stub(
+        utils,
+        'checkLocalIdentifierRunning'
+      );
       checkLocalIdentifierRunningStub.returns(Promise.resolve(true));
       return utils.stopLocalBinary(bsConfig, bs_local).then((result) => {
         expect(result).to.be.eq(undefined);
       });
     });
 
-    it('if the bs_local isRunning is true and local_mode is not always-on and there is stop error, then gets resolve with stop error' ,() => {
+    it('if the bs_local isRunning is true and local_mode is not always-on and there is stop error, then gets resolve with stop error', () => {
       let bsConfig = {
         connection_settings: {
-          local_mode: "on-demand"
-        }
+          local_mode: 'on-demand',
+        },
       };
       let isRunningStub = sandbox.stub().returns(true);
       let error = new Error('Local Stop Error');
       let stopStub = sandbox.stub().yields(error);
-      let checkLocalIdentifierRunningStub = sinon.stub(utils, "checkLocalIdentifierRunning");
+      let checkLocalIdentifierRunningStub = sinon.stub(
+        utils,
+        'checkLocalIdentifierRunning'
+      );
       checkLocalIdentifierRunningStub.returns(Promise.resolve(true));
       let bs_local = {
         isRunning: isRunningStub,
-        stop: stopStub
-      }
+        stop: stopStub,
+      };
       let sendUsageReportStub = sandbox
         .stub(utils, 'sendUsageReport')
         .callsFake(function () {
@@ -1224,17 +1305,17 @@ describe('utils', () => {
         sinon.assert.calledOnce(stopStub);
       });
     });
-
   });
 
   describe('generateLocalIdentifier', () => {
-
     it('if the mode is always-on it returns getmac() as local-identifier', () => {
-      expect(utils.generateLocalIdentifier("always-on")).to.be.eq(Buffer.from(getmac()).toString("base64"));
+      expect(utils.generateLocalIdentifier('always-on')).to.be.eq(
+        Buffer.from(getmac()).toString('base64')
+      );
     });
     it('if the mode is not always-on it returns random uuidv4 as local-identifier', () => {
-      let uuidv41 = utils.generateLocalIdentifier("abc");
-      let uuidv42 = utils.generateLocalIdentifier("abc");
+      let uuidv41 = utils.generateLocalIdentifier('abc');
+      let uuidv42 = utils.generateLocalIdentifier('abc');
       expect(uuidv41 != uuidv42).to.be.eq(true);
     });
   });
@@ -1250,16 +1331,17 @@ describe('utils', () => {
     it('should generate local_identifier if args.localIdentifier & process.env.BROWSERSTACK_LOCAL_IDENTIFIER is undefined', () => {
       let bsConfig = {
         connection_settings: {
-          local: true
+          local: true,
         },
       };
       let args = {};
-      let generateLocalIdentifierStub = sinon.stub(utils,"generateLocalIdentifier");
-      generateLocalIdentifierStub.returns("abc");
-      utils.setLocalIdentifier(bsConfig,args);
-      expect(bsConfig.connection_settings.local_identifier).to.be.eq(
-        "abc"
+      let generateLocalIdentifierStub = sinon.stub(
+        utils,
+        'generateLocalIdentifier'
       );
+      generateLocalIdentifierStub.returns('abc');
+      utils.setLocalIdentifier(bsConfig, args);
+      expect(bsConfig.connection_settings.local_identifier).to.be.eq('abc');
     });
 
     it('should change local identifier to local_identifier in bsConfig if process.env.BROWSERSTACK_LOCAL_IDENTIFIER is set to local_identifier', () => {
@@ -1270,7 +1352,7 @@ describe('utils', () => {
       };
       let args = {};
       process.env.BROWSERSTACK_LOCAL_IDENTIFIER = 'local_identifier';
-      utils.setLocalIdentifier(bsConfig,args);
+      utils.setLocalIdentifier(bsConfig, args);
       expect(bsConfig.connection_settings.local_identifier).to.be.eq(
         'local_identifier'
       );
@@ -1282,38 +1364,40 @@ describe('utils', () => {
       };
       let args = {};
       process.env.BROWSERSTACK_LOCAL_IDENTIFIER = 'local_identifier';
-      utils.setLocalIdentifier(bsConfig,args);
+      utils.setLocalIdentifier(bsConfig, args);
       expect(bsConfig.connection_settings.local_identifier).to.be.eq(
         'local_identifier'
       );
     });
 
-    it('if args localIdentifier is defined then it gets assigned to bsConfig connection_settings local_identifier' , () => {
+    it('if args localIdentifier is defined then it gets assigned to bsConfig connection_settings local_identifier', () => {
       let bsConfig = {
         local: true,
         connection_settings: {
-          local_identifier: "abc"
-        }
+          local_identifier: 'abc',
+        },
       };
       let args = {
-        localIdentifier: "xyz"
+        localIdentifier: 'xyz',
       };
       utils.setLocalIdentifier(bsConfig, args);
-      expect(bsConfig.connection_settings.local_identifier).to.be.eq("xyz");
+      expect(bsConfig.connection_settings.local_identifier).to.be.eq('xyz');
       expect(bsConfig.connection_settings.local_mode).to.be.eq('always-on');
     });
 
-    it('if localIdentifier is defined then local_mode is set to always-on' , () => {
+    it('if localIdentifier is defined then local_mode is set to always-on', () => {
       let bsConfig = {
         connection_settings: {
           local: true,
           local_identifier: 'abc',
         },
       };
-      let args = {}
+      let args = {};
       utils.setLocalIdentifier(bsConfig, args);
-      expect(bsConfig.connection_settings.local_identifier).to.be.eq("abc");
-      expect(bsConfig['connection_settings']['local_mode']).to.be.eq('always-on');
+      expect(bsConfig.connection_settings.local_identifier).to.be.eq('abc');
+      expect(bsConfig['connection_settings']['local_mode']).to.be.eq(
+        'always-on'
+      );
     });
   });
 
@@ -1332,7 +1416,7 @@ describe('utils', () => {
           username: 'test',
         },
       };
-      utils.setUsername(bsConfig, {username: 'username'});
+      utils.setUsername(bsConfig, { username: 'username' });
       expect(bsConfig.auth.username).to.be.eq('username');
     });
 
@@ -1373,7 +1457,7 @@ describe('utils', () => {
           access_key: 'test',
         },
       };
-      utils.setAccessKey(bsConfig, {key: 'access_key'});
+      utils.setAccessKey(bsConfig, { key: 'access_key' });
       expect(bsConfig.auth.access_key).to.be.eq('access_key');
     });
 
@@ -1486,7 +1570,7 @@ describe('utils', () => {
       };
     });
 
-    afterEach(function(){
+    afterEach(function () {
       sinon.restore();
     });
 
@@ -1575,9 +1659,10 @@ describe('utils', () => {
 
     it('should set setDefaults if args.username is present', () => {
       let bsConfig = { run_settings: {} };
-      utils.setDefaults(bsConfig, {username: 'username'});
+      utils.setDefaults(bsConfig, { username: 'username' });
       expect(utils.isUndefined(bsConfig.auth)).to.be.false;
-      expect(utils.isUndefined(bsConfig.run_settings.npm_dependencies)).to.be.false;
+      expect(utils.isUndefined(bsConfig.run_settings.npm_dependencies)).to.be
+        .false;
     });
 
     it('should set setDefaults if process.env.BROWSERSTACK_USERNAME is present and args.username is not present', () => {
@@ -1585,17 +1670,19 @@ describe('utils', () => {
       process.env.BROWSERSTACK_USERNAME = 'username';
       utils.setDefaults(bsConfig, {});
       expect(utils.isUndefined(bsConfig.auth)).to.be.false;
-      expect(utils.isUndefined(bsConfig.run_settings.npm_dependencies)).to.be.false;
+      expect(utils.isUndefined(bsConfig.run_settings.npm_dependencies)).to.be
+        .false;
     });
 
     it('should not set setDefaults if process.env.BROWSERSTACK_USERNAME and args.username is not present', () => {
       let bsConfig = { run_settings: {} };
       utils.setDefaults(bsConfig, {});
       expect(utils.isUndefined(bsConfig.auth)).to.be.true;
-      expect(utils.isUndefined(bsConfig.run_settings.npm_dependencies)).to.be.false;
+      expect(utils.isUndefined(bsConfig.run_settings.npm_dependencies)).to.be
+        .false;
     });
 
-    it ('should set connection_settings if bsConfig.connection_settings is undefined' , () => {
+    it('should set connection_settings if bsConfig.connection_settings is undefined', () => {
       let bsConfig = { run_settings: {} };
       utils.setDefaults(bsConfig, {});
       expect(utils.isUndefined(bsConfig.connection_settings)).to.be.false;
@@ -1605,11 +1692,11 @@ describe('utils', () => {
       let bsConfig = {
         run_settings: {},
         connection_settings: {
-          local: "false"
-        }
-     };
+          local: 'false',
+        },
+      };
       utils.setDefaults(bsConfig, {});
-      expect(bsConfig.connection_settings).to.deep.equal({local: "false"});
+      expect(bsConfig.connection_settings).to.deep.equal({ local: 'false' });
     });
   });
 
@@ -1624,7 +1711,7 @@ describe('utils', () => {
         },
       };
 
-      utils.getNumberOfSpecFiles(bsConfig,{},{});
+      utils.getNumberOfSpecFiles(bsConfig, {}, {});
       sinon.assert.calledOnce(getNumberOfSpecFilesStub);
       sinon.assert.calledOnceWithExactly(getNumberOfSpecFilesStub, 'specs', {
         cwd: 'cypressProjectDir',
@@ -1643,13 +1730,17 @@ describe('utils', () => {
         },
       };
 
-      utils.getNumberOfSpecFiles(bsConfig,{},{});
+      utils.getNumberOfSpecFiles(bsConfig, {}, {});
 
-      sinon.assert.calledOnceWithExactly(getNumberOfSpecFilesStub, `cypress/integration/**/*.+(${constant.specFileTypes.join("|")})`, {
-        cwd: 'cypressProjectDir',
-        matchBase: true,
-        ignore: 'exclude',
-      });
+      sinon.assert.calledOnceWithExactly(
+        getNumberOfSpecFilesStub,
+        `cypress/integration/**/*.+(${constant.specFileTypes.join('|')})`,
+        {
+          cwd: 'cypressProjectDir',
+          matchBase: true,
+          ignore: 'exclude',
+        }
+      );
       glob.sync.restore();
     });
 
@@ -1662,7 +1753,7 @@ describe('utils', () => {
         },
       };
 
-      utils.getNumberOfSpecFiles(bsConfig, {}, { "integrationFolder": "specs"});
+      utils.getNumberOfSpecFiles(bsConfig, {}, { integrationFolder: 'specs' });
 
       sinon.assert.calledOnceWithExactly(
         getNumberOfSpecFilesStub,
@@ -1679,7 +1770,8 @@ describe('utils', () => {
 
   describe('warnSpecLimit', () => {
     let sendUsageReportStub, loggerStub;
-    let bsConfig = {run_settings: {}}, args = {};
+    let bsConfig = { run_settings: {} },
+      args = {};
     beforeEach(() => {
       sendUsageReportStub = sandbox
         .stub(utils, 'sendUsageReport')
@@ -1698,13 +1790,13 @@ describe('utils', () => {
       it('should log and send to eds for one combination, one parallel', () => {
         let specFiles = {
           length: 1,
-          join: function() {
+          join: function () {
             return {
-              length: constant.SPEC_TOTAL_CHAR_LIMIT
-            }
-          }
+              length: constant.SPEC_TOTAL_CHAR_LIMIT,
+            };
+          },
         };
-        sinon.stub(utils, "getBrowserCombinations").returns(1);
+        sinon.stub(utils, 'getBrowserCombinations').returns(1);
         bsConfig.run_settings.parallels = 1;
         utils.warnSpecLimit(bsConfig, args, specFiles);
         sinon.assert.calledOnce(sendUsageReportStub);
@@ -1714,13 +1806,13 @@ describe('utils', () => {
       it('should log and send to eds for one combination, two parallel', () => {
         let specFiles = {
           length: 1,
-          join: function() {
+          join: function () {
             return {
-              length: constant.SPEC_TOTAL_CHAR_LIMIT
-            }
-          }
+              length: constant.SPEC_TOTAL_CHAR_LIMIT,
+            };
+          },
         };
-        sinon.stub(utils, "getBrowserCombinations").returns(1);
+        sinon.stub(utils, 'getBrowserCombinations').returns(1);
         bsConfig.run_settings.parallels = 2;
         utils.warnSpecLimit(bsConfig, args, specFiles);
         sinon.assert.calledOnce(sendUsageReportStub);
@@ -1730,13 +1822,13 @@ describe('utils', () => {
       it('should log and send to eds for multiple combination, multiple parallel', () => {
         let specFiles = {
           length: 1,
-          join: function() {
+          join: function () {
             return {
-              length: constant.SPEC_TOTAL_CHAR_LIMIT
-            }
-          }
+              length: constant.SPEC_TOTAL_CHAR_LIMIT,
+            };
+          },
         };
-        sinon.stub(utils, "getBrowserCombinations").returns(3);
+        sinon.stub(utils, 'getBrowserCombinations').returns(3);
         bsConfig.run_settings.parallels = 4;
         utils.warnSpecLimit(bsConfig, args, specFiles);
         sinon.assert.calledOnce(sendUsageReportStub);
@@ -1748,13 +1840,13 @@ describe('utils', () => {
       it('should not log for one combination, one parallel', () => {
         let specFiles = {
           length: 1,
-          join: function() {
+          join: function () {
             return {
-              length: 1
-            }
-          }
+              length: 1,
+            };
+          },
         };
-        sinon.stub(utils, "getBrowserCombinations").returns(1);
+        sinon.stub(utils, 'getBrowserCombinations').returns(1);
         bsConfig.run_settings.parallels = 1;
         utils.warnSpecLimit(bsConfig, args, specFiles);
         sinon.assert.notCalled(sendUsageReportStub);
@@ -1764,13 +1856,13 @@ describe('utils', () => {
       it('should not log for one combination, multiple parallel', () => {
         let specFiles = {
           length: 1,
-          join: function() {
+          join: function () {
             return {
-              length: 1
-            }
-          }
+              length: 1,
+            };
+          },
         };
-        sinon.stub(utils, "getBrowserCombinations").returns(1);
+        sinon.stub(utils, 'getBrowserCombinations').returns(1);
         bsConfig.run_settings.parallels = 2;
         utils.warnSpecLimit(bsConfig, args, specFiles);
         sinon.assert.notCalled(sendUsageReportStub);
@@ -1780,25 +1872,24 @@ describe('utils', () => {
   });
 
   describe('capitalizeFirstLetter', () => {
-
     it('should capitalize First Letter ', () => {
-      expect(utils.capitalizeFirstLetter("chrome")).to.eq("Chrome");
+      expect(utils.capitalizeFirstLetter('chrome')).to.eq('Chrome');
     });
 
     it('should return null if value passed is null', () => {
       expect(utils.capitalizeFirstLetter(null)).to.eq(null);
     });
-
   });
 
   describe('sanitizeSpecsPattern', () => {
-
     it('should wrap pattern around {} when input is csv', () => {
-      expect(utils.sanitizeSpecsPattern("pattern1,pattern2")).to.eq("{pattern1,pattern2}");
+      expect(utils.sanitizeSpecsPattern('pattern1,pattern2')).to.eq(
+        '{pattern1,pattern2}'
+      );
     });
 
     it('should not wrap pattern around {} when input is single glob pattern', () => {
-      expect(utils.sanitizeSpecsPattern("pattern3")).to.eq("pattern3");
+      expect(utils.sanitizeSpecsPattern('pattern3')).to.eq('pattern3');
     });
 
     it('should return undefined when --spec is undefined', () => {
@@ -1807,7 +1898,6 @@ describe('utils', () => {
   });
 
   describe('getBrowserCombinations', () => {
-
     it('returns correct number of browserCombinations for one combination', () => {
       let bsConfig = {
         browsers: [
@@ -1816,9 +1906,11 @@ describe('utils', () => {
             os: 'OS X Mojave',
             versions: ['85'],
           },
-        ]
+        ],
       };
-      chai.assert.deepEqual(utils.getBrowserCombinations(bsConfig), ['OS X Mojave-chrome85']);
+      chai.assert.deepEqual(utils.getBrowserCombinations(bsConfig), [
+        'OS X Mojave-chrome85',
+      ]);
     });
 
     it('returns correct number of browserCombinations for multiple combinations', () => {
@@ -1832,17 +1924,16 @@ describe('utils', () => {
           {
             browser: 'chrome',
             os: 'OS X Catalina',
-            versions: ['85','84'],
+            versions: ['85', '84'],
           },
         ],
       };
       chai.assert.deepEqual(utils.getBrowserCombinations(bsConfig), [
         'OS X Mojave-chrome85',
         'OS X Catalina-chrome85',
-        'OS X Catalina-chrome84'
+        'OS X Catalina-chrome84',
       ]);
     });
-
   });
 
   describe('#handleSyncExit', () => {
@@ -1855,8 +1946,12 @@ describe('utils', () => {
       processStub.restore();
     });
     it('should print network error message when exit code is set to network error code', () => {
-      let dashboard_url = "dashboard_url", exitCode = 2;
-      let getNetworkErrorMessageStub = sinon.stub(utils, 'getNetworkErrorMessage');
+      let dashboard_url = 'dashboard_url',
+        exitCode = 2;
+      let getNetworkErrorMessageStub = sinon.stub(
+        utils,
+        'getNetworkErrorMessage'
+      );
       utils.handleSyncExit(exitCode, dashboard_url);
       sinon.assert.calledOnce(getNetworkErrorMessageStub);
       sinon.assert.calledOnceWithExactly(processStub, exitCode);
@@ -1864,7 +1959,8 @@ describe('utils', () => {
     });
 
     it('should print dashboard link when exit code is not network error code', () => {
-      let dashboard_url = "dashboard_url", exitCode = 1;
+      let dashboard_url = 'dashboard_url',
+        exitCode = 1;
       let syncCliLoggerStub = sinon.stub(syncLogger, 'info');
       utils.handleSyncExit(exitCode, dashboard_url);
       sinon.assert.calledTwice(syncCliLoggerStub);
@@ -1874,80 +1970,109 @@ describe('utils', () => {
 
   describe('#getNetworkErrorMessage', () => {
     it('should return the error message in red color', () => {
-      let dashboard_url = "dashboard_url";
-      let message  =  constant.userMessages.FATAL_NETWORK_ERROR + '\n'
-                  + constant.userMessages.RETRY_LIMIT_EXCEEDED + '\n'
-                  + constant.userMessages.CHECK_DASHBOARD_AT  + dashboard_url
-      expect(utils.getNetworkErrorMessage(dashboard_url)).to.eq(chalk.red(message))
+      let dashboard_url = 'dashboard_url';
+      let message =
+        constant.userMessages.FATAL_NETWORK_ERROR +
+        '\n' +
+        constant.userMessages.RETRY_LIMIT_EXCEEDED +
+        '\n' +
+        constant.userMessages.CHECK_DASHBOARD_AT +
+        dashboard_url;
+      expect(utils.getNetworkErrorMessage(dashboard_url)).to.eq(
+        chalk.red(message)
+      );
     });
   });
 
   describe('#versionChangedMessage', () => {
     it('should return proper error message with placeholders replaced', () => {
-      let preferredVersion = "v1", actualVersion = "v2";
-      let message = constant.userMessages.CYPRESS_VERSION_CHANGED.replace("<preferredVersion>", preferredVersion).replace("<actualVersion>", actualVersion);
-      expect(utils.versionChangedMessage(preferredVersion, actualVersion)).to.eq(message)
+      let preferredVersion = 'v1',
+        actualVersion = 'v2';
+      let message = constant.userMessages.CYPRESS_VERSION_CHANGED.replace(
+        '<preferredVersion>',
+        preferredVersion
+      ).replace('<actualVersion>', actualVersion);
+      expect(
+        utils.versionChangedMessage(preferredVersion, actualVersion)
+      ).to.eq(message);
     });
-  })
+  });
 
   describe('#latestSyntaxToActualVersionMessage', () => {
     it('should return proper info message with placeholders replaced', () => {
-      let latestSyntaxVersion = "7.latest", actualVersion = "7.6.0";
-      let message = constant.userMessages.LATEST_SYNTAX_TO_ACTUAL_VERSION_MESSAGE.replace("<latestSyntaxVersion>", latestSyntaxVersion).replace("<actualVersion>", actualVersion);
-      expect(utils.latestSyntaxToActualVersionMessage(latestSyntaxVersion, actualVersion)).to.eq(message)
+      let latestSyntaxVersion = '7.latest',
+        actualVersion = '7.6.0';
+      let message =
+        constant.userMessages.LATEST_SYNTAX_TO_ACTUAL_VERSION_MESSAGE.replace(
+          '<latestSyntaxVersion>',
+          latestSyntaxVersion
+        ).replace('<actualVersion>', actualVersion);
+      expect(
+        utils.latestSyntaxToActualVersionMessage(
+          latestSyntaxVersion,
+          actualVersion
+        )
+      ).to.eq(message);
     });
-  })
+  });
 
   describe('#isJSONInvalid', () => {
     it('JSON is valid when error is parallel misconfiguration', () => {
       let error = constant.validationMessages.INVALID_PARALLELS_CONFIGURATION;
-      let args = {"parallels": 4}
-      expect(utils.isJSONInvalid(error, args)).to.eq(false)
+      let args = { parallels: 4 };
+      expect(utils.isJSONInvalid(error, args)).to.eq(false);
     });
 
     it('JSON is valid when local is not set for localhost url', () => {
-      let error = constant.validationMessages.LOCAL_NOT_SET.replace("<baseUrlValue>", "localhost:4000");
-      expect(utils.isJSONInvalid(error, {})).to.eq(false)
+      let error = constant.validationMessages.LOCAL_NOT_SET.replace(
+        '<baseUrlValue>',
+        'localhost:4000'
+      );
+      expect(utils.isJSONInvalid(error, {})).to.eq(false);
     });
 
     it('JSON is invalid for errors apart from Local or Prallell misconfiguration', () => {
       let error = constant.validationMessages.INCORRECT_AUTH_PARAMS;
-      expect(utils.isJSONInvalid(error, {})).to.eq(true)
+      expect(utils.isJSONInvalid(error, {})).to.eq(true);
     });
 
-    it('JSON is invalid if local identifier is invalid', () =>{
+    it('JSON is invalid if local identifier is invalid', () => {
       let error = constant.validationMessages.INVALID_CLI_LOCAL_IDENTIFIER;
-      expect(utils.isJSONInvalid(error,{})).to.eq(false);
+      expect(utils.isJSONInvalid(error, {})).to.eq(false);
     });
 
-    it('JSON is invalid if local mode is invalid', () =>{
+    it('JSON is invalid if local mode is invalid', () => {
       let error = constant.validationMessages.INVALID_LOCAL_MODE;
-      expect(utils.isJSONInvalid(error,{})).to.eq(false);
+      expect(utils.isJSONInvalid(error, {})).to.eq(false);
     });
-  })
+  });
 
   describe('#deleteBaseUrlFromError', () => {
     it('Replace baseUrl in Local error string', () => {
       let error = constant.validationMessages.LOCAL_NOT_SET;
-      expect(utils.deleteBaseUrlFromError(error)).to.match(/To test on BrowserStack/)
+      expect(utils.deleteBaseUrlFromError(error)).to.match(
+        /To test on BrowserStack/
+      );
     });
 
     it('should not replace baseUrl in other error string', () => {
       let error = constant.validationMessages.NOT_VALID_JSON;
-      expect(utils.deleteBaseUrlFromError(error)).not.to.match(/To test on BrowserStack/)
+      expect(utils.deleteBaseUrlFromError(error)).not.to.match(
+        /To test on BrowserStack/
+      );
     });
   });
 
   describe('#checkLocalIdentifierRunning', () => {
-    afterEach(() =>{
+    afterEach(() => {
       sinon.restore();
     });
-    it('if the bsConfig localIdentifier is not present within the response body then function should resolve with false' , () => {
+    it('if the bsConfig localIdentifier is not present within the response body then function should resolve with false', () => {
       const responseObject = {
         statusCode: 200,
         headers: {
-          'content-type': 'application/json'
-        }
+          'content-type': 'application/json',
+        },
       };
       const responseBody = {
         status: 'success',
@@ -1960,31 +2085,34 @@ describe('utils', () => {
           },
           {
             localIdentifier: 'lmno',
-          }
-        ]
+          },
+        ],
       };
-      sinon.stub(request, 'get')
-          .yields(undefined, responseObject, JSON.stringify(responseBody));
+      sinon
+        .stub(request, 'get')
+        .yields(undefined, responseObject, JSON.stringify(responseBody));
 
       let bsConfig = {
         auth: {
-        access_key: "abcd",
-        username: "abcd"
-        }
+          access_key: 'abcd',
+          username: 'abcd',
+        },
       };
 
-      let localIdentifier = "abcd";
-      return utils.checkLocalIdentifierRunning(bsConfig, localIdentifier).then((result) => {
-        expect(result).to.be.eq(false);
-      });
+      let localIdentifier = 'abcd';
+      return utils
+        .checkLocalIdentifierRunning(bsConfig, localIdentifier)
+        .then((result) => {
+          expect(result).to.be.eq(false);
+        });
     });
 
-    it('if the bsConfig localIdentifier if present within the response body then the function should resolve with true' , () => {
+    it('if the bsConfig localIdentifier if present within the response body then the function should resolve with true', () => {
       const responseObject = {
         statusCode: 200,
         headers: {
-          'content-type': 'application/json'
-        }
+          'content-type': 'application/json',
+        },
       };
       const responseBody = {
         status: 'success',
@@ -1997,23 +2125,26 @@ describe('utils', () => {
           },
           {
             localIdentifier: 'lmno',
-          }
-        ]
+          },
+        ],
       };
-      sinon.stub(request, 'get')
-          .yields(undefined, responseObject, JSON.stringify(responseBody));
+      sinon
+        .stub(request, 'get')
+        .yields(undefined, responseObject, JSON.stringify(responseBody));
 
       let bsConfig = {
         auth: {
-        access_key: "abcd",
-        username: "abcd"
-        }
+          access_key: 'abcd',
+          username: 'abcd',
+        },
       };
 
-      let localIdentifier = "lmno";
-      return utils.checkLocalIdentifierRunning(bsConfig, localIdentifier).then((result) => {
-        expect(result).to.be.eq(true);
-      });
+      let localIdentifier = 'lmno';
+      return utils
+        .checkLocalIdentifierRunning(bsConfig, localIdentifier)
+        .then((result) => {
+          expect(result).to.be.eq(true);
+        });
     });
   });
 
@@ -2021,47 +2152,47 @@ describe('utils', () => {
     it('the args localConfigfile should be assigned to bsconfig connection_settigs local_config_file', () => {
       let bsConfig = {
         connection_settings: {
-          local_config_file: "efgh"
-        }
+          local_config_file: 'efgh',
+        },
       };
       let args = {
-        localConfigFile: "abcd"
+        localConfigFile: 'abcd',
       };
       utils.setLocalConfigFile(bsConfig, args);
-      expect(args.localConfigFile).to.be.eql(bsConfig.connection_settings.local_config_file);
+      expect(args.localConfigFile).to.be.eql(
+        bsConfig.connection_settings.local_config_file
+      );
     });
   });
 
   describe('setOtherConfigs', () => {
     it('set reporter arg in run_settings', () => {
       let bsConfig = {
-        run_settings: {
-        }
+        run_settings: {},
       };
       let args = {
-        reporter: "mocha",
-        'reporter-options': "random-string"
+        reporter: 'mocha',
+        'reporter-options': 'random-string',
       };
       utils.setOtherConfigs(bsConfig, args);
-      expect(bsConfig.run_settings.reporter).to.be.eql("mocha");
+      expect(bsConfig.run_settings.reporter).to.be.eql('mocha');
     });
 
     it('set reporter-options arg in run_settings', () => {
       let bsConfig = {
-        run_settings: {
-        }
+        run_settings: {},
       };
       let args = {
-        'reporterOptions': "random-string"
+        reporterOptions: 'random-string',
       };
       utils.setOtherConfigs(bsConfig, args);
-      expect(bsConfig.run_settings.reporter_options).to.be.eql("random-string");
+      expect(bsConfig.run_settings.reporter_options).to.be.eql('random-string');
     });
   });
 
   describe('getCypressJSON', () => {
     let sampleJson = {
-      a: "b"
+      a: 'b',
     };
 
     beforeEach(() => {
@@ -2074,8 +2205,7 @@ describe('utils', () => {
 
     it('return undefined if param not present', () => {
       let bsConfig = {
-        run_settings: {
-        }
+        run_settings: {},
       };
       expect(utils.getCypressJSON(bsConfig)).to.be.eql(undefined);
     });
@@ -2083,8 +2213,8 @@ describe('utils', () => {
     it('read file and return json if param present', () => {
       let bsConfig = {
         run_settings: {
-          cypress_config_file: './cypress.json'
-        }
+          cypress_config_file: './cypress.json',
+        },
       };
 
       expect(utils.getCypressJSON(bsConfig)).to.be.eql(sampleJson);
@@ -2094,7 +2224,7 @@ describe('utils', () => {
   describe('nonEmptyArray', () => {
     it('return true if non empty array', () => {
       expect(utils.nonEmptyArray([1, 2, 3])).to.be.eql(true);
-      expect(utils.nonEmptyArray(["abc"])).to.be.eql(true);
+      expect(utils.nonEmptyArray(['abc'])).to.be.eql(true);
     });
 
     it('return false if empty array', () => {
@@ -2105,5 +2235,80 @@ describe('utils', () => {
       expect(utils.nonEmptyArray(null)).to.be.eql(false);
     });
   });
+  describe('setConfig', () => {
+    it('the args config should be assigned to bsconfig run_settings config', () => {
+      let bsConfig = {
+        run_settings: {},
+      };
+      let args = {
+        config: 'pageLoadTimeout=60000',
+      };
+      utils.setConfig(bsConfig, args);
+      expect(args.config).to.be.eql(bsConfig.run_settings.config);
+    });
+  });
 
+  describe('setBrowsers', () => {
+    it('the args browser should override the bsconfig browsers', async () => {
+      let bsConfig = {
+        browsers: [
+          {
+            browser: 'chrome',
+            os: 'Windows 10',
+            versions: ['latest', 'latest-1'],
+          },
+          {
+            browser: 'chrome',
+            os: 'Windows 10',
+            versions: ['latest', 'latest-1'],
+          },
+        ],
+      };
+      let args = {
+        browser: 'chrome@91:Windows 10,chrome:OS X Mojave',
+      };
+      let browserResult = [
+        {
+          browser: 'chrome',
+          os: 'Windows 10',
+          versions: ['91'],
+        },
+        {
+          browser: 'chrome',
+          os: 'OS X Mojave',
+          versions: ['latest'],
+        },
+      ];
+      await utils.setBrowsers(bsConfig, args);
+      expect(bsConfig.browsers).to.be.eql(browserResult);
+    });
+    it('the args browser should throw an error in case of exception raised', async () => {
+      let bsConfig = {
+        browsers: [
+          {
+            browser: 'chrome',
+            os: 'Windows 10',
+            versions: ['latest', 'latest-1'],
+          },
+          {
+            browser: 'chrome',
+            os: 'Windows 10',
+            versions: ['latest', 'latest-1'],
+          },
+        ],
+      };
+      let args = {
+        browser: ':Windows 10',
+      };
+      try {
+        await utils.setBrowsers(bsConfig, args);
+      } catch (err) {
+        {
+          expect(err).to.be.eql(
+            constant.validationMessages.INVALID_BROWSER_ARGS
+          );
+        }
+      }
+    });
+  });
 });
