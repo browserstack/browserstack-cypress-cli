@@ -767,6 +767,36 @@ exports.deleteBaseUrlFromError = (err) => {
   return err.replace(/To test ([\s\S]*)on BrowserStack/g, 'To test on BrowserStack');
 }
 
+exports.setBrowsers = async (bsConfig, args) => {
+  return new Promise((resolve, reject) => {
+    if(!this.isUndefined(args.browser)){
+      try{
+        bsConfig["browsers"] = []
+        let browsersList = args.browser.split(',')
+        browsersList.forEach((browser)=>{
+          let browserHash = {}
+          let osBrowserDetails =  browser.split(':')
+          browserHash['os'] = osBrowserDetails[1].trim()
+          let browserDetails = osBrowserDetails[0].split('@')
+          browserHash['browser'] = browserDetails[0].trim()
+          browserHash['versions'] = []
+          browserHash['versions'].push(this.isUndefined(browserDetails[1]) ? "latest" : browserDetails[1].trim())
+          bsConfig["browsers"].push(browserHash)
+        });
+      } catch(err){
+        reject(Constants.validationMessages.INVALID_BROWSER_ARGS)
+      }
+    }
+    resolve()
+  });
+}
+
+exports.setConfig = (bsConfig, args) => {
+  if (!this.isUndefined(args.config)) {
+    bsConfig["run_settings"]["config"] = args.config
+  }
+}
+
 // blindly send other passed configs with run_settings and handle at backend
 exports.setOtherConfigs = (bsConfig, args) => {
   if (!this.isUndefined(args.reporter)) {
