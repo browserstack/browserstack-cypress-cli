@@ -5,7 +5,8 @@ const syncCLI = {
   LOGS: {
     INIT_LOG: "All tests:"
   },
-  INITIAL_DELAY_MULTIPLIER: 10
+  INITIAL_DELAY_MULTIPLIER: 10,
+  DEFAULT_LINE_SEP: "\n--------------------------------------------------------------------------------",
 };
 
 const userMessages = {
