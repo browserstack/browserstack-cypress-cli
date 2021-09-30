@@ -6,6 +6,7 @@ const glob = require('glob');
 const getmac = require('getmac').default;
 const { v4: uuidv4 } = require('uuid');
 const browserstack = require('browserstack-local');
+const crypto = require('crypto');
 
 const usageReporting = require("./usageReporting"),
   logger = require("./logger").winstonLogger,
@@ -685,6 +686,18 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressJson) => {
 exports.sanitizeSpecsPattern = (pattern) => {
   return pattern && pattern.split(",").length > 1 ? "{" + pattern + "}" : pattern;
 }
+
+exports.generateUniqueHash = () => {
+  const loopback = /(?:[0]{2}[:-]){5}[0]{2}/
+  const interFaceList = os.networkInterfaces();
+  for (let inter in interFaceList){
+    for (const address of interFaceList[inter]) {
+      if (loopback.test(address.mac) === false) {
+        return crypto.createHash('md5').update(address.mac).digest('hex');
+      };
+    };
+  };
+};
 
 exports.getBrowserCombinations = (bsConfig) => {
   let osBrowserArray = [];

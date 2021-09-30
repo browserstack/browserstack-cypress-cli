@@ -9,6 +9,8 @@ const chai = require('chai'),
   chaiAsPromised = require('chai-as-promised'),
   glob = require('glob'),
   chalk = require('chalk'),
+  os = require("os"),
+  crypto = require('crypto'),
   fs = require('fs');
 const getmac = require('getmac').default;
 const usageReporting = require('../../../../bin/helpers/usageReporting');
@@ -2245,6 +2247,63 @@ describe('utils', () => {
       };
       utils.setConfig(bsConfig, args);
       expect(args.config).to.be.eql(bsConfig.run_settings.config);
+    });
+  });
+
+  describe('generateUniqueHash', () => {
+    beforeEach(() => {
+      let interfaceList = {
+        lo0: [
+          {
+            address: 'fe80::1',
+            netmask: 'ffff:ffff:ffff:ffff::',
+            family: 'IPv6',
+            mac: '00:00:00:00:00:00',
+            internal: true,
+            cidr: 'fe80::1/64',
+            scopeid: 1
+          }
+        ],
+        en5: [
+          {
+            address: 'fe80::1',
+            netmask: 'ffff:ffff:ffff:ffff::',
+            family: 'IPv6',
+            mac: '00:00:00:00:00:00',
+            internal: true,
+            cidr: 'fe80::1/64',
+            scopeid: 1
+          },
+          {
+            address: 'fe80::aede:48ff:fe00:1122',
+            netmask: 'ffff:ffff:ffff:ffff::',
+            family: 'IPv6',
+            mac: 'ra:nd:om:01:23:45',
+            internal: false,
+            cidr: 'fe80::aede:48ff:fe00:1122/64',
+            scopeid: 7
+          }
+        ],
+        en0: [
+          {
+            address: '192.168.29.250',
+            netmask: '255.255.255.0',
+            family: 'IPv4',
+            mac: '00:00:00:00:00:00',
+            internal: false,
+            cidr: '192.168.29.250/24'
+          }
+        ]
+      };
+      sinon.stub(os, 'networkInterfaces').returns(interfaceList);
+      sinon.stub(crypto, 'createHash').returns({
+        update: sinon.stub().returns({
+          digest: sinon.stub().returns("random_hash")
+        })
+      });
+    });
+    it('should return non zero mac address', () => {
+      expect(utils.generateUniqueHash()).to.equal('random_hash');
     });
   });
 
