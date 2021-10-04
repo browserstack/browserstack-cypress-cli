@@ -1,8 +1,7 @@
 const logger = require("./logger").winstonLogger,
   Constants = require("./constants"),
   Utils = require("./utils"),
-  fs = require('fs'),
-  path = require('path');
+  fs = require('fs');
 
 const caps = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {

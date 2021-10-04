@@ -6,6 +6,7 @@ const glob = require('glob');
 const getmac = require('getmac').default;
 const { v4: uuidv4 } = require('uuid');
 const browserstack = require('browserstack-local');
+const crypto = require('crypto');
 
 const usageReporting = require("./usageReporting"),
   logger = require("./logger").winstonLogger,
@@ -141,6 +142,7 @@ exports.setParallels = (bsConfig, args, numOfSpecs) => {
   let maxParallels = browserCombinations.length * numOfSpecs;
   if (numOfSpecs <= 0) {
     bsConfig['run_settings']['parallels'] = browserCombinations.length;
+    bsConfig['run_settings']['specs_count'] = numOfSpecs;
     return;
   }
   if (bsConfig['run_settings']['parallels'] > maxParallels && bsConfig['run_settings']['parallels'] != -1 ) {
@@ -148,6 +150,7 @@ exports.setParallels = (bsConfig, args, numOfSpecs) => {
       `Using ${maxParallels} machines instead of ${bsConfig['run_settings']['parallels']} that you configured as there are ${numOfSpecs} specs to be run on ${browserCombinations.length} browser combinations.`
     );
     bsConfig['run_settings']['parallels'] = maxParallels;
+    bsConfig['run_settings']['specs_count'] = numOfSpecs;
   }
 };
 
@@ -336,12 +339,19 @@ exports.isTrueString = value => (!this.isUndefined(value) && value.toString().to
 
 exports.isFloat = (value) => Number(value) && Number(value) % 1 !== 0;
 
+exports.nonEmptyArray = (value) => {
+  if(!this.isUndefined(value) && value && value.length) {
+    return true;
+  }
+  return false;
+}
+
 exports.isParallelValid = (value) => {
   return this.isUndefined(value) || !(isNaN(value) || this.isFloat(value) || parseInt(value, 10) === 0 || parseInt(value, 10) < -1) || value === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE;
 }
 
 exports.getUserAgent = () => {
-  return `BStack-Cypress-CLI/1.8.1 (${os.arch()}/${os.platform()}/${os.release()})`;
+  return `BStack-Cypress-CLI/1.10.0 (${os.arch()}/${os.platform()}/${os.release()})`;
 };
 
 exports.isAbsolute = (configPath) => {
@@ -754,6 +764,18 @@ exports.sanitizeSpecsPattern = (pattern) => {
   return pattern && pattern.split(",").length > 1 ? "{" + pattern + "}" : pattern;
 }
 
+exports.generateUniqueHash = () => {
+  const loopback = /(?:[0]{2}[:-]){5}[0]{2}/
+  const interFaceList = os.networkInterfaces();
+  for (let inter in interFaceList){
+    for (const address of interFaceList[inter]) {
+      if (loopback.test(address.mac) === false) {
+        return crypto.createHash('md5').update(address.mac).digest('hex');
+      };
+    };
+  };
+};
+
 exports.getBrowserCombinations = (bsConfig) => {
   let osBrowserArray = [];
   let osBrowser = "";
@@ -822,3 +844,56 @@ exports.deleteBaseUrlFromError = (err) => {
   return err.replace(/To test ([\s\S]*)on BrowserStack/g, 'To test on BrowserStack');
 }
 
+exports.setBrowsers = async (bsConfig, args) => {
+  return new Promise((resolve, reject) => {
+    if(!this.isUndefined(args.browser)){
+      try{
+        bsConfig["browsers"] = []
+        let browsersList = args.browser.split(',')
+        browsersList.forEach((browser)=>{
+          let browserHash = {}
+          let osBrowserDetails =  browser.split(':')
+          browserHash['os'] = osBrowserDetails[1].trim()
+          let browserDetails = osBrowserDetails[0].split('@')
+          browserHash['browser'] = browserDetails[0].trim()
+          browserHash['versions'] = []
+          browserHash['versions'].push(this.isUndefined(browserDetails[1]) ? "latest" : browserDetails[1].trim())
+          bsConfig["browsers"].push(browserHash)
+        });
+      } catch(err){
+        reject(Constants.validationMessages.INVALID_BROWSER_ARGS)
+      }
+    }
+    resolve()
+  });
+}
+
+exports.setConfig = (bsConfig, args) => {
+  if (!this.isUndefined(args.config)) {
+    bsConfig["run_settings"]["config"] = args.config
+  }
+}
+
+// blindly send other passed configs with run_settings and handle at backend
+exports.setOtherConfigs = (bsConfig, args) => {
+  if (!this.isUndefined(args.reporter)) {
+    bsConfig["run_settings"]["reporter"] = args.reporter;
+  }
+  if (!this.isUndefined(args.reporterOptions)) {
+    bsConfig["run_settings"]["reporter_options"] = args.reporterOptions;
+  }
+}
+
+exports.getCypressJSON = (bsConfig) => {
+  let cypressJSON = undefined;
+  if (bsConfig.run_settings.cypress_config_file && bsConfig.run_settings.cypress_config_filename !== 'false') {
+    cypressJSON = JSON.parse(
+      fs.readFileSync(bsConfig.run_settings.cypressConfigFilePath)
+    );
+  } else if (bsConfig.run_settings.cypressProjectDir) {
+    cypressJSON = JSON.parse(
+      fs.readFileSync(path.join(bsConfig.run_settings.cypressProjectDir, 'cypress.json'))
+    );
+  }
+  return cypressJSON;
+}

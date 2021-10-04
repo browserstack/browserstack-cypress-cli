@@ -52,6 +52,16 @@ const generateReportInputArgs = {
   $0: "browserstack-cypress",
 };
 
+const generateDownloadsInputArgs = {
+  _: ["generate-downloads", "f3c94f7203792d03a75be3912d19354fe0961e53"],
+  cf: "browserstack.json",
+  "config-file": "browserstack.json",
+  configFile: "browserstack.json",
+  "disable-usage-reporting": undefined,
+  disableUsageReporting: undefined,
+  $0: "browserstack-cypress",
+};
+
 const buildInfoSampleBody = {
   build_id: "random_hashed_id",
   framework: "cypress",
@@ -146,4 +156,5 @@ module.exports = Object.freeze({
   sampleCapsData,
   runSampleArgs,
   generateReportInputArgs,
+  generateDownloadsInputArgs,
 });

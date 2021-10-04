@@ -43,8 +43,11 @@ describe("checkUploaded", () => {
         checkSpecsMd5: checkSpecsMd5Stub
       });
       let checkUploadedMd5rewire = checkUploaded.__get__('checkUploadedMd5');
-
-      return checkUploadedMd5rewire(bsConfig, {})
+      let instrumentBlocks = {
+        markBlockStart: sinon.stub(),
+        markBlockEnd: sinon.stub()
+      }
+      return checkUploadedMd5rewire(bsConfig, {}, instrumentBlocks)
         .then(function (data) {
           chai.assert.equal(data.md5sum, 'random_md5sum');
           chai.assert.equal(data.zipUrlPresent, false);
@@ -67,8 +70,11 @@ describe("checkUploaded", () => {
         checkSpecsMd5: checkSpecsMd5Stub
       });
       let checkUploadedMd5rewire = checkUploaded.__get__('checkUploadedMd5');
-
-      return checkUploadedMd5rewire(bsConfig, {})
+      let instrumentBlocks = {
+        markBlockStart: sinon.stub(),
+        markBlockEnd: sinon.stub()
+      }
+      return checkUploadedMd5rewire(bsConfig, {}, instrumentBlocks)
         .then(function (data) {
           chai.assert.deepEqual(data, { md5sum: 'random_md5sum', zipUrlPresent: true, zipUrl: 'bs://random_hashid' })
           sinon.assert.calledOnce(requestStub);
@@ -90,8 +96,11 @@ describe("checkUploaded", () => {
         checkSpecsMd5: checkSpecsMd5Stub
       });
       let checkUploadedMd5rewire = checkUploaded.__get__('checkUploadedMd5');
-
-      return checkUploadedMd5rewire(bsConfig, {})
+      let instrumentBlocks = {
+        markBlockStart: sinon.stub(),
+        markBlockEnd: sinon.stub()
+      }
+      return checkUploadedMd5rewire(bsConfig, {}, instrumentBlocks)
         .then(function (data) {
           chai.assert.deepEqual(data, { md5sum: 'random_md5sum', zipUrlPresent: false })
           sinon.assert.calledOnce(requestStub);

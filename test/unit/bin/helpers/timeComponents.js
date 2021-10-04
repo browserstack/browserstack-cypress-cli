@@ -8,6 +8,7 @@ const chai = require("chai"),
 let timeComponents = rewire('../../../../bin/helpers/timeComponents');
 
 let initTimeComponents = timeComponents.__get__('initTimeComponents');
+let instrumentEventTime = timeComponents.__get__('instrumentEventTime');
 let markBlockStart = timeComponents.__get__('markBlockStart');
 let markBlockEnd = timeComponents.__get__('markBlockEnd');
 let markBlockDiff = timeComponents.__get__('markBlockDiff');
@@ -21,6 +22,15 @@ describe('timeComponents', () => {
       initTimeComponents();
       let sessionTimes = timeComponents.__get__('sessionTimes');
       expect(Object.keys(sessionTimes.logTimes).length).to.equal(0);
+    });
+  });
+
+  describe('instrumentEventTime', () => {
+    it('should set reset sessionTimes object', () => {
+      initTimeComponents();
+      instrumentEventTime('cliTest');
+      let sessionTimes = timeComponents.__get__('sessionTimes');
+      expect(Object.keys(sessionTimes.eventTime)).to.include('cliTest');
     });
   });
 
@@ -86,7 +96,6 @@ describe('timeComponents', () => {
     it('should call convertDotToNestedObject and return data', () => {
       let convertDotToNestedObjectStub = sinon.stub().returns({sampleBlock: 100}),
         convertDotToNestedObjectUnset = timeComponents.__set__('convertDotToNestedObject', convertDotToNestedObjectStub);
-
       expect(getTimeComponents()).to.deep.equal({sampleBlock:100});
 
       convertDotToNestedObjectUnset();

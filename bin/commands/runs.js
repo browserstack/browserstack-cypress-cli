@@ -12,18 +12,20 @@ const archiver = require("../helpers/archiver"),
   checkUploaded = require("../helpers/checkUploaded"),
   packageInstaller = require("../helpers/packageInstaller"),
   reportGenerator = require('../helpers/reporterHTML').reportGenerator,
-  {initTimeComponents, markBlockStart, markBlockEnd, getTimeComponents} = require('../helpers/timeComponents');
+  {initTimeComponents, instrumentEventTime, markBlockStart, markBlockEnd, getTimeComponents} = require('../helpers/timeComponents'),
+  downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts;
 
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
   //Delete build_results.txt from log folder if already present.
   initTimeComponents();
+  instrumentEventTime("cliStart")
   markBlockStart('deleteOldResults');
   utils.deleteResults();
   markBlockEnd('deleteOldResults');
 
   markBlockStart('validateBstackJson');
-  return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
+  return utils.validateBstackJson(bsConfigPath).then(async function (bsConfig) {
     markBlockEnd('validateBstackJson');
     markBlockStart('setConfig');
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
@@ -68,6 +70,14 @@ module.exports = function run(args) {
 
     // set the no-wrap
     utils.setNoWrap(bsConfig, args);
+
+    //set browsers
+    await utils.setBrowsers(bsConfig, args);
+
+    //set config (--config)
+    utils.setConfig(bsConfig, args);
+    // set other cypress configs e.g. reporter and reporter-options
+    utils.setOtherConfigs(bsConfig, args);
     markBlockEnd('setConfig');
 
     // Validate browserstack.json values and parallels specified via arguments
@@ -85,7 +95,7 @@ module.exports = function run(args) {
       utils.warnSpecLimit(bsConfig, args, specFiles);
       markBlockEnd('preArchiveSteps');
       markBlockStart('checkAlreadyUploaded');
-      return checkUploaded.checkUploadedMd5(bsConfig, args).then(function (md5data) {
+      return checkUploaded.checkUploadedMd5(bsConfig, args, {markBlockStart, markBlockEnd}).then(function (md5data) {
         markBlockEnd('checkAlreadyUploaded');
 
         markBlockStart('packageInstaller');
@@ -141,12 +151,22 @@ module.exports = function run(args) {
                     // stop the Local instance
                     await utils.stopLocalBinary(bsConfig, bs_local, args);
 
+                    // waiting for 5 secs for upload to complete (as a safety measure)
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+
+                    // download build artifacts
+                    if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
+                      await downloadBuildArtifacts(bsConfig, data.build_id, args);
+                    }
+
                     // Generate custom report!
                     reportGenerator(bsConfig, data.build_id, args, function(){
                       utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
                       utils.handleSyncExit(exitCode, data.dashboard_url);
                     });
                   });
+                } else if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
+                  logger.info(Constants.userMessages.ASYNC_DOWNLOADS.replace('<build-id>', data.build_id));
                 }
 
                 logger.info(message);

@@ -5,7 +5,8 @@ const syncCLI = {
   LOGS: {
     INIT_LOG: "All tests:"
   },
-  INITIAL_DELAY_MULTIPLIER: 10
+  INITIAL_DELAY_MULTIPLIER: 10,
+  DEFAULT_LINE_SEP: "\n--------------------------------------------------------------------------------",
 };
 
 const userMessages = {
@@ -49,6 +50,9 @@ const userMessages = {
   LOCAL_STOP_FAILED: "Local Binary stop failed.",
   INVALID_LOCAL_MODE_WARNING: "Invalid value specified for local_mode. local_mode: (\"always-on\" | \"on-demand\"). For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
   SPEC_LIMIT_WARNING: "You might not see all your results on the dashboard because of high spec count, please consider reducing the number of spec files in this folder.",
+  DOWNLOAD_BUILD_ARTIFACTS_FAILED: "Downloading build artifacts for the build <build-id> failed for <machine-count> machines.",
+  ASYNC_DOWNLOADS: "Test artifacts as specified under 'downloads' can be downloaded after the build has completed its run, using 'browserstack-cypress generate-downloads <build-id>'",
+  DOWNLOAD_BUILD_ARTIFACTS_SUCCESS: "Your build artifact(s) have been successfully downloaded in '<user-path>/build_artifacts/<build-id>' directory",
   LATEST_SYNTAX_TO_ACTUAL_VERSION_MESSAGE: "Your build will run using Cypress <actualVersion> as you had specified <latestSyntaxVersion>. Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions"
 };
 
@@ -73,7 +77,8 @@ const validationMessages = {
   INVALID_CLI_LOCAL_IDENTIFIER: "When using --local-identifier, a value needs to be supplied. \n--local-identifier <String>.\nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
   INVALID_LOCAL_MODE: "When using --local-mode, a value needs to be supplied. \n--local-mode (\"always-on\" | \"on-demand\").\nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
   INVALID_LOCAL_CONFIG_FILE: "Using --local-config-file requires an input of the form /path/to/config-file.yml.\nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
-  INVALID_LOCAL_IDENTIFIER: "Invalid value specified for local_identifier. For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference"
+  INVALID_LOCAL_IDENTIFIER: "Invalid value specified for local_identifier. For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
+  INVALID_BROWSER_ARGS: "Aborting as an unacceptable value was passed for --browser. Read more at https://www.browserstack.com/docs/automate/cypress/cli-reference"
 };
 
 const cliMessages = {
@@ -90,17 +95,13 @@ const cliMessages = {
     INFO: "Check status of your build.",
     STOP: "Stop your build.",
     DEMAND: "Requires a build id.",
-    DESC: "Path to BrowserStack config",
-    CONFIG_DEMAND: "config file is required",
     INFO_MESSAGE: "Getting information for buildId ",
     STOP_MESSAGE: "Stopping build with given buildId ",
   },
   RUN: {
     PARALLEL_DESC: "The maximum number of parallels to use to run your test suite",
     INFO: "Run your tests on BrowserStack.",
-    DESC: "Path to BrowserStack config",
     CYPRESS_DESC: "Path to Cypress config file",
-    CONFIG_DEMAND: "config file is required",
     CYPRESS_CONFIG_DEMAND: "Cypress config file is required",
     BUILD_NAME: "The build name you want to use to name your test runs",
     EXCLUDE: "Exclude files matching a pattern from zipping and uploading",
@@ -114,7 +115,11 @@ const cliMessages = {
     LOCAL_MODE: 'Accepted values: ("always-on" | "on-demand") - if you choose to keep the binary "always-on", it will speed up your tests by keeping the Local connection warmed up in the background; otherwise, you can choose to have it spawn and killed for every build',
     LOCAL_IDENTIFIER: "Accepted values: String - assign an identifier to your Local process instance",
     LOCAL_CONFIG_FILE: "Accepted values: String - path to local config-file to your Local process instance. Learn more at https://www.browserstack.com/local-testing/binary-params",
-    SYNC_NO_WRAP: "Wrap the spec names in --sync mode in case of smaller terminal window size pass --no-wrap"
+    SYNC_NO_WRAP: "Wrap the spec names in --sync mode in case of smaller terminal window size pass --no-wrap",
+    BROWSER_DESCRIPTION: "Specify the browsers you need to run your tests on.",
+    CONFIG_DESCRIPTION: "Set configuration values. Separate multiple values with a comma. The values set here override any values set in your configuration file.",
+    REPORTER: "Specify the custom reporter to use",
+    REPORTER_OPTIONS: "Specify reporter options for custom reporter",
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",
@@ -122,9 +127,14 @@ const cliMessages = {
     USERNAME: "Your BrowserStack username",
     ACCESS_KEY: "Your BrowserStack access key",
     NO_NPM_WARNING: "No NPM warning if npm_dependencies is empty",
+    CONFIG_DEMAND: "config file is required",
+    CONFIG_FILE_PATH: "Path to BrowserStack config",
   },
   GENERATE_REPORT: {
     INFO: "Generates the build report"
+  },
+  GENERATE_DOWNLOADS: {
+    INFO: "Downloads the build artifacts"
   },
 };
 
@@ -151,6 +161,7 @@ const filesToIgnoreWhileUploading = [
   '.vscode/**',
   '.npm/**',
   '.yarn/**',
+  'build_artifacts/**'
 ];
 
 const readDirOptions = {
@@ -175,6 +186,10 @@ const DEFAULT_CYPRESS_SPEC_PATH = "cypress/integration"
 const SPEC_TOTAL_CHAR_LIMIT = 32243;
 const METADATA_CHAR_BUFFER_PER_SPEC = 175;
 
+const usageReportingConstants = {
+  GENERATE_DOWNLOADS: 'generate-downloads called',
+}
+
 const LATEST_VERSION_SYNTAX_REGEX = /\d*.latest(.\d*)?/gm
 
 module.exports = Object.freeze({
@@ -191,5 +206,6 @@ module.exports = Object.freeze({
   DEFAULT_CYPRESS_SPEC_PATH,
   SPEC_TOTAL_CHAR_LIMIT,
   METADATA_CHAR_BUFFER_PER_SPEC,
+  usageReportingConstants,
   LATEST_VERSION_SYNTAX_REGEX
 });
