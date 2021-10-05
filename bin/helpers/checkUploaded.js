@@ -84,7 +84,6 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
       let npm_package_md5sum = checkPackageMd5(bsConfig.run_settings);
       instrumentBlocks.markBlockEnd("checkAlreadyUploaded.md5Package");
       instrumentBlocks.markBlockEnd("checkAlreadyUploaded.md5Total");
-      console.log(npm_package_md5sum)
       let data = {};
       if (!args["force-upload"]) {
         Object.assign(data, { zip_md5sum });
@@ -133,7 +132,6 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
         }
       });
     }).catch((_error) => {
-      console.log(_error)
       resolve({zipUrlPresent: false, packageUrlPresent: false});
     });
   });
