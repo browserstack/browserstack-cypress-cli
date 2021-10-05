@@ -29,6 +29,12 @@ const setupPackageFolder = (runSettings, directoryPath) => {
         let packageJSONString = JSON.stringify(packageJSON);
         let packagePath = path.join(directoryPath, "package.json");
         fs.writeFileSync(packagePath, packageJSONString);
+        let cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
+        let sourceNpmrc = path.join(cypressFolderPath, ".npmrc");
+        let destNpmrc = path.join(directoryPath, ".npmrc");
+        if (fs.existsSync(sourceNpmrc)) {
+          fs.copyFileSync(sourceNpmrc, destNpmrc);
+        }
         return resolve("package file created");
       }
       return reject("Nothing in package file");
