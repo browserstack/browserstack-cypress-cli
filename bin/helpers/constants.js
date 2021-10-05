@@ -179,6 +179,15 @@ const hashingOptions = {
   encoding: 'hex',
 };
 
+const packageInstallerOptions = {
+  npmLoad: {
+    loglevel: 'silent',
+    only: 'dev',
+    'save-dev': true,
+    'only-dev': true,
+  }
+}
+
 const specFileTypes = ['js', 'ts', 'feature', 'jsx', 'coffee', 'cjsx'];
 
 const DEFAULT_CYPRESS_SPEC_PATH = "cypress/integration"
@@ -202,6 +211,7 @@ module.exports = Object.freeze({
   filesToIgnoreWhileUploading,
   readDirOptions,
   hashingOptions,
+  packageInstallerOptions,
   specFileTypes,
   DEFAULT_CYPRESS_SPEC_PATH,
   SPEC_TOTAL_CHAR_LIMIT,

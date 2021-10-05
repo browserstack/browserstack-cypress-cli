@@ -4,6 +4,7 @@ const npm = require('global-npm'),
   path = require('path'),
   fs = require('fs-extra'),
   fileHelpers = require('./fileHelpers'),
+  Constants = require('./constants'),
   process = require('process'),
   utils = require('./utils');
 
@@ -45,7 +46,7 @@ const setupPackageFolder = (runSettings, directoryPath) => {
 const packageInstall = (packageDir) => {
   return new Promise(function (resolve, reject) {
     let savedPrefix = null;
-    let npmLoad = { loglevel: 'silent' };
+    let npmLoad = Constants.packageInstallerOptions.npmLoad
     const installCallback = (err, result) => {
       npm.prefix = savedPrefix;
       if (err) {
@@ -97,7 +98,7 @@ const packageArchiver = (packageDir, packageFile) => {
   })
 }
 
-const packageWrappper = (bsConfig, packageDir, packageFile, md5data, args) => {
+const packageWrappper = (bsConfig, packageDir, packageFile, md5data, instrumentBlocks) => {
   return new Promise(function (resolve) {
     let obj = {
       packageArchieveCreated: false
@@ -105,12 +106,18 @@ const packageWrappper = (bsConfig, packageDir, packageFile, md5data, args) => {
     if (md5data.packageUrlPresent || !utils.isTrueString(bsConfig.run_settings.local_npm_install)) {
       return resolve(obj);
     }
+    instrumentBlocks.markBlockStart("packageInstaller.folderSetup");
     return setupPackageFolder(bsConfig.run_settings, packageDir).then((_result) => {
       process.env.CYPRESS_INSTALL_BINARY = 0
+      instrumentBlocks.markBlockEnd("packageInstaller.folderSetup");
+      instrumentBlocks.markBlockStart("packageInstaller.packageInstall");
       return packageInstall(packageDir);
     }).then((_result) => {
+      instrumentBlocks.markBlockEnd("packageInstaller.packageInstall");
+      instrumentBlocks.markBlockStart("packageInstaller.packageArchive");
       return packageArchiver(packageDir, packageFile);
     }).then((_result) => {
+      instrumentBlocks.markBlockEnd("packageInstaller.packageArchive");
       Object.assign(obj, { packageArchieveCreated: true });
       return resolve(obj);
     }).catch((_error) => {

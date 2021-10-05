@@ -58,6 +58,12 @@ const checkPackageMd5 = (runSettings) => {
     let packageJSONString = JSON.stringify(packageJSON);
     outputHash.update(packageJSONString);
   }
+  let cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
+  let sourceNpmrc = path.join(cypressFolderPath, ".npmrc");
+  if (fs.existsSync(sourceNpmrc)) {
+    const npmrc = fs.readFileSync(sourceNpmrc, {encoding:'utf8', flag:'r'});
+    outputHash.update(npmrc);
+  }
 
   return outputHash.digest(Constants.hashingOptions.encoding)
 };
@@ -78,6 +84,7 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
       let npm_package_md5sum = checkPackageMd5(bsConfig.run_settings);
       instrumentBlocks.markBlockEnd("checkAlreadyUploaded.md5Package");
       instrumentBlocks.markBlockEnd("checkAlreadyUploaded.md5Total");
+      console.log(npm_package_md5sum)
       let data = {};
       if (!args["force-upload"]) {
         Object.assign(data, { zip_md5sum });
@@ -126,6 +133,7 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
         }
       });
     }).catch((_error) => {
+      console.log(_error)
       resolve({zipUrlPresent: false, packageUrlPresent: false});
     });
   });
