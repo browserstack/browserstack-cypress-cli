@@ -1,5 +1,5 @@
 'use strict';
-const npm = require('global-npm'),
+const npm = require('npm'),
   archiver = require("archiver"),
   path = require('path'),
   fs = require('fs-extra'),
@@ -11,34 +11,38 @@ const npm = require('global-npm'),
 const setupPackageFolder = (runSettings, directoryPath) => {
   return new Promise(function (resolve, reject) {
     fileHelpers.deletePackageArchieve();
-    fs.mkdir(directoryPath, (err) => {
-      if (err) {
-        return reject(err);
-      }
-      let packageJSON = {};
-      if (typeof runSettings.package_config_options === 'object') {
-        Object.assign(packageJSON, runSettings.package_config_options);
-      }
-
-      if (typeof runSettings.npm_dependencies === 'object') {
-        Object.assign(packageJSON, {
-          devDependencies: runSettings.npm_dependencies,
-        });
-      }
-
-      if (Object.keys(packageJSON).length > 0) {
-        let packageJSONString = JSON.stringify(packageJSON);
-        let packagePath = path.join(directoryPath, "package.json");
-        fs.writeFileSync(packagePath, packageJSONString);
-        let cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
-        let sourceNpmrc = path.join(cypressFolderPath, ".npmrc");
-        let destNpmrc = path.join(directoryPath, ".npmrc");
-        if (fs.existsSync(sourceNpmrc)) {
-          fs.copyFileSync(sourceNpmrc, destNpmrc);
+    fs.mkdir(directoryPath, function (err) {
+      try {
+        if (err) {
+          return reject(err);
         }
-        return resolve("package file created");
+        let packageJSON = {};
+        if (typeof runSettings.package_config_options === 'object') {
+          Object.assign(packageJSON, runSettings.package_config_options);
+        }
+
+        if (typeof runSettings.npm_dependencies === 'object') {
+          Object.assign(packageJSON, {
+            devDependencies: runSettings.npm_dependencies,
+          });
+        }
+
+        if (Object.keys(packageJSON).length > 0) {
+          let packageJSONString = JSON.stringify(packageJSON);
+          let packagePath = path.join(directoryPath, "package.json");
+          fs.writeFileSync(packagePath, packageJSONString);
+          let cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
+          let sourceNpmrc = path.join(cypressFolderPath, ".npmrc");
+          let destNpmrc = path.join(directoryPath, ".npmrc");
+          if (fs.existsSync(sourceNpmrc)) {
+            fs.copyFileSync(sourceNpmrc, destNpmrc);
+          }
+          return resolve("package file created");
+        }
+        return reject("Nothing in package file");
+      } catch(error) {
+        return reject(error);
       }
-      return reject("Nothing in package file");
     })
   })
 };
