@@ -10,10 +10,13 @@ const crypto = require('crypto'),
   utils = require('./utils');
 
 
-const checkSpecsMd5 = (runSettings, excludeFiles, instrumentBlocks) => {
+const checkSpecsMd5 = (runSettings, args, instrumentBlocks) => {
   return new Promise(function (resolve, reject) {
+    if (args["force-upload"]) {
+      return resolve("force-upload");
+    }
     let cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
-    let ignoreFiles = utils.getFilesToIgnore(runSettings, excludeFiles, false);
+    let ignoreFiles = utils.getFilesToIgnore(runSettings, args.exclude, false);
     let options = {
       cwd: cypressFolderPath,
       ignore: ignoreFiles,
@@ -79,7 +82,7 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
     }
     
     instrumentBlocks.markBlockStart("checkAlreadyUploaded.md5Total");
-    checkSpecsMd5(bsConfig.run_settings, args.exclude, instrumentBlocks).then(function (zip_md5sum) {
+    checkSpecsMd5(bsConfig.run_settings, args, instrumentBlocks).then(function (zip_md5sum) {
       instrumentBlocks.markBlockStart("checkAlreadyUploaded.md5Package");
       let npm_package_md5sum = checkPackageMd5(bsConfig.run_settings);
       instrumentBlocks.markBlockEnd("checkAlreadyUploaded.md5Package");
