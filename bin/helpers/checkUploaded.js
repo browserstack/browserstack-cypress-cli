@@ -131,8 +131,8 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
           resolve(obj);
         }
       });
-    }).catch((_error) => {
-      resolve({zipUrlPresent: false, packageUrlPresent: false});
+    }).catch((err) => {
+      resolve({zipUrlPresent: false, packageUrlPresent: false, error: err.stack.substring(0,100)});
     });
   });
 };

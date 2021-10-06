@@ -120,8 +120,8 @@ const packageWrappper = (bsConfig, packageDir, packageFile, md5data, instrumentB
       instrumentBlocks.markBlockEnd("packageInstaller.packageArchive");
       Object.assign(obj, { packageArchieveCreated: true });
       return resolve(obj);
-    }).catch((_error) => {
-      fileHelpers.deletePackageArchieve();
+    }).catch((err) => {
+      obj.error = err.stack.substring(0,100)
       return resolve(obj);
     })
   })

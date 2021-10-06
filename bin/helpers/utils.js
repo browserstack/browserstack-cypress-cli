@@ -822,6 +822,12 @@ exports.latestSyntaxToActualVersionMessage = (latestSyntaxVersion, actualVersion
   return message
 }
 
+exports.checkError = (data) => {
+  if (!this.isUndefined(data.error)) {
+    return data.error
+  }
+}
+
 exports.isJSONInvalid = (err, args) => {
   let invalid =  true
 

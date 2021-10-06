@@ -175,6 +175,8 @@ module.exports = function run(args) {
                 let dataToSend = {
                   time_components: getTimeComponents(),
                   unique_id: utils.generateUniqueHash(),
+                  package_error: utils.checkError(packageData),
+                  checkmd5_error: utils.checkError(md5data),
                   build_id: data.build_id,
                 };
                 if (bsConfig && bsConfig.connection_settings) {
