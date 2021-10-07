@@ -77,7 +77,7 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
       zipUrlPresent: false,
       packageUrlPresent: false,
     };
-    if (args["force-upload"] && !utils.isTrueString(bsConfig.run_settings.local_npm_install)) {
+    if (args["force-upload"] && !utils.isTrueString(bsConfig.run_settings.cache_dependencies)) {
       return resolve(obj);
     }
     
@@ -92,7 +92,7 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
         Object.assign(data, { zip_md5sum });
         Object.assign(obj, { zip_md5sum });
       }
-      if (utils.isTrueString(bsConfig.run_settings.local_npm_install)) {
+      if (utils.isTrueString(bsConfig.run_settings.cache_dependencies)) {
         Object.assign(data, { npm_package_md5sum });
         Object.assign(obj, { npm_package_md5sum });
       }

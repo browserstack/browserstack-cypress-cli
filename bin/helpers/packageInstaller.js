@@ -107,7 +107,7 @@ const packageWrappper = (bsConfig, packageDir, packageFile, md5data, instrumentB
     let obj = {
       packageArchieveCreated: false
     };
-    if (md5data.packageUrlPresent || !utils.isTrueString(bsConfig.run_settings.local_npm_install)) {
+    if (md5data.packageUrlPresent || !utils.isTrueString(bsConfig.run_settings.cache_dependencies)) {
       return resolve(obj);
     }
     instrumentBlocks.markBlockStart("packageInstaller.folderSetup");

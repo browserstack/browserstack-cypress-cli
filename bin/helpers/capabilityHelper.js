@@ -45,6 +45,7 @@ const caps = (bsConfig, zip) => {
     if (zip.npm_package_url && zip.npm_package_url.split("://")[1].length !== 0) {
       obj.npm_package_suite = zip.npm_package_url.split("://")[1];
     }
+    obj.cache_dependencies = bsConfig.run_settings.cache_dependencies;
 
     // Inferred settings
     if(bsConfig.connection_settings){

@@ -188,6 +188,11 @@ exports.setDefaults = (bsConfig, args) => {
     bsConfig.connection_settings = {};
   }
 
+  // setting cache_dependencies to true if not present
+  if (this.isUndefined(bsConfig.run_settings.cache_dependencies)) {
+    bsConfig.run_settings.cache_dependencies = true;
+  }
+
 }
 
 exports.setUsername = (bsConfig, args) => {
