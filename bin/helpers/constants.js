@@ -7,6 +7,7 @@ const syncCLI = {
   },
   INITIAL_DELAY_MULTIPLIER: 10,
   DEFAULT_LINE_SEP: "\n--------------------------------------------------------------------------------",
+  STARTUP_MESSAGE: "BrowserStack machines are now setting up Cypress with the specified npm dependencies for running your tests. It might take some time before your tests start runnning and showing up below..."
 };
 
 const userMessages = {
@@ -143,7 +144,7 @@ const messageTypes = {
   NULL: null
 }
 
-const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip', 'npmrc', 'xml', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'jsx', 'coffee', 'cjsx', 'csv', 'tsv', 'yml', 'yaml', 'env'];
+const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip', 'npmrc', 'xml', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'jsx', 'coffee', 'cjsx', 'csv', 'tsv', 'yml', 'yaml', 'env', 'mov', 'mp4'];
 
 const filesToIgnoreWhileUploading = [
   '**/node_modules/**',

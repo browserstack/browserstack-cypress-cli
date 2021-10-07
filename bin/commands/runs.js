@@ -12,7 +12,9 @@ const archiver = require("../helpers/archiver"),
   checkUploaded = require("../helpers/checkUploaded"),
   reportGenerator = require('../helpers/reporterHTML').reportGenerator,
   {initTimeComponents, instrumentEventTime, markBlockStart, markBlockEnd, getTimeComponents} = require('../helpers/timeComponents'),
-  downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts;
+  downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts,
+  updateNotifier = require('update-notifier'),
+  pkg = require('../../package.json');
 
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
@@ -235,5 +237,10 @@ module.exports = function run(args) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
     utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err));
+  }).finally(function(){
+    updateNotifier({
+      pkg,
+      updateCheckInterval: 1000 * 60 * 60 * 24 * 7,
+    }).notify();
   });
 }

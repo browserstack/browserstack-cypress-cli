@@ -3,6 +3,7 @@ const request = require("request"),
   config = require("../config"),
   utils = require("../utils"),
   logger = require("../logger").syncCliLogger,
+  winstonLogger = require("../logger").winstonLogger,
   async = require('async'),
   Constants = require("../constants"),
   tableStream = require('table').createStream,
@@ -164,6 +165,7 @@ let showSpecsStatus = (data) => {
 }
 
 let printInitialLog = () => {
+  winstonLogger.info(Constants.syncCLI.STARTUP_MESSAGE);
   logger.info(`\n${Constants.syncCLI.LOGS.INIT_LOG}`)
   logger.info(lineSeparator);
   n = Constants.syncCLI.INITIAL_DELAY_MULTIPLIER
