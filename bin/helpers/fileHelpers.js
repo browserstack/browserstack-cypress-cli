@@ -36,15 +36,15 @@ exports.deleteZip = () => {
   }
 };
 
-exports.deletePackageArchieve = () => {
+exports.deletePackageArchieve = (logging = true) => {
   try {
     delete process.env.CYPRESS_INSTALL_BINARY;
     fs.removeSync(config.packageFileName);
     fs.removeSync(config.packageDirName);
-    logger.info(Constants.userMessages.NPM_DELETED);
+    if (logging) logger.info(Constants.userMessages.NPM_DELETED);
     return 0;
   } catch (err) {
-    logger.info(Constants.userMessages.NPM_DELETE_FAILED);
+    if (logging) logger.info(Constants.userMessages.NPM_DELETE_FAILED);
     return 1;
   }
 };

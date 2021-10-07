@@ -2,15 +2,17 @@
 const npm = require('npm'),
   archiver = require("archiver"),
   path = require('path'),
+  os = require('os'),
   fs = require('fs-extra'),
   fileHelpers = require('./fileHelpers'),
+  logger = require("./logger").winstonLogger,
   Constants = require('./constants'),
   process = require('process'),
   utils = require('./utils');
 
 const setupPackageFolder = (runSettings, directoryPath) => {
   return new Promise(function (resolve, reject) {
-    fileHelpers.deletePackageArchieve();
+    fileHelpers.deletePackageArchieve(false);
     fs.mkdir(directoryPath, function (err) {
       try {
         if (err) {
@@ -51,6 +53,7 @@ const packageInstall = (packageDir) => {
   return new Promise(function (resolve, reject) {
     let savedPrefix = null;
     let npmLoad = Constants.packageInstallerOptions.npmLoad
+    npmLoad["cache"] = fs.mkdtempSync(`${os.tmpdir()}${path.sep}`);
     const installCallback = (err, result) => {
       npm.prefix = savedPrefix;
       if (err) {
@@ -110,6 +113,7 @@ const packageWrappper = (bsConfig, packageDir, packageFile, md5data, instrumentB
     if (md5data.packageUrlPresent || !utils.isTrueString(bsConfig.run_settings.cache_dependencies)) {
       return resolve(obj);
     }
+    logger.info(`Installing required dependencies and building the package to upload to BrowserStack`);
     instrumentBlocks.markBlockStart("packageInstaller.folderSetup");
     return setupPackageFolder(bsConfig.run_settings, packageDir).then((_result) => {
       process.env.CYPRESS_INSTALL_BINARY = 0
