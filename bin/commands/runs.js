@@ -99,7 +99,7 @@ module.exports = function run(args) {
         markBlockEnd('checkAlreadyUploaded');
 
         markBlockStart('packageInstaller');
-        return packageInstaller.packageWrappper(bsConfig, config.packageDirName, config.packageFileName, md5data, {markBlockStart, markBlockEnd}).then(function (packageData) {
+        return packageInstaller.packageWrapper(bsConfig, config.packageDirName, config.packageFileName, md5data, {markBlockStart, markBlockEnd}).then(function (packageData) {
           markBlockEnd('packageInstaller');
 
           // Archive the spec files
@@ -206,6 +206,11 @@ module.exports = function run(args) {
                 logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED);
                 fileHelpers.deleteZip();
                 utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed');
+                try {
+                  fileHelpers.deletePackageArchieve();
+                } catch (err) {
+                  utils.sendUsageReport(bsConfig, args, Constants.userMessages.NPM_DELETE_FAILED, Constants.messageTypes.ERROR, 'npm_deletion_failed');
+                }
               }
             });
           }).catch(function (err) {
@@ -218,12 +223,22 @@ module.exports = function run(args) {
             } catch (err) {
               utils.sendUsageReport(bsConfig, args, Constants.userMessages.ZIP_DELETE_FAILED, Constants.messageTypes.ERROR, 'zip_deletion_failed');
             }
+            try {
+              fileHelpers.deletePackageArchieve();
+            } catch (err) {
+              utils.sendUsageReport(bsConfig, args, Constants.userMessages.NPM_DELETE_FAILED, Constants.messageTypes.ERROR, 'npm_deletion_failed');
+            }
           });
         }).catch(function (err) {
           // package installer failed
           logger.error(err);
           logger.error(Constants.userMessages.FAILED_CREATE_NPM_ARCHIVE);
           utils.sendUsageReport(bsConfig, args, Constants.userMessages.FAILED_CREATE_NPM_ARCHIVE, Constants.messageTypes.ERROR, 'npm_package_archive_failed');
+          try {
+            fileHelpers.deletePackageArchieve();
+          } catch (err) {
+            utils.sendUsageReport(bsConfig, args, Constants.userMessages.NPM_DELETE_FAILED, Constants.messageTypes.ERROR, 'npm_deletion_failed');
+          }
         });
       }).catch(function (err) {
         // md5 check failed

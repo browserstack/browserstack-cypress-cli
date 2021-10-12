@@ -48,7 +48,7 @@ const uploadSuits = (bsConfig, filePath, opts) => {
             }
           }
         } else {
-          logger.info(`Uploaded tests successfully (${responseData[opts.md5ReturnKey]})`);
+          logger.info(`${opts.messages.uploadingSuccess} (${responseData[opts.md5ReturnKey]})`);
           opts.cleanupMethod();
           resolve(responseData);
         }

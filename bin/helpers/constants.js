@@ -38,7 +38,9 @@ const userMessages = {
   NO_NPM_DEPENDENCIES_READ_MORE: "Read more about npm dependencies here: https://www.browserstack.com/docs/automate/cypress/npm-packages. You can suppress this warning by using --disable-npm-warning flag.",
   VALIDATING_CONFIG: "Validating the config",
   UPLOADING_TESTS: "Uploading the tests to BrowserStack",
+  UPLOADING_TESTS_SUCCESS: "Uploaded tests successfully",
   UPLOADING_NPM_PACKAGES: "Uploading required node_modules to BrowserStack",
+  UPLOADING_NPM_PACKAGES_SUCCESS: "Uploaded node_modules successfully",
   LOCAL_TRUE: "you will now be able to test localhost / private URLs",
   LOCAL_FALSE: "you won't be able to test localhost / private URLs",
   EXIT_SYNC_CLI_MESSAGE: "Exiting the CLI, but your build is still running. You can use the --sync option to keep getting test updates. You can also use the build-info <build-id> command now.",
@@ -160,6 +162,8 @@ const filesToIgnoreWhileUploading = [
   '.idea/**',
   '.vscode/**',
   '.npm/**',
+  'bstackPackages.tar.gz',
+  'tmpBstackPackages/**',
   '.yarn/**',
   'build_artifacts/**'
 ];

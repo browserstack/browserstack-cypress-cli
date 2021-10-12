@@ -459,7 +459,8 @@ exports.generateUploadOptions = (type, md5data, packageData) => {
           filename: "tests"
         },
         messages: {
-          uploading: Constants.userMessages.UPLOADING_TESTS
+          uploading: Constants.userMessages.UPLOADING_TESTS,
+          uploadingSuccess: Constants.userMessages.UPLOADING_TESTS_SUCCESS
         },
         cleanupMethod: fileHelpers.deleteZip,
       }
@@ -477,7 +478,8 @@ exports.generateUploadOptions = (type, md5data, packageData) => {
           filename: "bstackPackages"
         },
         messages: {
-          uploading: Constants.userMessages.UPLOADING_NPM_PACKAGES
+          uploading: Constants.userMessages.UPLOADING_NPM_PACKAGES,
+          uploadingSuccess: Constants.userMessages.UPLOADING_NPM_PACKAGES_SUCCESS
         },
         cleanupMethod: fileHelpers.deletePackageArchieve,
       }

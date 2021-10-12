@@ -105,7 +105,7 @@ const packageArchiver = (packageDir, packageFile) => {
   })
 }
 
-const packageWrappper = (bsConfig, packageDir, packageFile, md5data, instrumentBlocks) => {
+const packageWrapper = (bsConfig, packageDir, packageFile, md5data, instrumentBlocks) => {
   return new Promise(function (resolve) {
     let obj = {
       packageArchieveCreated: false
@@ -129,10 +129,10 @@ const packageWrappper = (bsConfig, packageDir, packageFile, md5data, instrumentB
       Object.assign(obj, { packageArchieveCreated: true });
       return resolve(obj);
     }).catch((err) => {
-      obj.error = err.stack.substring(0,100)
+      obj.error = err.stack.substring(0,100);
       return resolve(obj);
     })
   })
 }
 
-exports.packageWrappper = packageWrappper;
+exports.packageWrapper = packageWrapper;

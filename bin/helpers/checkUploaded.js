@@ -130,6 +130,14 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
               Object.assign(obj, zipData, {packageUrlPresent: true});
             }
           }
+          if (utils.isTrueString(zipData.disableNpmSuiteCache)) {
+            bsConfig.run_settings.cache_dependencies = false;
+            Object.assign(obj, {packageUrlPresent: false});
+          }
+          if (utils.isTrueString(zipData.disableTestSuiteCache)) {
+            args["force-upload"] = true;
+            Object.assign(obj, {zipUrlPresent: false});
+          }
           instrumentBlocks.markBlockEnd("checkAlreadyUploaded.railsCheck");
           resolve(obj);
         }
