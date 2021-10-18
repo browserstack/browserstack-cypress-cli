@@ -77,6 +77,10 @@ module.exports = function run(args) {
 
     //set config (--config)
     utils.setConfig(bsConfig, args);
+
+    // set sync/async mode (--async/--sync)
+    utils.setCLIMode(bsConfig, args);
+
     // set other cypress configs e.g. reporter and reporter-options
     utils.setOtherConfigs(bsConfig, args);
     markBlockEnd('setConfig');
@@ -120,19 +124,19 @@ module.exports = function run(args) {
             return build.createBuild(bsConfig, zip).then(function (data) {
               markBlockEnd('createBuild');
               markBlockEnd('total');
+              utils.setProcessHooks(data.build_id, bsConfig, bs_local, args);
               let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
               let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
               utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
               if ((utils.isUndefined(bsConfig.run_settings.parallels) && utils.isUndefined(args.parallels)) || (!utils.isUndefined(bsConfig.run_settings.parallels) && bsConfig.run_settings.parallels == Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE)) {
                 logger.warn(Constants.userMessages.NO_PARALLELS);
               }
-
               if (bsConfig.run_settings.cypress_version && bsConfig.run_settings.cypress_version !== data.cypress_version) {
                 if (bsConfig.run_settings.cypress_version.toString().match(Constants.LATEST_VERSION_SYNTAX_REGEX)) {
-                  let versionMessage = utils.latestSyntaxToActualVersionMessage(bsConfig.run_settings.cypress_version, data.cypress_version);
+                  let versionMessage = utils.latestSyntaxToActualVersionMessage(bsConfig.run_settings.cypress_version, data.cypress_version, data.framework_upgrade_message);
                   logger.info(versionMessage);
                 } else {
-                  let versionMessage = utils.versionChangedMessage(bsConfig.run_settings.cypress_version, data.cypress_version);
+                  let versionMessage = utils.versionChangedMessage(bsConfig.run_settings.cypress_version, data.cypress_version, data.framework_upgrade_message);
                   logger.warn(versionMessage);
                 }
               }
@@ -241,6 +245,6 @@ module.exports = function run(args) {
     updateNotifier({
       pkg,
       updateCheckInterval: 1000 * 60 * 60 * 24 * 7,
-    }).notify();
+    }).notify({isGlobal: true});
   });
 }

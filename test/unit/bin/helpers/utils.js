@@ -99,6 +99,11 @@ describe('utils', () => {
         )
       ).to.eq('invalid_local_config_file');
       expect(
+        utils.getErrorCodeFromMsg(
+          constant.validationMessages.INVALID_LOCAL_ASYNC_ARGS
+        )
+      ).to.eq('invalid_local_async_args');
+      expect(
         utils.getErrorCodeFromMsg('Invalid browserstack.json file.')
       ).to.eq('bstack_json_invalid');
     });
