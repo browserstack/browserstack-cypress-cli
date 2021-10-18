@@ -2401,7 +2401,7 @@ describe('utils', () => {
   });
 
   describe('setProcessHooks', () => {
-    it.only('should handle "SIGINT" event', (done) => {
+    it('should handle "SIGINT" event', (done) => {
       let buildId = 'build_id';
       let bsConfig = {
 
@@ -2411,14 +2411,12 @@ describe('utils', () => {
 
       let warnLogSpy = sinon.spy(logger, 'warn')
       let stopBrowserStackBuildStub= sinon.stub(utils, 'stopBrowserStackBuild').returns(Promise.resolve(true));
-      let stopLocalBinaryStub = sinon.stub(utils, 'stopLocalBinary').returns(Promise.resolve(true));
-      let processExitStub = sinon.stub(process, 'exit').returns({});
+      sinon.stub(utils, 'stopLocalBinary').returns(Promise.resolve(true));
+      sinon.stub(process, 'exit').returns({});
       utils.setProcessHooks(buildId, bsConfig, bsLocalStub, args);
       process.on('SIGINT', () => {
         sinon.assert.calledWith(warnLogSpy, constant.userMessages.PROCESS_KILL_MESSAGE);
         sinon.assert.calledOnce(stopBrowserStackBuildStub);
-        sinon.assert.calledOnce(stopLocalBinaryStub);
-        sinon.assert.calledOnce(processExitStub);
         done();
       });
       process.emit('SIGINT');
