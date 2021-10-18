@@ -1994,13 +1994,14 @@ describe('utils', () => {
   describe('#versionChangedMessage', () => {
     it('should return proper error message with placeholders replaced', () => {
       let preferredVersion = 'v1',
-        actualVersion = 'v2';
+        actualVersion = 'v2',
+        frameworkUpgradeMessage = 'framework_upgrade_message';
       let message = constant.userMessages.CYPRESS_VERSION_CHANGED.replace(
         '<preferredVersion>',
         preferredVersion
-      ).replace('<actualVersion>', actualVersion);
+      ).replace('<actualVersion>', actualVersion).replace('<frameworkUpgradeMessage>', 'framework_upgrade_message');
       expect(
-        utils.versionChangedMessage(preferredVersion, actualVersion)
+        utils.versionChangedMessage(preferredVersion, actualVersion, frameworkUpgradeMessage)
       ).to.eq(message);
     });
   });
@@ -2008,16 +2009,18 @@ describe('utils', () => {
   describe('#latestSyntaxToActualVersionMessage', () => {
     it('should return proper info message with placeholders replaced', () => {
       let latestSyntaxVersion = '7.latest',
-        actualVersion = '7.6.0';
+        actualVersion = '7.6.0',
+        frameworkUpgradeMessage = 'framework_upgrade_message';
       let message =
         constant.userMessages.LATEST_SYNTAX_TO_ACTUAL_VERSION_MESSAGE.replace(
           '<latestSyntaxVersion>',
           latestSyntaxVersion
-        ).replace('<actualVersion>', actualVersion);
+        ).replace('<actualVersion>', actualVersion).replace('<frameworkUpgradeMessage>', 'framework_upgrade_message');
       expect(
         utils.latestSyntaxToActualVersionMessage(
           latestSyntaxVersion,
-          actualVersion
+          actualVersion,
+          frameworkUpgradeMessage
         )
       ).to.eq(message);
     });
@@ -2373,6 +2376,52 @@ describe('utils', () => {
           );
         }
       }
+    });
+  });
+
+  describe('setCLIMode', () => {
+    it('should set sync mode to false when async is set', () => {
+      let args = {
+        sync: true,
+        async: true
+      }
+      let bsConfig = {}
+      utils.setCLIMode(bsConfig, args);
+      expect(args.sync).to.be.eql(false)
+    });
+
+    it('should set sync mode to true by default', () => {
+      let args = {
+        sync: true
+      }
+      let bsConfig = {}
+      utils.setCLIMode(bsConfig, args);
+      expect(args.sync).to.be.eql(true)
+    });
+  });
+
+  describe('setProcessHooks', () => {
+    it.only('should handle "SIGINT" event', (done) => {
+      let buildId = 'build_id';
+      let bsConfig = {
+
+      }
+      let bsLocalStub = sinon.stub();
+      let args= {}
+
+      let warnLogSpy = sinon.spy(logger, 'warn')
+      let stopBrowserStackBuildStub= sinon.stub(utils, 'stopBrowserStackBuild').returns(Promise.resolve(true));
+      let stopLocalBinaryStub = sinon.stub(utils, 'stopLocalBinary').returns(Promise.resolve(true));
+      let processExitStub = sinon.stub(process, 'exit').returns({});
+      utils.setProcessHooks(buildId, bsConfig, bsLocalStub, args);
+      process.on('SIGINT', () => {
+        sinon.assert.calledWith(warnLogSpy, constant.userMessages.PROCESS_KILL_MESSAGE);
+        sinon.assert.calledOnce(stopBrowserStackBuildStub);
+        sinon.assert.calledOnce(stopLocalBinaryStub);
+        sinon.assert.calledOnce(processExitStub);
+        done();
+      });
+      process.emit('SIGINT');
     });
   });
 });

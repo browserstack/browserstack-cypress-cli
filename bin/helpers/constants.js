@@ -147,7 +147,7 @@ const messageTypes = {
   NULL: null
 }
 
-const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip', 'npmrc', 'xml', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'jsx', 'coffee', 'cjsx', 'csv', 'tsv', 'yml', 'yaml', 'env'];
+const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip', 'npmrc', 'xml', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'jsx', 'coffee', 'cjsx', 'csv', 'tsv', 'yml', 'yaml', 'env', 'mov', 'mp4'];
 
 const filesToIgnoreWhileUploading = [
   '**/node_modules/**',

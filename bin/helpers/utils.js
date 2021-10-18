@@ -833,6 +833,7 @@ exports.getCypressJSON = (bsConfig) => {
 }
 
 exports.setCLIMode = (bsConfig, args) => {
+  args.sync = true;
   if(!this.isUndefined(args.async) && args.async){
     args.sync = false;
   }
@@ -917,7 +918,7 @@ exports.setProcessHooks = (buildId, bsConfig, bsLocal, args) => {
 
 async function processExitHandler(exitData){
   logger.warn(Constants.userMessages.PROCESS_KILL_MESSAGE);
-  await this.stopBrowserStackBuild(exitData.bsConfig, exitData.args, exitData.buildId)
-  await this.stopLocalBinary( exitData.bsConfig, exitData.bsLocalInstance, exitData.args );
-  process.exit(1);
+  await this.stopBrowserStackBuild(exitData.bsConfig, exitData.args, exitData.buildId);
+  await this.stopLocalBinary(exitData.bsConfig, exitData.bsLocalInstance, exitData.args);
+  process.exit(0);
 }
