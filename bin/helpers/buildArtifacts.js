@@ -193,6 +193,7 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args) => {
         messageType = Constants.messageTypes.ERROR;
         message = Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_FAILED.replace('<build-id>', buildId).replace('<machine-count>', BUILD_ARTIFACTS_FAIL_COUNT);
         logger.error(message);
+        process.exitCode = Constants.ERROR_EXIT_CODE;
       } else {
         messageType = Constants.messageTypes.SUCCESS;
         message = Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_SUCCESS.replace('<build-id>', buildId).replace('<user-path>', process.cwd());
