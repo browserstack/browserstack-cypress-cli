@@ -277,7 +277,10 @@ function generateCypressCombinationSpecReportDataWithConfigJson(combination){
         });
         combination.tests = sessionTests;
         resolve(combination.tests);
-      } catch (error) { reject(error) }
+      } catch (error) {
+        process.exitCode = Constants.ERROR_EXIT_CODE;
+        reject(error);
+      }
   })
 }
 
@@ -308,7 +311,10 @@ function generateCypressCombinationSpecReportDataWithoutConfigJson(combination){
         });
         combination.tests = sessionTests;
         resolve(combination.tests);
-      } catch (error) { reject(error) }
+      } catch (error) {
+        process.exitCode = Constants.ERROR_EXIT_CODE;
+        reject(error);
+      }
   })
 }
 
