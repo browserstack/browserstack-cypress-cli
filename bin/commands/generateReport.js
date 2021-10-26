@@ -35,5 +35,6 @@ module.exports = function generateReport(args) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
     utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err));
+    process.exitCode = Constants.ERROR_EXIT_CODE;
   });
 };

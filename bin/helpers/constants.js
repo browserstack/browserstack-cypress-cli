@@ -205,6 +205,8 @@ const usageReportingConstants = {
 
 const LATEST_VERSION_SYNTAX_REGEX = /\d*.latest(.\d*)?/gm
 
+const ERROR_EXIT_CODE = 1;
+
 module.exports = Object.freeze({
   syncCLI,
   userMessages,
@@ -221,5 +223,6 @@ module.exports = Object.freeze({
   SPEC_TOTAL_CHAR_LIMIT,
   METADATA_CHAR_BUFFER_PER_SPEC,
   usageReportingConstants,
-  LATEST_VERSION_SYNTAX_REGEX
+  LATEST_VERSION_SYNTAX_REGEX,
+  ERROR_EXIT_CODE
 });
