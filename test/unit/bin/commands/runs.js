@@ -216,12 +216,14 @@ describe("runs", () => {
       validateBstackJsonStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       checkUploadedStub = sandbox.stub();
+      packageInstallerStub = sandbox.stub();
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
       });
       capabilityValidatorStub = sandbox.stub();
       archiverStub = sandbox.stub();
       deleteZipStub = sandbox.stub();
+      deletePackageArchieveStub = sandbox.stub();
       setLocalStub = sandbox.stub();
       setLocalModeStub = sandbox.stub();
       setupLocalTestingStub = sandbox.stub();
@@ -284,9 +286,13 @@ describe("runs", () => {
         },
         '../helpers/fileHelpers': {
           deleteZip: deleteZipStub,
+          deletePackageArchieve: deletePackageArchieveStub
         },
         '../helpers/checkUploaded': {
           checkUploadedMd5: checkUploadedStub,
+        },
+        '../helpers/packageInstaller': {
+          packageWrapper: packageInstallerStub,
         },
       });
 
@@ -294,6 +300,7 @@ describe("runs", () => {
       setupLocalTestingStub.returns(Promise.resolve("nothing"));
       capabilityValidatorStub.returns(Promise.resolve(Constants.validationMessages.VALIDATED));
       checkUploadedStub.returns(Promise.resolve({ zipUrlPresent: false }));
+      packageInstallerStub.returns(Promise.resolve({ packageArchieveCreated: false }));
       archiverStub.returns(Promise.reject("random-error"));
 
       return runs(args)
@@ -355,6 +362,7 @@ describe("runs", () => {
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       checkUploadedStub = sandbox.stub();
+      packageInstallerStub = sandbox.stub();
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
       });
@@ -362,6 +370,7 @@ describe("runs", () => {
       archiverStub = sandbox.stub();
       zipUploadStub = sandbox.stub();
       deleteZipStub = sandbox.stub();
+      deletePackageArchieveStub = sandbox.stub();
       setLocalStub = sandbox.stub();
       setLocalModeStub = sandbox.stub();
       setupLocalTestingStub = sandbox.stub();
@@ -424,6 +433,7 @@ describe("runs", () => {
         },
         '../helpers/fileHelpers': {
           deleteZip: deleteZipStub,
+          deletePackageArchieve: deletePackageArchieveStub
         },
         '../helpers/zipUpload': {
           zipUpload: zipUploadStub,
@@ -431,12 +441,16 @@ describe("runs", () => {
         '../helpers/checkUploaded': {
           checkUploadedMd5: checkUploadedStub,
         },
+        '../helpers/packageInstaller': {
+          packageWrapper: packageInstallerStub,
+        },
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
       capabilityValidatorStub.returns(Promise.resolve(Constants.validationMessages.VALIDATED));
       setupLocalTestingStub.returns(Promise.resolve("nothing"));
-      checkUploadedStub.returns(Promise.resolve({ zipUrlPresent: false }))
+      checkUploadedStub.returns(Promise.resolve({ zipUrlPresent: false }));
+      packageInstallerStub.returns(Promise.resolve({ packageArchieveCreated: false }));
       archiverStub.returns(Promise.resolve("Zipping completed"));
       zipUploadStub.returns(Promise.reject("random-error"));
 
@@ -498,6 +512,7 @@ describe("runs", () => {
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       checkUploadedStub = sandbox.stub();
+      packageInstallerStub = sandbox.stub();
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
       });
@@ -506,6 +521,7 @@ describe("runs", () => {
       zipUploadStub = sandbox.stub();
       createBuildStub = sandbox.stub();
       deleteZipStub = sandbox.stub();
+      deletePackageArchieveStub = sandbox.stub();
       setLocalStub = sandbox.stub();
       setLocalModeStub = sandbox.stub();
       setupLocalTestingStub = sandbox.stub();
@@ -570,6 +586,7 @@ describe("runs", () => {
         },
         '../helpers/fileHelpers': {
           deleteZip: deleteZipStub,
+          deletePackageArchieve: deletePackageArchieveStub
         },
         '../helpers/zipUpload': {
           zipUpload: zipUploadStub,
@@ -580,6 +597,9 @@ describe("runs", () => {
         '../helpers/checkUploaded': {
           checkUploadedMd5: checkUploadedStub,
         },
+        '../helpers/packageInstaller': {
+          packageWrapper: packageInstallerStub,
+        },
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -589,6 +609,7 @@ describe("runs", () => {
       );
       archiverStub.returns(Promise.resolve("Zipping completed"));
       checkUploadedStub.returns(Promise.resolve({ zipUrlPresent: false }));
+      packageInstallerStub.returns(Promise.resolve({ packageArchieveCreated: false }));
       zipUploadStub.returns(Promise.resolve("zip uploaded"));
       stopLocalBinaryStub.returns(Promise.resolve("nothing"));
       createBuildStub.returns(Promise.reject("random-error"));
@@ -652,9 +673,11 @@ describe("runs", () => {
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
       setSystemEnvsStub = sandbox.stub();
+      checkErrorStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       checkUploadedStub = sandbox.stub();
+      packageInstallerStub = sandbox.stub();
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
       });
@@ -664,6 +687,7 @@ describe("runs", () => {
       zipUploadStub = sandbox.stub();
       createBuildStub = sandbox.stub();
       deleteZipStub = sandbox.stub();
+      deletePackageArchieveStub = sandbox.stub();
       exportResultsStub = sandbox.stub();
       deleteResultsStub = sandbox.stub();
       setDefaultsStub = sandbox.stub();
@@ -698,7 +722,7 @@ describe("runs", () => {
       let errorCode = null;
       let message = `Success! ${Constants.userMessages.BUILD_CREATED} with build id: random_build_id`;
       let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${dashboardUrl}`;
-      let data = {time_components: {}, unique_id: 'random_hash', build_id: 'random_build_id'}
+      let data = {time_components: {}, unique_id: 'random_hash', package_error: 'test', checkmd5_error: 'test', build_id: 'random_build_id'}
 
       const runs = proxyquire('../../../../bin/commands/runs', {
         '../helpers/utils': {
@@ -733,6 +757,7 @@ describe("runs", () => {
           setConfig: setConfigStub,
           stopLocalBinary: stopLocalBinaryStub,
           nonEmptyArray: nonEmptyArrayStub,
+          checkError: checkErrorStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -742,6 +767,7 @@ describe("runs", () => {
         },
         '../helpers/fileHelpers': {
           deleteZip: deleteZipStub,
+          deletePackageArchieve: deletePackageArchieveStub
         },
         '../helpers/zipUpload': {
           zipUpload: zipUploadStub,
@@ -754,6 +780,9 @@ describe("runs", () => {
         },
         '../helpers/checkUploaded': {
           checkUploadedMd5: checkUploadedStub,
+        },
+        '../helpers/packageInstaller': {
+          packageWrapper: packageInstallerStub,
         },
         '../helpers/timeComponents': {
           initTimeComponents: initTimeComponentsStub,
@@ -770,10 +799,12 @@ describe("runs", () => {
         Promise.resolve(Constants.validationMessages.VALIDATED)
       );
       archiverStub.returns(Promise.resolve("Zipping completed"));
-      checkUploadedStub.returns(Promise.resolve({ zipUrlPresent: false }))
+      checkUploadedStub.returns(Promise.resolve({ zipUrlPresent: false }));
+      packageInstallerStub.returns(Promise.resolve({ packageArchieveCreated: false }));
       zipUploadStub.returns(Promise.resolve("zip uploaded"));
       stopLocalBinaryStub.returns(Promise.resolve("nothing"));
       nonEmptyArrayStub.returns(false);
+      checkErrorStub.returns('test');
       createBuildStub.returns(Promise.resolve({ message: 'Success', build_id: 'random_build_id', dashboard_url: dashboardUrl }));
 
       return runs(args)

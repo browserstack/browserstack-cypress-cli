@@ -17,6 +17,8 @@ const usageReporting = require('../../../../bin/helpers/usageReporting');
 const utils = require('../../../../bin/helpers/utils'),
   constant = require('../../../../bin/helpers/constants'),
   logger = require('../../../../bin/helpers/logger').winstonLogger,
+  config = require('../../../../bin/helpers/config'),
+  fileHelpers = require('../../../../bin/helpers/fileHelpers'),
   testObjects = require('../../support/fixtures/testObjects'),
   syncLogger = require('../../../../bin/helpers/logger').syncCliLogger;
 const browserstack = require('browserstack-local');
@@ -228,6 +230,125 @@ describe('utils', () => {
       };
       utils.setParallels(bsConfig, { parallels: undefined }, 2);
       expect(bsConfig['run_settings']['parallels']).to.be.eq(4);
+    });
+  });
+
+  describe('checkError', () => {
+    it('should return error if exists', () => {
+      expect(utils.checkError({error: "test error"})).to.be.eq("test error");
+      expect(utils.checkError({})).to.be.eq(undefined);
+    })
+  })
+
+  describe('isTrueString', () => {
+    it('should return true if true string', () => {
+      expect(utils.isTrueString("true")).to.be.eq(true);
+      expect(utils.isTrueString(true)).to.be.eq(true);
+      expect(utils.isTrueString(false)).to.be.eq(false);
+      expect(utils.isTrueString("atrue")).to.be.eq(false);
+      expect(utils.isTrueString("false")).to.be.eq(false);
+    })
+  })
+
+  describe('generateUploadParams', () => {
+    it('should generate upload params based on data', () => {
+      let bsConfig = {
+        auth: {
+          username: "user",
+          access_key: "key"
+        }
+      };
+      let filePath = "random/path";
+      let md5data = "md5data";
+      let fileDetails = {
+        filetype: "type",
+        filename: "name"
+      };
+      let options = {
+        url: config.uploadUrl,
+        auth: {
+          user: "user",
+          password: "key"
+        },
+        formData: {
+          file: "random_fs",
+          filetype: "type",
+          filename: "name",
+          zipMd5sum: "md5data",
+        },
+        headers: {
+          "User-Agent": "random_agent",
+        }
+      };
+      let getUserAgentStub = sinon.stub(utils, 'getUserAgent').returns("random_agent");
+      let fsStub = sinon.stub(fs, 'createReadStream').returns("random_fs");
+      expect(utils.generateUploadParams(bsConfig, filePath, md5data, fileDetails)).to.deep.equal(options);
+      getUserAgentStub.restore();
+      fsStub.restore();
+    });
+  });
+
+  describe('sortJsonKeys', () => {
+    it('should return josn sorted by keys', () => {
+      expect(utils.sortJsonKeys({b:1, a:2})).to.deep.equal({a:2, b:1})
+    });
+  });
+
+  describe('generateUploadOptions', () => {
+    it('should generate zip upload options based on data', () => {
+      let md5data = {
+        zipUrlPresent: true,
+        zip_md5sum: "randum_md5",
+        zipUrl: "bs://random_hash"
+      };
+      let packageData = {};
+      let options = {
+        archivePresent: true,
+        md5ReturnKey: "zip_url",
+        urlPresent: true,
+        md5Data: "randum_md5",
+        url: "bs://random_hash",
+        propogateError: true,
+        fileDetails: {
+          filetype: "zip",
+          filename: "tests"
+        },
+        messages: {
+          uploading: constant.userMessages.UPLOADING_TESTS,
+          uploadingSuccess: constant.userMessages.UPLOADING_TESTS_SUCCESS
+        },
+        cleanupMethod: fileHelpers.deleteZip,
+      };
+      expect(utils.generateUploadOptions('zip', md5data, packageData)).to.deep.equal(options);
+    });
+
+    it('should generate npm upload options based on data', () => {
+      let md5data = {
+        packageUrlPresent: true,
+        npm_package_md5sum: "randum_md5",
+        npmPackageUrl: "bs://random_hash"
+      };
+      let packageData = {
+        packageArchieveCreated: true
+      };
+      let options = {
+        archivePresent: true,
+        md5ReturnKey: "npm_package_url",
+        urlPresent: true,
+        md5Data: "randum_md5",
+        url: "bs://random_hash",
+        propogateError: false,
+        fileDetails: {
+          filetype: "tar.gz",
+          filename: "bstackPackages"
+        },
+        messages: {
+          uploading: constant.userMessages.UPLOADING_NPM_PACKAGES,
+          uploadingSuccess: constant.userMessages.UPLOADING_NPM_PACKAGES_SUCCESS
+        },
+        cleanupMethod: fileHelpers.deletePackageArchieve,
+      };
+      expect(utils.generateUploadOptions('npm', md5data, packageData)).to.deep.equal(options);
     });
   });
 

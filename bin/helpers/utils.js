@@ -444,7 +444,7 @@ exports.sortJsonKeys = (unordered) => {
 }
 
 exports.generateUploadOptions = (type, md5data, packageData) => {
-  let options = {}
+  let options = {};
   switch (type) {
     case 'zip':
       options =  {
@@ -485,8 +485,8 @@ exports.generateUploadOptions = (type, md5data, packageData) => {
       }
       break;
   }
-  return options
-}
+  return options;
+};
 
 exports.getLocalFlag = (connectionSettings) => {
   return (

@@ -133,10 +133,12 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
           if (utils.isTrueString(zipData.disableNpmSuiteCache)) {
             bsConfig.run_settings.cache_dependencies = false;
             Object.assign(obj, {packageUrlPresent: false});
+            delete obj.npm_package_md5sum;
           }
           if (utils.isTrueString(zipData.disableTestSuiteCache)) {
             args["force-upload"] = true;
             Object.assign(obj, {zipUrlPresent: false});
+            delete obj.zip_md5sum;
           }
           instrumentBlocks.markBlockEnd("checkAlreadyUploaded.railsCheck");
           resolve(obj);

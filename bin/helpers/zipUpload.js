@@ -25,7 +25,7 @@ const uploadSuits = (bsConfig, filePath, opts) => {
         try {
           responseData = JSON.parse(body);
         } catch (e) {
-          responseData = null
+          responseData = {};
         }
         if (resp.statusCode != 200) {
           if (resp.statusCode == 401) {
