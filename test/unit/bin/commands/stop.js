@@ -17,261 +17,14 @@ describe("buildStop", () => {
   let body = testObjects.buildStopSampleBody;
   let bsConfig = testObjects.sampleBsConfig;
 
-  describe("Handle API deprecated", () => {
-    var sandbox;
-
-    beforeEach(() => {
-      sandbox = sinon.createSandbox();
-      validateBstackJsonStub = sandbox.stub();
-      setUsernameStub = sandbox.stub();
-      setAccessKeyStub = sandbox.stub();
-      getConfigPathStub = sandbox.stub();
-      setUsageReportingFlagStub = sandbox.stub().returns(undefined);
-      setCypressConfigFilenameStub = sandbox.stub().returns(undefined);
-      getUserAgentStub = sandbox.stub().returns("random user-agent");
-      sendUsageReportStub = sandbox.stub().callsFake(function () {
-        return "end";
-      });
-      getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
-      setDefaultsStub = sandbox.stub();
-    });
-
-    afterEach(() => {
-      sandbox.restore();
-      sinon.restore();
-    });
-
-    it("message thrown if API deprecated", () => {
-      let message = Constants.userMessages.API_DEPRECATED;
-      let messageType = Constants.messageTypes.INFO;
-      let errorCode = "api_deprecated";
-
-      let requestStub = sandbox
-        .stub(request, "post")
-        .yields(null, { statusCode: 299 }, null);
-
-      const stop = proxyquire('../../../../bin/commands/stop', {
-        '../helpers/utils': {
-          validateBstackJson: validateBstackJsonStub,
-          setUsername: setUsernameStub,
-          setAccessKey: setAccessKeyStub,
-          getErrorCodeFromErr: getErrorCodeFromErrStub,
-          sendUsageReport: sendUsageReportStub,
-          setUsageReportingFlag: setUsageReportingFlagStub,
-          setCypressConfigFilename: setCypressConfigFilenameStub,
-          getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub,
-          setDefaults: setDefaultsStub
-        },
-        request: {post: requestStub},
-      });
-
-      validateBstackJsonStub.returns(Promise.resolve(bsConfig));
-
-      return stop(args)
-        .then(function (_bsConfig) {
-          sinon.assert.calledOnce(requestStub);
-          sinon.assert.calledOnce(getUserAgentStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
-        })
-        .catch((error) => {
-          chai.assert.isNotOk(error, "Promise error");
-        });
-    });
-
-    it("message thrown if build returned", () => {
-      let message = body.message;
-      let messageType = Constants.messageTypes.INFO;
-      let errorCode = "api_deprecated";
-
-      let requestStub = sandbox
-        .stub(request, "post")
-        .yields(null, { statusCode: 299 }, JSON.stringify(body));
-
-      const stop = proxyquire('../../../../bin/commands/stop', {
-        '../helpers/utils': {
-          validateBstackJson: validateBstackJsonStub,
-          getErrorCodeFromErr: getErrorCodeFromErrStub,
-          setUsername: setUsernameStub,
-          setAccessKey: setAccessKeyStub,
-          sendUsageReport: sendUsageReportStub,
-          setUsageReportingFlag: setUsageReportingFlagStub,
-          setCypressConfigFilename: setCypressConfigFilenameStub,
-          getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub,
-          setDefaults: setDefaultsStub
-        },
-        request: {post: requestStub},
-      });
-
-      validateBstackJsonStub.returns(Promise.resolve(bsConfig));
-
-      return stop(args)
-        .then(function (_bsConfig) {
-          sinon.assert.calledOnce(requestStub);
-          sinon.assert.calledOnce(getUserAgentStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
-        })
-        .catch((error) => {
-          chai.assert.isNotOk(error, "Promise error");
-        });
-    });
-  });
-
-  describe("Handle statusCode != 200", () => {
-    beforeEach(() => {
-      sandbox = sinon.createSandbox();
-      setUsernameStub = sandbox.stub();
-      setAccessKeyStub = sandbox.stub();
-      validateBstackJsonStub = sandbox.stub();
-      getConfigPathStub = sandbox.stub();
-      setUsageReportingFlagStub = sandbox.stub().returns(undefined);
-      setCypressConfigFilenameStub = sandbox.stub().returns(undefined);
-      getUserAgentStub = sandbox.stub().returns("random user-agent");
-      sendUsageReportStub = sandbox.stub().callsFake(function () {
-        return "end";
-      });
-      getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
-      setDefaultsStub = sandbox.stub();
-    });
-
-    afterEach(() => {
-      sandbox.restore();
-      sinon.restore();
-    });
-
-    it("message thrown if statusCode != 200", () => {
-      let message = Constants.userMessages.BUILD_STOP_FAILED;
-      let messageType = Constants.messageTypes.ERROR;
-      let errorCode = "api_failed_build_stop";
-
-      let requestStub = sinon
-        .stub(request, "post")
-        .yields(null, { statusCode: 400 }, null);
-
-      const stop = proxyquire('../../../../bin/commands/stop', {
-        '../helpers/utils': {
-          validateBstackJson: validateBstackJsonStub,
-          getErrorCodeFromErr: getErrorCodeFromErrStub,
-          sendUsageReport: sendUsageReportStub,
-          setUsername: setUsernameStub,
-          setAccessKey: setAccessKeyStub,
-          setUsageReportingFlag: setUsageReportingFlagStub,
-          setCypressConfigFilename: setCypressConfigFilenameStub,
-          getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub,
-          setDefaults: setDefaultsStub
-        },
-        request: {post: requestStub},
-      });
-
-      validateBstackJsonStub.returns(Promise.resolve(bsConfig));
-
-      return stop(args)
-        .then(function (_bsConfig) {
-          sinon.assert.calledOnce(requestStub);
-          sinon.assert.calledOnce(getUserAgentStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
-        })
-        .catch((error) => {
-          chai.assert.isNotOk(error, "Promise error");
-        });
-    });
-
-    it("message thrown if statusCode != 200 and user unauthorized", () => {
-      let body_with_message = {
-        ...body,
-        message: "Unauthorized",
-      };
-
-      let message = `${
-        Constants.userMessages.BUILD_STOP_FAILED
-      } with error: \n${JSON.stringify(body_with_message, null, 2)}`;
-      let messageType = Constants.messageTypes.ERROR;
-      let errorCode = "api_auth_failed";
-
-      let requestStub = sinon
-        .stub(request, "post")
-        .yields(null, { statusCode: 401 }, JSON.stringify(body_with_message));
-
-      const stop = proxyquire('../../../../bin/commands/stop', {
-        '../helpers/utils': {
-          validateBstackJson: validateBstackJsonStub,
-          getErrorCodeFromErr: getErrorCodeFromErrStub,
-          sendUsageReport: sendUsageReportStub,
-          setUsername: setUsernameStub,
-          setAccessKey: setAccessKeyStub,
-          setUsageReportingFlag: setUsageReportingFlagStub,
-          setCypressConfigFilename: setCypressConfigFilenameStub,
-          getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub,
-          setDefaults: setDefaultsStub
-        },
-        request: {post: requestStub},
-      });
-
-      validateBstackJsonStub.returns(Promise.resolve(bsConfig));
-
-      return stop(args)
-        .then(function (_bsConfig) {
-          sinon.assert.calledOnce(requestStub);
-          sinon.assert.calledOnce(getUserAgentStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
-        })
-        .catch((error) => {
-          chai.assert.isNotOk(error, "Promise error");
-        });
-    });
-
-    it("message thrown if statusCode != 200 and build is present", () => {
-      let message = `${
-        Constants.userMessages.BUILD_STOP_FAILED
-      } with error: \n${JSON.stringify(body, null, 2)}`;
-      let messageType = Constants.messageTypes.ERROR;
-      let errorCode = "api_failed_build_stop";
-
-      let requestStub = sinon
-        .stub(request, "post")
-        .yields(null, { statusCode: 402 }, JSON.stringify(body));
-
-      const stop = proxyquire('../../../../bin/commands/stop', {
-        '../helpers/utils': {
-          validateBstackJson: validateBstackJsonStub,
-          getErrorCodeFromErr: getErrorCodeFromErrStub,
-          sendUsageReport: sendUsageReportStub,
-          setUsername: setUsernameStub,
-          setAccessKey: setAccessKeyStub,
-          setUsageReportingFlag: setUsageReportingFlagStub,
-          setCypressConfigFilename: setCypressConfigFilenameStub,
-          getUserAgent: getUserAgentStub,
-          getConfigPath: getConfigPathStub,
-          setDefaults: setDefaultsStub
-        },
-        request: {post: requestStub},
-      });
-
-      validateBstackJsonStub.returns(Promise.resolve(bsConfig));
-
-      return stop(args)
-        .then(function (_bsConfig) {
-          sinon.assert.calledOnce(requestStub);
-          sinon.assert.calledOnce(getUserAgentStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
-        })
-        .catch((error) => {
-          chai.assert.isNotOk(error, "Promise error");
-        });
-    });
-  });
-
   describe("Handle API success", () => {
     var sandbox;
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
+      validateBstackJsonStub = sandbox.stub();
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
-      validateBstackJsonStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       setCypressConfigFilenameStub = sandbox.stub().returns(undefined);
@@ -281,6 +34,7 @@ describe("buildStop", () => {
       });
       getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
       setDefaultsStub = sandbox.stub();
+      stopBrowserStackBuildStub = sandbox.stub().returns(Promise.reject(true));
     });
 
     afterEach(() => {
@@ -288,42 +42,28 @@ describe("buildStop", () => {
       sinon.restore();
     });
 
-    it("message thrown if API success", () => {
-      let message = `${JSON.stringify(body, null, 2)}`;
-      let messageType = Constants.messageTypes.SUCCESS;
-      let errorCode = null;
-
-      let requestStub = sandbox
-        .stub(request, "post")
-        .yields(null, { statusCode: 200 }, JSON.stringify(body));
-
+    it("should call stopBrowserStackBuild method", () => {
       const stop = proxyquire('../../../../bin/commands/stop', {
         '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
-          getErrorCodeFromErr: getErrorCodeFromErrStub,
-          sendUsageReport: sendUsageReportStub,
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
+          getErrorCodeFromErr: getErrorCodeFromErrStub,
+          sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           setCypressConfigFilename: setCypressConfigFilenameStub,
-          getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub,
-          setDefaults: setDefaultsStub
-        },
-        request: {post: requestStub},
+          setDefaults: setDefaultsStub,
+          stopBrowserStackBuild: stopBrowserStackBuildStub
+        }
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
 
       return stop(args)
         .then(function (_bsConfig) {
-          sinon.assert.calledOnce(requestStub);
-          sinon.assert.calledOnce(getUserAgentStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+          sinon.assert.calledOnce(stopBrowserStackBuildStub);
         })
-        .catch((error) => {
-          chai.assert.isNotOk(error, "Promise error");
-        });
     });
   });
 

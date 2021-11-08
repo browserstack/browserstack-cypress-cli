@@ -164,8 +164,13 @@ var argv = yargs
           type: "boolean"
         },
         'sync': {
-          default: false,
+          default: true,
           describe: Constants.cliMessages.RUN.SYNC_DESCRIPTION,
+          type: "boolean"
+        },
+        'async': {
+          default: false,
+          describe: Constants.cliMessages.RUN.ASYNC_DESCRIPTION,
           type: "boolean"
         },
         'force-upload': {
