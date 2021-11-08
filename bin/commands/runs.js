@@ -195,6 +195,7 @@ module.exports = function run(args) {
               await utils.stopLocalBinary(bsConfig, bs_local, args);
 
               utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'build_failed');
+              process.exitCode = Constants.ERROR_EXIT_CODE;
             });
           }).catch(function (err) {
             // Zip Upload failed | Local Start failed
@@ -206,6 +207,7 @@ module.exports = function run(args) {
               fileHelpers.deleteZip();
               utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed');
             }
+            process.exitCode = Constants.ERROR_EXIT_CODE;
           });
         }).catch(function (err) {
           // Zipping failed
@@ -217,12 +219,14 @@ module.exports = function run(args) {
           } catch (err) {
             utils.sendUsageReport(bsConfig, args, Constants.userMessages.ZIP_DELETE_FAILED, Constants.messageTypes.ERROR, 'zip_deletion_failed');
           }
+          process.exitCode = Constants.ERROR_EXIT_CODE;
         });
       }).catch(function (err) {
         // md5 check failed
         logger.error(err);
         logger.error(Constants.userMessages.FAILED_MD5_CHECK);
         utils.sendUsageReport(bsConfig, args, Constants.userMessages.MD5_CHECK_FAILED, Constants.messageTypes.ERROR, 'zip_already_uploaded_failed');
+        process.exitCode = Constants.ERROR_EXIT_CODE;
       });
     }).catch(function (err) {
       // browerstack.json is not valid
@@ -236,11 +240,13 @@ module.exports = function run(args) {
 
       let error_code = utils.getErrorCodeFromMsg(err);
       utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.validationMessages.NOT_VALID}`, Constants.messageTypes.ERROR, error_code);
+      process.exitCode = Constants.ERROR_EXIT_CODE;
     });
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
     utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err));
+    process.exitCode = Constants.ERROR_EXIT_CODE;
   }).finally(function(){
     updateNotifier({
       pkg,
