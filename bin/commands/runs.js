@@ -13,7 +13,9 @@ const archiver = require("../helpers/archiver"),
   packageInstaller = require("../helpers/packageInstaller"),
   reportGenerator = require('../helpers/reporterHTML').reportGenerator,
   {initTimeComponents, instrumentEventTime, markBlockStart, markBlockEnd, getTimeComponents} = require('../helpers/timeComponents'),
-  downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts;
+  downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts,
+  updateNotifier = require('update-notifier'),
+  pkg = require('../../package.json');
 
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
@@ -76,6 +78,10 @@ module.exports = function run(args) {
 
     //set config (--config)
     utils.setConfig(bsConfig, args);
+
+    // set sync/async mode (--async/--sync)
+    utils.setCLIMode(bsConfig, args);
+
     // set other cypress configs e.g. reporter and reporter-options
     utils.setOtherConfigs(bsConfig, args);
     markBlockEnd('setConfig');
@@ -123,6 +129,7 @@ module.exports = function run(args) {
               return build.createBuild(bsConfig, zip).then(function (data) {
                 markBlockEnd('createBuild');
                 markBlockEnd('total');
+                utils.setProcessHooks(data.build_id, bsConfig, bs_local, args);
                 let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
                 let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
                 utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
@@ -144,6 +151,7 @@ module.exports = function run(args) {
                   logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES);
                   logger.warn(Constants.userMessages.NO_NPM_DEPENDENCIES_READ_MORE);
                 }
+
 
                 if (args.sync) {
                   syncRunner.pollBuildStatus(bsConfig, data).then(async (exitCode) => {
@@ -270,5 +278,10 @@ module.exports = function run(args) {
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
     utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err));
     process.exitCode = Constants.ERROR_EXIT_CODE;
+  }).finally(function(){
+    updateNotifier({
+      pkg,
+      updateCheckInterval: 1000 * 60 * 60 * 24 * 7,
+    }).notify({isGlobal: true});
   });
 }

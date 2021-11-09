@@ -17,6 +17,7 @@ const usageReporting = require("./usageReporting"),
   config = require("../helpers/config");
 
 const request = require('request');
+const axios = require("axios");
 
 exports.validateBstackJson = (bsConfigPath) => {
   return new Promise(function (resolve, reject) {
@@ -80,6 +81,9 @@ exports.getErrorCodeFromMsg = (errMsg) => {
       break;
     case Constants.validationMessages.INVALID_CYPRESS_CONFIG_FILE:
       errorCode = 'invalid_cypress_config_file';
+      break;
+    case Constants.validationMessages.INVALID_LOCAL_ASYNC_ARGS:
+      errorCode = 'invalid_local_async_args';
       break;
   }
   if (
@@ -817,15 +821,18 @@ exports.getNetworkErrorMessage = (dashboard_url) => {
   return chalk.red(message)
 }
 
-exports.versionChangedMessage = (preferredVersion, actualVersion) => {
+exports.versionChangedMessage = (preferredVersion, actualVersion, frameworkUpgradeMessage = '') => {
   let message = Constants.userMessages.CYPRESS_VERSION_CHANGED.replace("<preferredVersion>", preferredVersion);
   message = message.replace("<actualVersion>", actualVersion);
+  frameworkUpgradeMessage = frameworkUpgradeMessage.replace('.latest', "");
+  message = message.replace('<frameworkUpgradeMessage>', frameworkUpgradeMessage);
   return message
 }
 
-exports.latestSyntaxToActualVersionMessage = (latestSyntaxVersion, actualVersion) => {
+exports.latestSyntaxToActualVersionMessage = (latestSyntaxVersion, actualVersion, frameworkUpgradeMessage  = '') => {
   let message = Constants.userMessages.LATEST_SYNTAX_TO_ACTUAL_VERSION_MESSAGE.replace("<latestSyntaxVersion>", latestSyntaxVersion);
   message = message.replace("<actualVersion>", actualVersion);
+  message = message.replace('<frameworkUpgradeMessage>', frameworkUpgradeMessage)
   return message
 }
 
@@ -847,6 +854,10 @@ exports.isJSONInvalid = (err, args) => {
   }
 
   if( err === Constants.validationMessages.INVALID_CLI_LOCAL_IDENTIFIER || err === Constants.validationMessages.INVALID_LOCAL_MODE ){
+    return false
+  }
+
+  if( err === Constants.validationMessages.INVALID_LOCAL_ASYNC_ARGS && !this.isUndefined(args.async)) {
     return false
   }
 
@@ -909,4 +920,95 @@ exports.getCypressJSON = (bsConfig) => {
     );
   }
   return cypressJSON;
+}
+
+exports.setCLIMode = (bsConfig, args) => {
+  args.sync = true;
+  if(!this.isUndefined(args.async) && args.async){
+    args.sync = false;
+  }
+}
+
+exports.stopBrowserStackBuild = async (bsConfig, args, buildId ) => {
+  let url = config.buildStopUrl + buildId;
+  let options = {
+    url: url,
+    auth: {
+      username: bsConfig["auth"]["username"],
+      password: bsConfig["auth"]["access_key"],
+    },
+    headers: {
+      'User-Agent': this.getUserAgent(),
+    },
+  };
+
+  let message = null;
+  let messageType = null;
+  let errorCode = null;
+  try{
+    let resp = await axios.post(url, {} , options);
+    let build = null;
+    if(resp.data){
+      build = resp.data;
+    }
+
+    if (resp.status == 299) {
+      messageType = Constants.messageTypes.INFO;
+      errorCode = 'api_deprecated';
+
+      if (build) {
+        message = build.message;
+        logger.info(message);
+      } else {
+        message = Constants.userMessages.API_DEPRECATED;
+        logger.info(message);
+      }
+    } else if (resp.status != 200) {
+      messageType = Constants.messageTypes.ERROR;
+      errorCode = 'api_failed_build_stop';
+
+      if (build) {
+        message = `${
+          Constants.userMessages.BUILD_STOP_FAILED
+        } with error: \n${JSON.stringify(build, null, 2)}`;
+        logger.error(message);
+        if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
+      } else {
+        message = Constants.userMessages.BUILD_STOP_FAILED;
+        logger.error(message);
+      }
+    } else {
+      messageType = Constants.messageTypes.SUCCESS;
+      message = `${JSON.stringify(build, null, 2)}`;
+      logger.info(message);
+    }
+  } catch(err){
+    console.log(err);
+    message = Constants.userMessages.BUILD_STOP_FAILED;
+    messageType = Constants.messageTypes.ERROR;
+    errorCode = 'api_failed_build_stop';
+    logger.info(message);
+  } finally {
+    this.sendUsageReport(bsConfig, args, message, messageType, errorCode);
+  }
+}
+
+exports.setProcessHooks = (buildId, bsConfig, bsLocal, args) => {
+  let bindData = {
+    buildId: buildId,
+    bsConfig: bsConfig,
+    bsLocalInstance: bsLocal,
+    args: args
+  }
+  process.on('SIGINT', processExitHandler.bind(this, bindData));
+  process.on('SIGTERM', processExitHandler.bind(this, bindData));
+  process.on('SIGBREAK', processExitHandler.bind(this, bindData));
+  process.on('uncaughtException', processExitHandler.bind(this, bindData));
+}
+
+async function processExitHandler(exitData){
+  logger.warn(Constants.userMessages.PROCESS_KILL_MESSAGE);
+  await this.stopBrowserStackBuild(exitData.bsConfig, exitData.args, exitData.buildId);
+  await this.stopLocalBinary(exitData.bsConfig, exitData.bsLocalInstance, exitData.args);
+  process.exit(0);
 }

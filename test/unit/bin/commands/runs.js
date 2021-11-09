@@ -109,6 +109,7 @@ describe("runs", () => {
       setLocalConfigFileStub = sandbox.stub();
       setBrowsersStub = sandbox.stub();
       setConfigStub = sandbox.stub();
+      setCLIModeStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -147,7 +148,8 @@ describe("runs", () => {
           setLocalConfigFile: setLocalConfigFileStub,
           setSystemEnvs: setSystemEnvsStub,
           setBrowsers: setBrowsersStub,
-          setConfig: setConfigStub
+          setConfig: setConfigStub,
+          setCLIMode: setCLIModeStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub
@@ -181,6 +183,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
           sinon.assert.calledOnce(setConfigStub);
+          sinon.assert.calledOnce(setCLIModeStub);
           sinon.assert.calledOnce(setOtherConfigsStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(getErrorCodeFromMsgStub);
@@ -237,6 +240,7 @@ describe("runs", () => {
       setLocalConfigFileStub = sandbox.stub();
       setBrowsersStub = sandbox.stub();
       setConfigStub = sandbox.stub();
+      setCLIModeStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -276,7 +280,8 @@ describe("runs", () => {
           setLocalConfigFile: setLocalConfigFileStub,
           setSystemEnvs: setSystemEnvsStub,
           setBrowsers: setBrowsersStub,
-          setConfig: setConfigStub
+          setConfig: setConfigStub,
+          setCLIMode: setCLIModeStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -323,6 +328,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setCLIModeStub);
           sinon.assert.calledOnce(setOtherConfigsStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
@@ -384,6 +390,7 @@ describe("runs", () => {
       setLocalConfigFileStub = sandbox.stub();
       setConfigStub = sandbox.stub();
       setBrowsersStub = sandbox.stub();
+      setCLIModeStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -423,7 +430,8 @@ describe("runs", () => {
           setDefaults: setDefaultsStub,
           setLocalConfigFile: setLocalConfigFileStub,
           setBrowsers: setBrowsersStub,
-          setConfig: setConfigStub
+          setConfig: setConfigStub,
+          setCLIMode: setCLIModeStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -470,6 +478,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setCLIModeStub);
           sinon.assert.calledOnce(setOtherConfigsStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
@@ -536,6 +545,7 @@ describe("runs", () => {
       setLocalConfigFileStub = sandbox.stub();
       setConfigStub = sandbox.stub();
       setBrowsersStub = sandbox.stub();
+      setCLIModeStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -576,7 +586,8 @@ describe("runs", () => {
           stopLocalBinary: stopLocalBinaryStub,
           setLocalConfigFile: setLocalConfigFileStub,
           setBrowsers: setBrowsersStub,
-          setConfig: setConfigStub
+          setConfig: setConfigStub,
+          setCLIMode: setCLIModeStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -633,6 +644,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setCLIModeStub);
           sinon.assert.calledOnce(setOtherConfigsStub);
           sinon.assert.calledOnce(archiverStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
@@ -710,6 +722,8 @@ describe("runs", () => {
       setBrowsersStub = sandbox.stub();
       stopLocalBinaryStub = sandbox.stub();
       nonEmptyArrayStub = sandbox.stub();
+      setCLIModeStub = sandbox.stub();
+      setProcessHooksStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -757,7 +771,9 @@ describe("runs", () => {
           setConfig: setConfigStub,
           stopLocalBinary: stopLocalBinaryStub,
           nonEmptyArray: nonEmptyArrayStub,
-          checkError: checkErrorStub
+          checkError: checkErrorStub,
+          setCLIMode: setCLIModeStub,
+          setProcessHooks: setProcessHooksStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -826,6 +842,8 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setCLIModeStub);
+          sinon.assert.calledOnce(setProcessHooksStub);
           sinon.assert.calledOnce(setOtherConfigsStub);
           sinon.assert.calledOnce(generateUniqueHashStub);
           sinon.assert.calledOnce(archiverStub);

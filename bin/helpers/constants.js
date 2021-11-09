@@ -7,6 +7,7 @@ const syncCLI = {
   },
   INITIAL_DELAY_MULTIPLIER: 10,
   DEFAULT_LINE_SEP: "\n--------------------------------------------------------------------------------",
+  STARTUP_MESSAGE: "BrowserStack machines are now setting up Cypress with the specified npm dependencies for running your tests. It might take some time before your tests start runnning and showing up below..."
 };
 
 const userMessages = {
@@ -47,7 +48,7 @@ const userMessages = {
   FATAL_NETWORK_ERROR: `fatal: unable to access '${config.buildUrl}': Could not resolve host: ${config.rails_host}`,
   RETRY_LIMIT_EXCEEDED: `Max retries exceeded trying to connect to the host (retries: ${config.retries})`,
   CHECK_DASHBOARD_AT: "Please check the build status at: ",
-  CYPRESS_VERSION_CHANGED: "Your build will run using Cypress <actualVersion> instead of Cypress <preferredVersion>. Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions",
+  CYPRESS_VERSION_CHANGED: "Your build will run using Cypress <actualVersion> instead of Cypress <preferredVersion>.<frameworkUpgradeMessage> Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions",
   LOCAL_START_FAILED: "Local Testing setup failed.",
   LOCAL_STOP_FAILED: "Local Binary stop failed.",
   INVALID_LOCAL_MODE_WARNING: "Invalid value specified for local_mode. local_mode: (\"always-on\" | \"on-demand\"). For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
@@ -55,7 +56,8 @@ const userMessages = {
   DOWNLOAD_BUILD_ARTIFACTS_FAILED: "Downloading build artifacts for the build <build-id> failed for <machine-count> machines.",
   ASYNC_DOWNLOADS: "Test artifacts as specified under 'downloads' can be downloaded after the build has completed its run, using 'browserstack-cypress generate-downloads <build-id>'",
   DOWNLOAD_BUILD_ARTIFACTS_SUCCESS: "Your build artifact(s) have been successfully downloaded in '<user-path>/build_artifacts/<build-id>' directory",
-  LATEST_SYNTAX_TO_ACTUAL_VERSION_MESSAGE: "Your build will run using Cypress <actualVersion> as you had specified <latestSyntaxVersion>. Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions"
+  LATEST_SYNTAX_TO_ACTUAL_VERSION_MESSAGE: "Your build will run using Cypress <actualVersion> as you had specified <latestSyntaxVersion>.<frameworkUpgradeMessage> Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions",
+  PROCESS_KILL_MESSAGE: "Stopping the CLI and the execution of the build on BrowserStack",
 };
 
 const validationMessages = {
@@ -80,7 +82,8 @@ const validationMessages = {
   INVALID_LOCAL_MODE: "When using --local-mode, a value needs to be supplied. \n--local-mode (\"always-on\" | \"on-demand\").\nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
   INVALID_LOCAL_CONFIG_FILE: "Using --local-config-file requires an input of the form /path/to/config-file.yml.\nFor more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
   INVALID_LOCAL_IDENTIFIER: "Invalid value specified for local_identifier. For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
-  INVALID_BROWSER_ARGS: "Aborting as an unacceptable value was passed for --browser. Read more at https://www.browserstack.com/docs/automate/cypress/cli-reference"
+  INVALID_BROWSER_ARGS: "Aborting as an unacceptable value was passed for --browser. Read more at https://www.browserstack.com/docs/automate/cypress/cli-reference",
+  INVALID_LOCAL_ASYNC_ARGS: "Cannot run in --async mode when local is set to true. Please run the build after removing --async",
 };
 
 const cliMessages = {
@@ -102,7 +105,7 @@ const cliMessages = {
   },
   RUN: {
     PARALLEL_DESC: "The maximum number of parallels to use to run your test suite",
-    INFO: "Run your tests on BrowserStack.",
+    INFO: "Run your tests on BrowserStack. For more help: `browserstack-cypress run --help`.",
     CYPRESS_DESC: "Path to Cypress config file",
     CYPRESS_CONFIG_DEMAND: "Cypress config file is required",
     BUILD_NAME: "The build name you want to use to name your test runs",
@@ -111,6 +114,7 @@ const cliMessages = {
     SPECS_DESCRIPTION: "Specify the spec files to run",
     ENV_DESCRIPTION: "Specify the environment variables for your spec files",
     SYNC_DESCRIPTION: "Makes the run command in sync",
+    ASYNC_DESCRIPTION: "Makes the run command in async",
     BUILD_REPORT_MESSAGE: "See the entire build report here",
     HEADED: "Run your tests in a headed browser instead of a headless browser",
     LOCAL: "Accepted values: (true | false) - create a local testing connection to let you test staging and localhost websites, or sites behind proxies; learn more at browserstack.com/local-testing",
@@ -149,7 +153,7 @@ const messageTypes = {
   NULL: null
 }
 
-const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip', 'npmrc', 'xml', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'jsx', 'coffee', 'cjsx', 'csv', 'tsv', 'yml', 'yaml', 'env'];
+const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip', 'npmrc', 'xml', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'jsx', 'coffee', 'cjsx', 'csv', 'tsv', 'yml', 'yaml', 'env', 'mov', 'mp4', 'mp3', 'wav'];
 
 const filesToIgnoreWhileUploading = [
   '**/node_modules/**',
