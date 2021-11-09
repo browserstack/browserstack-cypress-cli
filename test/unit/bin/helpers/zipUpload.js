@@ -1,28 +1,22 @@
+'use strict';
 const chai = require("chai"),
   chaiAsPromised = require("chai-as-promised"),
   sinon = require("sinon"),
-  request = require("request"),
-  fs = require("fs");
+  request = require("request");
 
-const Constants = require("../../../../bin/helpers/constants"),
-  logger = require("../../../../bin/helpers/logger").winstonLogger,
-  testObjects = require("../../support/fixtures/testObjects");
+const logger = require("../../../../bin/helpers/logger").winstonLogger,
+  constant = require('../../../../bin/helpers/constants');
 
-const proxyquire = require("proxyquire").noCallThru();
+const rewire = require("rewire");
 
 chai.use(chaiAsPromised);
 logger.transports["console.info"].silent = true;
 
 describe("zipUpload", () => {
-  let bsConfig = testObjects.sampleBsConfig;
-
-  var sandbox;
+  let sandbox;
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    getUserAgentStub = sandbox.stub().returns("random user-agent");
-    createReadStreamStub = sandbox.stub(fs, "createReadStream");
-    deleteZipStub = sandbox.stub().returns(true);
   });
 
   afterEach(() => {
@@ -30,206 +24,320 @@ describe("zipUpload", () => {
     sinon.restore();
   });
 
-  it("reject with error", () => {
-    let requestStub = sandbox
-      .stub(request, "post")
-      .yields(new Error("random error"), null, null);
-
-    const zipUploader = proxyquire("../../../../bin/helpers/zipUpload", {
-      "./utils": {
-        getUserAgent: getUserAgentStub,
-      },
-      request: { post: requestStub },
+  context("uploadSuits", () => {
+    let utilsStub, loggerStub;
+    let bsConfig = {}
+    let filePath = "random/path";
+    const zipUploader = rewire("../../../../bin/helpers/zipUpload");
+    beforeEach(() => {
+      utilsStub = {
+        generateUploadParams: sinon.stub().returns({})
+      };
+      loggerStub = {
+        info: sandbox.stub().returns(null)
+      };
     });
 
-    return zipUploader
-      .zipUpload(bsConfig, "./random_file_path",{})
-      .then(function (data) {
-        chai.assert.fail("Promise error");
-      })
-      .catch((error) => {
-        sinon.assert.calledOnce(requestStub);
-        sinon.assert.calledOnce(getUserAgentStub);
-        sinon.assert.calledOnce(createReadStreamStub);
-        chai.assert.equal(error.message, "random error");
+    it("reject with error", () => {
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(new Error("test error"), null, null);
+
+      zipUploader.__set__({
+        request: { post: requestStub },
+        utils: utilsStub,
+        logger: loggerStub
       });
+      let uploadSuitsrewire = zipUploader.__get__('uploadSuits');
+      let opts = {
+        archivePresent: true,
+        messages: {}
+      }
+      return uploadSuitsrewire(bsConfig, filePath, opts)
+        .then((_data) => {
+          chai.assert.fail("Promise error");
+        })
+        .catch((error) => {
+          chai.assert.equal(error.message, "test error");
+        });
+    });
+
+    it("resolve with url if already present", () => {
+      let uploadSuitsrewire = zipUploader.__get__('uploadSuits');
+      let opts = {
+        urlPresent: true,
+        md5ReturnKey: 'returnKey',
+        url: 'bs://random_hash'
+      }
+      return uploadSuitsrewire(bsConfig, filePath, opts)
+        .then((data) => {
+          chai.assert.deepEqual(data, {returnKey: 'bs://random_hash'});
+        })
+        .catch((_error) => {
+          chai.assert.fail("Promise error");
+        });
+    });
+
+    it("resolve with url if archive not present", () => {
+      let uploadSuitsrewire = zipUploader.__get__('uploadSuits');
+      let opts = {
+        archivePresent: false,
+      }
+      return uploadSuitsrewire(bsConfig, filePath, opts)
+        .then((data) => {
+          chai.assert.deepEqual(data, {});
+        })
+        .catch((_error) => {
+          chai.assert.fail("Promise error");
+        });
+    });
+
+    it("resolve with nothing if parsing error", () => {
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(null, { statusCode: 200 }, '{ random: "test }');
+
+      zipUploader.__set__({
+        request: { post: requestStub },
+        utils: utilsStub,
+        logger: loggerStub
+      });
+      let uploadSuitsrewire = zipUploader.__get__('uploadSuits');
+      let opts = {
+        cleanupMethod: sinon.stub().returns(null),
+        archivePresent: true,
+        messages: {}
+      }
+      return uploadSuitsrewire(bsConfig, filePath, opts)
+        .then((data) => {
+          chai.assert.deepEqual(data, {});
+        })
+        .catch((_error) => {
+          chai.assert.fail("Promise error");
+        });
+    });
+
+    it("resolve with message if statusCode = 200", () => {
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(null, { statusCode: 200 }, JSON.stringify({ zip_url: "zip_url" }));
+
+      zipUploader.__set__({
+        request: { post: requestStub },
+        utils: utilsStub,
+        logger: loggerStub
+      });
+      let uploadSuitsrewire = zipUploader.__get__('uploadSuits');
+      let opts = {
+        cleanupMethod: sinon.stub().returns(null),
+        archivePresent: true,
+        messages: {}
+      }
+      return uploadSuitsrewire(bsConfig, filePath, opts)
+        .then((data) => {
+          chai.assert.deepEqual(data, {zip_url: 'zip_url'});
+        })
+        .catch((_error) => {
+          chai.assert.fail("Promise error");
+        });
+    });
+
+    it("reject with returned message if auth failed with message", () => {
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(null, { statusCode: 401 }, JSON.stringify({ error: "auth failed" }));
+
+      zipUploader.__set__({
+        request: { post: requestStub },
+        utils: utilsStub,
+        logger: loggerStub
+      });
+      let uploadSuitsrewire = zipUploader.__get__('uploadSuits');
+      let opts = {
+        archivePresent: true,
+        messages: {}
+      }
+      return uploadSuitsrewire(bsConfig, filePath, opts)
+        .then((_data) => {
+          chai.assert.fail("Promise error");
+        })
+        .catch((error) => {
+          chai.assert.equal(error, "auth failed");
+        });
+    });
+
+    it("reject with predefined message if auth failed without message", () => {
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(null, { statusCode: 401 }, JSON.stringify({ }));
+
+      zipUploader.__set__({
+        request: { post: requestStub },
+        utils: utilsStub,
+        logger: loggerStub
+      });
+      let uploadSuitsrewire = zipUploader.__get__('uploadSuits');
+      let opts = {
+        archivePresent: true,
+        messages: {}
+      }
+      return uploadSuitsrewire(bsConfig, filePath, opts)
+        .then((_data) => {
+          chai.assert.fail("Promise error");
+        })
+        .catch((error) => {
+          chai.assert.equal(error, constant.validationMessages.INVALID_DEFAULT_AUTH_PARAMS);
+        });
+    });
+
+    it("resolve with nothing if request error but no propogation", () => {
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(null, { statusCode: 402 }, JSON.stringify({ }));
+
+      zipUploader.__set__({
+        request: { post: requestStub },
+        utils: utilsStub,
+        logger: loggerStub
+      });
+      let uploadSuitsrewire = zipUploader.__get__('uploadSuits');
+      let opts = {
+        archivePresent: true,
+        messages: {},
+        propogateError: false
+      }
+      return uploadSuitsrewire(bsConfig, filePath, opts)
+        .then((data) => {
+          chai.assert.deepEqual(data, {});
+        })
+        .catch((_error) => {
+          chai.assert.fail("Promise error");
+        });
+    });
+
+    it("reject with error if request error", () => {
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(null, { statusCode: 402 }, JSON.stringify({ error: "test error" }));
+
+      zipUploader.__set__({
+        request: { post: requestStub },
+        utils: utilsStub,
+        logger: loggerStub
+      });
+      let uploadSuitsrewire = zipUploader.__get__('uploadSuits');
+      let opts = {
+        archivePresent: true,
+        messages: {},
+        propogateError: true
+      }
+      return uploadSuitsrewire(bsConfig, filePath, opts)
+        .then((_data) => {
+          chai.assert.fail("Promise error");
+        })
+        .catch((error) => {
+          chai.assert.deepEqual(error, "test error");
+        });
+    });
+
+    it("reject with limit exceeded error", () => {
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(null, { statusCode: 413 }, JSON.stringify({ }));
+
+      zipUploader.__set__({
+        request: { post: requestStub },
+        utils: utilsStub,
+        logger: loggerStub
+      });
+      let uploadSuitsrewire = zipUploader.__get__('uploadSuits');
+      let opts = {
+        archivePresent: true,
+        messages: {},
+        propogateError: true
+      }
+      return uploadSuitsrewire(bsConfig, filePath, opts)
+        .then((_data) => {
+          chai.assert.fail("Promise error");
+        })
+        .catch((error) => {
+          chai.assert.deepEqual(error, constant.userMessages.ZIP_UPLOAD_LIMIT_EXCEEDED);
+        });
+    });
+
+    it("reject with not reachable error", () => {
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(null, { statusCode: 414 }, JSON.stringify({ }));
+
+      zipUploader.__set__({
+        request: { post: requestStub },
+        utils: utilsStub,
+        logger: loggerStub
+      });
+      let uploadSuitsrewire = zipUploader.__get__('uploadSuits');
+      let opts = {
+        archivePresent: true,
+        messages: {},
+        propogateError: true
+      }
+      return uploadSuitsrewire(bsConfig, filePath, opts)
+        .then((_data) => {
+          chai.assert.fail("Promise error");
+        })
+        .catch((error) => {
+          chai.assert.deepEqual(error, constant.userMessages.ZIP_UPLOADER_NOT_REACHABLE);
+        });
+    });
   });
 
-  it("reject with error (if error present in response) if statusCode == 401", () => {
-    let error = "non 200 code";
-
-    let requestStub = sandbox
-      .stub(request, "post")
-      .yields(null, { statusCode: 401 }, JSON.stringify({ error: error }));
-
-    const zipUploader = proxyquire("../../../../bin/helpers/zipUpload", {
-      "./utils": {
-        getUserAgent: getUserAgentStub,
-      },
-      request: { post: requestStub },
+  context("uploadCypressZip", () => {
+    let utilsStub, uploadSuitsStub, uploadSuitsErrorStub;
+    const zipUploader = rewire("../../../../bin/helpers/zipUpload");
+    beforeEach(() => {
+      utilsStub = {
+        generateUploadOptions: sinon.stub().returns({})
+      };
+      uploadSuitsStub = sandbox.stub().returns(Promise.resolve({zip_url: 'zip_url'}));
     });
 
-    return zipUploader
-      .zipUpload(bsConfig, "./random_file_path", {})
-      .then(function (data) {
-        chai.assert.fail("Promise error");
-      })
-      .catch((error) => {
-        sinon.assert.calledOnce(requestStub);
-        sinon.assert.calledOnce(getUserAgentStub);
-        sinon.assert.calledOnce(createReadStreamStub);
-        chai.assert.equal(error, "non 200 code");
+    it("resolve with test suit", () => {
+      zipUploader.__set__({
+        utils: utilsStub,
+        uploadSuits: uploadSuitsStub
       });
-  });
-
-  it("reject with message if statusCode == 401 and error not in response", () => {
-    let requestStub = sandbox
-      .stub(request, "post")
-      .yields(
-        null,
-        { statusCode: 401 },
-        JSON.stringify({ message: "random message" })
-      );
-
-    const zipUploader = proxyquire("../../../../bin/helpers/zipUpload", {
-      "./utils": {
-        getUserAgent: getUserAgentStub,
-      },
-      request: { post: requestStub },
+      let uploadCypressZiprewire = zipUploader.__get__('uploadCypressZip');
+      let bsConfig = {}
+      let md5data = {};
+      let packageData = {
+      }
+      return uploadCypressZiprewire(bsConfig, md5data, packageData)
+        .then((data) => {
+          chai.assert.deepEqual(data, {zip_url: 'zip_url'});
+        })
+        .catch((_error) => {
+          chai.assert.fail("Promise error");
+      });
     });
 
-    return zipUploader
-      .zipUpload(bsConfig, "./random_file_path", {})
-      .then(function (data) {
-        chai.assert.fail("Promise error");
-      })
-      .catch((error) => {
-        sinon.assert.calledOnce(requestStub);
-        sinon.assert.calledOnce(getUserAgentStub);
-        sinon.assert.calledOnce(createReadStreamStub);
-        chai.assert.equal(
-          error,
-          Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS
-        );
+    it("reject with error while uploading suit", () => {
+      let uploadSuitsErrorStub = sandbox.stub().returns(Promise.reject("test error"));
+      zipUploader.__set__({
+        utils: utilsStub,
+        uploadSuits: uploadSuitsErrorStub
       });
-  });
-
-  it("reject with error (if error present in response) if statusCode != 200 and statusCode != 401", () => {
-    let error = "non 200 and non 401 code";
-
-    let requestStub = sandbox
-      .stub(request, "post")
-      .yields(null, { statusCode: 404 }, JSON.stringify({ error: error }));
-
-    const zipUploader = proxyquire("../../../../bin/helpers/zipUpload", {
-      "./utils": {
-        getUserAgent: getUserAgentStub,
-      },
-      request: { post: requestStub },
+      let uploadCypressZiprewire = zipUploader.__get__('uploadCypressZip');
+      let bsConfig = {}
+      let md5data = {};
+      let packageData = {
+      }
+      return uploadCypressZiprewire(bsConfig, md5data, packageData)
+        .then((_data) => {
+          chai.assert.fail("Promise error");
+        })
+        .catch((error) => {
+          chai.assert.equal(error, "test error");
+      });
     });
-
-    return zipUploader
-      .zipUpload(bsConfig, "./random_file_path", {})
-      .then(function (data) {
-        chai.assert.fail("Promise error");
-      })
-      .catch((error) => {
-        sinon.assert.calledOnce(requestStub);
-        sinon.assert.calledOnce(getUserAgentStub);
-        sinon.assert.calledOnce(createReadStreamStub);
-        chai.assert.equal(error, "non 200 and non 401 code");
-      });
-  });
-
-  it("reject with message if statusCode != 200 and statusCode != 401 and error not in response", () => {
-    let requestStub = sandbox
-      .stub(request, "post")
-      .yields(
-        null,
-        { statusCode: 404 },
-        JSON.stringify({ message: "random message" })
-      );
-
-    const zipUploader = proxyquire("../../../../bin/helpers/zipUpload", {
-      "./utils": {
-        getUserAgent: getUserAgentStub,
-      },
-      request: { post: requestStub },
-    });
-
-    return zipUploader
-      .zipUpload(bsConfig, "./random_file_path", {})
-      .then(function (data) {
-        chai.assert.fail("Promise error");
-      })
-      .catch((error) => {
-        sinon.assert.calledOnce(requestStub);
-        sinon.assert.calledOnce(getUserAgentStub);
-        sinon.assert.calledOnce(createReadStreamStub);
-        chai.assert.equal(
-          error,
-          Constants.userMessages.ZIP_UPLOADER_NOT_REACHABLE
-        );
-      });
-  });
-
-  it("resolve with message if statusCode = 200", () => {
-    let zip_url = "uploaded zip url";
-    let requestStub = sandbox
-      .stub(request, "post")
-      .yields(null, { statusCode: 200 }, JSON.stringify({ zip_url: zip_url }));
-
-    const zipUploader = proxyquire('../../../../bin/helpers/zipUpload', {
-      './utils': {
-        getUserAgent: getUserAgentStub,
-      },
-      request: {post: requestStub},
-      './fileHelpers': {
-        deleteZip: deleteZipStub,
-      },
-    });
-
-    return zipUploader
-      .zipUpload(bsConfig, "./random_file_path", {})
-      .then(function (data) {
-        sinon.assert.calledOnce(requestStub);
-        sinon.assert.calledOnce(getUserAgentStub);
-        sinon.assert.calledOnce(createReadStreamStub);
-        sinon.assert.calledOnce(deleteZipStub);
-        chai.assert.equal(data.zip_url, zip_url);
-      })
-      .catch((error) => {
-        chai.assert.isNotOk(error, "Promise error");
-      });
-  });
-
-  it("resolve early if zip url already present", () => {
-    let zip_url = "uploaded zip url";
-    let requestStub = sandbox
-      .stub(request, "post")
-      .yields(null, { statusCode: 200 }, JSON.stringify({ zip_url: zip_url }));
-
-    const zipUploader = proxyquire('../../../../bin/helpers/zipUpload', {
-      './utils': {
-        getUserAgent: getUserAgentStub,
-      },
-      request: {post: requestStub},
-      './fileHelpers': {
-        deleteZip: deleteZipStub,
-      },
-    });
-
-    return zipUploader
-      .zipUpload(bsConfig, "./random_file_path", { zipUrlPresent: true, zipUrl: zip_url })
-      .then(function (data) {
-        sinon.assert.notCalled(requestStub);
-        sinon.assert.notCalled(getUserAgentStub);
-        sinon.assert.notCalled(createReadStreamStub);
-        sinon.assert.notCalled(deleteZipStub);
-        chai.assert.equal(data.zip_url, zip_url);
-      })
-      .catch((error) => {
-        chai.assert.isNotOk(error, "Promise error");
-      });
   });
 });

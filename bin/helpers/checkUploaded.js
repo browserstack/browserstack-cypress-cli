@@ -10,10 +10,13 @@ const crypto = require('crypto'),
   utils = require('./utils');
 
 
-const checkSpecsMd5 = (runSettings, excludeFiles, instrumentBlocks) => {
+const checkSpecsMd5 = (runSettings, args, instrumentBlocks) => {
   return new Promise(function (resolve, reject) {
+    if (args["force-upload"]) {
+      return resolve("force-upload");
+    }
     let cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
-    let ignoreFiles = utils.getFilesToIgnore(runSettings, excludeFiles, false);
+    let ignoreFiles = utils.getFilesToIgnore(runSettings, args.exclude, false);
     let options = {
       cwd: cypressFolderPath,
       ignore: ignoreFiles,
@@ -45,18 +48,24 @@ const checkPackageMd5 = (runSettings) => {
   const outputHash = crypto.createHash(Constants.hashingOptions.algo);
   let packageJSON = {};
   if (typeof runSettings.package_config_options === 'object') {
-    Object.assign(packageJSON, runSettings.package_config_options);
+    Object.assign(packageJSON, utils.sortJsonKeys(runSettings.package_config_options));
   }
 
   if (typeof runSettings.npm_dependencies === 'object') {
     Object.assign(packageJSON, {
-      devDependencies: runSettings.npm_dependencies,
+      devDependencies: utils.sortJsonKeys(runSettings.npm_dependencies),
     });
   }
 
   if (Object.keys(packageJSON).length > 0) {
     let packageJSONString = JSON.stringify(packageJSON);
     outputHash.update(packageJSONString);
+  }
+  let cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
+  let sourceNpmrc = path.join(cypressFolderPath, ".npmrc");
+  if (fs.existsSync(sourceNpmrc)) {
+    const npmrc = fs.readFileSync(sourceNpmrc, {encoding:'utf8', flag:'r'});
+    outputHash.update(npmrc);
   }
 
   return outputHash.digest(Constants.hashingOptions.encoding)
@@ -66,18 +75,27 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
   return new Promise(function (resolve) {
     let obj = {
       zipUrlPresent: false,
+      packageUrlPresent: false,
     };
-    if (args["force-upload"]) {
+    if (args["force-upload"] && !utils.isTrueString(bsConfig.run_settings.cache_dependencies)) {
       return resolve(obj);
     }
+    
     instrumentBlocks.markBlockStart("checkAlreadyUploaded.md5Total");
-    checkSpecsMd5(bsConfig.run_settings, args.exclude, instrumentBlocks).then(function (md5data) {
-      Object.assign(obj, {md5sum: md5data});
+    checkSpecsMd5(bsConfig.run_settings, args, instrumentBlocks).then(function (zip_md5sum) {
       instrumentBlocks.markBlockStart("checkAlreadyUploaded.md5Package");
-      let package_md5sum = checkPackageMd5(bsConfig.run_settings);
+      let npm_package_md5sum = checkPackageMd5(bsConfig.run_settings);
       instrumentBlocks.markBlockEnd("checkAlreadyUploaded.md5Package");
       instrumentBlocks.markBlockEnd("checkAlreadyUploaded.md5Total");
-      let data = JSON.stringify({ zip_md5sum: md5data, instrument_package_md5sum: package_md5sum});
+      let data = {};
+      if (!args["force-upload"]) {
+        Object.assign(data, { zip_md5sum });
+        Object.assign(obj, { zip_md5sum });
+      }
+      if (utils.isTrueString(bsConfig.run_settings.cache_dependencies)) {
+        Object.assign(data, { npm_package_md5sum });
+        Object.assign(obj, { npm_package_md5sum });
+      }
 
       let options = {
         url: config.checkMd5sum,
@@ -89,7 +107,7 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
           'Content-Type': 'application/json',
           "User-Agent": utils.getUserAgent(),
         },
-        body: data
+        body: JSON.stringify(data)
       };
 
       instrumentBlocks.markBlockStart("checkAlreadyUploaded.railsCheck");
@@ -104,15 +122,30 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
           } catch (error) {
             zipData = {};
           }
-          if (resp.statusCode === 200 && !utils.isUndefined(zipData.zipUrl)) {
-            Object.assign(obj, zipData, {zipUrlPresent: true});
+          if (resp.statusCode === 200) {
+            if (!utils.isUndefined(zipData.zipUrl)) {
+              Object.assign(obj, zipData, {zipUrlPresent: true});
+            }
+            if (!utils.isUndefined(zipData.npmPackageUrl)) {
+              Object.assign(obj, zipData, {packageUrlPresent: true});
+            }
+          }
+          if (utils.isTrueString(zipData.disableNpmSuiteCache)) {
+            bsConfig.run_settings.cache_dependencies = false;
+            Object.assign(obj, {packageUrlPresent: false});
+            delete obj.npm_package_md5sum;
+          }
+          if (utils.isTrueString(zipData.disableTestSuiteCache)) {
+            args["force-upload"] = true;
+            Object.assign(obj, {zipUrlPresent: false});
+            delete obj.zip_md5sum;
           }
           instrumentBlocks.markBlockEnd("checkAlreadyUploaded.railsCheck");
           resolve(obj);
         }
       });
-    }).catch((error) => {
-      resolve({zipUrlPresent: false});
+    }).catch((err) => {
+      resolve({zipUrlPresent: false, packageUrlPresent: false, error: err.stack.substring(0,100)});
     });
   });
 };

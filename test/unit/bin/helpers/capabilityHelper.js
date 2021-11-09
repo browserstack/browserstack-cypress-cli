@@ -149,6 +149,8 @@ describe("capabilityHelper.js", () => {
         connection_settings: {
           local: false,
         },
+        run_settings: {
+        }
       };
       return capabilityHelper
         .caps(bsConfig, { zip_url: zip_url })
@@ -178,6 +180,8 @@ describe("capabilityHelper.js", () => {
           local: true,
           local_identifier: "abc"
         },
+        run_settings: {
+        }
       };
       return capabilityHelper
         .caps(bsConfig, { zip_url: zip_url })
@@ -208,6 +212,8 @@ describe("capabilityHelper.js", () => {
         connection_settings: {
           local: true,
         },
+        run_settings: {
+        }
       };
       return capabilityHelper
         .caps(bsConfig, { zip_url: zip_url })
@@ -235,6 +241,8 @@ describe("capabilityHelper.js", () => {
             versions: ["78", "77"],
           },
         ],
+        run_settings: {
+        }
       };
       return capabilityHelper
         .caps(bsConfig, { zip_url: zip_url })
