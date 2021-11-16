@@ -138,6 +138,10 @@ exports.setUsageReportingFlag = (bsConfig, disableUsageReporting) => {
   }
 };
 
+exports.getParallels = (bsConfig, args) => {
+  return args.parallels || bsConfig['run_settings']['parallels'];
+}
+
 exports.setParallels = (bsConfig, args, numOfSpecs) => {
   if (!this.isUndefined(args.parallels)) {
     bsConfig["run_settings"]["parallels"] = args.parallels;

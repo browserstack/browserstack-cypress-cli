@@ -181,11 +181,21 @@ function send(args) {
     data.cypress_version = bsConfig.run_settings.cypress_version
   }
 
+  bsConfig['auth']['username'] = "[REDACTED]"
+  bsConfig['auth']['access_key'] = "[REDACTED]"
+
   delete args.bstack_config;
 
   const payload = {
     event_type: "cypress_cli_stats",
     data: {
+      build_id: data.build_id,
+      user_id: data.user_id,
+      group_id: data.group_id,
+      parallels_specified: data.parallels_specified,
+      parallels_allotted: data.parallels_allotted,
+      bstack_json: bsConfig,
+      run_settings: bsConfig.run_settings,
       os: _os(),
       os_version: os_version(),
       bstack_json_found_in_pwd: bstack_json_found_in_pwd(),
