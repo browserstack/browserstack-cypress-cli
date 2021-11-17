@@ -173,7 +173,7 @@ function isUsageReportingEnabled() {
 function send(args) {
   if (isUsageReportingEnabled() === "true") return;
 
-  let bsConfig = args.bstack_config;
+  let bsConfig = JSON.parse(JSON.stringify(args.bstack_config));
   let cli_details = cli_version_and_path(bsConfig);
   let data = utils.isUndefined(args.data) ? {} : args.data;
 
@@ -182,8 +182,8 @@ function send(args) {
   }
 
   bsConfig['auth']['username'] = "[REDACTED]"
-  bsConfig['auth']['access_key'] = "[REDACTED]"
-
+  bsConfig['auth']['access_key'] = "[REDACTED]" 
+  
   delete args.bstack_config;
 
   const payload = {
@@ -191,9 +191,7 @@ function send(args) {
     data: {
       build_id: data.build_id,
       user_id: data.user_id,
-      group_id: data.group_id,
-      parallels_specified: data.parallels_specified,
-      parallels_allotted: data.parallels_allotted,
+      parallels: data.parallels,
       bstack_json: bsConfig,
       run_settings: bsConfig.run_settings,
       os: _os(),

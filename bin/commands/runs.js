@@ -137,8 +137,7 @@ module.exports = function run(args) {
                 let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
                 let buildReportData = { 
                   'user_id': data.user_id,
-                  'parallels_specified': userSpecifiedParallels,
-                  'parallels_allotted':  bsConfig.run_settings.parallels
+                  'parallels': userSpecifiedParallels
                 };
                 utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
                 if ((utils.isUndefined(bsConfig.run_settings.parallels) && utils.isUndefined(args.parallels)) || (!utils.isUndefined(bsConfig.run_settings.parallels) && bsConfig.run_settings.parallels == Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE)) {
