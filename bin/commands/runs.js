@@ -136,8 +136,7 @@ module.exports = function run(args) {
                 let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
                 let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
                 let buildReportData = { 
-                  'user_id': data.user_details.id,
-                  'group_id': data.user_details.group_id,
+                  'user_id': data.user_id,
                   'parallels_specified': userSpecifiedParallels,
                   'parallels_allotted':  bsConfig.run_settings.parallels
                 };
