@@ -239,6 +239,38 @@ describe('utils', () => {
     });
   });
 
+  describe('getparallels', () =>{
+    it('should return the parallels specified by the user as arguments', ()=>{
+      let bsConfig = {
+        run_settings: {
+          parallels: 100,
+        },
+      };
+      let args = {
+        parallels: 200
+      };
+      expect(utils.getParallels(bsConfig, args)).to.be.eq(200);
+    });
+
+    it('should return the parallels specified by the user in bsconfig if not passed as arguments', ()=>{
+      let bsConfig = {
+        run_settings: {
+          parallels: 100,
+        },
+      };
+      let args = {};
+      expect(utils.getParallels(bsConfig, args)).to.be.eq(100);
+    });
+
+    it('should return the undefined if no parallels specified in bsconfig and arguments', ()=>{
+      let bsConfig = {
+        run_settings: {},
+      };
+      let args = {};
+      expect(utils.getParallels(bsConfig, args)).to.be.eq(undefined);
+    });
+  });
+
   describe('checkError', () => {
     it('should return error if exists', () => {
       expect(utils.checkError({error: "test error"})).to.be.eq("test error");

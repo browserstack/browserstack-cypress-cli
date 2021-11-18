@@ -206,6 +206,7 @@ describe("runs", () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
+      getParallelsStub = sandbox.stub();
       setParallelsStub = sandbox.stub();
       warnSpecLimitStub = sandbox.stub();
       setUsernameStub = sandbox.stub();
@@ -257,6 +258,7 @@ describe("runs", () => {
         '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
+          getParallels: getParallelsStub,
           setParallels: setParallelsStub,
           warnSpecLimit: warnSpecLimitStub,
           setUsername: setUsernameStub,
@@ -322,6 +324,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(setCypressConfigFilenameStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+          sinon.assert.calledOnce(getParallelsStub);
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(warnSpecLimitStub);
           sinon.assert.calledOnce(setLocalStub);
@@ -356,6 +359,7 @@ describe("runs", () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
       validateBstackJsonStub = sandbox.stub();
+      getParallelsStub = sandbox.stub();
       setParallelsStub = sandbox.stub();
       warnSpecLimitStub = sandbox.stub();
       setUsernameStub = sandbox.stub();
@@ -407,6 +411,7 @@ describe("runs", () => {
         '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
+          getParallels: getParallelsStub,
           setParallels: setParallelsStub,
           warnSpecLimit: warnSpecLimitStub,
           setUsername: setUsernameStub,
@@ -472,6 +477,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalModeStub);
           sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+          sinon.assert.calledOnce(getParallelsStub);
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(warnSpecLimitStub);
           sinon.assert.calledOnce(setLocalStub);
@@ -509,6 +515,7 @@ describe("runs", () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
       validateBstackJsonStub = sandbox.stub();
+      getParallelsStub = sandbox.stub();
       setParallelsStub = sandbox.stub();
       warnSpecLimitStub = sandbox.stub();
       setUsernameStub = sandbox.stub();
@@ -562,6 +569,7 @@ describe("runs", () => {
         '../helpers/utils': {
           validateBstackJson: validateBstackJsonStub,
           sendUsageReport: sendUsageReportStub,
+          getParallels: getParallelsStub,
           setParallels: setParallelsStub,
           warnSpecLimit: warnSpecLimitStub,
           setUsername: setUsernameStub,
@@ -638,6 +646,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+          sinon.assert.calledOnce(getParallelsStub);
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(warnSpecLimitStub);
           sinon.assert.calledOnce(setLocalStub);
@@ -675,6 +684,7 @@ describe("runs", () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
       validateBstackJsonStub = sandbox.stub();
+      getParallelsStub = sandbox.stub();
       setParallelsStub = sandbox.stub();
       warnSpecLimitStub = sandbox.stub()
       setUsernameStub = sandbox.stub();
@@ -736,7 +746,7 @@ describe("runs", () => {
       let errorCode = null;
       let message = `Success! ${Constants.userMessages.BUILD_CREATED} with build id: random_build_id`;
       let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${dashboardUrl}`;
-      let data = {time_components: {}, unique_id: 'random_hash', package_error: 'test', checkmd5_error: 'test', build_id: 'random_build_id'}
+      let data = { user_id: 1234, parallels: 10, time_components: {}, unique_id: 'random_hash', package_error: 'test', checkmd5_error: 'test', build_id: 'random_build_id'}
 
       const runs = proxyquire('../../../../bin/commands/runs', {
         '../helpers/utils': {
@@ -750,6 +760,7 @@ describe("runs", () => {
           setTestEnvs: setTestEnvsStub,
           setSystemEnvs: setSystemEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
+          getParallels: getParallelsStub,
           setParallels: setParallelsStub,
           warnSpecLimit: warnSpecLimitStub,
           getConfigPath: getConfigPathStub,
@@ -821,7 +832,8 @@ describe("runs", () => {
       stopLocalBinaryStub.returns(Promise.resolve("nothing"));
       nonEmptyArrayStub.returns(false);
       checkErrorStub.returns('test');
-      createBuildStub.returns(Promise.resolve({ message: 'Success', build_id: 'random_build_id', dashboard_url: dashboardUrl }));
+      getParallelsStub.returns(10);
+      createBuildStub.returns(Promise.resolve({ message: 'Success', build_id: 'random_build_id', dashboard_url: dashboardUrl, user_id: 1234 }));
 
       return runs(args)
         .then(function (_bsConfig) {
@@ -834,6 +846,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+          sinon.assert.calledOnce(getParallelsStub);
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(warnSpecLimitStub);
           sinon.assert.calledOnce(setLocalStub);
