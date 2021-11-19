@@ -16,7 +16,7 @@ const archiver = require("../helpers/archiver"),
   downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts,
   updateNotifier = require('update-notifier'),
   pkg = require('../../package.json');
-
+  
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
   //Delete build_results.txt from log folder if already present.
@@ -284,7 +284,8 @@ module.exports = function run(args) {
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
-    utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err));
+    let bsJsonData = utils.readBsConfigJSON(bsConfigPath);
+    utils.sendUsageReport(bsJsonData, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err));
     process.exitCode = Constants.ERROR_EXIT_CODE;
   }).finally(function(){
     updateNotifier({

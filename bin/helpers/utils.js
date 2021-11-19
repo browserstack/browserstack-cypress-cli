@@ -912,6 +912,10 @@ exports.setOtherConfigs = (bsConfig, args) => {
   }
 }
 
+exports.readBsConfigJSON = (bsConfigPath) => {
+  return fs.readFileSync(bsConfigPath, 'utf-8');
+}
+
 exports.getCypressJSON = (bsConfig) => {
   let cypressJSON = undefined;
   if (bsConfig.run_settings.cypress_config_file && bsConfig.run_settings.cypress_config_filename !== 'false') {
