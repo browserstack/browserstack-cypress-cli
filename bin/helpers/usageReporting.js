@@ -8,6 +8,8 @@ const cp = require("child_process"),
 const config = require('./config'),
   fileLogger = require('./logger').fileLogger,
   utils = require('./utils');
+  
+const { REDACTED } = require("./constants");
 
 function get_version(package_name) {
   try {
@@ -181,8 +183,8 @@ function send(args) {
     data.cypress_version = bsConfig.run_settings.cypress_version
   }
 
-  bsConfig['auth']['username'] = "[REDACTED]"
-  bsConfig['auth']['access_key'] = "[REDACTED]" 
+  bsConfig['auth']['username'] = REDACTED
+  bsConfig['auth']['access_key'] = REDACTED
   
   delete args.bstack_config;
 
