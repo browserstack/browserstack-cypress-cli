@@ -194,7 +194,7 @@ function send(args) {
   const payload = {
     event_type: "cypress_cli_stats",
     data: {
-      build_id: data.build_id,
+      build_hashed_id: data.build_id,
       user_id: data.user_id,
       parallels: data.parallels,
       bstack_json: sanitizedbsConfig,

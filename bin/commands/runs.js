@@ -16,7 +16,6 @@ const archiver = require("../helpers/archiver"),
   downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts,
   updateNotifier = require('update-notifier'),
   pkg = require('../../package.json');
-  
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
   //Delete build_results.txt from log folder if already present.
@@ -135,7 +134,8 @@ module.exports = function run(args) {
                 utils.setProcessHooks(data.build_id, bsConfig, bs_local, args);
                 let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
                 let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
-                let buildReportData = { 
+                let buildReportData = {
+                  'build_id': data.build_id,
                   'user_id': data.user_id,
                   'parallels': userSpecifiedParallels
                 };
