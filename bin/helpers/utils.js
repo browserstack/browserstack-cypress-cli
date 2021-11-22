@@ -913,7 +913,7 @@ exports.setOtherConfigs = (bsConfig, args) => {
 }
 
 exports.readBsConfigJSON = (bsConfigPath) => {
-  return fs.readFileSync(bsConfigPath, 'utf-8');
+  return fs.existsSync(bsConfigPath) ? fs.readFileSync(bsConfigPath, 'utf-8') : null;
 }
 
 exports.getCypressJSON = (bsConfig) => {
