@@ -8,7 +8,10 @@ const npm = require('npm'),
   logger = require("./logger").winstonLogger,
   Constants = require('./constants'),
   process = require('process'),
-  utils = require('./utils');
+  utils = require('./utils'),
+  { spawn } = require('child_process');
+
+let nodeProcess;
 
 const setupPackageFolder = (runSettings, directoryPath) => {
   return new Promise(function (resolve, reject) {
@@ -39,7 +42,7 @@ const setupPackageFolder = (runSettings, directoryPath) => {
           if (fs.existsSync(sourceNpmrc)) {
             fs.copyFileSync(sourceNpmrc, destNpmrc);
           }
-          return resolve("package file created");
+          return resolve("Package file created");
         }
         return reject("Nothing in package file");
       } catch(error) {
@@ -51,25 +54,18 @@ const setupPackageFolder = (runSettings, directoryPath) => {
 
 const packageInstall = (packageDir) => {
   return new Promise(function (resolve, reject) {
-    let savedPrefix = null;
-    let npmLoad = Constants.packageInstallerOptions.npmLoad
-    npmLoad["cache"] = fs.mkdtempSync(`${os.tmpdir()}${path.sep}`);
-    const installCallback = (err, result) => {
-      npm.prefix = savedPrefix;
-      if (err) {
-        return reject(err);
+    nodeProcess = spawn('npm', ['install'], {cwd: packageDir});
+    nodeProcess.on('close', (code) => {
+      if(code == 0) {
+        resolve('Packages were installed');
+      } else {
+        reject('Packages were not installed');
       }
-      resolve(result);
-    };
-    const loadCallback = (err) => {
-      if (err) {
-        return reject(err);
-      }
-      savedPrefix = npm.prefix;
-      npm.prefix = packageDir;
-      npm.commands.install(packageDir, [], installCallback);
-    };
-    npm.load(npmLoad, loadCallback);
+    });
+    nodeProcess.on('error', (error) => {
+      logger.error(`Some error occurred while installing packages: ${error}`);
+      reject('Packages were not installed');
+    });
   });
 };
 
