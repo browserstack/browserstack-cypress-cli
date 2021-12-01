@@ -53,17 +53,19 @@ const setupPackageFolder = (runSettings, directoryPath) => {
 const packageInstall = (packageDir) => {
   return new Promise(function (resolve, reject) {
     nodeProcess = spawn('npm', ['install'], {cwd: packageDir});
-    nodeProcess.on('close', (code) => {
+    const nodeProcessCloseCallback = (code) => {
       if(code == 0) {
         resolve('Packages were installed');
       } else {
         reject('Packages were not installed');
       }
-    });
-    nodeProcess.on('error', (error) => {
+    };
+    const nodeProcessErrorCallback = (error) => {
       logger.error(`Some error occurred while installing packages: ${error}`);
       reject('Packages were not installed');
-    });
+    };
+    nodeProcess.on('error', nodeProcessErrorCallback);
+    nodeProcess.on('close', nodeProcessCloseCallback);
   });
 };
 
