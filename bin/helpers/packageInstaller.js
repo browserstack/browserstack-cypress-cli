@@ -1,8 +1,6 @@
 'use strict';
-const npm = require('npm'),
-  archiver = require("archiver"),
+  const archiver = require("archiver"),
   path = require('path'),
-  os = require('os'),
   fs = require('fs-extra'),
   fileHelpers = require('./fileHelpers'),
   logger = require("./logger").winstonLogger,
@@ -109,7 +107,7 @@ const packageWrapper = (bsConfig, packageDir, packageFile, md5data, instrumentBl
     if (md5data.packageUrlPresent || !utils.isTrueString(bsConfig.run_settings.cache_dependencies)) {
       return resolve(obj);
     }
-    logger.info(`Installing required dependencies and building the package to upload to BrowserStack`);
+    logger.info(Constants.userMessages.NPM_INSTALL_AND_UPLOAD);
     instrumentBlocks.markBlockStart("packageInstaller.folderSetup");
     return setupPackageFolder(bsConfig.run_settings, packageDir).then((_result) => {
       process.env.CYPRESS_INSTALL_BINARY = 0

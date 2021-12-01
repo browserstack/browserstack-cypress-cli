@@ -26,6 +26,7 @@ const userMessages = {
   MD5_CHECK_FAILED: "There was some issue while checking if zip is already uploaded.",
   ZIP_DELETE_FAILED: "Could not delete tests.zip successfully.",
   ZIP_DELETED: "Deleted tests.zip successfully.",
+  NPM_INSTALL_AND_UPLOAD: "Installing required dependencies and building the package to upload to BrowserStack",
   NPM_DELETE_FAILED: "Could not delete the dependency packages.",
   NPM_DELETED: "Deleted dependency packages successfully.",
   API_DEPRECATED: "This version of API is deprecated, please use latest version of API.",
