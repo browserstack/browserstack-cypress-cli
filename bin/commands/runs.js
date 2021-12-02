@@ -18,6 +18,7 @@ const archiver = require("../helpers/archiver"),
   pkg = require('../../package.json');
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
+  let rawArgs = args;
   //Delete build_results.txt from log folder if already present.
   initTimeComponents();
   instrumentEventTime("cliStart")
@@ -176,7 +177,7 @@ module.exports = function run(args) {
 
                     // Generate custom report!
                     reportGenerator(bsConfig, data.build_id, args, function(){
-                      utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData);
+                      utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
                       utils.handleSyncExit(exitCode, data.dashboard_url);
                     });
                   });
@@ -203,7 +204,7 @@ module.exports = function run(args) {
                   }
                 }
                 buildReportData = { ...buildReportData, ...dataToSend };
-                utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData);
+                utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
                 return;
               }).catch(async function (err) {
                 // Build creation failed
@@ -211,22 +212,22 @@ module.exports = function run(args) {
                 // stop the Local instance
                 await utils.stopLocalBinary(bsConfig, bs_local, args);
 
-                utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'build_failed');
+                utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'build_failed', null, rawArgs);
                 process.exitCode = Constants.ERROR_EXIT_CODE;
               });
             }).catch(function (err) {
               // Zip Upload failed | Local Start failed
               logger.error(err);
               if(err === Constants.userMessages.LOCAL_START_FAILED){
-                utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.LOCAL_START_FAILED}`, Constants.messageTypes.ERROR, 'local_start_failed');
+                utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.LOCAL_START_FAILED}`, Constants.messageTypes.ERROR, 'local_start_failed', null, rawArgs);
               } else {
                 logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED);
                 fileHelpers.deleteZip();
-                utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed');
+                utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed', null, rawArgs);
                 try {
                   fileHelpers.deletePackageArchieve();
                 } catch (err) {
-                  utils.sendUsageReport(bsConfig, args, Constants.userMessages.NPM_DELETE_FAILED, Constants.messageTypes.ERROR, 'npm_deletion_failed');
+                  utils.sendUsageReport(bsConfig, args, Constants.userMessages.NPM_DELETE_FAILED, Constants.messageTypes.ERROR, 'npm_deletion_failed', null, rawArgs);
                 }
               }
               process.exitCode = Constants.ERROR_EXIT_CODE;
@@ -235,16 +236,16 @@ module.exports = function run(args) {
             // Zipping failed
             logger.error(err);
             logger.error(Constants.userMessages.FAILED_TO_ZIP);
-            utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.FAILED_TO_ZIP}`, Constants.messageTypes.ERROR, 'zip_creation_failed');
+            utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.FAILED_TO_ZIP}`, Constants.messageTypes.ERROR, 'zip_creation_failed', null, rawArgs);
             try {
               fileHelpers.deleteZip();
             } catch (err) {
-              utils.sendUsageReport(bsConfig, args, Constants.userMessages.ZIP_DELETE_FAILED, Constants.messageTypes.ERROR, 'zip_deletion_failed');
+              utils.sendUsageReport(bsConfig, args, Constants.userMessages.ZIP_DELETE_FAILED, Constants.messageTypes.ERROR, 'zip_deletion_failed', null, rawArgs);
             }
             try {
               fileHelpers.deletePackageArchieve();
             } catch (err) {
-              utils.sendUsageReport(bsConfig, args, Constants.userMessages.NPM_DELETE_FAILED, Constants.messageTypes.ERROR, 'npm_deletion_failed');
+              utils.sendUsageReport(bsConfig, args, Constants.userMessages.NPM_DELETE_FAILED, Constants.messageTypes.ERROR, 'npm_deletion_failed', null, rawArgs);
             }
             process.exitCode = Constants.ERROR_EXIT_CODE;
           });
@@ -252,11 +253,11 @@ module.exports = function run(args) {
           // package installer failed
           logger.error(err);
           logger.error(Constants.userMessages.FAILED_CREATE_NPM_ARCHIVE);
-          utils.sendUsageReport(bsConfig, args, Constants.userMessages.FAILED_CREATE_NPM_ARCHIVE, Constants.messageTypes.ERROR, 'npm_package_archive_failed');
+          utils.sendUsageReport(bsConfig, args, Constants.userMessages.FAILED_CREATE_NPM_ARCHIVE, Constants.messageTypes.ERROR, 'npm_package_archive_failed', null, rawArgs);
           try {
             fileHelpers.deletePackageArchieve();
           } catch (err) {
-            utils.sendUsageReport(bsConfig, args, Constants.userMessages.NPM_DELETE_FAILED, Constants.messageTypes.ERROR, 'npm_deletion_failed');
+            utils.sendUsageReport(bsConfig, args, Constants.userMessages.NPM_DELETE_FAILED, Constants.messageTypes.ERROR, 'npm_deletion_failed', null, rawArgs);
           }
           process.exitCode = Constants.ERROR_EXIT_CODE;
         });
@@ -264,7 +265,7 @@ module.exports = function run(args) {
         // md5 check failed
         logger.error(err);
         logger.error(Constants.userMessages.FAILED_MD5_CHECK);
-        utils.sendUsageReport(bsConfig, args, Constants.userMessages.MD5_CHECK_FAILED, Constants.messageTypes.ERROR, 'zip_already_uploaded_failed');
+        utils.sendUsageReport(bsConfig, args, Constants.userMessages.MD5_CHECK_FAILED, Constants.messageTypes.ERROR, 'zip_already_uploaded_failed', null, rawArgs);
         process.exitCode = Constants.ERROR_EXIT_CODE;
       });
     }).catch(function (err) {
@@ -278,14 +279,14 @@ module.exports = function run(args) {
       }
 
       let error_code = utils.getErrorCodeFromMsg(err);
-      utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.validationMessages.NOT_VALID}`, Constants.messageTypes.ERROR, error_code);
+      utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.validationMessages.NOT_VALID}`, Constants.messageTypes.ERROR, error_code, null, rawArgs);
       process.exitCode = Constants.ERROR_EXIT_CODE;
     });
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
     let bsJsonData = utils.readBsConfigJSON(bsConfigPath);
-    utils.sendUsageReport(bsJsonData, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err));
+    utils.sendUsageReport(bsJsonData, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), null, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;
   }).finally(function(){
     updateNotifier({

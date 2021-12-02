@@ -114,7 +114,8 @@ exports.sendUsageReport = (
   message,
   message_type,
   error_code,
-  data
+  data,
+  rawArgs
 ) => {
   usageReporting.send({
     cli_args: args,
@@ -123,6 +124,7 @@ exports.sendUsageReport = (
     error_code: error_code,
     bstack_config: bsConfig,
     data,
+    raw_args: rawArgs
   });
 };
 

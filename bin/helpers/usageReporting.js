@@ -210,6 +210,7 @@ function send(args) {
       ci_environment: ci_environment(),
       event_timestamp: new Date().toLocaleString(),
       data: JSON.stringify(data),
+      raw_args: JSON.stringify(args.raw_args),
       ...args,
     },
   };
