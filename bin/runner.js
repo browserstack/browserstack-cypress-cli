@@ -116,6 +116,7 @@ var argv = yargs
     }
   })
   .command('run', Constants.cliMessages.RUN.INFO, function(yargs) {
+    let rawArgv = yargs.argv;
     argv = yargs
       .usage('usage: $0 run <options>')
       .options({
@@ -232,7 +233,7 @@ var argv = yargs
       .wrap(null)
       .argv
     if (checkCommands(yargs, argv, 1)) {
-      return require('./commands/runs')(argv);
+      return require('./commands/runs')(argv, rawArgv);
     }
   })
   .command('generate-report', Constants.cliMessages.GENERATE_REPORT.INFO, function(yargs) {

@@ -16,9 +16,8 @@ const archiver = require("../helpers/archiver"),
   downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts,
   updateNotifier = require('update-notifier'),
   pkg = require('../../package.json');
-module.exports = function run(args) {
+module.exports = function run(args, rawArgs) {
   let bsConfigPath = utils.getConfigPath(args.cf);
-  let rawArgs = args;
   //Delete build_results.txt from log folder if already present.
   initTimeComponents();
   instrumentEventTime("cliStart")
