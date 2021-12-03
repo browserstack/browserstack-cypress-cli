@@ -21,6 +21,7 @@ logger.transports["console.info"].silent = true;
 
 describe("init", () => {
   let args = testObjects.initSampleArgs;
+  let rawArgs = testObjects.initSampleRawArgs;
   var sandbox;
 
   beforeEach(() => {
@@ -132,10 +133,10 @@ describe("init", () => {
         }
       });
 
-      init(args);
+      init(args, rawArgs);
       sinon.assert.calledOnce(dirExistsStub);
       sinon.assert.notCalled(writeStub);
-      sinon.assert.calledOnceWithExactly(sendUsageReportStub, null, args, Constants.userMessages.DIR_NOT_FOUND, Constants.messageTypes.ERROR, 'path_to_init_not_found');
+      sinon.assert.calledOnceWithExactly(sendUsageReportStub, null, args, Constants.userMessages.DIR_NOT_FOUND, Constants.messageTypes.ERROR, 'path_to_init_not_found', null, rawArgs);
     });
 
     it("fail if browserstack.json is already present", () => {
@@ -154,11 +155,11 @@ describe("init", () => {
         },
       });
 
-      init(args);
+      init(args, rawArgs);
       sinon.assert.calledOnce(dirExistsStub);
       sinon.assert.calledOnce(fileExistsStub);
       sinon.assert.notCalled(writeStub);
-      sinon.assert.calledOnceWithExactly(sendUsageReportStub, null, args, Constants.userMessages.CONFIG_FILE_EXISTS, Constants.messageTypes.ERROR, 'bstack_json_already_exists');
+      sinon.assert.calledOnceWithExactly(sendUsageReportStub, null, args, Constants.userMessages.CONFIG_FILE_EXISTS, Constants.messageTypes.ERROR, 'bstack_json_already_exists', null, rawArgs);
     });
 
     it("create browserstack.json if not already present", () => {
@@ -178,7 +179,7 @@ describe("init", () => {
         },
       });
 
-      init(args);
+      init(args, rawArgs);
       sinon.assert.calledOnce(dirExistsStub);
       sinon.assert.calledOnce(fileExistsStub);
       sinon.assert.calledOnce(writeStub);
