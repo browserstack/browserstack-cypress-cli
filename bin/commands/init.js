@@ -35,7 +35,7 @@ function get_path(args) {
 }
 
 
-module.exports = function init(args) {
+module.exports = function init(args, rawArgs) {
 
   let path_to_json = get_path(args);
   if (path_to_json === undefined) return;
@@ -57,7 +57,7 @@ module.exports = function init(args) {
         if (exists) {
           let message = Constants.userMessages.CONFIG_FILE_EXISTS;
           logger.error(message);
-          utils.sendUsageReport(null, args, message, Constants.messageTypes.ERROR, 'bstack_json_already_exists');
+          utils.sendUsageReport(null, args, message, Constants.messageTypes.ERROR, 'bstack_json_already_exists', null, rawArgs);
         } else {
           fileHelpers.write(config, null, args, utils.configCreated);
         }
@@ -65,7 +65,7 @@ module.exports = function init(args) {
     } else {
       let message = util.format(Constants.userMessages.DIR_NOT_FOUND, path.dirname(config.path));
       logger.error(message);
-      utils.sendUsageReport(null, args, message, Constants.messageTypes.ERROR, 'path_to_init_not_found');
+      utils.sendUsageReport(null, args, message, Constants.messageTypes.ERROR, 'path_to_init_not_found', null, rawArgs);
     }
   });
 }
