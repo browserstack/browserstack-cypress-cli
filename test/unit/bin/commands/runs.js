@@ -28,6 +28,7 @@ describe("runs", () => {
       });
       getErrorCodeFromErrStub = sandbox.stub().returns("random-error-code");
       deleteResultsStub = sandbox.stub();
+      readBsConfigJSONStub = sandbox.stub().returns(null);
     });
 
     afterEach(() => {
@@ -47,7 +48,8 @@ describe("runs", () => {
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub,
-          deleteResults: deleteResultsStub
+          deleteResults: deleteResultsStub,
+          readBsConfigJSON: readBsConfigJSONStub
         },
       });
 
