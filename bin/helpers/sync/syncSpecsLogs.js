@@ -90,7 +90,7 @@ let setNoWrapParams = () => {
   }
 };
 
-let printSpecsStatus = (bsConfig, buildDetails) => {
+let printSpecsStatus = (bsConfig, buildDetails, rawArgs) => {
   setNoWrapParams();
   return new Promise((resolve, reject) => {
     options = getOptions(bsConfig.auth, buildDetails.build_id)
@@ -106,7 +106,7 @@ let printSpecsStatus = (bsConfig, buildDetails) => {
       },
       function(err, result) { // when loop ends
         if (err) {
-          utils.sendUsageReport(bsConfig, {}, `buildId: ${buildDetails.build_id}`, 'error', 'sync_cli_error', err);
+          utils.sendUsageReport(bsConfig, {}, `buildId: ${buildDetails.build_id}`, 'error', 'sync_cli_error', err, rawArgs);
         }
         logger.info(lineSeparator);
         specSummary.duration =  endTime - startTime

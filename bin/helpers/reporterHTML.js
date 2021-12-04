@@ -89,7 +89,7 @@ function buildSpecStats(specMeta) {
   return specStats;
 }
 
-let reportGenerator = (bsConfig, buildId, args, cb) => {
+let reportGenerator = (bsConfig, buildId, args, rawArgs, cb) => {
   let options = {
     url: `${config.buildUrl}${buildId}/custom_report`,
     auth: {
@@ -115,7 +115,7 @@ let reportGenerator = (bsConfig, buildId, args, cb) => {
       logger.error('Generating the build report failed.');
       logger.error(message);
 
-      utils.sendUsageReport(bsConfig, args, message, messageType, errorCode);
+      utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
       return;
     } else {
       try {
@@ -167,7 +167,7 @@ let reportGenerator = (bsConfig, buildId, args, cb) => {
       await renderReportHTML(build);
       logger.info(message);
     }
-    utils.sendUsageReport(bsConfig, args, message, messageType, errorCode);
+    utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
     if (cb){
       cb();
     }

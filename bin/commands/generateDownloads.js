@@ -28,7 +28,7 @@ module.exports = async function generateDownloads(args, rawArgs) {
     let errorCode = null;
     let buildId = args._[1];
 
-    await downloadBuildArtifacts(bsConfig, buildId, args);
+    await downloadBuildArtifacts(bsConfig, buildId, args, rawArgs);
     utils.sendUsageReport(bsConfig, args, Constants.usageReportingConstants.GENERATE_DOWNLOADS, messageType, errorCode, null, rawArgs);
   }).catch(function (err) {
     logger.error(err);

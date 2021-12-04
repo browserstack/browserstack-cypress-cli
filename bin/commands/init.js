@@ -7,7 +7,7 @@ const fileHelpers = require("../helpers/fileHelpers"),
   path = require('path');
 
 
-function get_path(args) {
+function get_path(args, rawArgs) {
   if (args._.length > 1 && args.p) {
     let filename = args._[1];
     if (filename !== path.basename(filename)) {
@@ -15,7 +15,7 @@ function get_path(args) {
       logger.error(message);
       // set cypress config filename
       utils.setCypressConfigFilename(args.bstack_config, args);
-      utils.sendUsageReport(null, args, message, Constants.messageTypes.ERROR, 'conflicting_path_json_init');
+      utils.sendUsageReport(null, args, message, Constants.messageTypes.ERROR, 'conflicting_path_json_init', null, rawArgs);
       return;
     }
 
@@ -37,7 +37,7 @@ function get_path(args) {
 
 module.exports = function init(args, rawArgs) {
 
-  let path_to_json = get_path(args);
+  let path_to_json = get_path(args, rawArgs);
   if (path_to_json === undefined) return;
 
   // append .json if filename passed is not of json type

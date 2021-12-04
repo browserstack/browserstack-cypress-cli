@@ -25,7 +25,7 @@ module.exports = function stop(args, rawArgs) {
 
     let buildId = args._[1];
 
-    await utils.stopBrowserStackBuild(bsConfig, args, buildId);
+    await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
 
   }).catch(function (err) {
     logger.error(err);

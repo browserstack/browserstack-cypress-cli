@@ -100,7 +100,7 @@ module.exports = function run(args, rawArgs) {
       utils.setParallels(bsConfig, args, specFiles.length);
 
       // warn if specFiles cross our limit
-      utils.warnSpecLimit(bsConfig, args, specFiles);
+      utils.warnSpecLimit(bsConfig, args, specFiles, rawArgs);
       markBlockEnd('preArchiveSteps');
       markBlockStart('checkAlreadyUploaded');
       return checkUploaded.checkUploadedMd5(bsConfig, args, {markBlockStart, markBlockEnd}).then(function (md5data) {
@@ -125,7 +125,7 @@ module.exports = function run(args, rawArgs) {
               // Create build
               //setup Local Testing
               markBlockStart('localSetup');
-              let bs_local = await utils.setupLocalTesting(bsConfig, args);
+              let bs_local = await utils.setupLocalTesting(bsConfig, args, rawArgs);
               markBlockEnd('localSetup');
               markBlockStart('createBuild');
               return build.createBuild(bsConfig, zip).then(function (data) {
@@ -161,21 +161,21 @@ module.exports = function run(args, rawArgs) {
 
 
                 if (args.sync) {
-                  syncRunner.pollBuildStatus(bsConfig, data).then(async (exitCode) => {
+                  syncRunner.pollBuildStatus(bsConfig, data, rawArgs).then(async (exitCode) => {
 
                     // stop the Local instance
-                    await utils.stopLocalBinary(bsConfig, bs_local, args);
+                    await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs);
 
                     // waiting for 5 secs for upload to complete (as a safety measure)
                     await new Promise(resolve => setTimeout(resolve, 5000));
 
                     // download build artifacts
                     if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
-                      await downloadBuildArtifacts(bsConfig, data.build_id, args);
+                      await downloadBuildArtifacts(bsConfig, data.build_id, args, rawArgs);
                     }
 
                     // Generate custom report!
-                    reportGenerator(bsConfig, data.build_id, args, function(){
+                    reportGenerator(bsConfig, data.build_id, args, rawArgs, function(){
                       utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
                       utils.handleSyncExit(exitCode, data.dashboard_url);
                     });
@@ -209,7 +209,7 @@ module.exports = function run(args, rawArgs) {
                 // Build creation failed
                 logger.error(err);
                 // stop the Local instance
-                await utils.stopLocalBinary(bsConfig, bs_local, args);
+                await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs);
 
                 utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'build_failed', null, rawArgs);
                 process.exitCode = Constants.ERROR_EXIT_CODE;
