@@ -1012,3 +1012,13 @@ async function processExitHandler(exitData){
   await this.stopLocalBinary(exitData.bsConfig, exitData.bsLocalInstance, exitData.args);
   process.exit(0);
 }
+
+exports.fetchZipSize = (fileName) => {
+  try {
+    let stats = fs.statSync(fileName)
+    return stats.size; // in bytes
+  }
+  catch(err) {
+    return "file not present"
+  }
+}
