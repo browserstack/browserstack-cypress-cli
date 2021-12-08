@@ -1019,6 +1019,6 @@ exports.fetchZipSize = (fileName) => {
     return stats.size; // in bytes
   }
   catch(err) {
-    return "file not present"
+    return 0;
   }
 }

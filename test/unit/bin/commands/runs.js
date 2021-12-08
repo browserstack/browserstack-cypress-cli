@@ -845,7 +845,6 @@ describe("runs", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          console.log(error);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(validateBstackJsonStub);

@@ -2672,7 +2672,7 @@ describe('utils', () => {
     });
 
     it('handle file not present', () => {
-      expect(utils.fetchZipSize('unknown.tar.gz')).to.be.eql('file not present');
+      expect(utils.fetchZipSize('unknown.tar.gz')).to.be.eql(0);
     });
   });
 });
