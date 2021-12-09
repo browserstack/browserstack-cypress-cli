@@ -14,8 +14,10 @@
   "dependencies": {
     "archiver": "^5.2.0",
     "async": "^3.2.0",
+    "axios": "^0.21.1",
     "browserstack-local": "^1.4.8",
     "chalk": "^4.1.0",
+    "cli-progress": "^3.9.1",
     "fs-extra": "^8.1.0",
     "getmac": "^5.17.0",
     "glob": "^7.1.6",
@@ -23,12 +25,11 @@
     "request": "^2.88.0",
     "requestretry": "^4.1.0",
     "table": "^5.4.6",
+    "unzipper": "^0.10.11",
+    "update-notifier": "^5.1.0",
     "uuid": "^8.3.2",
     "winston": "^2.3.1",
-    "yargs": "^14.2.3",
-    "axios": "^0.21.1",
-    "unzipper": "^0.10.11",
-    "update-notifier": "^5.1.0"
+    "yargs": "^14.2.3"
   },
   "repository": {
     "type": "git",
