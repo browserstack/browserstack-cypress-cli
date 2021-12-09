@@ -1,4 +1,6 @@
 'use strict';
+const path = require('path');
+
 const archiver = require("../helpers/archiver"),
   zipUploader = require("../helpers/zipUpload"),
   build = require("../helpers/build"),
@@ -116,6 +118,9 @@ module.exports = function run(args) {
           return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude, md5data).then(function (data) {
             markBlockEnd('zip.archive');
 
+            let test_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.fileName));
+            let npm_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.packageFileName));
+
             // Uploaded zip file
             markBlockStart('zip.zipUpload');
             return zipUploader.zipUpload(bsConfig, md5data, packageData).then(async function (zip) {
@@ -193,6 +198,8 @@ module.exports = function run(args) {
                   package_error: utils.checkError(packageData),
                   checkmd5_error: utils.checkError(md5data),
                   build_id: data.build_id,
+                  test_zip_size: test_zip_size,
+                  npm_zip_size: npm_zip_size,
                 };
                 if (bsConfig && bsConfig.connection_settings) {
                   if (bsConfig.connection_settings.local_mode) {

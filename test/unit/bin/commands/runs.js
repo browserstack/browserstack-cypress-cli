@@ -397,6 +397,7 @@ describe("runs", () => {
       setConfigStub = sandbox.stub();
       setBrowsersStub = sandbox.stub();
       setCLIModeStub = sandbox.stub();
+      fetchZipSizeStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -438,7 +439,8 @@ describe("runs", () => {
           setLocalConfigFile: setLocalConfigFileStub,
           setBrowsers: setBrowsersStub,
           setConfig: setConfigStub,
-          setCLIMode: setCLIModeStub
+          setCLIMode: setCLIModeStub,
+          fetchZipSize: fetchZipSizeStub,
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -468,6 +470,7 @@ describe("runs", () => {
       packageInstallerStub.returns(Promise.resolve({ packageArchieveCreated: false }));
       archiverStub.returns(Promise.resolve("Zipping completed"));
       zipUploadStub.returns(Promise.reject("random-error"));
+      fetchZipSizeStub.returns(123);
 
       return runs(args)
         .then(function (_bsConfig) {
@@ -476,6 +479,7 @@ describe("runs", () => {
         .catch((error) => {
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
+          sinon.assert.calledTwice(fetchZipSizeStub);
           sinon.assert.calledOnce(setLocalModeStub);
           sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
@@ -555,6 +559,7 @@ describe("runs", () => {
       setConfigStub = sandbox.stub();
       setBrowsersStub = sandbox.stub();
       setCLIModeStub = sandbox.stub();
+      fetchZipSizeStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -597,7 +602,8 @@ describe("runs", () => {
           setLocalConfigFile: setLocalConfigFileStub,
           setBrowsers: setBrowsersStub,
           setConfig: setConfigStub,
-          setCLIMode: setCLIModeStub
+          setCLIMode: setCLIModeStub,
+          fetchZipSize: fetchZipSizeStub,
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -634,6 +640,7 @@ describe("runs", () => {
       zipUploadStub.returns(Promise.resolve("zip uploaded"));
       stopLocalBinaryStub.returns(Promise.resolve("nothing"));
       createBuildStub.returns(Promise.reject("random-error"));
+      fetchZipSizeStub.returns(123);
 
       return runs(args)
         .then(function (_bsConfig) {
@@ -642,6 +649,7 @@ describe("runs", () => {
         .catch((error) => {
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
+          sinon.assert.calledTwice(fetchZipSizeStub);
           sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(setLocalModeStub);
           sinon.assert.calledOnce(setupLocalTestingStub);
@@ -706,6 +714,9 @@ describe("runs", () => {
         return "end";
       });
       dashboardUrl = "dashboard-url";
+      packageDirName = "package-dir";
+      packageFileName = "package-file";
+      fileName = "file-name";
       capabilityValidatorStub = sandbox.stub();
       archiverStub = sandbox.stub();
       zipUploadStub = sandbox.stub();
@@ -736,6 +747,7 @@ describe("runs", () => {
       nonEmptyArrayStub = sandbox.stub();
       setCLIModeStub = sandbox.stub();
       setProcessHooksStub = sandbox.stub();
+      fetchZipSizeStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -748,7 +760,7 @@ describe("runs", () => {
       let errorCode = null;
       let message = `Success! ${Constants.userMessages.BUILD_CREATED} with build id: random_build_id`;
       let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${dashboardUrl}`;
-      let data = { user_id: 1234, parallels: 10, time_components: {}, unique_id: 'random_hash', package_error: 'test', checkmd5_error: 'test', build_id: 'random_build_id'}
+      let data = { user_id: 1234, parallels: 10, time_components: {}, unique_id: 'random_hash', package_error: 'test', checkmd5_error: 'test', build_id: 'random_build_id', test_zip_size: 123, npm_zip_size: 123}
 
       const runs = proxyquire('../../../../bin/commands/runs', {
         '../helpers/utils': {
@@ -786,7 +798,8 @@ describe("runs", () => {
           nonEmptyArray: nonEmptyArrayStub,
           checkError: checkErrorStub,
           setCLIMode: setCLIModeStub,
-          setProcessHooks: setProcessHooksStub
+          setProcessHooks: setProcessHooksStub,
+          fetchZipSize: fetchZipSizeStub,
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -806,6 +819,9 @@ describe("runs", () => {
         },
         '../helpers/config': {
           dashboardUrl: dashboardUrl,
+          packageDirName: packageDirName,
+          packageFileName: packageFileName,
+          fileName: fileName,
         },
         '../helpers/checkUploaded': {
           checkUploadedMd5: checkUploadedStub,
@@ -836,6 +852,7 @@ describe("runs", () => {
       checkErrorStub.returns('test');
       getParallelsStub.returns(10);
       createBuildStub.returns(Promise.resolve({ message: 'Success', build_id: 'random_build_id', dashboard_url: dashboardUrl, user_id: 1234 }));
+      fetchZipSizeStub.returns(123);
 
       return runs(args)
         .then(function (_bsConfig) {
@@ -851,6 +868,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(getParallelsStub);
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(warnSpecLimitStub);
+          sinon.assert.calledTwice(fetchZipSizeStub);
           sinon.assert.calledOnce(setLocalStub);
           sinon.assert.calledOnce(setLocalModeStub);
           sinon.assert.calledOnce(setupLocalTestingStub);
