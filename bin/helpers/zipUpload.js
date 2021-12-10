@@ -25,7 +25,7 @@ const uploadSuits = (bsConfig, filePath, opts) => {
 
     // create new progress bar
     let bar1 = new cliProgress.SingleBar({
-      format: `${filePath} [{bar}] {percentage}% | ETA: {eta}s | Speed: {speed} kbps | Duration: {duration}s`,
+      format: `${filePath} [{bar}] {percentage}% | ETA: {eta}s | Speed: {speed} kbps | Duration: {duration}s [${(size / 1000000).toFixed(2)} MB]`,
       hideCursor: true,
     });
 
