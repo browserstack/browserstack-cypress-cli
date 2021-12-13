@@ -8,6 +8,8 @@ const cp = require("child_process"),
 const config = require('./config'),
   fileLogger = require('./logger').fileLogger,
   utils = require('./utils');
+  
+const { AUTH_REGEX, REDACTED_AUTH } = require("./constants");
 
 function get_version(package_name) {
   try {
@@ -173,19 +175,30 @@ function isUsageReportingEnabled() {
 function send(args) {
   if (isUsageReportingEnabled() === "true") return;
 
-  let bsConfig = args.bstack_config;
+  let bsConfig = JSON.parse(JSON.stringify(args.bstack_config));
+  let runSettings = "";
+  let sanitizedbsConfig = "";
   let cli_details = cli_version_and_path(bsConfig);
   let data = utils.isUndefined(args.data) ? {} : args.data;
 
   if (bsConfig && bsConfig.run_settings) {
-    data.cypress_version = bsConfig.run_settings.cypress_version
+    runSettings = bsConfig.run_settings;
+    data.cypress_version = bsConfig.run_settings.cypress_version;
   }
+
+  sanitizedbsConfig = `${(typeof bsConfig === 'string') ? bsConfig : 
+  JSON.stringify(bsConfig)}`.replace(AUTH_REGEX, REDACTED_AUTH);
 
   delete args.bstack_config;
 
   const payload = {
     event_type: "cypress_cli_stats",
     data: {
+      build_hashed_id: data.build_id,
+      user_id: data.user_id,
+      parallels: data.parallels,
+      bstack_json: sanitizedbsConfig,
+      run_settings: runSettings,
       os: _os(),
       os_version: os_version(),
       bstack_json_found_in_pwd: bstack_json_found_in_pwd(),

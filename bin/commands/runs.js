@@ -18,7 +18,6 @@ const archiver = require("../helpers/archiver"),
   downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts,
   updateNotifier = require('update-notifier'),
   pkg = require('../../package.json');
-
 module.exports = function run(args) {
   let bsConfigPath = utils.getConfigPath(args.cf);
   //Delete build_results.txt from log folder if already present.
@@ -96,6 +95,9 @@ module.exports = function run(args) {
       //get the number of spec files
       let specFiles = utils.getNumberOfSpecFiles(bsConfig, args, cypressJson);
 
+      // return the number of parallels user specified
+      let userSpecifiedParallels = utils.getParallels(bsConfig, args);
+
       // accept the number of parallels
       utils.setParallels(bsConfig, args, specFiles.length);
 
@@ -137,6 +139,11 @@ module.exports = function run(args) {
                 utils.setProcessHooks(data.build_id, bsConfig, bs_local, args);
                 let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
                 let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
+                let buildReportData = {
+                  'build_id': data.build_id,
+                  'user_id': data.user_id,
+                  'parallels': userSpecifiedParallels
+                };
                 utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
                 if ((utils.isUndefined(bsConfig.run_settings.parallels) && utils.isUndefined(args.parallels)) || (!utils.isUndefined(bsConfig.run_settings.parallels) && bsConfig.run_settings.parallels == Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE)) {
                   logger.warn(Constants.userMessages.NO_PARALLELS);
@@ -174,7 +181,7 @@ module.exports = function run(args) {
 
                     // Generate custom report!
                     reportGenerator(bsConfig, data.build_id, args, function(){
-                      utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null);
+                      utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData);
                       utils.handleSyncExit(exitCode, data.dashboard_url);
                     });
                   });
@@ -202,7 +209,8 @@ module.exports = function run(args) {
                     dataToSend.used_auto_local = bsConfig.connection_settings.usedAutoLocal;
                   }
                 }
-                utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, dataToSend);
+                buildReportData = { ...buildReportData, ...dataToSend };
+                utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData);
                 return;
               }).catch(async function (err) {
                 // Build creation failed
@@ -283,7 +291,8 @@ module.exports = function run(args) {
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
-    utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err));
+    let bsJsonData = utils.readBsConfigJSON(bsConfigPath);
+    utils.sendUsageReport(bsJsonData, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err));
     process.exitCode = Constants.ERROR_EXIT_CODE;
   }).finally(function(){
     updateNotifier({

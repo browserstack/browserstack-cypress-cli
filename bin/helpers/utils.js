@@ -138,6 +138,10 @@ exports.setUsageReportingFlag = (bsConfig, disableUsageReporting) => {
   }
 };
 
+exports.getParallels = (bsConfig, args) => {
+  return args.parallels || bsConfig['run_settings']['parallels'];
+}
+
 exports.setParallels = (bsConfig, args, numOfSpecs) => {
   if (!this.isUndefined(args.parallels)) {
     bsConfig["run_settings"]["parallels"] = args.parallels;
@@ -905,6 +909,15 @@ exports.setOtherConfigs = (bsConfig, args) => {
   }
   if (!this.isUndefined(args.reporterOptions)) {
     bsConfig["run_settings"]["reporter_options"] = args.reporterOptions;
+  }
+}
+
+exports.readBsConfigJSON = (bsConfigPath) => {
+  try {
+    fs.accessSync(bsConfigPath, fs.constants.R_OK);
+    return fs.readFileSync(bsConfigPath, 'utf-8');
+  } catch (err) {
+    return null;
   }
 }
 
