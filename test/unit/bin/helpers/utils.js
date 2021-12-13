@@ -2663,4 +2663,16 @@ describe('utils', () => {
       process.exit.restore();
     });
   });
+
+  describe('fetchZipSize', () => {
+    it('should return size in bytes if file is present', () => {
+      sinon.stub(fs, 'statSync').returns({size: 123});
+      expect(utils.fetchZipSize('unknown.zip')).to.be.eql(123);
+      fs.statSync.restore();
+    });
+
+    it('handle file not present', () => {
+      expect(utils.fetchZipSize('unknown.tar.gz')).to.be.eql(0);
+    });
+  });
 });
