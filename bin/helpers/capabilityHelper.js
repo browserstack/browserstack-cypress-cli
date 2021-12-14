@@ -1,7 +1,8 @@
 const logger = require("./logger").winstonLogger,
   Constants = require("./constants"),
   Utils = require("./utils"),
-  fs = require('fs');
+  fs = require('fs'),
+  path = require('path');
 
 const caps = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
@@ -129,6 +130,16 @@ const caps = (bsConfig, zip) => {
   })
 }
 
+const addCypressZipStartLocation = (runSettings) => {
+  let resolvedHomeDirectoryPath = path.resolve(runSettings.home_directory);
+  let resolvedCypressConfigFilePath = path.resolve(runSettings.cypressConfigFilePath);
+  // For example
+  // resolvedHomeDirectoryPath -> '/Users/<user_name>/path'
+  // resolvedCypressConfigFilePath -> '/Users/<user_name>/path/cypress.json' or '/Users/<user_name>/path/more_path/cypress.json'
+  runSettings.cypressZipStartLocation = path.dirname(resolvedCypressConfigFilePath.split(resolvedHomeDirectoryPath)[1]); // cypressZipStartLocation -> '/' or '/more_path'
+  runSettings.cypressZipStartLocation = runSettings.cypressZipStartLocation.substring(1); // cypressZipStartLocation -> '' or 'more_path'
+}
+
 const validate = (bsConfig, args) => {
   return new Promise(function (resolve, reject) {
     logger.info(Constants.userMessages.VALIDATING_CONFIG);
@@ -185,6 +196,27 @@ const validate = (bsConfig, args) => {
     } catch(error){
       reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
     }
+
+    //check if home_directory is present or not in user run_settings
+    if (!Utils.isUndefined(bsConfig.run_settings.home_directory)) {
+      // check if home_directory exists or not
+      if (!fs.existsSync(bsConfig.run_settings.home_directory)) {
+        reject(Constants.validationMessages.HOME_DIRECTORY_NOT_FOUND);
+      }
+
+      // check if home_directory is a directory or not
+      if (!fs.statSync(bsConfig.run_settings.home_directory).isDirectory()) {
+        reject(Constants.validationMessages.HOME_DIRECTORY_NOT_A_DIRECTORY);
+      }
+
+      // check if cypress config file (cypress.json) is a part of home_directory or not
+      if (!path.resolve(bsConfig.run_settings.cypressConfigFilePath).includes(path.resolve(bsConfig.run_settings.home_directory))) {
+        reject(Constants.validationMessages.CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY);
+      }
+
+      addCypressZipStartLocation(bsConfig.run_settings);
+    }
+
     resolve(cypressJson);
   });
 }

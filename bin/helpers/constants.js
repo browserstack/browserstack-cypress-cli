@@ -84,6 +84,9 @@ const validationMessages = {
   INVALID_LOCAL_IDENTIFIER: "Invalid value specified for local_identifier. For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
   INVALID_BROWSER_ARGS: "Aborting as an unacceptable value was passed for --browser. Read more at https://www.browserstack.com/docs/automate/cypress/cli-reference",
   INVALID_LOCAL_ASYNC_ARGS: "Cannot run in --async mode when local is set to true. Please run the build after removing --async",
+  HOME_DIRECTORY_NOT_FOUND: "Specified home directory could not be found. Please make sure the path of the home directory is correct.",
+  HOME_DIRECTORY_NOT_A_DIRECTORY: "Specified home directory is not a directory. The home directory can only be a directory and not a file.",
+  CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY: "Could not find cypress.json within the specified home directory. Please make sure cypress.json resides within the home directory."
 };
 
 const cliMessages = {
