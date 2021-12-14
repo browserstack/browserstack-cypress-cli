@@ -239,6 +239,38 @@ describe('utils', () => {
     });
   });
 
+  describe('getparallels', () =>{
+    it('should return the parallels specified by the user as arguments', ()=>{
+      let bsConfig = {
+        run_settings: {
+          parallels: 100,
+        },
+      };
+      let args = {
+        parallels: 200
+      };
+      expect(utils.getParallels(bsConfig, args)).to.be.eq(200);
+    });
+
+    it('should return the parallels specified by the user in bsconfig if not passed as arguments', ()=>{
+      let bsConfig = {
+        run_settings: {
+          parallels: 100,
+        },
+      };
+      let args = {};
+      expect(utils.getParallels(bsConfig, args)).to.be.eq(100);
+    });
+
+    it('should return the undefined if no parallels specified in bsconfig and arguments', ()=>{
+      let bsConfig = {
+        run_settings: {},
+      };
+      let args = {};
+      expect(utils.getParallels(bsConfig, args)).to.be.eq(undefined);
+    });
+  });
+
   describe('checkError', () => {
     it('should return error if exists', () => {
       expect(utils.checkError({error: "test error"})).to.be.eq("test error");
@@ -2525,7 +2557,8 @@ describe('utils', () => {
   describe('stopBrowserStackBuild', () => {
     let axiosPostStub, getUserAgentStub, sendUsageReportStub, message, messageType, errorCode;
     let bsConfig = testObjects.sampleBsConfig;
-    let args = {}
+    let args = {};
+    let rawArgs = {};
     let buildId = 'build_id';
     let body = testObjects.buildStopSampleBody;
 
@@ -2549,10 +2582,10 @@ describe('utils', () => {
       messageType = constant.messageTypes.INFO;
       errorCode = 'api_deprecated';
       axiosPostStub.resolves(api_deprecated_response);
-      await utils.stopBrowserStackBuild(bsConfig, args, buildId);
+      await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
       sinon.assert.calledOnce(axiosPostStub);
       sinon.assert.calledOnce(getUserAgentStub);
-      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
     });
 
     it('message thrown if build returned', async () => {
@@ -2564,10 +2597,10 @@ describe('utils', () => {
       messageType = constant.messageTypes.INFO;
       errorCode = 'api_deprecated';
       axiosPostStub.resolves(api_deprecated_response);
-      await utils.stopBrowserStackBuild(bsConfig, args, buildId);
+      await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
       sinon.assert.calledOnce(axiosPostStub);
       sinon.assert.calledOnce(getUserAgentStub);
-      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
     });
 
     it('message thrown if statusCode != 200', async () => {
@@ -2578,10 +2611,10 @@ describe('utils', () => {
       messageType = constant.messageTypes.ERROR;
       errorCode = 'api_failed_build_stop';
       axiosPostStub.resolves(non_200_status_response);
-      await utils.stopBrowserStackBuild(bsConfig, args, buildId);
+      await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
       sinon.assert.calledOnce(axiosPostStub);
       sinon.assert.calledOnce(getUserAgentStub);
-      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
     });
 
     it('message thrown if statusCode != 200 and user unauthorized', async () => {
@@ -2600,10 +2633,10 @@ describe('utils', () => {
       messageType = constant.messageTypes.ERROR;
       errorCode = 'api_auth_failed';
       axiosPostStub.resolves(non_200_status_response);
-      await utils.stopBrowserStackBuild(bsConfig, args, buildId);
+      await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
       sinon.assert.calledOnce(axiosPostStub);
       sinon.assert.calledOnce(getUserAgentStub);
-      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
     });
 
     it('message thrown if statusCode != 200 and build is present', async () => {
@@ -2618,10 +2651,10 @@ describe('utils', () => {
       messageType = constant.messageTypes.ERROR;
       errorCode = 'api_failed_build_stop';
       axiosPostStub.resolves(non_200_status_response);
-      await utils.stopBrowserStackBuild(bsConfig, args, buildId);
+      await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
       sinon.assert.calledOnce(axiosPostStub);
       sinon.assert.calledOnce(getUserAgentStub);
-      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
     });
 
     it('message thrown if API success', async () => {
@@ -2634,10 +2667,10 @@ describe('utils', () => {
       messageType = constant.messageTypes.SUCCESS;
       errorCode = null;
       axiosPostStub.resolves(success_response);
-      await utils.stopBrowserStackBuild(bsConfig, args, buildId);
+      await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
       sinon.assert.calledOnce(axiosPostStub);
       sinon.assert.calledOnce(getUserAgentStub);
-      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
     });
   });
 

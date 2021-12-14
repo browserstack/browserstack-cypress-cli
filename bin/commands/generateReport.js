@@ -6,7 +6,7 @@ const logger = require("../helpers/logger").winstonLogger,
       reporterHTML = require('../helpers/reporterHTML');
 
 
-module.exports = function generateReport(args) {
+module.exports = function generateReport(args, rawArgs) {
   let bsConfigPath = utils.getConfigPath(args.cf);
   let reportGenerator = reporterHTML.reportGenerator;
 
@@ -29,12 +29,12 @@ module.exports = function generateReport(args) {
     let errorCode = null;
     let buildId = args._[1];
 
-    reportGenerator(bsConfig, buildId, args);
-    utils.sendUsageReport(bsConfig, args, 'generate-report called', messageType, errorCode);
+    reportGenerator(bsConfig, buildId, args, rawArgs);
+    utils.sendUsageReport(bsConfig, args, 'generate-report called', messageType, errorCode, null, rawArgs);
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
-    utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err));
+    utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), null, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;
   });
 };

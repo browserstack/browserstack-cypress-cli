@@ -6,7 +6,7 @@ const config = require("../helpers/config"),
   Constants = require("../helpers/constants"),
   utils = require("../helpers/utils");
 
-module.exports = function info(args) {
+module.exports = function info(args, rawArgs) {
   let bsConfigPath = utils.getConfigPath(args.cf);
 
   return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
@@ -90,12 +90,12 @@ module.exports = function info(args) {
           logger.info(message);
         }
       }
-      utils.sendUsageReport(bsConfig, args, message, messageType, errorCode);
+      utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
     });
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
-    utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err));
+    utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), null, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;
   })
 }
