@@ -1085,7 +1085,6 @@ describe("capabilityHelper.js", () => {
       });
 
       it("does not exist", () => {
-        // sinon.stub(fs, 'existsSync').returns(false);
         bsConfig.run_settings.cypressConfigFilePath = 'false';
         bsConfig.run_settings.cypress_config_filename = 'false';
         bsConfig.run_settings.home_directory = '/some/random';
@@ -1107,7 +1106,6 @@ describe("capabilityHelper.js", () => {
       });
 
       it("is not a directory", () => {
-        // sinon.stub(fs, 'existsSync').returns(false);
         bsConfig.run_settings.cypressConfigFilePath = 'false';
         bsConfig.run_settings.cypress_config_filename = 'false';
         bsConfig.run_settings.home_directory = '/some/random/file.ext';
@@ -1131,10 +1129,32 @@ describe("capabilityHelper.js", () => {
       });
 
       it("does not contain cypressConfigFilePath", () => {
-        // sinon.stub(fs, 'existsSync').returns(false);
         bsConfig.run_settings.cypressConfigFilePath = 'false';
         bsConfig.run_settings.cypress_config_filename = 'false';
         bsConfig.run_settings.home_directory = '/some/random';
+
+        sinon.stub(fs, 'existsSync').returns(true);
+        sinon.stub(fs, 'statSync').returns({ isDirectory: () => true });
+        
+        return capabilityHelper
+        .validate(bsConfig, {})
+        .then(function (data) {
+          chai.assert.fail("Promise error");
+        })
+        .catch((error) => {
+          chai.assert.equal(
+            error,
+            Constants.validationMessages.CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY
+            );
+            fs.existsSync.restore();
+            fs.statSync.restore();
+          });
+      });
+
+      it("does not contain cypressConfigFilePath with special chars", () => {
+        bsConfig.run_settings.cypressConfigFilePath = 'false';
+        bsConfig.run_settings.cypress_config_filename = 'false';
+        bsConfig.run_settings.home_directory = '/$some!@#$%^&*()_+=-[]{};:<>?\'\\\//random';
 
         sinon.stub(fs, 'existsSync').returns(true);
         sinon.stub(fs, 'statSync').returns({ isDirectory: () => true });

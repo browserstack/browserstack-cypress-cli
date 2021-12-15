@@ -133,11 +133,8 @@ const caps = (bsConfig, zip) => {
 const addCypressZipStartLocation = (runSettings) => {
   let resolvedHomeDirectoryPath = path.resolve(runSettings.home_directory);
   let resolvedCypressConfigFilePath = path.resolve(runSettings.cypressConfigFilePath);
-  // For example
-  // resolvedHomeDirectoryPath -> '/Users/<user_name>/path'
-  // resolvedCypressConfigFilePath -> '/Users/<user_name>/path/cypress.json' or '/Users/<user_name>/path/more_path/cypress.json'
-  runSettings.cypressZipStartLocation = path.dirname(resolvedCypressConfigFilePath.split(resolvedHomeDirectoryPath)[1]); // cypressZipStartLocation -> '/' or '/more_path'
-  runSettings.cypressZipStartLocation = runSettings.cypressZipStartLocation.substring(1); // cypressZipStartLocation -> '' or 'more_path'
+  runSettings.cypressZipStartLocation = path.dirname(resolvedCypressConfigFilePath.split(resolvedHomeDirectoryPath)[1]);
+  runSettings.cypressZipStartLocation = runSettings.cypressZipStartLocation.substring(1);
 }
 
 const validate = (bsConfig, args) => {
