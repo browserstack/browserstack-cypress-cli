@@ -110,7 +110,7 @@ describe("zipUpload", () => {
       }
       return uploadSuitsrewire(bsConfig, filePath, opts)
         .then((data) => {
-          chai.assert.deepEqual(data, {});
+          chai.assert.hasAllKeys(data, ["time"]);
         })
         .catch((_error) => {
           chai.assert.fail("Promise error");
@@ -135,7 +135,7 @@ describe("zipUpload", () => {
       }
       return uploadSuitsrewire(bsConfig, filePath, opts)
         .then((data) => {
-          chai.assert.deepEqual(data, {zip_url: 'zip_url'});
+          chai.assert.hasAllKeys(data, ["zip_url", "time"]);
         })
         .catch((_error) => {
           chai.assert.fail("Promise error");
