@@ -220,5 +220,6 @@ const validate = (bsConfig, args) => {
 
 module.exports = {
   caps,
+  addCypressZipStartLocation,
   validate
 }
