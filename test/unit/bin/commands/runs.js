@@ -13,6 +13,7 @@ logger.transports["console.info"].silent = true;
 
 describe("runs", () => {
   let args = testObjects.runSampleArgs;
+  let rawArgs = testObjects.runSampleRawArgs;
   let bsConfig = testObjects.sampleBsConfig;
 
   describe("handle browserstack.json not valid", () => {
@@ -55,7 +56,7 @@ describe("runs", () => {
 
       validateBstackJsonStub.returns(Promise.reject({ message: "random-error" }));
 
-      return runs(args)
+      return runs(args, rawArgs)
         .then(function (_bsConfig) {
           chai.assert.fail("Promise error");
         })
@@ -72,7 +73,9 @@ describe("runs", () => {
             args,
             message,
             messageType,
-            errorCode
+            errorCode,
+            null,
+            rawArgs
           );
         });
     });
@@ -162,7 +165,7 @@ describe("runs", () => {
       setupLocalTestingStub.returns(Promise.resolve("return nothing"));
       capabilityValidatorStub.returns(Promise.reject("random-error"));
 
-      return runs(args)
+      return runs(args, rawArgs)
         .then(function (_bsConfig) {
           chai.assert.fail("Promise error");
         })
@@ -197,7 +200,9 @@ describe("runs", () => {
             args,
             message,
             messageType,
-            errorCode
+            errorCode,
+            null,
+            rawArgs
           );
         });
     });
@@ -312,7 +317,7 @@ describe("runs", () => {
       packageInstallerStub.returns(Promise.resolve({ packageArchieveCreated: false }));
       archiverStub.returns(Promise.reject("random-error"));
 
-      return runs(args)
+      return runs(args, rawArgs)
         .then(function (_bsConfig) {
           chai.assert.fail("Promise error");
         })
@@ -349,7 +354,9 @@ describe("runs", () => {
             args,
             message,
             messageType,
-            errorCode
+            errorCode,
+            null,
+            rawArgs
           );
         });
     });
@@ -472,7 +479,7 @@ describe("runs", () => {
       zipUploadStub.returns(Promise.reject("random-error"));
       fetchZipSizeStub.returns(123);
 
-      return runs(args)
+      return runs(args, rawArgs)
         .then(function (_bsConfig) {
           chai.assert.fail("Promise error");
         })
@@ -506,7 +513,9 @@ describe("runs", () => {
             args,
             message,
             messageType,
-            errorCode
+            errorCode,
+            null,
+            rawArgs
           );
         })
         .finally(function () {
@@ -642,7 +651,7 @@ describe("runs", () => {
       createBuildStub.returns(Promise.reject("random-error"));
       fetchZipSizeStub.returns(123);
 
-      return runs(args)
+      return runs(args, rawArgs)
         .then(function (_bsConfig) {
           chai.assert.fail("Promise error");
         })
@@ -681,7 +690,9 @@ describe("runs", () => {
             args,
             message,
             messageType,
-            errorCode
+            errorCode,
+            null,
+            rawArgs
           );
         });
     });
@@ -854,7 +865,7 @@ describe("runs", () => {
       createBuildStub.returns(Promise.resolve({ message: 'Success', build_id: 'random_build_id', dashboard_url: dashboardUrl, user_id: 1234 }));
       fetchZipSizeStub.returns(123);
 
-      return runs(args)
+      return runs(args, rawArgs)
         .then(function (_bsConfig) {
           chai.assert.fail("Promise error");
         })
@@ -895,7 +906,8 @@ describe("runs", () => {
               `${message}\n${dashboardLink}`,
               messageType,
               errorCode,
-              data
+              data,
+              rawArgs
             ]
           );
         });

@@ -114,7 +114,8 @@ exports.sendUsageReport = (
   message,
   message_type,
   error_code,
-  data
+  data,
+  rawArgs
 ) => {
   usageReporting.send({
     cli_args: args,
@@ -123,6 +124,7 @@ exports.sendUsageReport = (
     error_code: error_code,
     bstack_config: bsConfig,
     data,
+    raw_args: rawArgs
   });
 };
 
@@ -162,7 +164,7 @@ exports.setParallels = (bsConfig, args, numOfSpecs) => {
   }
 };
 
-exports.warnSpecLimit = (bsConfig, args, specFiles) => {
+exports.warnSpecLimit = (bsConfig, args, specFiles, rawArgs) => {
   let expectedCharLength = specFiles.join("").length + Constants.METADATA_CHAR_BUFFER_PER_SPEC * specFiles.length;
   let parallels = bsConfig.run_settings.parallels;
   let combinations = this.getBrowserCombinations(bsConfig).length;
@@ -175,7 +177,9 @@ exports.warnSpecLimit = (bsConfig, args, specFiles) => {
       args,
       Constants.userMessages.SPEC_LIMIT_WARNING,
       Constants.messageTypes.WARNING,
-      null
+      null,
+      null,
+      rawArgs
     );
   }
  }
@@ -593,7 +597,7 @@ exports.setLocalMode = (bsConfig, args) => {
   }
 };
 
-exports.setupLocalTesting = (bsConfig, args) => {
+exports.setupLocalTesting = (bsConfig, args, rawArgs) => {
   return new Promise(async (resolve, reject) => {
     if( bsConfig['connection_settings'] && bsConfig['connection_settings']['local'] && String(bsConfig['connection_settings']['local']) === "true" ){
       let localIdentifierRunning = await this.checkLocalIdentifierRunning(
@@ -616,7 +620,9 @@ exports.setupLocalTesting = (bsConfig, args) => {
               args,
               message,
               Constants.messageTypes.ERROR,
-              errorCode
+              errorCode,
+              null,
+              rawArgs
             );
             reject(Constants.userMessages.LOCAL_START_FAILED);
           }
@@ -630,7 +636,7 @@ exports.setupLocalTesting = (bsConfig, args) => {
   });
 };
 
-exports.stopLocalBinary = (bsConfig, bs_local, args) => {
+exports.stopLocalBinary = (bsConfig, bs_local, args, rawArgs) => {
   return new Promise(async (resolve, reject) => {
     if(bsConfig['connection_settings'] && bsConfig['connection_settings']['local']){
       let localIdentifierRunning = await this.checkLocalIdentifierRunning(bsConfig,bsConfig["connection_settings"]["local_identifier"]);
@@ -642,7 +648,9 @@ exports.stopLocalBinary = (bsConfig, bs_local, args) => {
           args,
           message,
           Constants.messageTypes.ERROR,
-          errorCode
+          errorCode,
+          null,
+          rawArgs
         );
       }
     }
@@ -659,7 +667,9 @@ exports.stopLocalBinary = (bsConfig, bs_local, args) => {
             args,
             message,
             Constants.messageTypes.ERROR,
-            errorCode
+            errorCode,
+            null,
+            rawArgs
           );
           resolve(Constants.userMessages.LOCAL_STOP_FAILED);
         }
@@ -942,7 +952,7 @@ exports.setCLIMode = (bsConfig, args) => {
   }
 }
 
-exports.stopBrowserStackBuild = async (bsConfig, args, buildId ) => {
+exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs) => {
   let url = config.buildStopUrl + buildId;
   let options = {
     url: url,
@@ -1002,7 +1012,7 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId ) => {
     errorCode = 'api_failed_build_stop';
     logger.info(message);
   } finally {
-    this.sendUsageReport(bsConfig, args, message, messageType, errorCode);
+    this.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
   }
 }
 

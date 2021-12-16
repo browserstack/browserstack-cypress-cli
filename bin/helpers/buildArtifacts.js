@@ -134,7 +134,7 @@ const unzipFile = async (filePath, fileName) => {
   });
 }
 
-const sendUpdatesToBstack = async (bsConfig, buildId, args, options) => {
+const sendUpdatesToBstack = async (bsConfig, buildId, args, options, rawArgs) => {
   let url = `${config.buildUrl}${buildId}/build_artifacts/status`;
 
   let cypressJSON = utils.getCypressJSON(bsConfig);
@@ -159,11 +159,11 @@ const sendUpdatesToBstack = async (bsConfig, buildId, args, options) => {
   try {
     await axios.post(url, data, options);
   } catch (err) {
-    utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'api_failed_build_artifacts_status_update');
+    utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'api_failed_build_artifacts_status_update', null, rawArgs);
   }
 }
 
-exports.downloadBuildArtifacts = async (bsConfig, buildId, args) => {
+exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs) => {
   BUILD_ARTIFACTS_FAIL_COUNT = 0;
   BUILD_ARTIFACTS_TOTAL_COUNT = 0;
 
@@ -200,8 +200,8 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args) => {
         logger.info(message);
       }
 
-      await sendUpdatesToBstack(bsConfig, buildId, args, options);
-      utils.sendUsageReport(bsConfig, args, message, messageType, null);
+      await sendUpdatesToBstack(bsConfig, buildId, args, options, rawArgs);
+      utils.sendUsageReport(bsConfig, args, message, messageType, null, null, rawArgs);
   } catch (err) {
     messageType = Constants.messageTypes.ERROR;
     errorCode = 'api_failed_build_artifacts';
@@ -214,7 +214,7 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args) => {
       logger.error('Downloading the build artifacts failed.');
     }
 
-    utils.sendUsageReport(bsConfig, args, err, messageType, errorCode);
+    utils.sendUsageReport(bsConfig, args, err, messageType, errorCode, null, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;
   }
 };

@@ -32,6 +32,12 @@ const initSampleArgs = {
   $0: "browserstack-cypress",
 };
 
+const initSampleRawArgs = {
+  _: ["init"],
+  p: false,
+  $0: "browserstack-cypress",
+}
+
 const buildInfoSampleArgs = {
   _: ["build-info", "f3c94f7203792d03a75be3912d19354fe0961e53"],
   cf: "browserstack.json",
@@ -39,6 +45,11 @@ const buildInfoSampleArgs = {
   configFile: "browserstack.json",
   "disable-usage-reporting": undefined,
   disableUsageReporting: undefined,
+  $0: "browserstack-cypress",
+};
+
+const buildInfoSampleRawArgs = {
+  _: ["build-info", "f3c94f7203792d03a75be3912d19354fe0961e53"],
   $0: "browserstack-cypress",
 };
 
@@ -52,6 +63,11 @@ const generateReportInputArgs = {
   $0: "browserstack-cypress",
 };
 
+const generateReportInputRawArgs = {
+  _: ["generate-report", "f3c94f7203792d03a75be3912d19354fe0961e53"],
+  $0: "browserstack-cypress",
+};
+
 const generateDownloadsInputArgs = {
   _: ["generate-downloads", "f3c94f7203792d03a75be3912d19354fe0961e53"],
   cf: "browserstack.json",
@@ -59,6 +75,11 @@ const generateDownloadsInputArgs = {
   configFile: "browserstack.json",
   "disable-usage-reporting": undefined,
   disableUsageReporting: undefined,
+  $0: "browserstack-cypress",
+};
+
+const generateDownloadsInputRawArgs = {
+  _: ["generate-downloads", "f3c94f7203792d03a75be3912d19354fe0961e53"],
   $0: "browserstack-cypress",
 };
 
@@ -124,6 +145,11 @@ const buildStopSampleArgs = {
   $0: "browserstack-cypress",
 };
 
+const buildStopSampleRawArgs = {
+  _: ["build-stop", "f3c94f7203792d03a75be3912d19354fe0961e53"],
+  $0: "browserstack-cypress",
+};
+
 const buildStopSampleBody = {
   message: "stopped 1 sessions",
   stopped_session_count: 1,
@@ -145,16 +171,28 @@ const runSampleArgs = {
   $0: "browserstack-cypress",
 };
 
+const runSampleRawArgs = {
+  _: ["run"],
+  p: undefined,
+  $0: "browserstack-cypress",
+};
+
 module.exports = Object.freeze({
   sampleBsConfig,
   sampleBsConfigWithParallels,
   initSampleArgs,
+  initSampleRawArgs,
   buildInfoSampleArgs,
+  buildInfoSampleRawArgs,
   buildInfoSampleBody,
   buildStopSampleArgs,
+  buildStopSampleRawArgs,
   buildStopSampleBody,
   sampleCapsData,
   runSampleArgs,
+  runSampleRawArgs,
   generateReportInputArgs,
+  generateReportInputRawArgs,
   generateDownloadsInputArgs,
+  generateDownloadsInputRawArgs
 });

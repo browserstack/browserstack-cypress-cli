@@ -21,6 +21,7 @@ describe("reportHTML", () => {
   var sandbox;
   let templateDir = 'templateDir',
       args = testObjects.generateReportInputArgs,
+      rawArgs = testObjects.generateReportInputRawArgs
       buildId = 'buildId',
       bsConfig = testObjects.sampleBsConfig;
 
@@ -40,7 +41,6 @@ describe("reportHTML", () => {
     reportGeneratorSpy = sandbox.spy();
     getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
     setDefaultsStub = sandbox.stub();
-
     getUserAgentStub = sandbox.stub().returns("random user-agent");
     // pathStub = sinon.stub(path, 'join').returns(templateDir);
   });
@@ -75,11 +75,11 @@ describe("reportHTML", () => {
         request: {get: requestStub}
       });
 
-      reporterHTML.reportGenerator(bsConfig, buildId, args);
+      reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs);
 
       sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
-      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
     });
 
     it("is deprecated, i.e. 299", () => {
@@ -106,11 +106,11 @@ describe("reportHTML", () => {
         request: {get: requestStub}
       });
 
-      reporterHTML.reportGenerator(bsConfig, buildId, args);
+      reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs);
 
       sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
-      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
     });
 
     context("non 200 response", () => {
@@ -138,11 +138,11 @@ describe("reportHTML", () => {
           request: {get: requestStub}
         });
 
-        reporterHTML.reportGenerator(bsConfig, buildId, args);
+        reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs);
 
         sinon.assert.calledOnce(requestStub);
         sinon.assert.calledOnce(getUserAgentStub);
-        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
       });
 
       it("400 status, build available, cannot generate report", () => {
@@ -171,11 +171,11 @@ describe("reportHTML", () => {
           request: {get: requestStub}
         });
 
-        reporterHTML.reportGenerator(bsConfig, buildId, args);
+        reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs);
 
         sinon.assert.calledOnce(requestStub);
         sinon.assert.calledOnce(getUserAgentStub);
-        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
       });
 
       it("user is unauthorized", () => {
@@ -204,11 +204,11 @@ describe("reportHTML", () => {
           request: {get: requestStub}
         });
 
-        reporterHTML.reportGenerator(bsConfig, buildId, args);
+        reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs);
 
         sinon.assert.calledOnce(requestStub);
         sinon.assert.calledOnce(getUserAgentStub);
-        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
       });
 
       it("400 status, build not available, cannot generate report", () => {
@@ -233,11 +233,11 @@ describe("reportHTML", () => {
           request: {get: requestStub}
         });
 
-        reporterHTML.reportGenerator(bsConfig, buildId, args);
+        reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs);
 
         sinon.assert.calledOnce(requestStub);
         sinon.assert.calledOnce(getUserAgentStub);
-        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
       });
     });
 
@@ -265,11 +265,11 @@ describe("reportHTML", () => {
         request: {get: requestStub}
       });
 
-      reporterHTML.reportGenerator(bsConfig, buildId, args);
+      reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs);
 
       sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
-      sendUsageReportStub.calledOnceWithExactly(bsConfig, args, message, messageType, errorCode);
+      sendUsageReportStub.calledOnceWithExactly(bsConfig, args, message, messageType, errorCode, null, rawArgs);
     });
   });
 
