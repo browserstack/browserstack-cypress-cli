@@ -18,6 +18,7 @@ const archiver = require("../helpers/archiver"),
   downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts,
   updateNotifier = require('update-notifier'),
   pkg = require('../../package.json');
+
 module.exports = function run(args, rawArgs) {
   let bsConfigPath = utils.getConfigPath(args.cf);
   //Delete build_results.txt from log folder if already present.
@@ -201,6 +202,14 @@ module.exports = function run(args, rawArgs) {
                   test_zip_size: test_zip_size,
                   npm_zip_size: npm_zip_size,
                 };
+
+                if (zip.tests_upload_time || zip.npm_package_upload_time) {
+                  dataToSend.time_components.zip.zipUploadSplit = {
+                    tests_upload_time: zip.tests_upload_time,
+                    npm_package_upload_time: zip.npm_package_upload_time,
+                  }
+                }
+
                 if (bsConfig && bsConfig.connection_settings) {
                   if (bsConfig.connection_settings.local_mode) {
                     dataToSend.local_mode = bsConfig.connection_settings.local_mode;

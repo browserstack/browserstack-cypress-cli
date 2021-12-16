@@ -7,6 +7,8 @@ const config = require("./config"),
 
 const uploadSuits = (bsConfig, filePath, opts) => {
   return new Promise(function (resolve, reject) {
+    let startTime = Date.now();
+
     if (opts.urlPresent) {
       return resolve({ [opts.md5ReturnKey]: opts.url });
     }
@@ -30,6 +32,7 @@ const uploadSuits = (bsConfig, filePath, opts) => {
         if (resp.statusCode != 200) {
           if (resp.statusCode == 401) {
             if (responseData && responseData["error"]) {
+              responseData["time"] = Date.now() - startTime;
               return reject(responseData["error"]);
             } else {
               return reject(Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS);
@@ -39,6 +42,7 @@ const uploadSuits = (bsConfig, filePath, opts) => {
             return resolve({});
           }
           if(responseData && responseData["error"]){
+            responseData["time"] = Date.now() - startTime;
             reject(responseData["error"]);
           } else {
             if (resp.statusCode == 413) {
@@ -50,6 +54,7 @@ const uploadSuits = (bsConfig, filePath, opts) => {
         } else {
           logger.info(`${opts.messages.uploadingSuccess} (${responseData[opts.md5ReturnKey]})`);
           opts.cleanupMethod();
+          responseData["time"] = Date.now() - startTime;
           resolve(responseData);
         }
       }
@@ -66,7 +71,15 @@ const uploadCypressZip = (bsConfig, md5data, packageData) => {
     let zipUpload = uploadSuits(bsConfig, config.fileName, zipOptions);
     let npmPackageUpload = uploadSuits(bsConfig, config.packageFileName, npmOptions);
     Promise.all([zipUpload, npmPackageUpload]).then(function (uploads) {
-      uploads.forEach(upload => Object.assign(obj, upload))
+      uploads.forEach(upload => {
+        if(upload.zip_url && upload.time) {
+          upload.tests_upload_time = upload.time;
+        } else if (upload.npm_package_url && upload.time) {
+          upload.npm_package_upload_time = upload.time;
+        }
+        delete upload.time;
+        Object.assign(obj, upload);
+      });
       return resolve(obj);
     }).catch((error) => {
       return reject(error);
@@ -74,4 +87,4 @@ const uploadCypressZip = (bsConfig, md5data, packageData) => {
   })
 }
 
-exports.zipUpload = uploadCypressZip
+exports.zipUpload = uploadCypressZip;
