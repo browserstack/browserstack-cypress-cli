@@ -4,7 +4,7 @@ const chai = require("chai"),
   sinon = require("sinon"),
   fs = require('fs-extra'),
   path = require('path'),
-  npm = require('npm');
+  cp = require('child_process');
 
 const logger = require("../../../../bin/helpers/logger").winstonLogger,
 fileHelpers = require("../../../../bin/helpers/fileHelpers");
@@ -150,7 +150,7 @@ describe("packageInstaller", () => {
           sinon.assert.calledOnce(pathdirnameStub);
           sinon.assert.calledThrice(pathjoinStub);
           sinon.assert.calledWith(fswriteFileSyncStub, null, packageCreated);
-          chai.assert.equal(data, "package file created");
+          chai.assert.equal(data, "Package file created");
         })
         .catch((_error) => {
           console.log(_error)
@@ -202,7 +202,7 @@ describe("packageInstaller", () => {
           sinon.assert.calledOnce(pathdirnameStub);
           sinon.assert.calledThrice(pathjoinStub);
           sinon.assert.calledWith(fswriteFileSyncStub, null, packageCreated);
-          chai.assert.equal(data, "package file created");
+          chai.assert.equal(data, "Package file created");
         })
         .catch((_error) => {
           console.log(_error)
@@ -212,80 +212,52 @@ describe("packageInstaller", () => {
   });
 
   context("packageInstall", () => {
-    let npmInstallStub;
     const packageInstaller = rewire("../../../../bin/helpers/packageInstaller");
-    beforeEach(() => {
-      npmInstallStub = sandbox.stub(npm.commands, "install").returns(null);
-    });
 
-    it("should reject if error in  npm load", () => {
+    it("should call npm install on directory and resolve if spawn is closed successfully", () => {
+      let spawnStub = sandbox.stub(cp, 'spawn').returns({
+        on: (_close, nodeProcessCloseCallback) => {
+          nodeProcessCloseCallback(0);
+        }
+      });
       packageInstaller.__set__({
-        npm: {
-          commands: {
-            install: npmInstallStub
-          },
-          load: (_npmLoad, loadCallback) => {
-            loadCallback("test error");
-          } 
-        },
+        nodeProcess: {},
+        spawn: spawnStub
       });
       let packageInstallrewire = packageInstaller.__get__('packageInstall');
       let directoryPath = "/random/path";
       return packageInstallrewire(directoryPath)
-        .then((_data) => {
-          chai.assert.fail("Promise error");
-        })
-        .catch((error) => {
-          chai.assert.equal(error, "test error")
-        });
+      .then((data) => {
+        console.log(data);
+        chai.assert.equal(data, "Packages were installed successfully.")
+        spawnStub.restore();
+      })
+      .catch((_error) => {
+        chai.assert.fail(`Promise error ${_error}`);
+      });
     });
 
-    it("should call npm install on directory", () => {
+    it("should call npm install on directory and reject if spawn is not closed successfully", () => {
+      let spawnStub = sandbox.stub(cp, 'spawn').returns({
+        on: (_close, nodeProcessCloseCallback) => {
+          nodeProcessCloseCallback(1);
+        }
+      });
       packageInstaller.__set__({
-        npm: {
-          commands: {
-            install: (_packageDir, [], installCallback) => {
-              installCallback(null, "npm install done");
-            }
-          },
-          load: (_npmLoad, loadCallback) => {
-            loadCallback(null);
-          } 
-        },
+        nodeProcess: {},
+        spawn: spawnStub
       });
       let packageInstallrewire = packageInstaller.__get__('packageInstall');
       let directoryPath = "/random/path";
       return packageInstallrewire(directoryPath)
-        .then((data) => {
-          chai.assert.equal(data, "npm install done")
-        })
-        .catch((_error) => {
-          chai.assert.fail("Promise error");
-        });
-    });
-
-    it("should reject if error in npm install", () => {
-      packageInstaller.__set__({
-        npm: {
-          commands: {
-            install: (_packageDir, [], installCallback) => {
-              installCallback("test error", "npm install failed");
-            }
-          },
-          load: (_npmLoad, loadCallback) => {
-            loadCallback(null);
-          } 
-        },
+      .then((_data) => {
+        spawnStub.restore();
+        chai.assert.fail("Promise error");
+      })
+      .catch((error) => {
+        spawnStub.restore();
+        chai.assert.equal(error, "Packages were not installed successfully.")
       });
-      let packageInstallrewire = packageInstaller.__get__('packageInstall');
-      let directoryPath = "/random/path";
-      return packageInstallrewire(directoryPath)
-        .then((_data) => {
-          chai.assert.fail("Promise error");
-        })
-        .catch((error) => {
-          chai.assert.equal(error, "test error")
-        });
     });
   });
 

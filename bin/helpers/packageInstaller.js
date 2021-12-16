@@ -1,14 +1,15 @@
 'use strict';
-const npm = require('npm'),
-  archiver = require("archiver"),
+  const archiver = require("archiver"),
   path = require('path'),
-  os = require('os'),
   fs = require('fs-extra'),
   fileHelpers = require('./fileHelpers'),
   logger = require("./logger").winstonLogger,
   Constants = require('./constants'),
   process = require('process'),
-  utils = require('./utils');
+  utils = require('./utils'),
+  { spawn } = require('child_process');
+
+let nodeProcess;
 
 const setupPackageFolder = (runSettings, directoryPath) => {
   return new Promise(function (resolve, reject) {
@@ -39,7 +40,7 @@ const setupPackageFolder = (runSettings, directoryPath) => {
           if (fs.existsSync(sourceNpmrc)) {
             fs.copyFileSync(sourceNpmrc, destNpmrc);
           }
-          return resolve("package file created");
+          return resolve("Package file created");
         }
         return reject("Nothing in package file");
       } catch(error) {
@@ -51,25 +52,20 @@ const setupPackageFolder = (runSettings, directoryPath) => {
 
 const packageInstall = (packageDir) => {
   return new Promise(function (resolve, reject) {
-    let savedPrefix = null;
-    let npmLoad = Constants.packageInstallerOptions.npmLoad
-    npmLoad["cache"] = fs.mkdtempSync(`${os.tmpdir()}${path.sep}`);
-    const installCallback = (err, result) => {
-      npm.prefix = savedPrefix;
-      if (err) {
-        return reject(err);
+    const nodeProcessCloseCallback = (code) => {
+      if(code == 0) {
+        resolve('Packages were installed successfully.');
+      } else {
+        reject('Packages were not installed successfully.');
       }
-      resolve(result);
     };
-    const loadCallback = (err) => {
-      if (err) {
-        return reject(err);
-      }
-      savedPrefix = npm.prefix;
-      npm.prefix = packageDir;
-      npm.commands.install(packageDir, [], installCallback);
+    const nodeProcessErrorCallback = (error) => {
+      logger.error(`Some error occurred while installing packages: ${error}`);
+      reject(`Packages were not installed successfully.`);
     };
-    npm.load(npmLoad, loadCallback);
+    nodeProcess = spawn('npm', ['install'], {cwd: packageDir});
+    nodeProcess.on('close', nodeProcessCloseCallback);
+    nodeProcess.on('error', nodeProcessErrorCallback);
   });
 };
 
@@ -113,7 +109,7 @@ const packageWrapper = (bsConfig, packageDir, packageFile, md5data, instrumentBl
     if (md5data.packageUrlPresent || !utils.isTrueString(bsConfig.run_settings.cache_dependencies)) {
       return resolve(obj);
     }
-    logger.info(`Installing required dependencies and building the package to upload to BrowserStack`);
+    logger.info(Constants.userMessages.NPM_INSTALL_AND_UPLOAD);
     instrumentBlocks.markBlockStart("packageInstaller.folderSetup");
     return setupPackageFolder(bsConfig.run_settings, packageDir).then((_result) => {
       process.env.CYPRESS_INSTALL_BINARY = 0
