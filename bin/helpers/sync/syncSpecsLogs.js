@@ -108,6 +108,7 @@ let printSpecsStatus = (bsConfig, buildDetails) => {
         if (err) {
           utils.sendUsageReport(bsConfig, {}, `buildId: ${buildDetails.build_id}`, 'error', 'sync_cli_error', err);
         }
+        // fetchResourceErrors(bsConfig, buildDetails).then();
         logger.info(lineSeparator);
         specSummary.duration =  endTime - startTime
         resolve(specSummary)
@@ -150,6 +151,48 @@ let whileProcess = (whilstCallback) => {
         whileLoop = false;
         return whilstCallback({ status: response.statusCode, message: body });
     }
+  });
+}
+
+let fetchResourceErrors = (bsConfig, buildDetails, specSummary) => {
+  // TODO: Error handling, retries
+  return new Promise((resolve, reject) => {
+    options = getOptions(bsConfig.auth, buildDetails.build_id);
+    options.url = "https://webhook.site/cb5f986e-7ae4-41bc-8477-5f81caac9cb1"
+    specSummary.resourceErrors = {};
+    request.post(options, function(error, response, body) {
+      // if (error) {
+      //   whileTries -= 1;
+      //   if (whileTries === 0) {
+      //     specSummary.exitCode = config.networkErrorExitCode;
+      //     return;
+      //   } else {
+      //     n = 2
+      //     return;
+      //     // return setTimeout(whilstCallback, timeout * n, null);
+      //   }
+      // }
+
+      // whileTries = config.retries; // reset to default after every successful request
+      // console.log(body);
+      // switch (response.statusCode) {
+      //   case 200: // get data here and print it
+          let responseObj = JSON.parse(body);
+          if (responseObj && Object.keys(responseObj).length > 0){
+            Object.keys(responseObj).forEach((errorType) => {
+              responseObj[errorType].combinations.forEach((combinationErrorObject) => {
+                request.get(combinationErrorObject.error_source, function(err, resp, data) {
+                  combinationErrorObject["stacktrace"] = data;
+                })
+              })
+            })
+            specSummary.resourceErrors = responseObj;
+          }
+          resolve(specSummary);
+        // default:
+        //   return;
+      // }
+    });
   });
 }
 
@@ -208,3 +251,4 @@ let getStatus = (status) => {
 }
 
 exports.printSpecsStatus = printSpecsStatus;
+exports.fetchResourceErrors = fetchResourceErrors;
