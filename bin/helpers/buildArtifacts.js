@@ -10,6 +10,7 @@ const logger = require('./logger').winstonLogger,
       utils = require("./utils"),
       Constants = require("./constants"),
       config = require("./config");
+const { inspect } = require('util');
 
 
 let BUILD_ARTIFACTS_TOTAL_COUNT = 0;
@@ -203,6 +204,8 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs) => {
       await sendUpdatesToBstack(bsConfig, buildId, args, options, rawArgs);
       utils.sendUsageReport(bsConfig, args, message, messageType, null, null, rawArgs);
   } catch (err) {
+
+    logger.error(err.message);
     messageType = Constants.messageTypes.ERROR;
     errorCode = 'api_failed_build_artifacts';
 
