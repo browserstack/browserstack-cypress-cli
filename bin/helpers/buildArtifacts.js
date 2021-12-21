@@ -99,13 +99,10 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
   let tmpFilePath = path.join(filePath, fileName);
   const writer = fs.createWriteStream(tmpFilePath);
 
-  console.log(`roshan1: url ${url}`)
-  console.log(`roshan inside downloadAndUnzip`)
-  return request.get(url).on('response', function(response) {
-    //ensure that the user can call `then()` only when the file has
-    //been downloaded entirely.
-    console.log(`roshan1: response ${inspect(response)}`)
-    return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
+    request.get(url).on('response', function(response) {
+      //ensure that the user can call `then()` only when the file has
+      //been downloaded entirely.
       response.pipe(writer);
       let error = null;
       writer.on('error', err => {
@@ -183,7 +180,6 @@ const sendUpdatesToBstack = async (bsConfig, buildId, args, options, rawArgs) =>
 }
 
 exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs) => {
-  console.log('hello brother')
   BUILD_ARTIFACTS_FAIL_COUNT = 0;
   BUILD_ARTIFACTS_TOTAL_COUNT = 0;
 
@@ -219,7 +215,6 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs) => {
           } else {
             await createDirectories(buildId, buildDetails);
             await parseAndDownloadArtifacts(buildId, buildDetails);
-            console.log(`roshan1 making request passed1 ${inspect(buildDetails)}`);
             if (BUILD_ARTIFACTS_FAIL_COUNT > 0) {
               messageType = Constants.messageTypes.ERROR;
               message = Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_FAILED.replace('<build-id>', buildId).replace('<machine-count>', BUILD_ARTIFACTS_FAIL_COUNT);
@@ -251,7 +246,6 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs) => {
       }
     });
   } catch (err) {
-    console.log(`roshan1: error here ${err}`)
     utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'api_failed_build_artifacts', null, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;
   }
