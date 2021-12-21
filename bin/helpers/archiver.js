@@ -1,10 +1,11 @@
 'use strict';
+const fs = require("fs"),
+    path = require('path');
+
 const archiver = require("archiver"),
   Constants = require('../helpers/constants'),
   logger = require("./logger").winstonLogger,
-  utils = require('../helpers/utils'),
-  path = require('path'),
-  fs = require("fs");
+  utils = require('../helpers/utils');
 
 const archiveSpecs = (runSettings, filePath, excludeFiles, md5data) => {
   return new Promise(function (resolve, reject) {
