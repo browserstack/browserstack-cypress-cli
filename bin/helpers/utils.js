@@ -14,7 +14,8 @@ const usageReporting = require("./usageReporting"),
   chalk = require('chalk'),
   syncCliLogger = require("../helpers/logger").syncCliLogger,
   fileHelpers = require("./fileHelpers"),
-  config = require("../helpers/config");
+  config = require("../helpers/config"),
+  pkg = require('../../package.json');
 
 const request = require('request');
 const axios = require("axios");
@@ -368,7 +369,7 @@ exports.isParallelValid = (value) => {
 }
 
 exports.getUserAgent = () => {
-  return `BStack-Cypress-CLI/1.10.0 (${os.arch()}/${os.platform()}/${os.release()})`;
+  return `BStack-Cypress-CLI/${pkg.version} (${os.arch()}/${os.platform()}/${os.release()})`;
 };
 
 exports.isAbsolute = (configPath) => {
