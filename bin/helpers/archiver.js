@@ -1,6 +1,6 @@
 'use strict';
 const fs = require("fs"),
-    path = require('path');
+    path = require("path");
 
 const archiver = require("archiver"),
   Constants = require('../helpers/constants'),
