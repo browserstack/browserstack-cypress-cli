@@ -245,6 +245,7 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs) => {
           process.exitCode = Constants.ERROR_EXIT_CODE;
         }
       }
+      resolve();
     });
   });
 };
