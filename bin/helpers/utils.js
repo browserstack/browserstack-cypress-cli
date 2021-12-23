@@ -1018,8 +1018,8 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs) => {
             that.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
         }
       }
+      resolve();
     });
-    resolve();
   });
 }
 
