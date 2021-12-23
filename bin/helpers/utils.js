@@ -17,7 +17,6 @@ const usageReporting = require("./usageReporting"),
   config = require("../helpers/config");
 
 const request = require('request');
-const axios = require("axios");
 
 exports.validateBstackJson = (bsConfigPath) => {
   return new Promise(function (resolve, reject) {
@@ -1020,6 +1019,7 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs) => {
         }
       }
     });
+    resolve();
   });
 }
 

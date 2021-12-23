@@ -276,6 +276,7 @@ describe("reportHTML", () => {
   describe("Modify Cypress Report Data", ()=> {
     const reporterHTML = rewire('../../../../bin/helpers/reporterHTML');
     const cypressReportData = reporterHTML.__get__('cypressReportData');
+    let getMock = sinon.mock(request);
     const cypress_report_data_with_config = {
       cypress_version: "6.8.0",
       rows: {
@@ -307,32 +308,32 @@ describe("reportHTML", () => {
       }
     }
     it("Generate Report Data for cypress version > 6", async ()=>{
-      let configResponse = { data: {
-        tests: [
+      let configResponse = {
+        "tests": [
           {
-            clientId: "r3",
-            title:[
+            "clientId": "r3",
+            "title":[
               "file_name",
               "test_case"
             ]
           }
         ]
-      } }
-      let resultsResponse = { data: {
-        tests: [
+      }
+      let resultsResponse = {
+        "tests": [
           {
-            clientId: "r3",
-            state: "passed",
-            attempts:[
+            "clientId": "r3",
+            "state": "passed",
+            "attempts":[
               {
                 "state": "passed",
-                "wallClockDuration": 62
+                "wallClockDuration": "62"
               }
             ]
           }
         ]
-      } }
-      let expectedResponse = { 
+      }
+      let expectedResponse = {
         cypress_version: "6.8.0",
         rows:{ 
           "todo.spec.js": {
@@ -344,18 +345,17 @@ describe("reportHTML", () => {
               }]
             }
           }
-        }
-      let axiosGetStub = sandbox.stub(axios, "get")
-      let axiosConfigStub = axiosGetStub.withArgs("config_json").resolves(configResponse);
-      let axiosResultStub = axiosGetStub.withArgs("result_json").resolves(resultsResponse);
+      }
+      let getConfigJsonResponse = getMock.expects('get').withArgs("config_json").yields(undefined, { statusCode: 200 }, JSON.stringify(configResponse)); 
+      let getResultsJsonResponse = getMock.expects('get').withArgs("result_json").yields(undefined, { statusCode: 200 }, JSON.stringify(resultsResponse));
       let result = await cypressReportData(cypress_report_data_with_config);
-      sinon.assert.calledOnce(axiosConfigStub);
-      sinon.assert.calledOnce(axiosResultStub);
+      sinon.assert.calledOnce(getConfigJsonResponse);
+      sinon.assert.calledOnce(getResultsJsonResponse);
       expect(JSON.stringify(result)).to.be.equal(JSON.stringify(expectedResponse));
     });
 
     it("Generate Report Data for cypress version < 6", async ()=>{
-      let resultsResponse = { data: {
+      let resultsResponse = {
         tests: [
           {
             clientId: "r3",
@@ -372,7 +372,7 @@ describe("reportHTML", () => {
             ]
           }
         ]
-      } }
+      }
       let expectedResponse = { 
         cypress_version: "5.6.0",
         rows:{ 
@@ -386,10 +386,9 @@ describe("reportHTML", () => {
             }
           }
         }
-      let axiosGetStub = sandbox.stub(axios, "get")
-      let axiosResultStub = axiosGetStub.withArgs("result_json").resolves(resultsResponse);
+      let getResultsJsonResponse = getMock.expects('get').withArgs("result_json").yields(undefined, { statusCode: 200 }, JSON.stringify(resultsResponse));
       let result = await cypressReportData(cypress_report_data_without_config);
-      sinon.assert.calledOnce(axiosResultStub);
+      sinon.assert.calledOnce(getResultsJsonResponse);
       expect(JSON.stringify(result)).to.be.equal(JSON.stringify(expectedResponse));
     });
   });

@@ -294,9 +294,9 @@ function generateCypressCombinationSpecReportDataWithConfigJson(combination){
         let configJson, resultsJson;
         
         await Promise.all([getConfigJsonResponse(combination), getResultsJsonResponse(combination)]).then(function (successResult) {
-          [configJson, configJsonError, resultsJson, resultsJsonError]  = successResult;
+          [[configJson, configJsonError], [resultsJson, resultsJsonError]]  = successResult;
         }).catch(function (failureResult) {
-          [configJson, configJsonError, resultsJson, resultsJsonError]  = failureResult;
+          [[configJson, configJsonError], [resultsJson, resultsJsonError]]  = failureResult;
         });
 
         if(resultsJsonError || configJsonError){
