@@ -276,7 +276,7 @@ describe("reportHTML", () => {
   describe("Modify Cypress Report Data", ()=> {
     const reporterHTML = rewire('../../../../bin/helpers/reporterHTML');
     const cypressReportData = reporterHTML.__get__('cypressReportData');
-    let getMock = sinon.mock(request);
+    let getMock;
     const cypress_report_data_with_config = {
       cypress_version: "6.8.0",
       rows: {
@@ -307,6 +307,12 @@ describe("reportHTML", () => {
         }
       }
     }
+    beforeEach(() =>{
+      getMock = sinon.mock(request);
+    })
+    afterEach(() =>{
+      getMock.restore();
+    })
     it("Generate Report Data for cypress version > 6", async ()=>{
       let configResponse = {
         "tests": [
