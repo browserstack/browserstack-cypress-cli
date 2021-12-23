@@ -177,11 +177,7 @@ module.exports = function run(args, rawArgs) {
 
                     // download build artifacts
                     if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
-                      try { 
-                        await downloadBuildArtifacts(bsConfig, data.build_id, args, rawArgs);
-                      } catch (err) {
-                        logger.error(err);
-                      }
+                      await downloadBuildArtifacts(bsConfig, data.build_id, args, rawArgs);
                     }
 
                     // Generate custom report!
