@@ -2,12 +2,14 @@
 const chai = require("chai"),
   chaiAsPromised = require("chai-as-promised"),
   sinon = require("sinon"),
+  fs = require('fs'),
   request = require("request");
 
 const logger = require("../../../../bin/helpers/logger").winstonLogger,
   constant = require('../../../../bin/helpers/constants');
 
-const rewire = require("rewire");
+const rewire = require("rewire"),
+  cliProgress = require('cli-progress');
 
 chai.use(chaiAsPromised);
 logger.transports["console.info"].silent = true;
@@ -15,8 +17,19 @@ logger.transports["console.info"].silent = true;
 describe("zipUpload", () => {
   let sandbox;
 
+  let barStub;
+
   beforeEach(() => {
     sandbox = sinon.createSandbox();
+
+    barStub = {
+      start: sinon.stub(),
+      stop: sinon.stub(),
+      update: sinon.stub(),
+      on: sinon.stub(),
+    }
+
+    sinon.stub(cliProgress, 'SingleBar').returns(barStub);
   });
 
   afterEach(() => {
@@ -36,6 +49,11 @@ describe("zipUpload", () => {
       loggerStub = {
         info: sandbox.stub().returns(null)
       };
+      sinon.stub(fs, 'lstatSync').returns({ size: 123 });
+    });
+
+    afterEach(() => {
+      fs.lstatSync.restore();
     });
 
     it("reject with error", () => {
