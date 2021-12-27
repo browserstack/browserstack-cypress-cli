@@ -151,8 +151,8 @@ const buildStopSampleRawArgs = {
 };
 
 const buildStopSampleBody = {
-  message: "stopped 1 sessions",
-  stopped_session_count: 1,
+  "message": "stopped 1 sessions",
+  "stopped_session_count": "1"
 };
 
 const sampleCapsData = {
