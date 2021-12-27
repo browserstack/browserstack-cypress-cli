@@ -191,7 +191,7 @@ function send(args) {
 
   delete args.bstack_config;
 
-  let uploadDetails = {
+  let zipUploadDetails = {
     test_suite_zip_upload: data.test_suite_zip_upload,
     package_zip_upload: data.package_zip_upload,
     test_suite_zip_size: data.test_suite_zip_size,
@@ -200,7 +200,7 @@ function send(args) {
     npm_package_zip_upload_avg_speed: data.npm_package_zip_upload_avg_speed,
   }
 
-  Object.keys(uploadDetails).forEach((key) => {
+  Object.keys(zipUploadDetails).forEach((key) => {
     delete data[key];
   })
 
@@ -224,7 +224,7 @@ function send(args) {
       event_timestamp: new Date().toLocaleString(),
       data: JSON.stringify(data),
       raw_args: JSON.stringify(args.raw_args),
-      ...uploadDetails,
+      ...zipUploadDetails,
       ...args,
     },
   };
