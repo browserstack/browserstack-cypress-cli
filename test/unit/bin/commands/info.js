@@ -14,6 +14,7 @@ logger.transports["console.info"].silent = true;
 
 describe("buildInfo", () => {
   let args = testObjects.buildInfoSampleArgs;
+  let rawArgs = testObjects.buildInfoSampleRawArgs;
   let body = testObjects.buildInfoSampleBody;
   let bsConfig = testObjects.sampleBsConfig;
 
@@ -66,12 +67,12 @@ describe("buildInfo", () => {
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
 
-      return info(args)
+      return info(args, rawArgs)
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getUserAgentStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
         }).catch((error) => {
           chai.assert.isNotOk(error,'Promise error');
         });
@@ -104,12 +105,12 @@ describe("buildInfo", () => {
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
 
-      return info(args)
+      return info(args, rawArgs)
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnce(getConfigPathStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
         })
         .catch((error) => {
           chai.assert.isNotOk(error, "Promise error");
@@ -166,12 +167,12 @@ describe("buildInfo", () => {
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
 
-      return info(args)
+      return info(args, rawArgs)
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnce(getConfigPathStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
         })
         .catch((error) => {
           chai.assert.isNotOk(error, "Promise error");
@@ -210,12 +211,12 @@ describe("buildInfo", () => {
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
 
-      return info(args)
+      return info(args, rawArgs)
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnce(getConfigPathStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
         })
         .catch((error) => {
           chai.assert.isNotOk(error, "Promise error");
@@ -249,12 +250,12 @@ describe("buildInfo", () => {
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
 
-      return info(args)
+      return info(args, rawArgs)
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnce(getConfigPathStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
         })
         .catch((error) => {
           chai.assert.isNotOk(error, "Promise error");
@@ -311,12 +312,12 @@ describe("buildInfo", () => {
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
 
-      return info(args)
+      return info(args, rawArgs)
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnce(getConfigPathStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
         }).catch((error) => {
           chai.assert.isNotOk(error,'Promise error');
         });
@@ -363,11 +364,11 @@ describe("buildInfo", () => {
 
       validateBstackJsonStub.returns(Promise.reject({ message: "reject error" }));
 
-      return info(args)
+      return info(args, rawArgs)
         .then(function (_bsConfig) {
           chai.assert.fail("Promise error");
         }).catch((error) => {
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, null, args, "reject error", Constants.messageTypes.ERROR, "random-error");
+          sinon.assert.calledOnceWithExactly(sendUsageReportStub, null, args, "reject error", Constants.messageTypes.ERROR, "random-error", null, rawArgs);
         });
     });
   });

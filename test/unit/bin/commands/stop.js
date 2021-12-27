@@ -14,6 +14,7 @@ logger.transports["console.info"].silent = true;
 
 describe("buildStop", () => {
   let args = testObjects.buildStopSampleArgs;
+  let rawArgs =  testObjects.buildStopSampleRawArgs;
   let body = testObjects.buildStopSampleBody;
   let bsConfig = testObjects.sampleBsConfig;
 
@@ -60,7 +61,7 @@ describe("buildStop", () => {
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
 
-      return stop(args)
+      return stop(args, rawArgs)
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(stopBrowserStackBuildStub);
         })
@@ -109,7 +110,7 @@ describe("buildStop", () => {
         Promise.reject({ message: "reject error" })
       );
 
-      return stop(args)
+      return stop(args, rawArgs)
         .then(function (_bsConfig) {
           chai.assert.fail("Promise error");
         })
@@ -120,7 +121,9 @@ describe("buildStop", () => {
             args,
             "reject error",
             Constants.messageTypes.ERROR,
-            "random-error"
+            "random-error",
+            null,
+            rawArgs
           );
         });
     });

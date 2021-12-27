@@ -21,6 +21,7 @@ describe("reportHTML", () => {
   var sandbox;
   let templateDir = 'templateDir',
       args = testObjects.generateReportInputArgs,
+      rawArgs = testObjects.generateReportInputRawArgs
       buildId = 'buildId',
       bsConfig = testObjects.sampleBsConfig;
 
@@ -40,7 +41,6 @@ describe("reportHTML", () => {
     reportGeneratorSpy = sandbox.spy();
     getErrorCodeFromErrStub = sandbox.stub().returns("random-error");
     setDefaultsStub = sandbox.stub();
-
     getUserAgentStub = sandbox.stub().returns("random user-agent");
     // pathStub = sinon.stub(path, 'join').returns(templateDir);
   });
@@ -75,11 +75,11 @@ describe("reportHTML", () => {
         request: {get: requestStub}
       });
 
-      reporterHTML.reportGenerator(bsConfig, buildId, args);
+      reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs);
 
       sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
-      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
     });
 
     it("is deprecated, i.e. 299", () => {
@@ -106,11 +106,11 @@ describe("reportHTML", () => {
         request: {get: requestStub}
       });
 
-      reporterHTML.reportGenerator(bsConfig, buildId, args);
+      reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs);
 
       sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
-      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+      sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
     });
 
     context("non 200 response", () => {
@@ -138,11 +138,11 @@ describe("reportHTML", () => {
           request: {get: requestStub}
         });
 
-        reporterHTML.reportGenerator(bsConfig, buildId, args);
+        reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs);
 
         sinon.assert.calledOnce(requestStub);
         sinon.assert.calledOnce(getUserAgentStub);
-        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
       });
 
       it("400 status, build available, cannot generate report", () => {
@@ -171,11 +171,11 @@ describe("reportHTML", () => {
           request: {get: requestStub}
         });
 
-        reporterHTML.reportGenerator(bsConfig, buildId, args);
+        reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs);
 
         sinon.assert.calledOnce(requestStub);
         sinon.assert.calledOnce(getUserAgentStub);
-        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
       });
 
       it("user is unauthorized", () => {
@@ -204,11 +204,11 @@ describe("reportHTML", () => {
           request: {get: requestStub}
         });
 
-        reporterHTML.reportGenerator(bsConfig, buildId, args);
+        reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs);
 
         sinon.assert.calledOnce(requestStub);
         sinon.assert.calledOnce(getUserAgentStub);
-        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
       });
 
       it("400 status, build not available, cannot generate report", () => {
@@ -233,11 +233,11 @@ describe("reportHTML", () => {
           request: {get: requestStub}
         });
 
-        reporterHTML.reportGenerator(bsConfig, buildId, args);
+        reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs);
 
         sinon.assert.calledOnce(requestStub);
         sinon.assert.calledOnce(getUserAgentStub);
-        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode);
+        sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
       });
     });
 
@@ -265,17 +265,18 @@ describe("reportHTML", () => {
         request: {get: requestStub}
       });
 
-      reporterHTML.reportGenerator(bsConfig, buildId, args);
+      reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs);
 
       sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
-      sendUsageReportStub.calledOnceWithExactly(bsConfig, args, message, messageType, errorCode);
+      sendUsageReportStub.calledOnceWithExactly(bsConfig, args, message, messageType, errorCode, null, rawArgs);
     });
   });
 
   describe("Modify Cypress Report Data", ()=> {
     const reporterHTML = rewire('../../../../bin/helpers/reporterHTML');
     const cypressReportData = reporterHTML.__get__('cypressReportData');
+    let getMock;
     const cypress_report_data_with_config = {
       cypress_version: "6.8.0",
       rows: {
@@ -306,33 +307,39 @@ describe("reportHTML", () => {
         }
       }
     }
+    beforeEach(() =>{
+      getMock = sinon.mock(request);
+    })
+    afterEach(() =>{
+      getMock.restore();
+    })
     it("Generate Report Data for cypress version > 6", async ()=>{
-      let configResponse = { data: {
-        tests: [
+      let configResponse = {
+        "tests": [
           {
-            clientId: "r3",
-            title:[
+            "clientId": "r3",
+            "title":[
               "file_name",
               "test_case"
             ]
           }
         ]
-      } }
-      let resultsResponse = { data: {
-        tests: [
+      }
+      let resultsResponse = {
+        "tests": [
           {
-            clientId: "r3",
-            state: "passed",
-            attempts:[
+            "clientId": "r3",
+            "state": "passed",
+            "attempts":[
               {
                 "state": "passed",
-                "wallClockDuration": 62
+                "wallClockDuration": "62"
               }
             ]
           }
         ]
-      } }
-      let expectedResponse = { 
+      }
+      let expectedResponse = {
         cypress_version: "6.8.0",
         rows:{ 
           "todo.spec.js": {
@@ -344,18 +351,17 @@ describe("reportHTML", () => {
               }]
             }
           }
-        }
-      let axiosGetStub = sandbox.stub(axios, "get")
-      let axiosConfigStub = axiosGetStub.withArgs("config_json").resolves(configResponse);
-      let axiosResultStub = axiosGetStub.withArgs("result_json").resolves(resultsResponse);
+      }
+      let getConfigJsonResponse = getMock.expects('get').withArgs("config_json").yields(undefined, { statusCode: 200 }, JSON.stringify(configResponse)); 
+      let getResultsJsonResponse = getMock.expects('get').withArgs("result_json").yields(undefined, { statusCode: 200 }, JSON.stringify(resultsResponse));
       let result = await cypressReportData(cypress_report_data_with_config);
-      sinon.assert.calledOnce(axiosConfigStub);
-      sinon.assert.calledOnce(axiosResultStub);
+      sinon.assert.calledOnce(getConfigJsonResponse);
+      sinon.assert.calledOnce(getResultsJsonResponse);
       expect(JSON.stringify(result)).to.be.equal(JSON.stringify(expectedResponse));
     });
 
     it("Generate Report Data for cypress version < 6", async ()=>{
-      let resultsResponse = { data: {
+      let resultsResponse = {
         tests: [
           {
             clientId: "r3",
@@ -372,7 +378,7 @@ describe("reportHTML", () => {
             ]
           }
         ]
-      } }
+      }
       let expectedResponse = { 
         cypress_version: "5.6.0",
         rows:{ 
@@ -386,10 +392,9 @@ describe("reportHTML", () => {
             }
           }
         }
-      let axiosGetStub = sandbox.stub(axios, "get")
-      let axiosResultStub = axiosGetStub.withArgs("result_json").resolves(resultsResponse);
+      let getResultsJsonResponse = getMock.expects('get').withArgs("result_json").yields(undefined, { statusCode: 200 }, JSON.stringify(resultsResponse));
       let result = await cypressReportData(cypress_report_data_without_config);
-      sinon.assert.calledOnce(axiosResultStub);
+      sinon.assert.calledOnce(getResultsJsonResponse);
       expect(JSON.stringify(result)).to.be.equal(JSON.stringify(expectedResponse));
     });
   });

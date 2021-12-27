@@ -89,7 +89,7 @@ function buildSpecStats(specMeta) {
   return specStats;
 }
 
-let reportGenerator = (bsConfig, buildId, args, cb) => {
+let reportGenerator = (bsConfig, buildId, args, rawArgs, cb) => {
   let options = {
     url: `${config.buildUrl}${buildId}/custom_report`,
     auth: {
@@ -115,7 +115,7 @@ let reportGenerator = (bsConfig, buildId, args, cb) => {
       logger.error('Generating the build report failed.');
       logger.error(message);
 
-      utils.sendUsageReport(bsConfig, args, message, messageType, errorCode);
+      utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
       return;
     } else {
       try {
@@ -167,7 +167,7 @@ let reportGenerator = (bsConfig, buildId, args, cb) => {
       await renderReportHTML(build);
       logger.info(message);
     }
-    utils.sendUsageReport(bsConfig, args, message, messageType, errorCode);
+    utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
     if (cb){
       cb();
     }
@@ -235,24 +235,74 @@ async function cypressReportData(report_data) {
   return report_data;
 }
 
+function getConfigJsonResponse(combination) {
+  return new Promise(async (resolve, reject) => {
+    configJsonResponse = null;
+    configJsonError = false
+    request.get(combination.tests.config_json , function(err, resp, body) {
+      if(err) {
+        configJsonError = true;
+        reject([configJsonResponse, configJsonError]);
+      } else {
+        if(resp.statusCode != 200) {
+          configJsonError = true;
+          reject([configJsonResponse, configJsonError]);
+        } else {
+          try {
+            configJsonResponse = JSON.parse(body);
+          } catch (err) {
+            configJsonError = true
+            reject([configJsonResponse, configJsonError]);
+          }
+        }
+      }
+      resolve([configJsonResponse, configJsonError]);
+    }); 
+  });
+}
+
+function getResultsJsonResponse(combination) {
+  return new Promise(async (resolve, reject) => {
+    resultsJsonResponse = null
+    resultsJsonError = false;
+    request.get(combination.tests.result_json , function(err, resp, body) {
+      if(err) {
+        resultsJsonError = true;
+        reject([resultsJsonResponse, resultsJsonError]);
+      } else {
+        if(resp.statusCode != 200) {
+          resultsJsonError = true;
+          reject([resultsJsonResponse, resultsJsonError]);
+        } else {
+          try {
+            resultsJsonResponse = JSON.parse(body);
+          } catch (err) {
+            resultsJsonError = true
+            reject([resultsJsonResponse, resultsJsonError]);
+          }
+        }
+      }
+      resolve([resultsJsonResponse, resultsJsonError]);
+    }); 
+  });
+}
+
 function generateCypressCombinationSpecReportDataWithConfigJson(combination){
   return new Promise(async (resolve, reject) => {
       try {
         let configJsonError, resultsJsonError;
-        let [configJsonResponse, resultsJsonResponse] = await axios.all([
-            axios.get(combination.tests.config_json).catch(function (error) {
-              configJsonError = true;
-            }),
-            axios.get(combination.tests.result_json).catch(function(error){
-              resultsJsonError = true;
-            })
-          ]);
+        let configJson, resultsJson;
+        
+        await Promise.all([getConfigJsonResponse(combination), getResultsJsonResponse(combination)]).then(function (successResult) {
+          [[configJson, configJsonError], [resultsJson, resultsJsonError]]  = successResult;
+        }).catch(function (failureResult) {
+          [[configJson, configJsonError], [resultsJson, resultsJsonError]]  = failureResult;
+        });
+
         if(resultsJsonError || configJsonError){
           resolve();
         }
         let tests = {};
-        let configJson = configJsonResponse.data;
-        let resultsJson = resultsJsonResponse.data;
         if(utils.isUndefined(configJson.tests) || utils.isUndefined(resultsJson.tests)){
           resolve();
         }
@@ -287,14 +337,15 @@ function generateCypressCombinationSpecReportDataWithConfigJson(combination){
 function generateCypressCombinationSpecReportDataWithoutConfigJson(combination){
   return new Promise(async (resolve, reject) => {
       try {
-        let resultsJsonError;
-        let resultsJsonResponse = await axios.get(combination.tests.result_json).catch(function(error){
-              resultsJsonError = true;
-            });
+        let resultsJson ,resultsJsonError;
+        await getResultsJsonResponse(combination).then(function (successResult) {
+          [resultsJson, resultsJsonError] = successResult
+        }).catch( function (failureResult) {
+          [resultsJson, resultsJsonError] = failureResult
+        })
         if(resultsJsonError || utils.isUndefined(resultsJsonResponse)){
           resolve();
         }
-        let resultsJson = resultsJsonResponse.data;
         let sessionTests = [];
         if(utils.isUndefined(resultsJson.tests)){
           resolve();

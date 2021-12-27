@@ -210,7 +210,13 @@ const usageReportingConstants = {
 
 const LATEST_VERSION_SYNTAX_REGEX = /\d*.latest(.\d*)?/gm
 
+const AUTH_REGEX = /"auth" *: *{[\s\S]*?}/g
+
 const ERROR_EXIT_CODE = 1;
+
+const REDACTED = "[REDACTED]";
+
+const REDACTED_AUTH =`auth: { "username": ${REDACTED}, "access_key": ${REDACTED} }`;
 
 module.exports = Object.freeze({
   syncCLI,
@@ -229,5 +235,7 @@ module.exports = Object.freeze({
   METADATA_CHAR_BUFFER_PER_SPEC,
   usageReportingConstants,
   LATEST_VERSION_SYNTAX_REGEX,
-  ERROR_EXIT_CODE
+  ERROR_EXIT_CODE,
+  AUTH_REGEX,
+  REDACTED_AUTH
 });
