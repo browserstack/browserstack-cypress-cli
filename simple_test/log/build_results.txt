@@ -1,0 +1,2 @@
+BUILD_ID=d131a04273762d9edff61e812bf5ab819f6b6700
+BUILD_URL=https://automate-k8s-stagcypressqa.bsstag.com/dashboard/v2/builds/d131a04273762d9edff61e812bf5ab819f6b6700
