@@ -2,8 +2,7 @@ const { expect } = require("chai");
 const chai = require("chai"),
   chaiAsPromised = require("chai-as-promised"),
   sinon = require('sinon'),
-  rewire = require('rewire'),
-  axios = require('axios');
+  rewire = require('rewire');
 
 const fs = require('fs'),
       path = require('path'),

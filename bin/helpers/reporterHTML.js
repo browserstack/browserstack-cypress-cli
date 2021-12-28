@@ -4,8 +4,7 @@ const fs = require('fs'),
       logger = require('./logger').winstonLogger,
       utils = require("./utils"),
       Constants = require('./constants'),
-      config = require("./config"),
-      axios = require("axios");
+      config = require("./config");
 
 let templatesDir = path.join(__dirname, '../', 'templates');
 
