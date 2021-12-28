@@ -105,6 +105,9 @@ const uploadCypressZip = (bsConfig, md5data, packageData) => {
     const zipOptions = utils.generateUploadOptions('zip', md5data, packageData);
     const npmOptions = utils.generateUploadOptions('npm', md5data, packageData);
 
+    if(zipOptions.urlPresent) logger.info(Constants.userMessages.SKIP_UPLOADING_TESTS);
+    if(npmOptions.urlPresent) logger.info(Constants.userMessages.SKIP_UPLOADING_NPM_PACKAGES);
+
     if (!zipOptions.urlPresent && zipOptions.archivePresent) {
       logger.info(zipOptions.messages.uploading);
     }
