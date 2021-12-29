@@ -18,7 +18,6 @@ const usageReporting = require("./usageReporting"),
   pkg = require('../../package.json');
 
 const request = require('request');
-const axios = require("axios");
 
 exports.validateBstackJson = (bsConfigPath) => {
   return new Promise(function (resolve, reject) {
@@ -954,67 +953,75 @@ exports.setCLIMode = (bsConfig, args) => {
 }
 
 exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs) => {
-  let url = config.buildStopUrl + buildId;
-  let options = {
-    url: url,
-    auth: {
-      username: bsConfig["auth"]["username"],
-      password: bsConfig["auth"]["access_key"],
-    },
-    headers: {
-      'User-Agent': this.getUserAgent(),
-    },
-  };
-
-  let message = null;
-  let messageType = null;
-  let errorCode = null;
-  try{
-    let resp = await axios.post(url, {} , options);
+  let that = this;
+  return new Promise(function (resolve, reject) {
+    let url = config.buildStopUrl + buildId;
+    let options = {
+      url: url,
+      auth: {
+        username: bsConfig["auth"]["username"],
+        password: bsConfig["auth"]["access_key"],
+      },
+      headers: {
+        'User-Agent': that.getUserAgent(),
+      },
+    };
+    let message = null;
+    let messageType = null;
+    let errorCode = null;
     let build = null;
-    if(resp.data){
-      build = resp.data;
-    }
-
-    if (resp.status == 299) {
-      messageType = Constants.messageTypes.INFO;
-      errorCode = 'api_deprecated';
-
-      if (build) {
-        message = build.message;
-        logger.info(message);
-      } else {
-        message = Constants.userMessages.API_DEPRECATED;
-        logger.info(message);
-      }
-    } else if (resp.status != 200) {
-      messageType = Constants.messageTypes.ERROR;
-      errorCode = 'api_failed_build_stop';
-
-      if (build) {
-        message = `${
-          Constants.userMessages.BUILD_STOP_FAILED
-        } with error: \n${JSON.stringify(build, null, 2)}`;
-        logger.error(message);
-        if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
-      } else {
+    request.post(options, function(err, resp, data) {
+      if(err) {
         message = Constants.userMessages.BUILD_STOP_FAILED;
-        logger.error(message);
+        messageType = Constants.messageTypes.ERROR;
+        errorCode = 'api_failed_build_stop';
+        logger.info(message);
+      } else {
+        try {
+          build = JSON.parse(data);
+          if (resp.statusCode == 299) {
+            messageType = Constants.messageTypes.INFO;
+            errorCode = 'api_deprecated';
+      
+            if (build) {
+              message = build.message;
+              logger.info(message);
+            } else {
+              message = Constants.userMessages.API_DEPRECATED;
+              logger.info(message);
+            }
+          } else if (resp.statusCode != 200) {
+            messageType = Constants.messageTypes.ERROR;
+            errorCode = 'api_failed_build_stop';
+      
+            if (build) {
+              message = `${
+                Constants.userMessages.BUILD_STOP_FAILED
+              } with error: \n${JSON.stringify(build, null, 2)}`;
+              logger.error(message);
+              if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
+            } else {
+              message = Constants.userMessages.BUILD_STOP_FAILED;
+              logger.error(message);
+            }
+          } else {
+            messageType = Constants.messageTypes.SUCCESS;
+            message = `${JSON.stringify(build, null, 2)}`;
+            logger.info(message);
+          }
+        } catch(err) {
+          console.log(err);
+          message = Constants.userMessages.BUILD_STOP_FAILED;
+          messageType = Constants.messageTypes.ERROR;
+          errorCode = 'api_failed_build_stop';
+          logger.info(message);
+        } finally {
+            that.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
+        }
       }
-    } else {
-      messageType = Constants.messageTypes.SUCCESS;
-      message = `${JSON.stringify(build, null, 2)}`;
-      logger.info(message);
-    }
-  } catch(err){
-    console.log(err);
-    message = Constants.userMessages.BUILD_STOP_FAILED;
-    messageType = Constants.messageTypes.ERROR;
-    errorCode = 'api_failed_build_stop';
-    logger.info(message);
-  } finally {
-    this.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
-  }
+      resolve();
+    });
+  });
 }
 
 exports.setProcessHooks = (buildId, bsConfig, bsLocal, args) => {

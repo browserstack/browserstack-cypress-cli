@@ -43,6 +43,8 @@ const userMessages = {
   UPLOADING_TESTS_SUCCESS: "Uploaded tests successfully",
   UPLOADING_NPM_PACKAGES: "Uploading required node_modules to BrowserStack",
   UPLOADING_NPM_PACKAGES_SUCCESS: "Uploaded node_modules successfully",
+  SKIP_UPLOADING_TESTS: "Skipping zip upload since BrowserStack already has your test suite that has not changed since the last run.",
+  SKIP_UPLOADING_NPM_PACKAGES: "Skipping the upload of node_modules since BrowserStack has already cached your npm dependencies that have not changed since the last run.",
   LOCAL_TRUE: "you will now be able to test localhost / private URLs",
   LOCAL_FALSE: "you won't be able to test localhost / private URLs",
   EXIT_SYNC_CLI_MESSAGE: "Exiting the CLI, but your build is still running. You can use the --sync option to keep getting test updates. You can also use the build-info <build-id> command now.",
