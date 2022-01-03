@@ -85,6 +85,9 @@ exports.getErrorCodeFromMsg = (errMsg) => {
     case Constants.validationMessages.INVALID_LOCAL_ASYNC_ARGS:
       errorCode = 'invalid_local_async_args';
       break;
+    case Constants.validationMessages.INVALID_GEO_LOCATION:
+      errorCode = 'invalid_geo_location';
+      break;
   }
   if (
     errMsg.includes("Please use --config-file <path to browserstack.json>.")
