@@ -133,6 +133,13 @@ var argv = yargs
           demand: true,
           demand: Constants.cliMessages.RUN.CYPRESS_CONFIG_DEMAND
         },
+        'gl': {
+          alias: 'geolocation',
+          describe: Constants.cliMessages.RUN.CYPRESS_GEO_LOCATION,
+          default: undefined,
+          type: 'string',
+          nargs: 1
+        },
         'p': {
           alias: ['parallels', 'parallel'],
           describe: Constants.cliMessages.RUN.PARALLEL_DESC,

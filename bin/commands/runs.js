@@ -48,6 +48,9 @@ module.exports = function run(args, rawArgs) {
     // set cypress config filename
     utils.setCypressConfigFilename(bsConfig, args);
 
+    // set cypress geo location
+    utils.setGeoLocation(bsConfig, args);
+
     // accept the specs list from command line if provided
     utils.setUserSpecs(bsConfig, args);
 

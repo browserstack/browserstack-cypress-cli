@@ -272,6 +272,28 @@ exports.setCypressConfigFilename = (bsConfig, args) => {
   }
 }
 
+exports.verifyGeoLocationOption = () => {
+  let glOptionsSet = (this.searchForOption('-gl') || this.searchForOption('--gl'));
+  let geoHyphenLocationOptionsSet = (this.searchForOption('-geo-location') || this.searchForOption('--geo-location'));
+  let geoLocationOptionsSet = (this.searchForOption('-geolocation') || this.searchForOption('--geolocation'));
+  return (glOptionsSet || geoHyphenLocationOptionsSet || geoLocationOptionsSet);
+}
+
+exports.setGeoLocation = (bsConfig, args) => {
+  let userProvidedGeoLocation = this.verifyGeoLocationOption();
+  bsConfig.run_settings.userProvidedGeoLocation = (userProvidedGeoLocation || (!this.isUndefined(bsConfig.run_settings.geolocation)));
+
+  if (userProvidedGeoLocation && !this.isUndefined(args.geolocation)) {
+      bsConfig.run_settings.geolocation = args.geolocation;
+  }
+
+  if (this.isUndefined(bsConfig.run_settings.geolocation)){
+    bsConfig.run_settings.geolocation = null;
+  } else {
+    bsConfig.run_settings.geolocation = bsConfig.run_settings.geolocation.toUpperCase();
+  }
+}
+
 // specs can be passed from bstack configuration file
 // specs can be passed via command line args as a string
 // command line args takes precedence over config
