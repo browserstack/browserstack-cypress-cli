@@ -88,6 +88,9 @@ exports.getErrorCodeFromMsg = (errMsg) => {
     case Constants.validationMessages.INVALID_GEO_LOCATION:
       errorCode = 'invalid_geo_location';
       break;
+    case Constants.validationMessages.NOT_ALLOWED_GEO_LOCATION_AND_LOCAL_MODE:
+      errorCode = 'not_allowed_geo_location_and_local_mode';
+      break;
   }
   if (
     errMsg.includes("Please use --config-file <path to browserstack.json>.")

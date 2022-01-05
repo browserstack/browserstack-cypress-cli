@@ -90,7 +90,8 @@ const validationMessages = {
   INVALID_GEO_LOCATION: "[BROWSERSTACK_INVALID_COUNTRY_CODE] The country code specified for 'browserstack.geoLocation' is invalid. For list of supported countries, refer to -  https://www.browserstack.com/ip-geolocation",
   NOT_SUPPORTED_GEO_LOCATION: "The country code you have passed for IP Geolocation is currently not supported. Please refer the link https://www.browserstack.com/ip-geolocation for a list of supported countries.",
   NOT_AVAILABLE_GEO_LOCATION: "The country code you have passed for IP Geolocation is not available at the moment. Please try again in a few hours.",
-  ACCESS_DENIED_GEO_LOCATION: "'geolocation' (IP Geolocation feature) capability is not supported in your account. It is only available under Enterprise plans, refer https://www.browserstack.com/ip-geolocation for more details."
+  ACCESS_DENIED_GEO_LOCATION: "'geolocation' (IP Geolocation feature) capability is not supported in your account. It is only available under Enterprise plans, refer https://www.browserstack.com/ip-geolocation for more details.",
+  NOT_ALLOWED_GEO_LOCATION_AND_LOCAL_MODE: "Cannot run IP Geolocation feature in conjunction with local mode."
 };
 
 const cliMessages = {
