@@ -164,7 +164,9 @@ const validate = (bsConfig, args) => {
 
     if( Utils.searchForOption('--async') && ( !Utils.isUndefined(args.async) && bsConfig["connection_settings"]["local"])) reject(Constants.validationMessages.INVALID_LOCAL_ASYNC_ARGS);
     
-    if (bsConfig.run_settings.userProvidedGeoLocation && bsConfig.run_settings.geolocation.match(/^[A-Z]{2}$/g)) reject(Constants.validationMessages.INVALID_GEO_LOCATION);
+    if (bsConfig.run_settings.userProvidedGeoLocation && !bsConfig.run_settings.geolocation.match(/^[A-Z]{2}$/g)) reject(Constants.validationMessages.INVALID_GEO_LOCATION);
+
+    if (bsConfig["connection_settings"]["local"] && bsConfig.run_settings.userProvidedGeoLocation) reject(Constants.validationMessages.INVALID_GEO_LOCATION_AND_LOCAL_MODE);
     
     // validate if config file provided exists or not when cypress_config_file provided
     // validate the cypressProjectDir key otherwise.
