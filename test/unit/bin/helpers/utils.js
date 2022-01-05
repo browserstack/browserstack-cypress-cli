@@ -2708,4 +2708,17 @@ describe('utils', () => {
       expect(utils.fetchZipSize('unknown.tar.gz')).to.be.eql(0);
     });
   });
+
+  describe('getVideoConfig', () => {
+    it('should return default hash if no config is passed by the user', () => {
+      expect(utils.getVideoConfig({})).to.be.eql({video: true, videoUploadOnPasses: true});
+      expect(utils.getVideoConfig({reporter: "mochawesome"})).to.be.eql({video: true, videoUploadOnPasses: true});
+    });
+
+    it('should replace video config as passed by the user', () => {
+      expect(utils.getVideoConfig({video: false})).to.be.eql({video: false, videoUploadOnPasses: true});
+      expect(utils.getVideoConfig({videoUploadOnPasses: false})).to.be.eql({video: true, videoUploadOnPasses: false});
+      expect(utils.getVideoConfig({video: false, videoUploadOnPasses: false})).to.be.eql({video: false, videoUploadOnPasses: false});
+    });
+  });
 });
