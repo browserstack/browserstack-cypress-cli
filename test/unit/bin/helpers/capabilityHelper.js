@@ -1053,5 +1053,98 @@ describe("capabilityHelper.js", () => {
         })
       });
     });
+
+    describe("validate ip geolocation", () => {
+      beforeEach(() => {
+        bsConfig = {
+          auth: {},
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            cypress_proj_dir: "random path",
+            cypressConfigFilePath: "random path",
+            cypressProjectDir: "random path"
+          },
+          connection_settings: {}
+        };
+      });
+
+      it("should throw an error if both local and geolocation are used", () => {
+        bsConfig.run_settings.geolocation = "US";
+        bsConfig.run_settings.userProvidedGeolocation = true;
+        bsConfig.connection_settings.local = true;
+        bsConfig.connection_settings.local_identifier = "some text";
+  
+        return capabilityHelper
+          .validate(bsConfig, {})
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.NOT_ALLOWED_GEO_LOCATION_AND_LOCAL_MODE);
+          });
+      });
+
+      it("should throw an error if incorrect format for geolocation code is used (valid country name but incorrect code)", () => {
+        bsConfig.run_settings.geolocation = "USA";
+        bsConfig.run_settings.userProvidedGeolocation = true;
+  
+        return capabilityHelper
+          .validate(bsConfig, {})
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_GEO_LOCATION);
+          });
+      });
+
+      it("should throw an error if incorrect format for geolocation code is used (random value)", () => {
+        bsConfig.run_settings.geolocation = "RANDOM";
+        bsConfig.run_settings.userProvidedGeolocation = true;
+  
+        return capabilityHelper
+          .validate(bsConfig, {})
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_GEO_LOCATION);
+          });
+      });
+
+      it("should throw an error if incorrect format for geolocation code is used (special chars)", () => {
+        bsConfig.run_settings.geolocation = "$USA$!&@*)()";
+        bsConfig.run_settings.userProvidedGeolocation = true;
+  
+        return capabilityHelper
+          .validate(bsConfig, {})
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_GEO_LOCATION);
+          });
+      });
+
+      it("should throw an error if incorrect format for geolocation code is used (small caps)", () => {
+        bsConfig.run_settings.geolocation = "us";
+        bsConfig.run_settings.userProvidedGeolocation = true;
+  
+        return capabilityHelper
+          .validate(bsConfig, {})
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_GEO_LOCATION);
+          });
+      });
+    });
   });
 });

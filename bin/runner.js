@@ -137,8 +137,7 @@ var argv = yargs
           alias: 'geolocation',
           describe: Constants.cliMessages.RUN.CYPRESS_GEO_LOCATION,
           default: undefined,
-          type: 'string',
-          nargs: 1
+          type: 'string'
         },
         'p': {
           alias: ['parallels', 'parallel'],

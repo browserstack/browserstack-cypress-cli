@@ -278,18 +278,18 @@ exports.setCypressConfigFilename = (bsConfig, args) => {
   }
 }
 
-exports.verifyGeoLocationOption = () => {
+exports.verifyGeolocationOption = () => {
   let glOptionsSet = (this.searchForOption('-gl') || this.searchForOption('--gl'));
   let geoHyphenLocationOptionsSet = (this.searchForOption('-geo-location') || this.searchForOption('--geo-location'));
   let geoLocationOptionsSet = (this.searchForOption('-geolocation') || this.searchForOption('--geolocation'));
   return (glOptionsSet || geoHyphenLocationOptionsSet || geoLocationOptionsSet);
 }
 
-exports.setGeoLocation = (bsConfig, args) => {
-  let userProvidedGeoLocation = this.verifyGeoLocationOption();
-  bsConfig.run_settings.userProvidedGeoLocation = (userProvidedGeoLocation || (!this.isUndefined(bsConfig.run_settings.geolocation)));
+exports.setGeolocation = (bsConfig, args) => {
+  let userProvidedGeolocation = this.verifyGeolocationOption();
+  bsConfig.run_settings.userProvidedGeolocation = (userProvidedGeolocation || (!this.isUndefined(bsConfig.run_settings.geolocation)));
 
-  if (userProvidedGeoLocation && !this.isUndefined(args.geolocation)) {
+  if (userProvidedGeolocation && !this.isUndefined(args.geolocation)) {
       bsConfig.run_settings.geolocation = args.geolocation;
   }
 
