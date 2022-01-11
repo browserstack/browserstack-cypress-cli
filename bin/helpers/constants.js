@@ -87,7 +87,7 @@ const validationMessages = {
   INVALID_LOCAL_IDENTIFIER: "Invalid value specified for local_identifier. For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
   INVALID_BROWSER_ARGS: "Aborting as an unacceptable value was passed for --browser. Read more at https://www.browserstack.com/docs/automate/cypress/cli-reference",
   INVALID_LOCAL_ASYNC_ARGS: "Cannot run in --async mode when local is set to true. Please run the build after removing --async",
-  INVALID_GEO_LOCATION: "[BROWSERSTACK_INVALID_COUNTRY_CODE] The country code specified for 'browserstack.geoLocation' is invalid. For list of supported countries, refer to -  https://www.browserstack.com/ip-geolocation",
+  INVALID_GEO_LOCATION: "[BROWSERSTACK_INVALID_COUNTRY_CODE] The country code specified for 'geolocation' is invalid. For list of supported countries, refer to -  https://www.browserstack.com/ip-geolocation",
   NOT_SUPPORTED_GEO_LOCATION: "The country code you have passed for IP Geolocation is currently not supported. Please refer the link https://www.browserstack.com/ip-geolocation for a list of supported countries.",
   NOT_AVAILABLE_GEO_LOCATION: "The country code you have passed for IP Geolocation is not available at the moment. Please try again in a few hours.",
   ACCESS_DENIED_GEO_LOCATION: "'geolocation' (IP Geolocation feature) capability is not supported in your account. It is only available under Enterprise plans, refer https://www.browserstack.com/ip-geolocation for more details.",
