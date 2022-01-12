@@ -145,7 +145,8 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
         }
       });
     }).catch((err) => {
-      resolve({zipUrlPresent: false, packageUrlPresent: false, error: err.stack.substring(0,100)});
+      let errString = err.stack ? err.stack.toString().substring(0,100) : err.toString().substring(0,100);
+      resolve({zipUrlPresent: false, packageUrlPresent: false, error: errString});
     });
   });
 };
