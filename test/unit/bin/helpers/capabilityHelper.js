@@ -586,6 +586,7 @@ describe("capabilityHelper.js", () => {
             cypress_proj_dir: "random path",
             cypressConfigFilePath: "random path"
           },
+          connection_settings: {local: false}
         };
       });
 
@@ -952,6 +953,7 @@ describe("capabilityHelper.js", () => {
             cypressConfigFilePath: "random path",
             cypressProjectDir: "random path"
           },
+          connection_settings: {local: false}
         };
       });
       it("validate cypress json is present", () => {
@@ -1081,6 +1083,7 @@ describe("capabilityHelper.js", () => {
             cypressConfigFilePath: "random path",
             cypressProjectDir: "random path"
           },
+          connection_settings: {local: false}
         };
       });
 
