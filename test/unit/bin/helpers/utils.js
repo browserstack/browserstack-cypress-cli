@@ -11,8 +11,7 @@ const chai = require('chai'),
   chalk = require('chalk'),
   os = require("os"),
   crypto = require('crypto'),
-  fs = require('fs'),
-  axios = require('axios');
+  fs = require('fs');
 const getmac = require('getmac').default;
 const usageReporting = require('../../../../bin/helpers/usageReporting');
 const utils = require('../../../../bin/helpers/utils'),
@@ -106,6 +105,21 @@ describe('utils', () => {
           constant.validationMessages.INVALID_LOCAL_ASYNC_ARGS
         )
       ).to.eq('invalid_local_async_args');
+      expect(
+        utils.getErrorCodeFromMsg(
+          constant.validationMessages.HOME_DIRECTORY_NOT_FOUND
+        )
+      ).to.eq('home_directory_not_found');
+      expect(
+        utils.getErrorCodeFromMsg(
+          constant.validationMessages.HOME_DIRECTORY_NOT_A_DIRECTORY
+        )
+      ).to.eq('home_directory_not_a_directory');
+      expect(
+        utils.getErrorCodeFromMsg(
+          constant.validationMessages.CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY
+        )
+      ).to.eq('cypress_config_file_not_part_of_home_directory');
       expect(
         utils.getErrorCodeFromMsg('Invalid browserstack.json file.')
       ).to.eq('bstack_json_invalid');
@@ -2555,7 +2569,7 @@ describe('utils', () => {
   });
 
   describe('stopBrowserStackBuild', () => {
-    let axiosPostStub, getUserAgentStub, sendUsageReportStub, message, messageType, errorCode;
+    let getUserAgentStub, sendUsageReportStub, message, messageType, errorCode;
     let bsConfig = testObjects.sampleBsConfig;
     let args = {};
     let rawArgs = {};
@@ -2563,12 +2577,10 @@ describe('utils', () => {
     let body = testObjects.buildStopSampleBody;
 
     beforeEach(() => {
-      axiosPostStub = sandbox.stub(axios, "post");
       getUserAgentStub = sinon.stub(utils, 'getUserAgent').returns('user-agent');
       sendUsageReportStub = sinon.stub(utils, 'sendUsageReport');
     });
     afterEach(()=>{
-      axiosPostStub.restore();
       getUserAgentStub.restore();
       sendUsageReportStub.restore();
       sandbox.restore();
@@ -2576,54 +2588,56 @@ describe('utils', () => {
 
     it('message thrown if API deprecated', async () => {
       let api_deprecated_response = {
-        status: 299
+        statusCode: 299
       }
       message = constant.userMessages.API_DEPRECATED;
       messageType = constant.messageTypes.INFO;
       errorCode = 'api_deprecated';
-      axiosPostStub.resolves(api_deprecated_response);
+      let requestStub = sinon.stub(request, 'post').yields(undefined, api_deprecated_response, null);
       await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
-      sinon.assert.calledOnce(axiosPostStub);
+      sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
       sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
+      requestStub.restore();
     });
 
     it('message thrown if build returned', async () => {
       let api_deprecated_response = {
-        status: 299,
-        data: body
+        statusCode: 299,
       }
       message = body.message;
       messageType = constant.messageTypes.INFO;
       errorCode = 'api_deprecated';
-      axiosPostStub.resolves(api_deprecated_response);
+      let requestStub = sinon.stub(request, 'post').yields(undefined, api_deprecated_response, JSON.stringify(body));
       await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
-      sinon.assert.calledOnce(axiosPostStub);
+      sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
       sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
+      requestStub.restore();
     });
 
     it('message thrown if statusCode != 200', async () => {
       let non_200_status_response = {
-        status: 400
+        statusCode: 400
       }
       message = constant.userMessages.BUILD_STOP_FAILED;
       messageType = constant.messageTypes.ERROR;
       errorCode = 'api_failed_build_stop';
-      axiosPostStub.resolves(non_200_status_response);
+      let requestStub = sinon.stub(request, 'post').yields(undefined, non_200_status_response, null);
       await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
-      sinon.assert.calledOnce(axiosPostStub);
+      sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
       sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
+      requestStub.restore();
     });
 
     it('message thrown if statusCode != 200 and user unauthorized', async () => {
       let body_with_message = {
         ...body,
-        message: "Unauthorized",
+        "message": "Unauthorized",
       };
       let non_200_status_response = {
-        status: 401,
+        statusCode: 401,
         data: body_with_message
       }
 
@@ -2632,17 +2646,17 @@ describe('utils', () => {
       } with error: \n${JSON.stringify(body_with_message, null, 2)}`;
       messageType = constant.messageTypes.ERROR;
       errorCode = 'api_auth_failed';
-      axiosPostStub.resolves(non_200_status_response);
+      let requestStub = sinon.stub(request, 'post').yields(undefined, non_200_status_response, JSON.stringify(body_with_message));
       await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
-      sinon.assert.calledOnce(axiosPostStub);
+      sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
       sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
+      requestStub.restore();
     });
 
     it('message thrown if statusCode != 200 and build is present', async () => {
       let non_200_status_response = {
-        status: 402,
-        data: body
+        statusCode: 402,
       }
 
       message = `${
@@ -2650,27 +2664,28 @@ describe('utils', () => {
       } with error: \n${JSON.stringify(body, null, 2)}`;
       messageType = constant.messageTypes.ERROR;
       errorCode = 'api_failed_build_stop';
-      axiosPostStub.resolves(non_200_status_response);
+      let requestStub = sinon.stub(request, 'post').yields(undefined, non_200_status_response, JSON.stringify(body));
       await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
-      sinon.assert.calledOnce(axiosPostStub);
+      sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
       sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
+      requestStub.restore();
     });
 
     it('message thrown if API success', async () => {
       let success_response = {
-        status: 200,
-        data: body
+        statusCode: 200,
       }
 
       message = `${JSON.stringify(body, null, 2)}`;
       messageType = constant.messageTypes.SUCCESS;
       errorCode = null;
-      axiosPostStub.resolves(success_response);
+      let requestStub = sinon.stub(request, 'post').yields(undefined, success_response, JSON.stringify(body));
       await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
-      sinon.assert.calledOnce(axiosPostStub);
+      sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
       sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
+      requestStub.restore();
     });
   });
 

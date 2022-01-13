@@ -18,6 +18,7 @@ const archiver = require("../helpers/archiver"),
   downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts,
   updateNotifier = require('update-notifier'),
   pkg = require('../../package.json');
+
 module.exports = function run(args, rawArgs) {
   let bsConfigPath = utils.getConfigPath(args.cf);
   //Delete build_results.txt from log folder if already present.
@@ -200,7 +201,27 @@ module.exports = function run(args, rawArgs) {
                   build_id: data.build_id,
                   test_zip_size: test_zip_size,
                   npm_zip_size: npm_zip_size,
+                  test_suite_zip_upload: md5data.zipUrlPresent ? 0 : 1,
+                  package_zip_upload: md5data.packageUrlPresent ? 0 : 1
                 };
+
+                if (!md5data.zipUrlPresent && zip.tests_upload_time) {
+                  dataToSend.test_suite_zip_size = parseFloat((test_zip_size / 1024).toFixed(2));
+                  dataToSend.test_suite_zip_upload_avg_speed = parseFloat(((test_zip_size * 1000) / (1024 * zip.tests_upload_time)).toFixed(2));
+                };
+
+                if (!md5data.packageUrlPresent && zip.npm_package_upload_time) {
+                  dataToSend.npm_package_zip_size = parseFloat((npm_zip_size / 1024).toFixed(2));
+                  dataToSend.npm_package_zip_upload_avg_speed = parseFloat(((npm_zip_size * 1000) / (1024 * zip.npm_package_upload_time)).toFixed(2));
+                };
+
+                if (zip.tests_upload_time || zip.npm_package_upload_time) {
+                  dataToSend.time_components.zip.zipUploadSplit = {
+                    tests_upload_time: zip.tests_upload_time,
+                    npm_package_upload_time: zip.npm_package_upload_time,
+                  }
+                }
+
                 if (bsConfig && bsConfig.connection_settings) {
                   if (bsConfig.connection_settings.local_mode) {
                     dataToSend.local_mode = bsConfig.connection_settings.local_mode;

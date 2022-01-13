@@ -43,6 +43,8 @@ const userMessages = {
   UPLOADING_TESTS_SUCCESS: "Uploaded tests successfully",
   UPLOADING_NPM_PACKAGES: "Uploading required node_modules to BrowserStack",
   UPLOADING_NPM_PACKAGES_SUCCESS: "Uploaded node_modules successfully",
+  SKIP_UPLOADING_TESTS: "Skipping zip upload since BrowserStack already has your test suite that has not changed since the last run.",
+  SKIP_UPLOADING_NPM_PACKAGES: "Skipping the upload of node_modules since BrowserStack has already cached your npm dependencies that have not changed since the last run.",
   LOCAL_TRUE: "you will now be able to test localhost / private URLs",
   LOCAL_FALSE: "you won't be able to test localhost / private URLs",
   EXIT_SYNC_CLI_MESSAGE: "Exiting the CLI, but your build is still running. You can use the --sync option to keep getting test updates. You can also use the build-info <build-id> command now.",
@@ -85,6 +87,9 @@ const validationMessages = {
   INVALID_LOCAL_IDENTIFIER: "Invalid value specified for local_identifier. For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
   INVALID_BROWSER_ARGS: "Aborting as an unacceptable value was passed for --browser. Read more at https://www.browserstack.com/docs/automate/cypress/cli-reference",
   INVALID_LOCAL_ASYNC_ARGS: "Cannot run in --async mode when local is set to true. Please run the build after removing --async",
+  HOME_DIRECTORY_NOT_FOUND: "Specified home directory could not be found. Please make sure the path of the home directory is correct.",
+  HOME_DIRECTORY_NOT_A_DIRECTORY: "Specified home directory is not a directory. The home directory can only be a directory and not a file.",
+  CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY: "Could not find cypress.json within the specified home directory. Please make sure cypress.json resides within the home directory."
 };
 
 const cliMessages = {
