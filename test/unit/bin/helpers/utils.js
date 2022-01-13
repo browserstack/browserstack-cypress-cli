@@ -2517,6 +2517,61 @@ describe('utils', () => {
       await utils.setBrowsers(bsConfig, args);
       expect(bsConfig.browsers).to.be.eql(browserResult);
     });
+    it('the args browser should not return exception if os is empty string', async () => {
+      let bsConfig = {
+        browsers: [
+          {
+            browser: 'chrome',
+            os: 'Windows 10',
+            versions: ['latest', 'latest-1'],
+          },
+          {
+            browser: 'chrome',
+            os: 'Windows 10',
+            versions: ['latest', 'latest-1'],
+          },
+        ],
+      };
+      let browserResult = [
+        {
+          browser: 'chrome',
+          os: '',
+          versions: ['latest-1'],
+        }
+      ];
+      let args = {
+        browser: 'chrome@latest-1:',
+      };
+      await utils.setBrowsers(bsConfig, args)
+      expect(bsConfig.browsers).to.be.eql(browserResult);
+    });
+    it('the args browser should not return exception if os is nil', async () => {
+      let bsConfig = {
+        browsers: [
+          {
+            browser: 'chrome',
+            os: 'Windows 10',
+            versions: ['latest', 'latest-1'],
+          },
+          {
+            browser: 'chrome',
+            os: 'Windows 10',
+            versions: ['latest', 'latest-1'],
+          },
+        ],
+      };
+      let browserResult = [
+        {
+          browser: 'chrome',
+          versions: ['latest-1'],
+        }
+      ];
+      let args = {
+        browser: 'chrome@latest-1',
+      };
+      await utils.setBrowsers(bsConfig, args)
+      expect(bsConfig.browsers).to.be.eql(browserResult);
+    });
     it('the args browser should throw an error in case of exception raised', async () => {
       let bsConfig = {
         browsers: [
