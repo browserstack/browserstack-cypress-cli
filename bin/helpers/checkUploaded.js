@@ -15,7 +15,12 @@ const checkSpecsMd5 = (runSettings, args, instrumentBlocks) => {
     if (args["force-upload"]) {
       return resolve("force-upload");
     }
-    let cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
+    let cypressFolderPath = undefined;
+    if (runSettings.home_directory) {
+      cypressFolderPath = runSettings.home_directory;
+    } else {
+      cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
+    }
     let ignoreFiles = utils.getFilesToIgnore(runSettings, args.exclude, false);
     let options = {
       cwd: cypressFolderPath,
@@ -145,7 +150,8 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
         }
       });
     }).catch((err) => {
-      resolve({zipUrlPresent: false, packageUrlPresent: false, error: err.stack.substring(0,100)});
+      let errString = err.stack ? err.stack.toString().substring(0,100) : err.toString().substring(0,100);
+      resolve({zipUrlPresent: false, packageUrlPresent: false, error: errString});
     });
   });
 };

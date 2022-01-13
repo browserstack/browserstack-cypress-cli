@@ -125,7 +125,7 @@ const packageWrapper = (bsConfig, packageDir, packageFile, md5data, instrumentBl
       Object.assign(obj, { packageArchieveCreated: true });
       return resolve(obj);
     }).catch((err) => {
-      obj.error = err.stack.substring(0,100);
+      obj.error = err.stack ? err.stack.toString().substring(0,100) : err.toString().substring(0,100);
       return resolve(obj);
     })
   })

@@ -91,6 +91,15 @@ exports.getErrorCodeFromMsg = (errMsg) => {
     case Constants.validationMessages.NOT_ALLOWED_GEO_LOCATION_AND_LOCAL_MODE:
       errorCode = 'not_allowed_geo_location_and_local_mode';
       break;
+    case Constants.validationMessages.HOME_DIRECTORY_NOT_FOUND:
+      errorCode = 'home_directory_not_found';
+      break;
+    case Constants.validationMessages.HOME_DIRECTORY_NOT_A_DIRECTORY:
+      errorCode = 'home_directory_not_a_directory';
+      break;
+    case Constants.validationMessages.CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY:
+      errorCode = 'cypress_config_file_not_part_of_home_directory';
+      break;
   }
   if (
     errMsg.includes("Please use --config-file <path to browserstack.json>.")
@@ -919,7 +928,7 @@ exports.setBrowsers = async (bsConfig, args) => {
         browsersList.forEach((browser)=>{
           let browserHash = {}
           let osBrowserDetails =  browser.split(':')
-          browserHash['os'] = osBrowserDetails[1].trim()
+          if (!this.isUndefined(osBrowserDetails[1])) browserHash['os'] = osBrowserDetails[1].trim()
           let browserDetails = osBrowserDetails[0].split('@')
           browserHash['browser'] = browserDetails[0].trim()
           browserHash['versions'] = []
