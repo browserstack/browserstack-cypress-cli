@@ -10,6 +10,15 @@ const config = require("./config"),
   Constants = require("./constants"),
   utils = require("./utils");
 
+
+const purgeUploadBar = (obj) => {
+  obj.bar1.update(100, {
+    speed: ((obj.size / (Date.now() - obj.startTime)) / 125).toFixed(2) //kbits per sec
+  });
+  obj.bar1.stop();
+  clearInterval(obj.zipInterval);
+}
+
 const uploadSuits = (bsConfig, filePath, opts, obj) => {
   return new Promise(function (resolve, reject) {
     obj.startTime = Date.now();
@@ -91,15 +100,6 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
     }, 150);
 
   });
-}
-
-
-const purgeUploadBar = (obj) => {
-  obj.bar1.update(100, {
-    speed: ((obj.size / (Date.now() - obj.startTime)) / 125).toFixed(2) //kbits per sec
-  });
-  obj.bar1.stop();
-  clearInterval(obj.zipInterval);
 }
 
 const uploadCypressZip = (bsConfig, md5data, packageData) => {
