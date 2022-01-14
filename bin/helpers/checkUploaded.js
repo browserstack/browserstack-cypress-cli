@@ -15,12 +15,7 @@ const checkSpecsMd5 = (runSettings, args, instrumentBlocks) => {
     if (args["force-upload"]) {
       return resolve("force-upload");
     }
-    let cypressFolderPath = undefined;
-    if (runSettings.home_directory) {
-      cypressFolderPath = runSettings.home_directory;
-    } else {
-      cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
-    }
+    let cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
     let ignoreFiles = utils.getFilesToIgnore(runSettings, args.exclude, false);
     let options = {
       cwd: cypressFolderPath,

@@ -85,15 +85,6 @@ exports.getErrorCodeFromMsg = (errMsg) => {
     case Constants.validationMessages.INVALID_LOCAL_ASYNC_ARGS:
       errorCode = 'invalid_local_async_args';
       break;
-    case Constants.validationMessages.HOME_DIRECTORY_NOT_FOUND:
-      errorCode = 'home_directory_not_found';
-      break;
-    case Constants.validationMessages.HOME_DIRECTORY_NOT_A_DIRECTORY:
-      errorCode = 'home_directory_not_a_directory';
-      break;
-    case Constants.validationMessages.CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY:
-      errorCode = 'cypress_config_file_not_part_of_home_directory';
-      break;
   }
   if (
     errMsg.includes("Please use --config-file <path to browserstack.json>.")
@@ -1061,4 +1052,15 @@ exports.fetchZipSize = (fileName) => {
   catch(err) {
     return 0;
   }
+}
+
+exports.getVideoConfig = (cypressJson) => {
+  let conf = {
+    video: true,
+    videoUploadOnPasses: true
+  }
+  if (!this.isUndefined(cypressJson.video)) conf.video = cypressJson.video;
+  if (!this.isUndefined(cypressJson.videoUploadOnPasses)) conf.videoUploadOnPasses = cypressJson.videoUploadOnPasses;
+
+  return conf;
 }

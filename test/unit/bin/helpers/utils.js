@@ -106,21 +106,6 @@ describe('utils', () => {
         )
       ).to.eq('invalid_local_async_args');
       expect(
-        utils.getErrorCodeFromMsg(
-          constant.validationMessages.HOME_DIRECTORY_NOT_FOUND
-        )
-      ).to.eq('home_directory_not_found');
-      expect(
-        utils.getErrorCodeFromMsg(
-          constant.validationMessages.HOME_DIRECTORY_NOT_A_DIRECTORY
-        )
-      ).to.eq('home_directory_not_a_directory');
-      expect(
-        utils.getErrorCodeFromMsg(
-          constant.validationMessages.CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY
-        )
-      ).to.eq('cypress_config_file_not_part_of_home_directory');
-      expect(
         utils.getErrorCodeFromMsg('Invalid browserstack.json file.')
       ).to.eq('bstack_json_invalid');
     });
@@ -2776,6 +2761,19 @@ describe('utils', () => {
 
     it('handle file not present', () => {
       expect(utils.fetchZipSize('unknown.tar.gz')).to.be.eql(0);
+    });
+  });
+
+  describe('getVideoConfig', () => {
+    it('should return default hash if no config is passed by the user', () => {
+      expect(utils.getVideoConfig({})).to.be.eql({video: true, videoUploadOnPasses: true});
+      expect(utils.getVideoConfig({reporter: "mochawesome"})).to.be.eql({video: true, videoUploadOnPasses: true});
+    });
+
+    it('should replace video config as passed by the user', () => {
+      expect(utils.getVideoConfig({video: false})).to.be.eql({video: false, videoUploadOnPasses: true});
+      expect(utils.getVideoConfig({videoUploadOnPasses: false})).to.be.eql({video: true, videoUploadOnPasses: false});
+      expect(utils.getVideoConfig({video: false, videoUploadOnPasses: false})).to.be.eql({video: false, videoUploadOnPasses: false});
     });
   });
 });

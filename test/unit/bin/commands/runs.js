@@ -249,6 +249,7 @@ describe("runs", () => {
       setBrowsersStub = sandbox.stub();
       setConfigStub = sandbox.stub();
       setCLIModeStub = sandbox.stub();
+      getVideoConfigStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -290,7 +291,8 @@ describe("runs", () => {
           setSystemEnvs: setSystemEnvsStub,
           setBrowsers: setBrowsersStub,
           setConfig: setConfigStub,
-          setCLIMode: setCLIModeStub
+          setCLIMode: setCLIModeStub,
+          getVideoConfig: getVideoConfigStub,
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -339,6 +341,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
           sinon.assert.calledOnce(setCLIModeStub);
+          sinon.assert.calledOnce(getVideoConfigStub);
           sinon.assert.calledOnce(setOtherConfigsStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
@@ -405,6 +408,7 @@ describe("runs", () => {
       setBrowsersStub = sandbox.stub();
       setCLIModeStub = sandbox.stub();
       fetchZipSizeStub = sandbox.stub();
+      getVideoConfigStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -448,6 +452,7 @@ describe("runs", () => {
           setConfig: setConfigStub,
           setCLIMode: setCLIModeStub,
           fetchZipSize: fetchZipSizeStub,
+          getVideoConfig: getVideoConfigStub,
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -487,6 +492,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledTwice(fetchZipSizeStub);
+          sinon.assert.calledOnce(getVideoConfigStub);
           sinon.assert.calledOnce(setLocalModeStub);
           sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
@@ -569,6 +575,7 @@ describe("runs", () => {
       setBrowsersStub = sandbox.stub();
       setCLIModeStub = sandbox.stub();
       fetchZipSizeStub = sandbox.stub();
+      getVideoConfigStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -613,6 +620,7 @@ describe("runs", () => {
           setConfig: setConfigStub,
           setCLIMode: setCLIModeStub,
           fetchZipSize: fetchZipSizeStub,
+          getVideoConfig: getVideoConfigStub,
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -659,6 +667,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledTwice(fetchZipSizeStub);
+          sinon.assert.calledOnce(getVideoConfigStub);
           sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(setLocalModeStub);
           sinon.assert.calledOnce(setupLocalTestingStub);
@@ -759,6 +768,7 @@ describe("runs", () => {
       setCLIModeStub = sandbox.stub();
       setProcessHooksStub = sandbox.stub();
       fetchZipSizeStub = sandbox.stub();
+      getVideoConfigStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -771,7 +781,7 @@ describe("runs", () => {
       let errorCode = null;
       let message = `Success! ${Constants.userMessages.BUILD_CREATED} with build id: random_build_id`;
       let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${dashboardUrl}`;
-      let data = { user_id: 1234, parallels: 10, time_components: {}, unique_id: 'random_hash', package_error: 'test', checkmd5_error: 'test', build_id: 'random_build_id', test_zip_size: 123, npm_zip_size: 123}
+      let data = { user_id: 1234, parallels: 10, time_components: {}, unique_id: 'random_hash', package_error: 'test', checkmd5_error: 'test', build_id: 'random_build_id', test_zip_size: 123, npm_zip_size: 123, test_suite_zip_upload: 1, package_zip_upload: 1}
 
       const runs = proxyquire('../../../../bin/commands/runs', {
         '../helpers/utils': {
@@ -811,6 +821,7 @@ describe("runs", () => {
           setCLIMode: setCLIModeStub,
           setProcessHooks: setProcessHooksStub,
           fetchZipSize: fetchZipSizeStub,
+          getVideoConfig: getVideoConfigStub,
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -880,6 +891,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(warnSpecLimitStub);
           sinon.assert.calledTwice(fetchZipSizeStub);
+          sinon.assert.calledOnce(getVideoConfigStub);
           sinon.assert.calledOnce(setLocalStub);
           sinon.assert.calledOnce(setLocalModeStub);
           sinon.assert.calledOnce(setupLocalTestingStub);
