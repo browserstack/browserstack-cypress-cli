@@ -1053,3 +1053,14 @@ exports.fetchZipSize = (fileName) => {
     return 0;
   }
 }
+
+exports.getVideoConfig = (cypressJson) => {
+  let conf = {
+    video: true,
+    videoUploadOnPasses: true
+  }
+  if (!this.isUndefined(cypressJson.video)) conf.video = cypressJson.video;
+  if (!this.isUndefined(cypressJson.videoUploadOnPasses)) conf.videoUploadOnPasses = cypressJson.videoUploadOnPasses;
+
+  return conf;
+}
