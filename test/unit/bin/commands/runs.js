@@ -784,7 +784,7 @@ describe("runs", () => {
       let errorCode = null;
       let message = `Success! ${Constants.userMessages.BUILD_CREATED} with build id: random_build_id`;
       let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${dashboardUrl}`;
-      let data = { user_id: 1234, parallels: 10, time_components: {}, unique_id: 'random_hash', package_error: 'test', checkmd5_error: 'test', build_id: 'random_build_id', test_zip_size: 123, npm_zip_size: 123, test_suite_zip_upload: 1, package_zip_upload: 1}
+      let data = { user_id: 1234, parallels: 10, time_components: {}, unique_id: 'random_hash', package_error: 'test', checkmd5_error: 'test', build_id: 'random_build_id', test_zip_size: 123, npm_zip_size: 123}
 
       const runs = proxyquire('../../../../bin/commands/runs', {
         '../helpers/utils': {
