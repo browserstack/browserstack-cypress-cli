@@ -71,13 +71,7 @@ describe("zipUpload", () => {
         archivePresent: true,
         messages: {}
       }
-      let obj = {
-        bar1: null,
-        zipInterval: null,
-        size: 0,
-        startTime: null
-      }
-      return uploadSuitsrewire(bsConfig, filePath, opts, obj)
+      return uploadSuitsrewire(bsConfig, filePath, opts)
         .then((_data) => {
           chai.assert.fail("Promise error");
         })
@@ -93,13 +87,7 @@ describe("zipUpload", () => {
         md5ReturnKey: 'returnKey',
         url: 'bs://random_hash'
       }
-      let obj = {
-        bar1: null,
-        zipInterval: null,
-        size: 0,
-        startTime: null
-      }
-      return uploadSuitsrewire(bsConfig, filePath, opts, obj)
+      return uploadSuitsrewire(bsConfig, filePath, opts)
         .then((data) => {
           chai.assert.deepEqual(data, {returnKey: 'bs://random_hash'});
         })
@@ -113,13 +101,7 @@ describe("zipUpload", () => {
       let opts = {
         archivePresent: false,
       }
-      let obj = {
-        bar1: null,
-        zipInterval: null,
-        size: 0,
-        startTime: null
-      }
-      return uploadSuitsrewire(bsConfig, filePath, opts, obj)
+      return uploadSuitsrewire(bsConfig, filePath, opts)
         .then((data) => {
           chai.assert.deepEqual(data, {});
         })
@@ -144,13 +126,7 @@ describe("zipUpload", () => {
         archivePresent: true,
         messages: {}
       }
-      let obj = {
-        bar1: null,
-        zipInterval: null,
-        size: 0,
-        startTime: null
-      }
-      return uploadSuitsrewire(bsConfig, filePath, opts, obj)
+      return uploadSuitsrewire(bsConfig, filePath, opts)
         .then((data) => {
           chai.assert.hasAllKeys(data, ["time"]);
         })
@@ -175,13 +151,7 @@ describe("zipUpload", () => {
         archivePresent: true,
         messages: {}
       }
-      let obj = {
-        bar1: null,
-        zipInterval: null,
-        size: 0,
-        startTime: null
-      }
-      return uploadSuitsrewire(bsConfig, filePath, opts, obj)
+      return uploadSuitsrewire(bsConfig, filePath, opts)
         .then((data) => {
           chai.assert.hasAllKeys(data, ["zip_url", "time"]);
         })
@@ -205,13 +175,7 @@ describe("zipUpload", () => {
         archivePresent: true,
         messages: {}
       }
-      let obj = {
-        bar1: null,
-        zipInterval: null,
-        size: 0,
-        startTime: null
-      }
-      return uploadSuitsrewire(bsConfig, filePath, opts, obj)
+      return uploadSuitsrewire(bsConfig, filePath, opts)
         .then((_data) => {
           chai.assert.fail("Promise error");
         })
@@ -235,13 +199,7 @@ describe("zipUpload", () => {
         archivePresent: true,
         messages: {}
       }
-      let obj = {
-        bar1: null,
-        zipInterval: null,
-        size: 0,
-        startTime: null
-      }
-      return uploadSuitsrewire(bsConfig, filePath, opts, obj)
+      return uploadSuitsrewire(bsConfig, filePath, opts)
         .then((_data) => {
           chai.assert.fail("Promise error");
         })
@@ -266,13 +224,7 @@ describe("zipUpload", () => {
         messages: {},
         propogateError: false
       }
-      let obj = {
-        bar1: null,
-        zipInterval: null,
-        size: 0,
-        startTime: null
-      }
-      return uploadSuitsrewire(bsConfig, filePath, opts, obj)
+      return uploadSuitsrewire(bsConfig, filePath, opts)
         .then((data) => {
           chai.assert.deepEqual(data, {});
         })
@@ -297,13 +249,7 @@ describe("zipUpload", () => {
         messages: {},
         propogateError: true
       }
-      let obj = {
-        bar1: null,
-        zipInterval: null,
-        size: 0,
-        startTime: null
-      }
-      return uploadSuitsrewire(bsConfig, filePath, opts, obj)
+      return uploadSuitsrewire(bsConfig, filePath, opts)
         .then((_data) => {
           chai.assert.fail("Promise error");
         })
@@ -328,13 +274,7 @@ describe("zipUpload", () => {
         messages: {},
         propogateError: true
       }
-      let obj = {
-        bar1: null,
-        zipInterval: null,
-        size: 0,
-        startTime: null
-      }
-      return uploadSuitsrewire(bsConfig, filePath, opts, obj)
+      return uploadSuitsrewire(bsConfig, filePath, opts)
         .then((_data) => {
           chai.assert.fail("Promise error");
         })
@@ -359,13 +299,7 @@ describe("zipUpload", () => {
         messages: {},
         propogateError: true
       }
-      let obj = {
-        bar1: null,
-        zipInterval: null,
-        size: 0,
-        startTime: null
-      }
-      return uploadSuitsrewire(bsConfig, filePath, opts, obj)
+      return uploadSuitsrewire(bsConfig, filePath, opts)
         .then((_data) => {
           chai.assert.fail("Promise error");
         })
@@ -386,11 +320,9 @@ describe("zipUpload", () => {
     });
 
     it("resolve with test suit", () => {
-      let purgeUploadBarStub = sandbox.stub().returns(true);
       zipUploader.__set__({
         utils: utilsStub,
-        uploadSuits: uploadSuitsStub,
-        purgeUploadBar: purgeUploadBarStub
+        uploadSuits: uploadSuitsStub
       });
       let uploadCypressZiprewire = zipUploader.__get__('uploadCypressZip');
       let bsConfig = {}
@@ -408,11 +340,9 @@ describe("zipUpload", () => {
 
     it("reject with error while uploading suit", () => {
       let uploadSuitsErrorStub = sandbox.stub().returns(Promise.reject("test error"));
-      let purgeUploadBarStub = sandbox.stub().returns(true);
       zipUploader.__set__({
         utils: utilsStub,
-        uploadSuits: uploadSuitsErrorStub,
-        purgeUploadBar: purgeUploadBarStub
+        uploadSuits: uploadSuitsErrorStub
       });
       let uploadCypressZiprewire = zipUploader.__get__('uploadCypressZip');
       let bsConfig = {}
