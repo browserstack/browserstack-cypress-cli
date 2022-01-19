@@ -99,6 +99,8 @@ module.exports = function run(args, rawArgs) {
       //get the number of spec files
       let specFiles = utils.getNumberOfSpecFiles(bsConfig, args, cypressJson);
 
+      bsConfig['run_settings']['video_config'] = utils.getVideoConfig(cypressJson);
+
       // return the number of parallels user specified
       let userSpecifiedParallels = utils.getParallels(bsConfig, args);
 
