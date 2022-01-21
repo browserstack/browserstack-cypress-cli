@@ -106,6 +106,21 @@ describe('utils', () => {
         )
       ).to.eq('invalid_local_async_args');
       expect(
+        utils.getErrorCodeFromMsg(
+          constant.validationMessages.HOME_DIRECTORY_NOT_FOUND
+        )
+      ).to.eq('home_directory_not_found');
+      expect(
+        utils.getErrorCodeFromMsg(
+          constant.validationMessages.HOME_DIRECTORY_NOT_A_DIRECTORY
+        )
+      ).to.eq('home_directory_not_a_directory');
+      expect(
+        utils.getErrorCodeFromMsg(
+          constant.validationMessages.CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY
+        )
+      ).to.eq('cypress_config_file_not_part_of_home_directory');
+      expect(
         utils.getErrorCodeFromMsg('Invalid browserstack.json file.')
       ).to.eq('bstack_json_invalid');
     });
