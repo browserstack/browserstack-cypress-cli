@@ -9,7 +9,6 @@ const request = require("request"),
   tableStream = require('table').createStream,
   chalk = require('chalk');
 
-const { inspect } = require('util');
 let whileLoop = true, whileTries = config.retries, options, timeout = 3000, n = 2, tableConfig, stream, endTime, startTime = Date.now(), buildStarted = false;
 let specSummary = {
   "buildError": null,
@@ -172,7 +171,7 @@ let showSpecsStatus = (data) => {
     } else if (specDetails["stacktrace_url"]) {
       specSummary.exitCode = config.buildFailedExitCode;
       specSummary.buildError = specDetails["stacktrace_url"]
-      console.log(chalk.bold.red(specDetails["message"]));
+      winstonLogger.error(chalk.red(specDetails["message"]));
     } else {
       if(!buildStarted) {
         buildStarted = true

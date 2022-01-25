@@ -1,15 +1,12 @@
 'use strict'
 const fs = require('fs'),
-  request = require('request'),
-  { inspect } = require('util'),
-  Constants = require("./constants"),
-  chalk = require('chalk');
+  request = require('request');
 
 const downloadBuildStacktrace = async (url) => {
   let writer = fs.createWriteStream('a.txt');
 	return new Promise(async (resolve, reject) => {
     request.get(url).on('data', (data) => {
-      console.log(chalk.bold(data.toString()));
+      console.log(data.toString());
     }).on('error', (err) => {
       reject();
     }).on('end', () => {
