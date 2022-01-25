@@ -91,7 +91,10 @@ const validationMessages = {
   NOT_SUPPORTED_GEO_LOCATION: "The country code you have passed for IP Geolocation is currently not supported. Please refer the link https://www.browserstack.com/ip-geolocation for a list of supported countries.",
   NOT_AVAILABLE_GEO_LOCATION: "The country code you have passed for IP Geolocation is not available at the moment. Please try again in a few hours.",
   ACCESS_DENIED_GEO_LOCATION: "'geolocation' (IP Geolocation feature) capability is not supported in your account. It is only available under Enterprise plans, refer https://www.browserstack.com/ip-geolocation for more details.",
-  NOT_ALLOWED_GEO_LOCATION_AND_LOCAL_MODE: "IP Geolocation feature is not available in conjunction with BrowserStack Local."
+  NOT_ALLOWED_GEO_LOCATION_AND_LOCAL_MODE: "IP Geolocation feature is not available in conjunction with BrowserStack Local.",
+  HOME_DIRECTORY_NOT_FOUND: "Specified home directory could not be found. Please make sure the path of the home directory is correct.",
+  HOME_DIRECTORY_NOT_A_DIRECTORY: "Specified home directory is not a directory. The home directory can only be a directory and not a file.",
+  CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY: "Could not find cypress.json within the specified home directory. Please make sure cypress.json resides within the home directory."
 };
 
 const cliMessages = {

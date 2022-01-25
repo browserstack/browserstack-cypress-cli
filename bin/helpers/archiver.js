@@ -1,11 +1,11 @@
 'use strict';
-const fs = require("fs");
+const fs = require("fs"),
+    path = require("path");
 
 const archiver = require("archiver"),
   Constants = require('../helpers/constants'),
   logger = require("./logger").winstonLogger,
-  utils = require('../helpers/utils'),
-  path = require('path');
+  utils = require('../helpers/utils');
 
 const archiveSpecs = (runSettings, filePath, excludeFiles, md5data) => {
   return new Promise(function (resolve, reject) {
@@ -14,7 +14,17 @@ const archiveSpecs = (runSettings, filePath, excludeFiles, md5data) => {
     }
     var output = fs.createWriteStream(filePath);
 
-    var cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
+    var cypressFolderPath = '';
+    let cypressAppendFilesZipLocation = '';
+    if (runSettings.home_directory) {
+      cypressFolderPath = runSettings.home_directory;
+      cypressAppendFilesZipLocation = runSettings.cypressZipStartLocation;
+      if (cypressAppendFilesZipLocation !== '') {
+        cypressAppendFilesZipLocation += '/';
+      }
+    } else {
+      cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
+    }
 
     logger.info(`Creating tests.zip with files in ${cypressFolderPath}`);
 
@@ -61,7 +71,7 @@ const archiveSpecs = (runSettings, filePath, excludeFiles, md5data) => {
 
     if (Object.keys(packageJSON).length > 0) {
       let packageJSONString = JSON.stringify(packageJSON, null, 4);
-      archive.append(packageJSONString, {name: 'browserstack-package.json'});
+      archive.append(packageJSONString, {name: `${cypressAppendFilesZipLocation}browserstack-package.json`});
     }
 
     // do not add cypress.json if arg provided is false
@@ -73,7 +83,7 @@ const archiveSpecs = (runSettings, filePath, excludeFiles, md5data) => {
         fs.readFileSync(runSettings.cypressConfigFilePath)
       );
       let cypressJSONString = JSON.stringify(cypressJSON, null, 4);
-      archive.append(cypressJSONString, {name: 'cypress.json'});
+      archive.append(cypressJSONString, {name: `${cypressAppendFilesZipLocation}cypress.json`});
     }
 
     archive.finalize();
