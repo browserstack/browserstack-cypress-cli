@@ -21,5 +21,6 @@ config.packageFileName = "bstackPackages.tar.gz";
 config.packageDirName = "tmpBstackPackages";
 config.retries = 5;
 config.networkErrorExitCode = 2;
+config.buildFailedExitCode = 3;
 
 module.exports = config;
