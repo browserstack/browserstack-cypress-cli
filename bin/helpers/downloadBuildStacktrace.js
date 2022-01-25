@@ -1,38 +1,23 @@
 'use strict'
-
-const request = require('request');
-const { inspect } = require('util');
+const fs = require('fs'),
+  request = require('request'),
+  { inspect } = require('util'),
+  Constants = require("./constants"),
+  chalk = require('chalk');
 
 const downloadBuildStacktrace = async (url) => {
-	let tmpFilePath = path.join("a", "fileName");
-  const writer = fs.createWriteStream(tmpFilePath);
+  let writer = fs.createWriteStream('a.txt');
 	return new Promise(async (resolve, reject) => {
-    request.get(url).on('response', function(response) {
-
-      if(response.statusCode != 200) {
-        reject();
-      } else {
-        //ensure that the user can call `then()` only when the file has
-        //been downloaded entirely.
-				console.log(`roshan1: the response is ${inspect(response)}`);
-        response.pipe(writer);
-        let error = null;
-        writer.on('error', err => {
-          error = err;
-          writer.close();
-          reject(err);
-        });
-        writer.on('close', async () => {
-          if (!error) {
-            await unzipFile("a", "fileName");
-            fs.unlinkSync(tmpFilePath);
-            resolve(true);
-          }
-          //no need to call the reject here, as it will have been called in the
-          //'error' stream;
-        });
-      }
-    });
+    request.get(url).on('data', (data) => {
+      console.log(chalk.bold(data.toString()));
+    }).on('error', (err) => {
+      reject();
+    }).on('end', () => {
+      let terminalWidth = (process.stdout.columns) * 0.9;
+      let lineSeparator = "\n" + "-".repeat(terminalWidth);
+      console.log(lineSeparator)
+      resolve();
+    })
   });
 };
 

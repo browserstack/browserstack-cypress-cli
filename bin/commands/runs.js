@@ -19,6 +19,7 @@ const archiver = require("../helpers/archiver"),
   downloadBuildStacktrace = require('../helpers/downloadBuildStacktrace').downloadBuildStacktrace,
   updateNotifier = require('update-notifier'),
   pkg = require('../../package.json');
+const { getStackTraceUrl } = require('../helpers/sync/syncSpecsLogs');
 
 module.exports = function run(args, rawArgs) {
   let bsConfigPath = utils.getConfigPath(args.cf);
@@ -172,7 +173,6 @@ module.exports = function run(args, rawArgs) {
                 if (args.sync) {
                   syncRunner.pollBuildStatus(bsConfig, data, rawArgs).then(async (exitCode) => {
 
-                    console.log(`roshan1: the exit code is ${exitCode} :: ${config.buildFailedExitCode}`)
                     // stop the Local instance
                     await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs);
 
@@ -190,6 +190,11 @@ module.exports = function run(args, rawArgs) {
                         utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
                         utils.handleSyncExit(exitCode, data.dashboard_url);
                       });
+                    } else {
+                      let stacktraceUrl = getStackTraceUrl();
+                      await downloadBuildStacktrace(stacktraceUrl);
+                      logger.info(Constants.userMessages.BUILD_FAILED_ERROR)
+                      process.exitCode = Constants.ERROR_EXIT_CODE;
                     }
                   });
                 } else if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {

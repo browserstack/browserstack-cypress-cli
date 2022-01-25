@@ -9,11 +9,10 @@ const request = require("request"),
   tableStream = require('table').createStream,
   chalk = require('chalk');
 
-const downloadBuildStacktrace = require('../downloadBuildStacktrace').downloadBuildStacktrace
-
 const { inspect } = require('util');
 let whileLoop = true, whileTries = config.retries, options, timeout = 3000, n = 2, tableConfig, stream, endTime, startTime = Date.now(), buildStarted = false;
 let specSummary = {
+  "buildError": null,
   "specs": [],
   "duration": null
 }
@@ -108,10 +107,8 @@ let printSpecsStatus = (bsConfig, buildDetails, rawArgs) => {
         whileProcess(callback)
       },
       function(err, result) { // when loop ends
-        console.log(`roshan1: the error is ${inspect(err)}`)
         if (err) {
           if(err.status == 204) {
-            
             reject(specSummary.exitCode);
           } else {
           utils.sendUsageReport(bsConfig, {}, `buildId: ${buildDetails.build_id}`, 'error', 'sync_cli_error', err, rawArgs);
@@ -163,15 +160,19 @@ let whileProcess = (whilstCallback) => {
   });
 }
 
+let getStackTraceUrl = () => {
+  return specSummary.buildError
+}
+
 let showSpecsStatus = (data) => {
   let specData = JSON.parse(data);
   specData.forEach(specDetails => {
-    console.log(`specDetails ${inspect(specDetails)}`);
     if (specDetails == "created") {
       return;
     } else if (specDetails["stacktrace_url"]) {
       specSummary.exitCode = config.buildFailedExitCode;
-      downloadBuildStacktrace(specDetails["stacktrace_url"]);
+      specSummary.buildError = specDetails["stacktrace_url"]
+      console.log(chalk.bold.red(specDetails["message"]));
     } else {
       if(!buildStarted) {
         buildStarted = true
@@ -226,3 +227,4 @@ let getStatus = (status) => {
 }
 
 exports.printSpecsStatus = printSpecsStatus;
+exports.getStackTraceUrl = getStackTraceUrl;
