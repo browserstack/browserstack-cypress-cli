@@ -9,7 +9,10 @@ const request = require("request"),
   tableStream = require('table').createStream,
   chalk = require('chalk');
 
-let whileLoop = true, whileTries = config.retries, options, timeout = 3000, n = 2, tableConfig, stream, endTime, startTime = Date.now();
+const downloadBuildStacktrace = require('../downloadBuildStacktrace').downloadBuildStacktrace
+
+const { inspect } = require('util');
+let whileLoop = true, whileTries = config.retries, options, timeout = 3000, n = 2, tableConfig, stream, endTime, startTime = Date.now(), buildStarted = false;
 let specSummary = {
   "specs": [],
   "duration": null
@@ -105,12 +108,18 @@ let printSpecsStatus = (bsConfig, buildDetails, rawArgs) => {
         whileProcess(callback)
       },
       function(err, result) { // when loop ends
+        console.log(`roshan1: the error is ${inspect(err)}`)
         if (err) {
+          if(err.status == 204) {
+            
+            reject(specSummary.exitCode);
+          } else {
           utils.sendUsageReport(bsConfig, {}, `buildId: ${buildDetails.build_id}`, 'error', 'sync_cli_error', err, rawArgs);
+          }
         }
         logger.info(lineSeparator);
         specSummary.duration =  endTime - startTime
-        resolve(specSummary)
+        resolve(specSummary);
       }
     );
   });
@@ -145,7 +154,8 @@ let whileProcess = (whilstCallback) => {
         whileLoop = false;
         endTime = Date.now();
         showSpecsStatus(body);
-        return whilstCallback(null, body);
+        return specSummary.exitCode == config.buildFailedExitCode ? 
+        whilstCallback({ status: 204, message: "No specs raun in the build"} ) : whilstCallback(null, body);
       default:
         whileLoop = false;
         return whilstCallback({ status: response.statusCode, message: body });
@@ -156,10 +166,18 @@ let whileProcess = (whilstCallback) => {
 let showSpecsStatus = (data) => {
   let specData = JSON.parse(data);
   specData.forEach(specDetails => {
+    console.log(`specDetails ${inspect(specDetails)}`);
     if (specDetails == "created") {
-      printInitialLog();
+      return;
+    } else if (specDetails["stacktrace_url"]) {
+      specSummary.exitCode = config.buildFailedExitCode;
+      downloadBuildStacktrace(specDetails["stacktrace_url"]);
     } else {
-      printSpecData(JSON.parse(specDetails))
+      if(!buildStarted) {
+        buildStarted = true
+        printInitialLog();
+      }
+      printSpecData(JSON.parse(specDetails));
     }
   });
 }

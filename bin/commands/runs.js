@@ -16,6 +16,7 @@ const archiver = require("../helpers/archiver"),
   reportGenerator = require('../helpers/reporterHTML').reportGenerator,
   {initTimeComponents, instrumentEventTime, markBlockStart, markBlockEnd, getTimeComponents} = require('../helpers/timeComponents'),
   downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts,
+  downloadBuildStacktrace = require('../helpers/downloadBuildStacktrace').downloadBuildStacktrace,
   updateNotifier = require('update-notifier'),
   pkg = require('../../package.json');
 
@@ -171,6 +172,7 @@ module.exports = function run(args, rawArgs) {
                 if (args.sync) {
                   syncRunner.pollBuildStatus(bsConfig, data, rawArgs).then(async (exitCode) => {
 
+                    console.log(`roshan1: the exit code is ${exitCode} :: ${config.buildFailedExitCode}`)
                     // stop the Local instance
                     await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs);
 
@@ -178,15 +180,17 @@ module.exports = function run(args, rawArgs) {
                     await new Promise(resolve => setTimeout(resolve, 5000));
 
                     // download build artifacts
-                    if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
-                      await downloadBuildArtifacts(bsConfig, data.build_id, args, rawArgs);
-                    }
+                    if (exitCode != config.buildFailedExitCode) {
+                      if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
+                        await downloadBuildArtifacts(bsConfig, data.build_id, args, rawArgs);
+                      }
 
-                    // Generate custom report!
-                    reportGenerator(bsConfig, data.build_id, args, rawArgs, function(){
-                      utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
-                      utils.handleSyncExit(exitCode, data.dashboard_url);
-                    });
+                      // Generate custom report!
+                      reportGenerator(bsConfig, data.build_id, args, rawArgs, function(){
+                        utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
+                        utils.handleSyncExit(exitCode, data.dashboard_url);
+                      });
+                    }
                   });
                 } else if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
                   logger.info(Constants.userMessages.ASYNC_DOWNLOADS.replace('<build-id>', data.build_id));
