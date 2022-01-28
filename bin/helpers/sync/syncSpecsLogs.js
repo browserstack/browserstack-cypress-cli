@@ -169,7 +169,7 @@ let showSpecsStatus = (data) => {
     if (specDetails == "created") {
       return;
     } else if (specDetails["stacktrace_url"]) {
-      specSummary.exitCode = config.buildFailedExitCode;
+      specSummary.exitCode = Constants.BUILD_FAILED_EXIT_CODE;
       specSummary.buildError = specDetails["stacktrace_url"]
       winstonLogger.error(chalk.red(specDetails["message"]));
     } else {

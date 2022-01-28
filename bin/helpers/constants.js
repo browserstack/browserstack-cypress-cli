@@ -218,6 +218,8 @@ const AUTH_REGEX = /"auth" *: *{[\s\S]*?}/g
 
 const ERROR_EXIT_CODE = 1;
 
+const BUILD_FAILED_EXIT_CODE = 3;
+
 const REDACTED = "[REDACTED]";
 
 const REDACTED_AUTH =`auth: { "username": ${REDACTED}, "access_key": ${REDACTED} }`;
@@ -241,5 +243,6 @@ module.exports = Object.freeze({
   LATEST_VERSION_SYNTAX_REGEX,
   ERROR_EXIT_CODE,
   AUTH_REGEX,
-  REDACTED_AUTH
+  REDACTED_AUTH,
+  BUILD_FAILED_EXIT_CODE
 });

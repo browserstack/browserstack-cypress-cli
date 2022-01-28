@@ -180,7 +180,7 @@ module.exports = function run(args, rawArgs) {
                     await new Promise(resolve => setTimeout(resolve, 5000));
 
                     // download build artifacts
-                    if (exitCode != config.buildFailedExitCode) {
+                    if (exitCode != Constants.BUILD_FAILED_EXIT_CODE) {
                       if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
                         await downloadBuildArtifacts(bsConfig, data.build_id, args, rawArgs);
                       }
@@ -194,7 +194,7 @@ module.exports = function run(args, rawArgs) {
                       let stacktraceUrl = getStackTraceUrl();
                       await downloadBuildStacktrace(stacktraceUrl);
                       logger.info(Constants.userMessages.BUILD_FAILED_ERROR)
-                      process.exitCode = Constants.ERROR_EXIT_CODE;
+                      process.exitCode = Constants.BUILD_FAILED_EXIT_CODE;
                     }
                   });
                 } else if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
