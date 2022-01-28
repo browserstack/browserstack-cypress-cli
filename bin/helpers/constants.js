@@ -87,6 +87,11 @@ const validationMessages = {
   INVALID_LOCAL_IDENTIFIER: "Invalid value specified for local_identifier. For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
   INVALID_BROWSER_ARGS: "Aborting as an unacceptable value was passed for --browser. Read more at https://www.browserstack.com/docs/automate/cypress/cli-reference",
   INVALID_LOCAL_ASYNC_ARGS: "Cannot run in --async mode when local is set to true. Please run the build after removing --async",
+  INVALID_GEO_LOCATION: "[BROWSERSTACK_INVALID_COUNTRY_CODE] The country code specified for 'geolocation' is invalid. For list of supported countries, refer to -  https://www.browserstack.com/ip-geolocation",
+  NOT_SUPPORTED_GEO_LOCATION: "The country code you have passed for IP Geolocation is currently not supported. Please refer the link https://www.browserstack.com/ip-geolocation for a list of supported countries.",
+  NOT_AVAILABLE_GEO_LOCATION: "The country code you have passed for IP Geolocation is not available at the moment. Please try again in a few hours.",
+  ACCESS_DENIED_GEO_LOCATION: "'geolocation' (IP Geolocation feature) capability is not supported in your account. It is only available under Enterprise plans, refer https://www.browserstack.com/ip-geolocation for more details.",
+  NOT_ALLOWED_GEO_LOCATION_AND_LOCAL_MODE: "IP Geolocation feature is not available in conjunction with BrowserStack Local.",
   HOME_DIRECTORY_NOT_FOUND: "Specified home directory could not be found. Please make sure the path of the home directory is correct.",
   HOME_DIRECTORY_NOT_A_DIRECTORY: "Specified home directory is not a directory. The home directory can only be a directory and not a file.",
   CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY: "Could not find cypress.json within the specified home directory. Please make sure cypress.json resides within the home directory."
@@ -132,6 +137,7 @@ const cliMessages = {
     CONFIG_DESCRIPTION: "Set configuration values. Separate multiple values with a comma. The values set here override any values set in your configuration file.",
     REPORTER: "Specify the custom reporter to use",
     REPORTER_OPTIONS: "Specify reporter options for custom reporter",
+    CYPRESS_GEO_LOCATION: "Enterprise feature to simulate website and mobile behavior from different locations."
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",
