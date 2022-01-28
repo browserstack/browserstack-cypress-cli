@@ -2,7 +2,7 @@
 const request = require('request');
 
 const downloadBuildStacktrace = async (url) => {
-	return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     request.get(url).on('data', (data) => {
       console.log(data.toString());
     }).on('error', (err) => {
