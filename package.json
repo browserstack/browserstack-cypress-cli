@@ -17,6 +17,7 @@
     "browserstack-local": "^1.4.8",
     "chalk": "^4.1.0",
     "cli-progress": "^3.9.1",
+    "colorette": "^2.0.16",
     "fs-extra": "^8.1.0",
     "getmac": "^5.17.0",
     "glob": "^7.1.6",
@@ -28,8 +29,7 @@
     "update-notifier": "^5.1.0",
     "uuid": "^8.3.2",
     "winston": "2.4.4",
-    "yargs": "^14.2.3",
-    "colors": "1.0.3"
+    "yargs": "^14.2.3"
   },
   "repository": {
     "type": "git",
