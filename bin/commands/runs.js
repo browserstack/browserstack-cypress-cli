@@ -192,9 +192,16 @@ module.exports = function run(args, rawArgs) {
                       });
                     } else {
                       let stacktraceUrl = getStackTraceUrl();
-                      await downloadBuildStacktrace(stacktraceUrl);
-                      logger.info(Constants.userMessages.BUILD_FAILED_ERROR)
-                      process.exitCode = Constants.BUILD_FAILED_EXIT_CODE;
+                      downloadBuildStacktrace(stacktraceUrl).then((message) => {
+                        utils.sendUsageReport(bsConfig, args, message, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
+                      }).catch((err) => {
+                        let message = `Downloading build stacktrace failed with statuscode: ${err}`;
+                        logger.error(message);
+                        utils.sendUsageReport(bsConfig, args, message, Constants.messageTypes.ERROR, null, buildReportData, rawArgs);
+                      }).finally(() =>{
+                        logger.info(Constants.userMessages.BUILD_FAILED_ERROR)
+                        process.exitCode = Constants.BUILD_FAILED_EXIT_CODE;
+                      });
                     }
                   });
                 } else if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
