@@ -10,7 +10,7 @@ const downloadBuildStacktrace = async (url) => {
         process.stdout.on('error', (err) => {
           error = err;
           process.stdout.close();
-          reject(err);
+          reject(response.statusCode);
         });
         process.stdout.on('close', async () => {
           if(!error) {
