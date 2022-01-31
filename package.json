@@ -17,7 +17,6 @@
     "browserstack-local": "^1.4.8",
     "chalk": "^4.1.0",
     "cli-progress": "^3.9.1",
-    "colorette": "^2.0.16",
     "fs-extra": "^8.1.0",
     "getmac": "^5.17.0",
     "glob": "^7.1.6",
