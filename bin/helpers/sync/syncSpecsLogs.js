@@ -150,7 +150,7 @@ let whileProcess = (whilstCallback) => {
         whileLoop = false;
         endTime = Date.now();
         showSpecsStatus(body);
-        return specSummary.exitCode == config.buildFailedExitCode ? 
+        return specSummary.exitCode == Constants.BUILD_FAILED_EXIT_CODE ? 
         whilstCallback({ status: 204, message: "No specs ran in the build"} ) : whilstCallback(null, body);
       default:
         whileLoop = false;

@@ -199,6 +199,9 @@ module.exports = function run(args, rawArgs) {
                         logger.error(message);
                         utils.sendUsageReport(bsConfig, args, message, Constants.messageTypes.ERROR, null, buildReportData, rawArgs);
                       }).finally(() =>{
+                        let terminalWidth = (process.stdout.columns) * 0.9;
+                        let lineSeparator = "\n" + "-".repeat(terminalWidth);
+                        console.log(lineSeparator)
                         logger.info(Constants.userMessages.BUILD_FAILED_ERROR)
                         process.exitCode = Constants.BUILD_FAILED_EXIT_CODE;
                       });

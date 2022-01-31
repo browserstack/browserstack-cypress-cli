@@ -20,6 +20,8 @@ const downloadBuildStacktrace = async (url) => {
       } else {
         reject(response.statusCode);
       }
+    }).on('end', () => {
+      resolve("Build stacktrace downloaded successfully");
     });
   });
 };
