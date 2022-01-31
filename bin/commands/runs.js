@@ -195,7 +195,7 @@ module.exports = function run(args, rawArgs) {
                       downloadBuildStacktrace(stacktraceUrl).then((message) => {
                         utils.sendUsageReport(bsConfig, args, message, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
                       }).catch((err) => {
-                        let message = `Downloading build stacktrace failed with statuscode: ${err}`;
+                        let message = `Downloading build stacktrace failed with statuscode: ${err}. Please visit ${data.dashboard_url} for additional details.`;
                         logger.error(message);
                         utils.sendUsageReport(bsConfig, args, message, Constants.messageTypes.ERROR, null, buildReportData, rawArgs);
                       }).finally(() =>{
