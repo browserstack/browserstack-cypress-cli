@@ -324,9 +324,14 @@ module.exports = function run(args, rawArgs) {
     utils.sendUsageReport(bsJsonData, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), null, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;
   }).finally(function(){
-    updateNotifier({
+    const notifier = updateNotifier({
       pkg,
       updateCheckInterval: 1000 * 60 * 60 * 24 * 7,
-    }).notify({isGlobal: true});
+    });
+
+    if (notifier.update && notifier.update.current !== notifier.update.latest) {
+      notifier.config.set('update', notifier.update);
+      notifier.notify({isGlobal: true});
+    }
   });
 }
