@@ -328,6 +328,11 @@ module.exports = function run(args, rawArgs) {
       pkg,
       updateCheckInterval: 1000 * 60 * 60 * 24 * 7,
     });
+    
+    if (!notifier.disabled && Date.now() - notifier.config.get('lastUpdateCheck') < 50) {
+      notifier.config.set('lastUpdateCheck', 0);
+      notifier.check();
+    }
 
     if (notifier.update && notifier.update.current !== notifier.update.latest) {
       notifier.config.set('update', notifier.update);
