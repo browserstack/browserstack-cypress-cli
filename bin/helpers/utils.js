@@ -85,6 +85,21 @@ exports.getErrorCodeFromMsg = (errMsg) => {
     case Constants.validationMessages.INVALID_LOCAL_ASYNC_ARGS:
       errorCode = 'invalid_local_async_args';
       break;
+    case Constants.validationMessages.INVALID_GEO_LOCATION:
+      errorCode = 'invalid_geo_location';
+      break;
+    case Constants.validationMessages.NOT_ALLOWED_GEO_LOCATION_AND_LOCAL_MODE:
+      errorCode = 'not_allowed_geo_location_and_local_mode';
+      break;
+    case Constants.validationMessages.HOME_DIRECTORY_NOT_FOUND:
+      errorCode = 'home_directory_not_found';
+      break;
+    case Constants.validationMessages.HOME_DIRECTORY_NOT_A_DIRECTORY:
+      errorCode = 'home_directory_not_a_directory';
+      break;
+    case Constants.validationMessages.CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY:
+      errorCode = 'cypress_config_file_not_part_of_home_directory';
+      break;
   }
   if (
     errMsg.includes("Please use --config-file <path to browserstack.json>.")
@@ -269,6 +284,28 @@ exports.setCypressConfigFilename = (bsConfig, args) => {
   } else {
     bsConfig.run_settings.cypressConfigFilePath = path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json');
     bsConfig.run_settings.cypressProjectDir = bsConfig.run_settings.cypress_proj_dir;
+  }
+}
+
+exports.verifyGeolocationOption = () => {
+  let glOptionsSet = (this.searchForOption('-gl') || this.searchForOption('--gl'));
+  let geoHyphenLocationOptionsSet = (this.searchForOption('-geo-location') || this.searchForOption('--geo-location'));
+  let geoLocationOptionsSet = (this.searchForOption('-geolocation') || this.searchForOption('--geolocation'));
+  return (glOptionsSet || geoHyphenLocationOptionsSet || geoLocationOptionsSet);
+}
+
+exports.setGeolocation = (bsConfig, args) => {
+  let userProvidedGeolocation = this.verifyGeolocationOption();
+  bsConfig.run_settings.userProvidedGeolocation = (userProvidedGeolocation || (!this.isUndefined(bsConfig.run_settings.geolocation)));
+
+  if (userProvidedGeolocation && !this.isUndefined(args.geolocation)) {
+      bsConfig.run_settings.geolocation = args.geolocation;
+  }
+
+  if (this.isUndefined(bsConfig.run_settings.geolocation)){
+    bsConfig.run_settings.geolocation = null;
+  } else {
+    bsConfig.run_settings.geolocation = bsConfig.run_settings.geolocation.toUpperCase();
   }
 }
 

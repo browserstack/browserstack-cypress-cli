@@ -554,6 +554,17 @@ describe("capabilityHelper.js", () => {
     });
   });
 
+  describe("addCypressZipStartLocation", () => {
+    it("returns correct zip start location", () => {
+      let runSettings = {
+        home_directory: "/some/path",
+        cypressConfigFilePath: "/some/path/that/is/nested/file.json"
+      };
+      capabilityHelper.addCypressZipStartLocation(runSettings);
+      chai.assert.equal(runSettings.cypressZipStartLocation, "that/is/nested");
+    });
+  });
+
   describe("validate", () => {
 
     describe("validate parallels specified in bsconfig and arguments", () => {
@@ -575,6 +586,7 @@ describe("capabilityHelper.js", () => {
             cypress_proj_dir: "random path",
             cypressConfigFilePath: "random path"
           },
+          connection_settings: {local: false}
         };
       });
 
@@ -941,6 +953,7 @@ describe("capabilityHelper.js", () => {
             cypressConfigFilePath: "random path",
             cypressProjectDir: "random path"
           },
+          connection_settings: {local: false}
         };
       });
       it("validate cypress json is present", () => {
@@ -1051,6 +1064,210 @@ describe("capabilityHelper.js", () => {
               );
             });
         })
+      });
+    });
+    
+    describe("validate ip geolocation", () => {
+      beforeEach(() => {
+        bsConfig = {
+          auth: {},
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            cypress_proj_dir: "random path",
+            cypressConfigFilePath: "random path",
+            cypressProjectDir: "random path"
+          },
+          connection_settings: {}
+        };
+      });
+
+      it("should throw an error if both local and geolocation are used", () => {
+        bsConfig.run_settings.geolocation = "US";
+        bsConfig.run_settings.userProvidedGeolocation = true;
+        bsConfig.connection_settings.local = true;
+        bsConfig.connection_settings.local_identifier = "some text";
+  
+        return capabilityHelper
+          .validate(bsConfig, {})
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.NOT_ALLOWED_GEO_LOCATION_AND_LOCAL_MODE);
+          });
+      });
+
+      it("should throw an error if incorrect format for geolocation code is used (valid country name but incorrect code)", () => {
+        bsConfig.run_settings.geolocation = "USA";
+        bsConfig.run_settings.userProvidedGeolocation = true;
+  
+        return capabilityHelper
+          .validate(bsConfig, {})
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_GEO_LOCATION);
+          });
+      });
+
+      it("should throw an error if incorrect format for geolocation code is used (random value)", () => {
+        bsConfig.run_settings.geolocation = "RANDOM";
+        bsConfig.run_settings.userProvidedGeolocation = true;
+  
+        return capabilityHelper
+          .validate(bsConfig, {})
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_GEO_LOCATION);
+          });
+      });
+
+      it("should throw an error if incorrect format for geolocation code is used (special chars)", () => {
+        bsConfig.run_settings.geolocation = "$USA$!&@*)()";
+        bsConfig.run_settings.userProvidedGeolocation = true;
+  
+        return capabilityHelper
+          .validate(bsConfig, {})
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_GEO_LOCATION);
+          });
+      });
+
+      it("should throw an error if incorrect format for geolocation code is used (small caps)", () => {
+        bsConfig.run_settings.geolocation = "us";
+        bsConfig.run_settings.userProvidedGeolocation = true;
+  
+        return capabilityHelper
+          .validate(bsConfig, {})
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(error, Constants.validationMessages.INVALID_GEO_LOCATION);
+          });
+      });
+    });
+
+    describe("validate home directory", () => {
+      beforeEach(() => {
+        bsConfig = {
+          auth: {},
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            cypress_proj_dir: "random path",
+            cypressConfigFilePath: "random path",
+            cypressProjectDir: "random path"
+          },
+          connection_settings: {local: false}
+        };
+      });
+
+      it("does not exist", () => {
+        bsConfig.run_settings.cypressConfigFilePath = 'false';
+        bsConfig.run_settings.cypress_config_filename = 'false';
+        bsConfig.run_settings.home_directory = '/some/random';
+
+        sinon.stub(fs, 'existsSync').returns(false);
+        fs.existsSync.restore();
+
+        return capabilityHelper
+          .validate(bsConfig, {})
+          .then(function (data) {
+            chai.assert.fail("Promise error");
+          })
+          .catch((error) => {
+            chai.assert.equal(
+              error,
+              Constants.validationMessages.HOME_DIRECTORY_NOT_FOUND
+            );
+          });
+      });
+
+      it("is not a directory", () => {
+        bsConfig.run_settings.cypressConfigFilePath = 'false';
+        bsConfig.run_settings.cypress_config_filename = 'false';
+        bsConfig.run_settings.home_directory = '/some/random/file.ext';
+
+        sinon.stub(fs, 'existsSync').returns(true);
+        sinon.stub(fs, 'statSync').returns({ isDirectory: () => false });
+        
+        return capabilityHelper
+        .validate(bsConfig, {})
+        .then(function (data) {
+          chai.assert.fail("Promise error");
+        })
+        .catch((error) => {
+          chai.assert.equal(
+            error,
+            Constants.validationMessages.HOME_DIRECTORY_NOT_A_DIRECTORY
+            );
+            fs.existsSync.restore();
+            fs.statSync.restore();
+          });
+      });
+
+      it("does not contain cypressConfigFilePath", () => {
+        bsConfig.run_settings.cypressConfigFilePath = 'false';
+        bsConfig.run_settings.cypress_config_filename = 'false';
+        bsConfig.run_settings.home_directory = '/some/random';
+
+        sinon.stub(fs, 'existsSync').returns(true);
+        sinon.stub(fs, 'statSync').returns({ isDirectory: () => true });
+        
+        return capabilityHelper
+        .validate(bsConfig, {})
+        .then(function (data) {
+          chai.assert.fail("Promise error");
+        })
+        .catch((error) => {
+          chai.assert.equal(
+            error,
+            Constants.validationMessages.CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY
+            );
+            fs.existsSync.restore();
+            fs.statSync.restore();
+          });
+      });
+
+      it("does not contain cypressConfigFilePath with special chars", () => {
+        bsConfig.run_settings.cypressConfigFilePath = 'false';
+        bsConfig.run_settings.cypress_config_filename = 'false';
+        bsConfig.run_settings.home_directory = '/$some!@#$%^&*()_+=-[]{};:<>?\'\\\//random';
+
+        sinon.stub(fs, 'existsSync').returns(true);
+        sinon.stub(fs, 'statSync').returns({ isDirectory: () => true });
+        
+        return capabilityHelper
+        .validate(bsConfig, {})
+        .then(function (data) {
+          chai.assert.fail("Promise error");
+        })
+        .catch((error) => {
+          chai.assert.equal(
+            error,
+            Constants.validationMessages.CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY
+            );
+            fs.existsSync.restore();
+            fs.statSync.restore();
+          });
       });
     });
   });
