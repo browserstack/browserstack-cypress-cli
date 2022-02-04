@@ -115,6 +115,7 @@ describe("runs", () => {
       setBrowsersStub = sandbox.stub();
       setConfigStub = sandbox.stub();
       setCLIModeStub = sandbox.stub();
+      setGeolocationStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -154,7 +155,8 @@ describe("runs", () => {
           setSystemEnvs: setSystemEnvsStub,
           setBrowsers: setBrowsersStub,
           setConfig: setConfigStub,
-          setCLIMode: setCLIModeStub
+          setCLIMode: setCLIModeStub,
+          setGeolocation: setGeolocationStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub
@@ -194,6 +196,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(getErrorCodeFromMsgStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
+          sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -249,6 +252,7 @@ describe("runs", () => {
       setBrowsersStub = sandbox.stub();
       setConfigStub = sandbox.stub();
       setCLIModeStub = sandbox.stub();
+      setGeolocationStub = sandbox.stub();
       getVideoConfigStub = sandbox.stub();
     });
 
@@ -292,6 +296,7 @@ describe("runs", () => {
           setBrowsers: setBrowsersStub,
           setConfig: setConfigStub,
           setCLIMode: setCLIModeStub,
+          setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
         },
         '../helpers/capabilityHelper': {
@@ -351,6 +356,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnce(setSystemEnvsStub);
+          sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -408,6 +414,7 @@ describe("runs", () => {
       setBrowsersStub = sandbox.stub();
       setCLIModeStub = sandbox.stub();
       fetchZipSizeStub = sandbox.stub();
+      setGeolocationStub = sandbox.stub();
       getVideoConfigStub = sandbox.stub();
     });
 
@@ -452,6 +459,7 @@ describe("runs", () => {
           setConfig: setConfigStub,
           setCLIMode: setCLIModeStub,
           fetchZipSize: fetchZipSizeStub,
+          setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
         },
         '../helpers/capabilityHelper': {
@@ -513,6 +521,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnce(setSystemEnvsStub);
+          sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -575,6 +584,7 @@ describe("runs", () => {
       setBrowsersStub = sandbox.stub();
       setCLIModeStub = sandbox.stub();
       fetchZipSizeStub = sandbox.stub();
+      setGeolocationStub = sandbox.stub();
       getVideoConfigStub = sandbox.stub();
     });
 
@@ -620,6 +630,7 @@ describe("runs", () => {
           setConfig: setConfigStub,
           setCLIMode: setCLIModeStub,
           fetchZipSize: fetchZipSizeStub,
+          setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
         },
         '../helpers/capabilityHelper': {
@@ -692,6 +703,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnce(setSystemEnvsStub);
+          sinon.assert.calledOnce(setGeolocationStub);
 
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
@@ -768,6 +780,7 @@ describe("runs", () => {
       setCLIModeStub = sandbox.stub();
       setProcessHooksStub = sandbox.stub();
       fetchZipSizeStub = sandbox.stub();
+      setGeolocationStub = sandbox.stub();
       getVideoConfigStub = sandbox.stub();
     });
 
@@ -821,6 +834,7 @@ describe("runs", () => {
           setCLIMode: setCLIModeStub,
           setProcessHooks: setProcessHooksStub,
           fetchZipSize: fetchZipSizeStub,
+          setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
         },
         '../helpers/capabilityHelper': {
@@ -910,6 +924,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnce(setSystemEnvsStub);
+          sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.match(
             sendUsageReportStub.getCall(0).args,
             [

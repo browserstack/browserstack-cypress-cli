@@ -50,6 +50,9 @@ module.exports = function run(args, rawArgs) {
     // set cypress config filename
     utils.setCypressConfigFilename(bsConfig, args);
 
+    // set cypress geo location
+    utils.setGeolocation(bsConfig, args);
+
     // accept the specs list from command line if provided
     utils.setUserSpecs(bsConfig, args);
 
@@ -255,6 +258,9 @@ module.exports = function run(args, rawArgs) {
                 utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
                 return;
               }).catch(async function (err) {
+                if (err && err.includes('browserstack.geoLocation')) {
+                  err = err.replace(/browserstack.geoLocation/g, 'geolocation');
+                }
                 // Build creation failed
                 logger.error(err);
                 // stop the Local instance

@@ -1,7 +1,9 @@
+const fs = require('fs'),
+  path = require('path');
+
 const logger = require("./logger").winstonLogger,
   Constants = require("./constants"),
-  Utils = require("./utils"),
-  fs = require('fs');
+  Utils = require("./utils");
 
 const caps = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
@@ -129,6 +131,13 @@ const caps = (bsConfig, zip) => {
   })
 }
 
+const addCypressZipStartLocation = (runSettings) => {
+  let resolvedHomeDirectoryPath = path.resolve(runSettings.home_directory);
+  let resolvedCypressConfigFilePath = path.resolve(runSettings.cypressConfigFilePath);
+  runSettings.cypressZipStartLocation = path.dirname(resolvedCypressConfigFilePath.split(resolvedHomeDirectoryPath)[1]);
+  runSettings.cypressZipStartLocation = runSettings.cypressZipStartLocation.substring(1);
+}
+
 const validate = (bsConfig, args) => {
   return new Promise(function (resolve, reject) {
     logger.info(Constants.userMessages.VALIDATING_CONFIG);
@@ -164,6 +173,10 @@ const validate = (bsConfig, args) => {
 
     if( Utils.searchForOption('--async') && ( !Utils.isUndefined(args.async) && bsConfig["connection_settings"]["local"])) reject(Constants.validationMessages.INVALID_LOCAL_ASYNC_ARGS);
     
+    if (bsConfig.run_settings.userProvidedGeolocation && !bsConfig.run_settings.geolocation.match(/^[A-Z]{2}$/g)) reject(Constants.validationMessages.INVALID_GEO_LOCATION);
+
+    if (bsConfig["connection_settings"]["local"] && bsConfig.run_settings.userProvidedGeolocation) reject(Constants.validationMessages.NOT_ALLOWED_GEO_LOCATION_AND_LOCAL_MODE);
+    
     // validate if config file provided exists or not when cypress_config_file provided
     // validate the cypressProjectDir key otherwise.
     let cypressConfigFilePath = bsConfig.run_settings.cypressConfigFilePath;
@@ -185,11 +198,33 @@ const validate = (bsConfig, args) => {
     } catch(error){
       reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
     }
+
+    //check if home_directory is present or not in user run_settings
+    if (!Utils.isUndefined(bsConfig.run_settings.home_directory)) {
+      // check if home_directory exists or not
+      if (!fs.existsSync(bsConfig.run_settings.home_directory)) {
+        reject(Constants.validationMessages.HOME_DIRECTORY_NOT_FOUND);
+      }
+
+      // check if home_directory is a directory or not
+      if (!fs.statSync(bsConfig.run_settings.home_directory).isDirectory()) {
+        reject(Constants.validationMessages.HOME_DIRECTORY_NOT_A_DIRECTORY);
+      }
+
+      // check if cypress config file (cypress.json) is a part of home_directory or not
+      if (!path.resolve(bsConfig.run_settings.cypressConfigFilePath).includes(path.resolve(bsConfig.run_settings.home_directory))) {
+        reject(Constants.validationMessages.CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY);
+      }
+
+      addCypressZipStartLocation(bsConfig.run_settings);
+    }
+
     resolve(cypressJson);
   });
 }
 
 module.exports = {
   caps,
+  addCypressZipStartLocation,
   validate
 }

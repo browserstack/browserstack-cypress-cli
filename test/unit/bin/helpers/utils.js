@@ -106,6 +106,21 @@ describe('utils', () => {
         )
       ).to.eq('invalid_local_async_args');
       expect(
+        utils.getErrorCodeFromMsg(
+          constant.validationMessages.HOME_DIRECTORY_NOT_FOUND
+        )
+      ).to.eq('home_directory_not_found');
+      expect(
+        utils.getErrorCodeFromMsg(
+          constant.validationMessages.HOME_DIRECTORY_NOT_A_DIRECTORY
+        )
+      ).to.eq('home_directory_not_a_directory');
+      expect(
+        utils.getErrorCodeFromMsg(
+          constant.validationMessages.CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY
+        )
+      ).to.eq('cypress_config_file_not_part_of_home_directory');
+      expect(
         utils.getErrorCodeFromMsg('Invalid browserstack.json file.')
       ).to.eq('bstack_json_invalid');
     });
@@ -1805,6 +1820,157 @@ describe('utils', () => {
 
     afterEach(function () {
       verifyCypressConfigFileOptionStub.restore();
+    });
+  });
+
+  describe('verifyGeolocationOption', () => {
+    let utilsearchForOptionGeolocationStub, userOption, testOption;
+
+    beforeEach(function () {
+      utilsearchForOptionGeolocationStub = sinon
+        .stub(utils, 'searchForOption')
+        .callsFake((...userOption) => {
+          return userOption == testOption;
+        });
+    });
+
+    afterEach(function () {
+      utilsearchForOptionGeolocationStub.restore();
+    });
+
+    it('-gl user option', () => {
+      testOption = '-gl';
+      expect(utils.verifyGeolocationOption()).to.be.true;
+      sinon.assert.calledWithExactly(
+        utilsearchForOptionGeolocationStub,
+        testOption
+      );
+    });
+
+    it('--gl user option', () => {
+      testOption = '--gl';
+      expect(utils.verifyGeolocationOption()).to.be.true;
+      sinon.assert.calledWithExactly(
+        utilsearchForOptionGeolocationStub,
+        testOption
+      );
+    });
+
+    it('-geo-location user option', () => {
+      testOption = '-geo-location';
+      expect(utils.verifyGeolocationOption()).to.be.true;
+      sinon.assert.calledWithExactly(
+        utilsearchForOptionGeolocationStub,
+        testOption
+      );
+    });
+
+    it('--geo-location user option', () => {
+      testOption = '--geo-location';
+      expect(utils.verifyGeolocationOption()).to.be.true;
+      sinon.assert.calledWithExactly(
+        utilsearchForOptionGeolocationStub,
+        testOption
+      );
+    });
+
+    it('-geolocation user option', () => {
+      testOption = '-geolocation';
+      expect(utils.verifyGeolocationOption()).to.be.true;
+      sinon.assert.calledWithExactly(
+        utilsearchForOptionGeolocationStub,
+        testOption
+      );
+    });
+
+    it('--geolocation user option', () => {
+      testOption = '--geolocation';
+      expect(utils.verifyGeolocationOption()).to.be.true;
+      sinon.assert.calledWithExactly(
+        utilsearchForOptionGeolocationStub,
+        testOption
+      );
+    });
+  });
+
+  describe('setGeolocation', () => {
+    let verifyGeolocationOptionStub,
+      glBool,
+      args,
+      bsConfig,
+      geolocation;
+
+    beforeEach(function () {
+      verifyGeolocationOptionStub = sinon
+        .stub(utils, 'verifyGeolocationOption')
+        .callsFake(() => glBool);
+
+      args = {
+        geolocation: 'IN',
+      };
+    });
+
+    afterEach(function () {
+      sinon.restore();
+    });
+
+    it('has user provided gl flag', () => {
+      glBool = true;
+
+      bsConfig = {
+        run_settings: {
+          geolocation: 'IN',
+        },
+      };
+
+      utils.setGeolocation(bsConfig, args);
+
+      expect(bsConfig.run_settings.geolocation).to.be.eq(
+        args.geolocation
+      );
+      expect(bsConfig.run_settings.userProvidedGeolocation).to.be.true;
+    });
+
+    it('does not have user provided gl flag, sets the value from bsConfig', () => {
+      glBool = false;
+      args = {
+        geolocation: null
+      };
+      bsConfig = {
+        run_settings: {
+          geolocation: 'IN',
+        },
+      };
+
+      utils.setGeolocation(bsConfig, args);
+
+      expect(bsConfig.run_settings.geolocation).to.not.be.eq(
+        args.geolocation
+      );
+      expect(bsConfig.run_settings.geolocation).to.be.eq('IN');
+      expect(bsConfig.run_settings.userProvidedGeolocation).to.be.true;
+    });
+
+    it('does not have user provided gl flag and config value, sets geolocation to be null', () => {
+      geolocation = 'run_settings_geolocation';
+      glBool = false;
+      args = {
+        geolocation: null
+      };
+      bsConfig = {
+        run_settings: {
+          geolocation: null,
+        },
+      };
+
+      utils.setGeolocation(bsConfig, args);
+
+      expect(bsConfig.run_settings.geolocation).to.be.eq(null);
+      expect(bsConfig.run_settings.userProvidedGeolocation).to.be.false;
+    });
+
+    afterEach(function () {
+      verifyGeolocationOptionStub.restore();
     });
   });
 
