@@ -16,8 +16,10 @@ const archiver = require("../helpers/archiver"),
   reportGenerator = require('../helpers/reporterHTML').reportGenerator,
   {initTimeComponents, instrumentEventTime, markBlockStart, markBlockEnd, getTimeComponents} = require('../helpers/timeComponents'),
   downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts,
+  downloadBuildStacktrace = require('../helpers/downloadBuildStacktrace').downloadBuildStacktrace,
   updateNotifier = require('update-notifier'),
   pkg = require('../../package.json');
+const { getStackTraceUrl } = require('../helpers/sync/syncSpecsLogs');
 
 module.exports = function run(args, rawArgs) {
   let bsConfigPath = utils.getConfigPath(args.cf);
@@ -181,15 +183,32 @@ module.exports = function run(args, rawArgs) {
                     await new Promise(resolve => setTimeout(resolve, 5000));
 
                     // download build artifacts
-                    if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
-                      await downloadBuildArtifacts(bsConfig, data.build_id, args, rawArgs);
-                    }
+                    if (exitCode != Constants.BUILD_FAILED_EXIT_CODE) {
+                      if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
+                        await downloadBuildArtifacts(bsConfig, data.build_id, args, rawArgs);
+                      }
 
-                    // Generate custom report!
-                    reportGenerator(bsConfig, data.build_id, args, rawArgs, function(){
-                      utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
-                      utils.handleSyncExit(exitCode, data.dashboard_url);
-                    });
+                      // Generate custom report!
+                      reportGenerator(bsConfig, data.build_id, args, rawArgs, function(){
+                        utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
+                        utils.handleSyncExit(exitCode, data.dashboard_url);
+                      });
+                    } else {
+                      let stacktraceUrl = getStackTraceUrl();
+                      downloadBuildStacktrace(stacktraceUrl).then((message) => {
+                        utils.sendUsageReport(bsConfig, args, message, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
+                      }).catch((err) => {
+                        let message = `Downloading build stacktrace failed with statuscode: ${err}. Please visit ${data.dashboard_url} for additional details.`;
+                        logger.error(message);
+                        utils.sendUsageReport(bsConfig, args, message, Constants.messageTypes.ERROR, null, buildReportData, rawArgs);
+                      }).finally(() =>{
+                        let terminalWidth = (process.stdout.columns) * 0.9;
+                        let lineSeparator = "\n" + "-".repeat(terminalWidth);
+                        console.log(lineSeparator)
+                        logger.info(Constants.userMessages.BUILD_FAILED_ERROR)
+                        process.exitCode = Constants.BUILD_FAILED_EXIT_CODE;
+                      });
+                    }
                   });
                 } else if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
                   logger.info(Constants.userMessages.ASYNC_DOWNLOADS.replace('<build-id>', data.build_id));
@@ -324,9 +343,23 @@ module.exports = function run(args, rawArgs) {
     utils.sendUsageReport(bsJsonData, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), null, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;
   }).finally(function(){
-    updateNotifier({
+    const notifier = updateNotifier({
       pkg,
       updateCheckInterval: 1000 * 60 * 60 * 24 * 7,
-    }).notify({isGlobal: true});
+    });
+
+    // Checks for update on first run. 
+    // Set lastUpdateCheck to 0 to spawn the check update process as notifier sets this to Date.now() for preventing 
+    // the check untill one interval period. It runs once.
+    if (!notifier.disabled && Date.now() - notifier.config.get('lastUpdateCheck') < 50) {
+      notifier.config.set('lastUpdateCheck', 0);
+      notifier.check();
+    }
+
+    // Set the config update as notifier clears this after reading.
+    if (notifier.update && notifier.update.current !== notifier.update.latest) {
+      notifier.config.set('update', notifier.update);
+      notifier.notify({isGlobal: true});
+    }
   });
 }

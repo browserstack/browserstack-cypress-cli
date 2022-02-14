@@ -9,8 +9,9 @@ const request = require("request"),
   tableStream = require('table').createStream,
   chalk = require('chalk');
 
-let whileLoop = true, whileTries = config.retries, options, timeout = 3000, n = 2, tableConfig, stream, endTime, startTime = Date.now();
+let whileLoop = true, whileTries = config.retries, options, timeout = 3000, n = 2, tableConfig, stream, endTime, startTime = Date.now(), buildStarted = false;
 let specSummary = {
+  "buildError": null,
   "specs": [],
   "duration": null
 }
@@ -106,11 +107,15 @@ let printSpecsStatus = (bsConfig, buildDetails, rawArgs) => {
       },
       function(err, result) { // when loop ends
         if (err) {
+          if(err.status == 204) {
+            reject(specSummary.exitCode);
+          } else {
           utils.sendUsageReport(bsConfig, {}, `buildId: ${buildDetails.build_id}`, 'error', 'sync_cli_error', err, rawArgs);
+          }
         }
         logger.info(lineSeparator);
         specSummary.duration =  endTime - startTime
-        resolve(specSummary)
+        resolve(specSummary);
       }
     );
   });
@@ -145,7 +150,8 @@ let whileProcess = (whilstCallback) => {
         whileLoop = false;
         endTime = Date.now();
         showSpecsStatus(body);
-        return whilstCallback(null, body);
+        return specSummary.exitCode == Constants.BUILD_FAILED_EXIT_CODE ? 
+        whilstCallback({ status: 204, message: "No specs ran in the build"} ) : whilstCallback(null, body);
       default:
         whileLoop = false;
         return whilstCallback({ status: response.statusCode, message: body });
@@ -153,13 +159,25 @@ let whileProcess = (whilstCallback) => {
   });
 }
 
+let getStackTraceUrl = () => {
+  return specSummary.buildError
+}
+
 let showSpecsStatus = (data) => {
   let specData = JSON.parse(data);
   specData.forEach(specDetails => {
     if (specDetails == "created") {
-      printInitialLog();
+      return;
+    } else if (specDetails["stacktrace_url"]) {
+      specSummary.exitCode = Constants.BUILD_FAILED_EXIT_CODE;
+      specSummary.buildError = specDetails["stacktrace_url"]
+      winstonLogger.error(chalk.red(specDetails["message"]));
     } else {
-      printSpecData(JSON.parse(specDetails))
+      if(!buildStarted) {
+        buildStarted = true
+        printInitialLog();
+      }
+      printSpecData(JSON.parse(specDetails));
     }
   });
 }
@@ -208,3 +226,4 @@ let getStatus = (status) => {
 }
 
 exports.printSpecsStatus = printSpecsStatus;
+exports.getStackTraceUrl = getStackTraceUrl;
