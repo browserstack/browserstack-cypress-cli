@@ -172,6 +172,7 @@ let showSpecsStatus = (data) => {
       specSummary.exitCode = Constants.BUILD_FAILED_EXIT_CODE;
       specSummary.buildError = specDetails["stacktrace_url"]
       winstonLogger.error(chalk.red(specDetails["message"]));
+      winstonLogger.debug(JSON.stringify(specDetails));
     } else {
       if(!buildStarted) {
         buildStarted = true

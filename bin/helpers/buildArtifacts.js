@@ -203,6 +203,7 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs) => {
     let buildDetails = null;
     request.get(options, async function (err, resp, body) {
       if(err) {
+        logger.debug(err);
         utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'api_failed_build_artifacts', null, rawArgs);
         process.exitCode = Constants.ERROR_EXIT_CODE;
       } else {
@@ -229,6 +230,7 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs) => {
             await sendUpdatesToBstack(bsConfig, buildId, args, options, rawArgs)
             utils.sendUsageReport(bsConfig, args, message, messageType, null, null, rawArgs);
           }
+          logger.debug(JSON.stringify(resp));
         } catch (err) {
           messageType = Constants.messageTypes.ERROR;
           errorCode = 'api_failed_build_artifacts';
@@ -241,6 +243,7 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs) => {
           }
           utils.sendUsageReport(bsConfig, args, err, messageType, errorCode, null, rawArgs);
           logger.error(`Error: Request failed with status code ${resp.statusCode}`)
+          logger.debug(err);
           process.exitCode = Constants.ERROR_EXIT_CODE;
         }
       }

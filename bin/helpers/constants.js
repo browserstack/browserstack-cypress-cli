@@ -149,6 +149,7 @@ const cliMessages = {
     NO_NPM_WARNING: "No NPM warning if npm_dependencies is empty",
     CONFIG_DEMAND: "config file is required",
     CONFIG_FILE_PATH: "Path to BrowserStack config",
+    DEBUG: "Accepted values: (true : false) - recieve helpful debugging output."
   },
   GENERATE_REPORT: {
     INFO: "Generates the build report"

@@ -8,37 +8,47 @@ if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir);
 }
 
+// Save transports to change log level dynamically
+const transports = {
+  loggerConsole: new winston.transports.Console({
+    name: 'console.info',
+    colorize: true,
+    timestamp: function () {
+      return `[${new Date().toLocaleString()}]`;
+    },
+    prettyPrint: true,
+  }),
+  syncLoggerConsole: new (winston.transports.Console)({
+    formatter: (options) => {
+      return  (options.message ? options.message : '');
+    }
+  }),
+  loggerFile: new winston.transports.File({
+    filename: path.join(logDir, "/usage.log"),
+  }),
+}
+
 const winstonLoggerParams = {
   transports: [
-    new winston.transports.Console({
-      name: 'console.info',
-      colorize: true,
-      timestamp: function () {
-        return `[${new Date().toLocaleString()}]`;
-      },
-      prettyPrint: true,
-    }),
+    transports.loggerConsole,
   ],
 };
 
 const winstonSyncCliLoggerParams = {
   transports: [
-    new (winston.transports.Console)({
-      formatter: (options) => {
-        return  (options.message ? options.message : '');
-      }
-    }),
+    transports.syncLoggerConsole,
   ]
 }
 
 const winstonFileLoggerParams = {
   transports: [
-    new winston.transports.File({
-      filename: path.join(logDir, "/usage.log"),
-    }),
+   transports.loggerFile,
   ],
 };
 
 exports.winstonLogger = new winston.Logger(winstonLoggerParams);
 exports.fileLogger = new winston.Logger(winstonFileLoggerParams);
 exports.syncCliLogger = new winston.Logger(winstonSyncCliLoggerParams);
+
+//Export transports to change log level
+exports.transports = transports;

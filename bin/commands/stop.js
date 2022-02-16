@@ -23,6 +23,9 @@ module.exports = function stop(args, rawArgs) {
     // set cypress config filename
     utils.setCypressConfigFilename(bsConfig, args);
 
+    // set debug mode (--debug)
+    utils.setDebugMode(bsConfig, args);
+
     let buildId = args._[1];
 
     await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);

@@ -15,7 +15,8 @@ const usageReporting = require("./usageReporting"),
   syncCliLogger = require("../helpers/logger").syncCliLogger,
   fileHelpers = require("./fileHelpers"),
   config = require("../helpers/config"),
-  pkg = require('../../package.json');
+  pkg = require('../../package.json'),
+  transports = require('./logger').transports;
 
 const request = require('request');
 
@@ -989,6 +990,16 @@ exports.setCLIMode = (bsConfig, args) => {
   }
 }
 
+exports.setDebugMode = (_, args) => {
+  console.log(args);
+  if(args.debug){
+    transports.loggerConsole.level = 'debug';
+    return;
+  }
+
+  transports.loggerConsole.level = 'info';
+}
+
 exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs) => {
   let that = this;
   return new Promise(function (resolve, reject) {
@@ -1056,6 +1067,7 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs) => {
             that.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
         }
       }
+      logger.debug(JSON.stringify(resp));
       resolve();
     });
   });

@@ -24,6 +24,9 @@ module.exports = async function generateDownloads(args, rawArgs) {
     // set cypress config filename
     utils.setCypressConfigFilename(bsConfig, args);
 
+    // set debug mode (--debug)
+    utils.setDebugMode(bsConfig, args);
+
     let messageType = Constants.messageTypes.INFO;
     let errorCode = null;
     let buildId = args._[1];

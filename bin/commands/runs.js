@@ -89,6 +89,9 @@ module.exports = function run(args, rawArgs) {
     // set sync/async mode (--async/--sync)
     utils.setCLIMode(bsConfig, args);
 
+    // set debug mode (--debug)
+    utils.setDebugMode(bsConfig, args);
+
     // set other cypress configs e.g. reporter and reporter-options
     utils.setOtherConfigs(bsConfig, args);
     markBlockEnd('setConfig');
@@ -198,6 +201,7 @@ module.exports = function run(args, rawArgs) {
                       downloadBuildStacktrace(stacktraceUrl).then((message) => {
                         utils.sendUsageReport(bsConfig, args, message, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
                       }).catch((err) => {
+                        logger.debug(err);
                         let message = `Downloading build stacktrace failed with statuscode: ${err}. Please visit ${data.dashboard_url} for additional details.`;
                         logger.error(message);
                         utils.sendUsageReport(bsConfig, args, message, Constants.messageTypes.ERROR, null, buildReportData, rawArgs);
