@@ -112,16 +112,16 @@ module.exports = function run(args, rawArgs) {
       // warn if specFiles cross our limit
       utils.warnSpecLimit(bsConfig, args, specFiles, rawArgs);
       markBlockEnd('preArchiveSteps');
-      markBlockStart('checkAlreadyUploaded');
+      markBlockStart('zip');
+      markBlockStart('zip.checkAlreadyUploaded');
       return checkUploaded.checkUploadedMd5(bsConfig, args, {markBlockStart, markBlockEnd}).then(function (md5data) {
-        markBlockEnd('checkAlreadyUploaded');
+        markBlockEnd('zip.checkAlreadyUploaded');
 
-        markBlockStart('packageInstaller');
+        markBlockStart('zip.packageInstaller');
         return packageInstaller.packageWrapper(bsConfig, config.packageDirName, config.packageFileName, md5data, {markBlockStart, markBlockEnd}).then(function (packageData) {
-          markBlockEnd('packageInstaller');
+          markBlockEnd('zip.packageInstaller');
 
           // Archive the spec files
-          markBlockStart('zip');
           markBlockStart('zip.archive');
           return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude, md5data).then(function (data) {
             markBlockEnd('zip.archive');
