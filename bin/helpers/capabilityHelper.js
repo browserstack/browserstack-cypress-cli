@@ -219,6 +219,20 @@ const validate = (bsConfig, args) => {
       addCypressZipStartLocation(bsConfig.run_settings);
     }
 
+    if(!Utils.isUndefined(bsConfig.run_settings.spec_timeout)) {
+      if(Utils.isPositiveInteger(bsConfig.run_settings.spec_timeout.toString().trim())) {
+        if(Number(bsConfig.run_settings.spec_timeout) > Constants.SPEC_TIMEOUT_LIMIT) { 
+          reject(Constants.validationMessages.SPEC_TIMEOUT_LIMIT_ERROR) 
+        } else {
+          logger.info(Constants.userMessages.SPEC_LIMIT_SUCCESS_MESSAGE.replace("<x>", bsConfig.run_settings.spec_timeout));
+        }
+      } else {
+        logger.warn(Constants.userMessages.SPEC_LIMIT_WARNING)
+      }
+    } else {
+      logger.warn(Constants.validationMessages.SPEC_TIMEOUT_NOT_PASSED_ERROR);
+    }
+
     resolve(cypressJson);
   });
 }

@@ -168,6 +168,12 @@ var argv = yargs
           type: "string",
           default: undefined
         },
+        'st': {
+          alias: ['specTimeout'],
+          default: undefined,
+          describe: Constants.cliMessages.RUN.SPEC_TIMEOUT,
+          type: "string"
+        },
         'disable-npm-warning': {
           default: false,
           description: Constants.cliMessages.COMMON.NO_NPM_WARNING,

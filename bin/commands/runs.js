@@ -53,6 +53,9 @@ module.exports = function run(args, rawArgs) {
     // set cypress geo location
     utils.setGeolocation(bsConfig, args);
 
+    // set spec timeout 
+    utils.setSpecTimeout(bsConfig, args);
+
     // accept the specs list from command line if provided
     utils.setUserSpecs(bsConfig, args);
 
