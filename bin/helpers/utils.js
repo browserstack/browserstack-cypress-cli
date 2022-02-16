@@ -991,7 +991,6 @@ exports.setCLIMode = (bsConfig, args) => {
 }
 
 exports.setDebugMode = (_, args) => {
-  console.log(args);
   if(args.debug){
     transports.loggerConsole.level = 'debug';
     return;
