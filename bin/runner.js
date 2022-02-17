@@ -168,7 +168,7 @@ var argv = yargs
           type: "string",
           default: undefined
         },
-        'st': {
+        't': {
           alias: ['specTimeout'],
           default: undefined,
           describe: Constants.cliMessages.RUN.SPEC_TIMEOUT,

@@ -310,7 +310,7 @@ exports.setGeolocation = (bsConfig, args) => {
 }
 
 exports.isSpecTimeoutArgPassed = () => {
-  return this.searchForOption('--spec-timeout') || this.searchForOption('-st') || this.searchForOption('--st'); 
+  return this.searchForOption('--spec-timeout') || this.searchForOption('-t'); 
 }
 exports.setSpecTimeout = (bsConfig, args) => {
   let specTimeout = null;
