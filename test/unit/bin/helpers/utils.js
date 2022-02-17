@@ -1358,6 +1358,7 @@ describe('utils', () => {
       expect(local_args['daemon']).to.be.eq(true);
       expect(local_args['enable-logging-for-api']).to.be.eq(true);
       expect(local_args['config-file']).to.be.eq(path.resolve('./local.yml'));
+      cliVersionPathStub.restore();
       sinon.restore();
     });
   });
@@ -2940,6 +2941,91 @@ describe('utils', () => {
       expect(utils.getVideoConfig({video: false})).to.be.eql({video: false, videoUploadOnPasses: true});
       expect(utils.getVideoConfig({videoUploadOnPasses: false})).to.be.eql({video: true, videoUploadOnPasses: false});
       expect(utils.getVideoConfig({video: false, videoUploadOnPasses: false})).to.be.eql({video: false, videoUploadOnPasses: false});
+    });
+  });
+
+  describe('isSpecTimeoutArgPassed', () => {
+    let searchForOptionStub;
+    beforeEach(() => {
+      searchForOptionStub = sinon.stub(utils, 'searchForOption').withArgs('--spec-timeout');
+    })
+    afterEach(() => {
+      sinon.restore();
+    })
+    it('returns true if --spec-timeout flag is passed', () => {
+      searchForOptionStub.withArgs('--spec-timeout').returns(true);
+      expect(utils.isSpecTimeoutArgPassed()).to.eq(true);
+    });
+
+    it('returns true if -t flag is passed', () => {
+      searchForOptionStub.withArgs('--spec-timeout').returns(true);
+      searchForOptionStub.withArgs('-t').returns(true);
+      // stub2.returns(true);
+      expect(utils.isSpecTimeoutArgPassed()).to.eq(true);
+    });
+
+    it('returns false if no flag is passed', () => {
+      searchForOptionStub.withArgs('--spec-timeout').returns(false);
+      searchForOptionStub.withArgs('-t').returns(false);
+      expect(utils.isSpecTimeoutArgPassed()).to.eq(false);
+    });
+  });
+
+  describe("setSpecTimeout", () => {
+    let isSpecTimeoutArgPassedStub;
+    beforeEach(() => {
+      isSpecTimeoutArgPassedStub = sinon.stub(utils, 'isSpecTimeoutArgPassed');
+    });
+
+    afterEach(() => {
+      isSpecTimeoutArgPassedStub.restore();
+    });
+    it('sets spec_timeout defined value passed in args', () => {
+      let bsConfig = {
+        run_settings: {
+          spec_timeout: "abc"
+        }
+      }
+      let args = {
+        specTimeout: 20
+      };
+      isSpecTimeoutArgPassedStub.returns(true);
+      utils.setSpecTimeout(bsConfig, args);
+      expect(bsConfig.run_settings.spec_timeout).to.eq(20);
+    });
+
+    it('sets spec_timeout undefined if no value passed in args', () => {
+      let bsConfig = {
+        run_settings: {
+          spec_timeout: "abc"
+        }
+      }
+      let args = {};
+      isSpecTimeoutArgPassedStub.returns(true);
+      utils.setSpecTimeout(bsConfig, args);
+      expect(bsConfig.run_settings.spec_timeout).to.eq('undefined');
+    });
+
+    it('sets spec_timeout to value passed in bsConfig is not in args', () => {
+      let bsConfig = {
+        run_settings: {
+          spec_timeout: 20
+        }
+      }
+      let args = {};
+      isSpecTimeoutArgPassedStub.returns(false);
+      utils.setSpecTimeout(bsConfig, args);
+      expect(bsConfig.run_settings.spec_timeout).to.eq(20);
+    });
+
+    it('sets spec_timeout to null if no value passed in args or bsConfig', () => {
+      let bsConfig = {
+        run_settings: {}
+      }
+      let args = {};
+      isSpecTimeoutArgPassedStub.returns(false);
+      utils.setSpecTimeout(bsConfig, args);
+      expect(bsConfig.run_settings.spec_timeout).to.eq(null);
     });
   });
 });

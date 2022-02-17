@@ -116,6 +116,7 @@ describe("runs", () => {
       setConfigStub = sandbox.stub();
       setCLIModeStub = sandbox.stub();
       setGeolocationStub = sandbox.stub();
+      setSpecTimeoutStub = sandbox.stub().returns(undefined);
     });
 
     afterEach(() => {
@@ -156,7 +157,8 @@ describe("runs", () => {
           setBrowsers: setBrowsersStub,
           setConfig: setConfigStub,
           setCLIMode: setCLIModeStub,
-          setGeolocation: setGeolocationStub
+          setGeolocation: setGeolocationStub,
+          setSpecTimeout: setSpecTimeoutStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub
@@ -197,6 +199,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(setGeolocationStub);
+          sinon.assert.calledOnce(setSpecTimeoutStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -254,6 +257,7 @@ describe("runs", () => {
       setCLIModeStub = sandbox.stub();
       setGeolocationStub = sandbox.stub();
       getVideoConfigStub = sandbox.stub();
+      setSpecTimeoutStub = sandbox.stub().returns(undefined);
     });
 
     afterEach(() => {
@@ -298,6 +302,7 @@ describe("runs", () => {
           setCLIMode: setCLIModeStub,
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
+          setSpecTimeout: setSpecTimeoutStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -357,6 +362,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setGeolocationStub);
+          sinon.assert.calledOnce(setSpecTimeoutStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -416,6 +422,7 @@ describe("runs", () => {
       fetchZipSizeStub = sandbox.stub();
       setGeolocationStub = sandbox.stub();
       getVideoConfigStub = sandbox.stub();
+      setSpecTimeoutStub = sandbox.stub().returns(undefined);
     });
 
     afterEach(() => {
@@ -461,6 +468,7 @@ describe("runs", () => {
           fetchZipSize: fetchZipSizeStub,
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
+          setSpecTimeout: setSpecTimeoutStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -522,6 +530,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setGeolocationStub);
+          sinon.assert.calledOnce(setSpecTimeoutStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -586,6 +595,7 @@ describe("runs", () => {
       fetchZipSizeStub = sandbox.stub();
       setGeolocationStub = sandbox.stub();
       getVideoConfigStub = sandbox.stub();
+      setSpecTimeoutStub = sandbox.stub().returns(undefined);
     });
 
     afterEach(() => {
@@ -632,6 +642,7 @@ describe("runs", () => {
           fetchZipSize: fetchZipSizeStub,
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
+          setSpecTimeout: setSpecTimeoutStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -704,6 +715,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setGeolocationStub);
+          sinon.assert.calledOnce(setSpecTimeoutStub);
 
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
@@ -782,6 +794,7 @@ describe("runs", () => {
       fetchZipSizeStub = sandbox.stub();
       setGeolocationStub = sandbox.stub();
       getVideoConfigStub = sandbox.stub();
+      setSpecTimeoutStub = sandbox.stub().returns(undefined);
     });
 
     afterEach(() => {
@@ -836,6 +849,7 @@ describe("runs", () => {
           fetchZipSize: fetchZipSizeStub,
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
+          setSpecTimeout: setSpecTimeoutStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
