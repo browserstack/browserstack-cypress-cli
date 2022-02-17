@@ -1358,7 +1358,6 @@ describe('utils', () => {
       expect(local_args['daemon']).to.be.eq(true);
       expect(local_args['enable-logging-for-api']).to.be.eq(true);
       expect(local_args['config-file']).to.be.eq(path.resolve('./local.yml'));
-      cliVersionPathStub.restore();
       sinon.restore();
     });
   });
