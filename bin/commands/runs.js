@@ -258,7 +258,7 @@ module.exports = function run(args, rawArgs) {
                 utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
                 return;
               }).catch(async function (err) {
-                if (err && err.includes('browserstack.geoLocation')) {
+                if (err && err.toString().includes('browserstack.geoLocation')) {
                   err = err.replace(/browserstack.geoLocation/g, 'geolocation');
                 }
                 // Build creation failed

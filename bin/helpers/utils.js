@@ -746,33 +746,29 @@ exports.generateLocalIdentifier = (mode) => {
 
 exports.checkLocalIdentifierRunning = (bsConfig, localIdentifier) => {
   let options = {
-    url: `${config.localTestingListUrl}?auth_token=${bsConfig.auth.access_key}&state=running`,
+    url: `${config.cypress_v1}/local_binary_running_check`,
     auth: {
       user: bsConfig.auth.username,
       password: bsConfig.auth.access_key,
     },
     headers: {
+      'Content-Type': 'application/json',
       'User-Agent': this.getUserAgent(),
     },
+    body: JSON.stringify({ localIdentifier: localIdentifier}),
   };
-  let that = this;
   return new Promise ( function(resolve, reject) {
-      request.get(options, function (err, resp, body) {
+      request.post(options, function (err, resp, body) {
         if(err){
           reject(err);
         }
+        console.log(body);
         let response = JSON.parse(body);
-        let localInstances = [];
-        if(!that.isUndefined(response['instances'])){
-          localInstances = response['instances'];
+        if(response['should_spawn_binary'] == true){
+          resolve(false);
+        } else {
+          resolve(true);
         }
-        let localIdentifiers = [];
-
-        localInstances.forEach(function(instance){
-          localIdentifiers.push(instance['localIdentifier']);
-        });
-
-        resolve(localIdentifiers.includes(localIdentifier));
     });
   });
 };
