@@ -632,7 +632,7 @@ exports.setLocalMode = (bsConfig, args) => {
 exports.setupLocalTesting = (bsConfig, args, rawArgs) => {
   return new Promise(async (resolve, reject) => {
     if( bsConfig['connection_settings'] && bsConfig['connection_settings']['local'] && String(bsConfig['connection_settings']['local']) === "true" ){
-      let localBinaryRunning = await this.checklocalBinaryRunning(bsConfig, bsConfig['connection_settings']['local_identifier']);
+      let localBinaryRunning = await this.checkLocalBinaryRunning(bsConfig, bsConfig['connection_settings']['local_identifier']);
       let localIdentifierRunning;
       if (localBinaryRunning['should_spawn_binary'] == true) {
         localIdentifierRunning = false;
@@ -731,7 +731,7 @@ exports.generateLocalIdentifier = (mode) => {
   return Buffer.from(local_identifier).toString("base64");
 };
 
-exports.checklocalBinaryRunning = (bsConfig, localIdentifier) => {
+exports.checkLocalBinaryRunning = (bsConfig, localIdentifier) => {
   let options = {
     url: `${config.cypress_v1}/local_binary_running_check`,
     auth: {

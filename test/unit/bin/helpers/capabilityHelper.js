@@ -162,37 +162,47 @@ describe("capabilityHelper.js", () => {
         });
     });
 
-    it("handle local_identifier set", () => {
-      let zip_url = "bs://<random>";
-      let bsConfig = {
-        auth: {
-          username: "random",
-          access_key: "random",
-        },
-        browsers: [
-          {
-            browser: "chrome",
-            os: "Windows 10",
-            versions: ["78", "77"],
+    context("handle local_identifier set when local binary spawned", () => {
+      beforeEach(() => {
+        process.env.BSTACK_CYPRESS_RUN_LOCAL_BINARY = "true";
+      });
+
+      afterEach(() => {
+        delete process.env.BSTACK_CYPRESS_RUN_LOCAL_BINARY;
+      });
+
+      it("handle local_identifier set", () => {
+        let zip_url = "bs://<random>";
+        let bsConfig = {
+          auth: {
+            username: "random",
+            access_key: "random",
           },
-        ],
-        connection_settings: {
-          local: true,
-          local_identifier: "abc"
-        },
-        run_settings: {
-        }
-      };
-      return capabilityHelper
-        .caps(bsConfig, { zip_url: zip_url })
-        .then(function (data) {
-          let parsed_data = JSON.parse(data);
-          chai.assert.equal(parsed_data.local, true);
-          chai.assert.equal(parsed_data.localIdentifier, "abc");
-        })
-        .catch((error) => {
-          chai.assert.fail("Promise error");
-        });
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          connection_settings: {
+            local: true,
+            local_identifier: "abc"
+          },
+          run_settings: {
+          }
+        };
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: zip_url })
+          .then(function (data) {
+            let parsed_data = JSON.parse(data);
+            chai.assert.equal(parsed_data.local, true);
+            chai.assert.equal(parsed_data.localIdentifier, "abc");
+          })
+          .catch((error) => {
+            chai.assert.fail("Promise error");
+          });
+      });
     });
 
     it("handle local_identifier not set", () => {
