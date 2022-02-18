@@ -204,7 +204,6 @@ module.exports = function run(args, rawArgs) {
                       }).finally(() =>{
                         let terminalWidth = (process.stdout.columns) * 0.9;
                         let lineSeparator = "\n" + "-".repeat(terminalWidth);
-                        console.log(lineSeparator)
                         logger.info(Constants.userMessages.BUILD_FAILED_ERROR)
                         process.exitCode = Constants.BUILD_FAILED_EXIT_CODE;
                       });

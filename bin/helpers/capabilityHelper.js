@@ -71,21 +71,29 @@ const caps = (bsConfig, zip) => {
       obj.local = true;
     }
 
-    obj.localMode = null;
-    // Local Mode
-    if (obj.local === true && bsConfig.connection_settings.local_mode) {
-      obj.localMode = bsConfig.connection_settings.local_mode;
-      if (bsConfig.connection_settings.user_defined_local_mode_warning) {
-        logger.warn(Constants.userMessages.INVALID_LOCAL_MODE_WARNING);
-      }
-      logger.info(`Local testing set up in ${obj.localMode} mode.`);
-    }
+    // binary was spawned locally
+    if(obj.local === true) {
+      if (!Utils.isUndefined(process.env.BSTACK_CYPRESS_RUN_LOCAL_BINARY) && process.env.BSTACK_CYPRESS_RUN_LOCAL_BINARY == "true") {
+        obj.localMode = null;
 
-    // Local Identifier
-    obj.localIdentifier = null;
-    if (obj.local === true && (bsConfig.connection_settings.localIdentifier || bsConfig.connection_settings.local_identifier)) {
-      obj.localIdentifier = bsConfig.connection_settings.localIdentifier || bsConfig.connection_settings.local_identifier;
-      logger.info(`Local testing identifier: ${obj.localIdentifier}`);
+        // Local Mode
+        if (obj.local === true && bsConfig.connection_settings.local_mode) {
+          obj.localMode = bsConfig.connection_settings.local_mode;
+          if (bsConfig.connection_settings.user_defined_local_mode_warning) {
+            logger.warn(Constants.userMessages.INVALID_LOCAL_MODE_WARNING);
+          }
+          logger.info(`Local testing set up in ${obj.localMode} mode.`);
+        }
+
+        // Local Identifier
+        obj.localIdentifier = null;
+        if (obj.local === true && (bsConfig.connection_settings.localIdentifier || bsConfig.connection_settings.local_identifier)) {
+          obj.localIdentifier = bsConfig.connection_settings.localIdentifier || bsConfig.connection_settings.local_identifier;
+          logger.info(`Local testing identifier: ${obj.localIdentifier}`);
+        }
+      } else {
+        logger.info(Constants.userMessages.LOCAL_BINARY_ALREADY_RUNNING);
+      }
     }
 
     logger.info(`Local is set to: ${obj.local} (${obj.local ? Constants.userMessages.LOCAL_TRUE : Constants.userMessages.LOCAL_FALSE})`);
@@ -164,8 +172,6 @@ const validate = (bsConfig, args) => {
     // validate local args i.e --local-mode and --local-identifier
 
     if( Utils.searchForOption('--local-identifier') && (Utils.isUndefined(args.localIdentifier) || (!Utils.isUndefined(args.localIdentifier) && !args.localIdentifier.trim()))) reject(Constants.validationMessages.INVALID_CLI_LOCAL_IDENTIFIER);
-    
-    if( Utils.getLocalFlag(bsConfig.connection_settings) && (Utils.isUndefined(bsConfig["connection_settings"]["local_identifier"]) || ( !Utils.isUndefined(bsConfig["connection_settings"]["local_identifier"]) && !bsConfig["connection_settings"]["local_identifier"].trim()))) reject(Constants.validationMessages.INVALID_LOCAL_IDENTIFIER);
 
     if( Utils.searchForOption('--local-mode') && ( Utils.isUndefined(args.localMode) || (!Utils.isUndefined(args.localMode) && !["always-on","on-demand"].includes(args.localMode)))) reject(Constants.validationMessages.INVALID_LOCAL_MODE);
 
