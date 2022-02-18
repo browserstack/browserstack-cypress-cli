@@ -27,6 +27,7 @@ exports.validateBstackJson = (bsConfigPath) => {
       let bsConfig = require(bsConfigPath);
       resolve(bsConfig);
     } catch (e) {
+      logger.debug(e);
       reject(
         e.code === "MODULE_NOT_FOUND"
           ? "Couldn't find the browserstack.json file at \"" +
@@ -820,6 +821,7 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressJson) => {
   let globSearchPattern = this.sanitizeSpecsPattern(bsConfig.run_settings.specs) || `${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`;
   let ignoreFiles = args.exclude || bsConfig.run_settings.exclude;
   let files = glob.sync(globSearchPattern, {cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles});
+  logger.debug('Spec files', files);
   return files;
 };
 
@@ -1066,7 +1068,7 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs) => {
             that.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
         }
       }
-      logger.debug(JSON.stringify(resp));
+      logger.debug(`Post ${options.url} %j`, resp);
       resolve();
     });
   });

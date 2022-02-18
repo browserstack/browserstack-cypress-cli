@@ -141,6 +141,7 @@ const addCypressZipStartLocation = (runSettings) => {
 const validate = (bsConfig, args) => {
   return new Promise(function (resolve, reject) {
     logger.info(Constants.userMessages.VALIDATING_CONFIG);
+    logger.debug('Browserstack configs %j', bsConfig);
     if (!bsConfig) reject(Constants.validationMessages.EMPTY_BROWSERSTACK_JSON);
 
     if (!bsConfig.auth) reject(Constants.validationMessages.INCORRECT_AUTH_PARAMS);
@@ -218,7 +219,7 @@ const validate = (bsConfig, args) => {
 
       addCypressZipStartLocation(bsConfig.run_settings);
     }
-
+    logger.debug('Cypress configs %j', cypressJson);
     resolve(cypressJson);
   });
 }

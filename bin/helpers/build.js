@@ -4,7 +4,8 @@ const request = require('request');
 const config = require('./config'),
   capabilityHelper = require("../helpers/capabilityHelper"),
   Constants = require('../helpers/constants'),
-  utils = require('../helpers/utils');
+  utils = require('../helpers/utils'),
+  logger = require('../helpers/logger').winstonLogger;
 
 const createBuild = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
@@ -23,6 +24,7 @@ const createBuild = (bsConfig, zip) => {
       }
 
       request.post(options, function (err, resp, body) {
+        logger.debug(`Post ${options.url} %j`, resp);
         if (err) {
           reject(err);
         } else {

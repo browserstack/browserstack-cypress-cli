@@ -7,6 +7,7 @@ const cp = require("child_process"),
 
 const config = require('./config'),
   fileLogger = require('./logger').fileLogger,
+  logger = require('./logger').winstonLogger,
   utils = require('./utils');
   
 const { AUTH_REGEX, REDACTED_AUTH } = require("./constants");
@@ -243,10 +244,13 @@ function send(args) {
   };
 
   fileLogger.info(`Sending ${JSON.stringify(payload)} to ${config.usageReportingUrl}`);
+  logger.debug(`Sending usage report ${JSON.stringify(payload)} to ${config.usageReportingUrl}`);
+
   request(options, function (error, res, body) {
     if (error) {
       //write err response to file
       fileLogger.error(JSON.stringify(error));
+      logger.debug(error);
       return;
     }
     // write response file
@@ -256,6 +260,7 @@ function send(args) {
       body: body
     };
     fileLogger.info(`${JSON.stringify(response)}`);
+    logger.debug(`Post ${options.url} %j`, response);
   });
 }
 

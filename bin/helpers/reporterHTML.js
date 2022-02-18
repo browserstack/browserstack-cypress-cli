@@ -166,7 +166,7 @@ let reportGenerator = (bsConfig, buildId, args, rawArgs, cb) => {
       await renderReportHTML(build);
       logger.info(message);
     }
-    logger.debug(JSON.stringify(resp));
+    logger.debug(`Get ${options.url} %j`, resp);
     utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
     if (cb){
       cb();

@@ -50,6 +50,7 @@ module.exports = function info(args, rawArgs) {
         errorCode = 'api_failed_build_info';
 
         logger.info(message);
+        logger.debug(err);
       } else {
         let build = null;
         try {
@@ -93,6 +94,7 @@ module.exports = function info(args, rawArgs) {
           logger.info(message);
         }
       }
+      logger.debug(`Get ${options.url} %j`, resp);
       utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
     });
   }).catch(function (err) {

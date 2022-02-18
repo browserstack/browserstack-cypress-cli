@@ -2,6 +2,7 @@
 
 const { isUndefined } = require('./utils');
 
+const logger = require('./logger').winstonLogger;
 
 let sessionTimes = {
   referenceTimes: {
@@ -17,11 +18,13 @@ const initTimeComponents = () => {
 
 const markBlockStart = (blockName) => {
   sessionTimes.referenceTimes[blockName] = Date.now();
+  logger.debug(`Started ${blockName}`);
 };
 
 const markBlockEnd = (blockName) => {
   const startTime = sessionTimes.referenceTimes[blockName] || sessionTimes.referenceTimes.absoluteStartTime;
   markBlockDiff(blockName, startTime, Date.now());
+  logger.debug(`Ended ${blockName}`);
 };
 
 const markBlockDiff = (blockName, startTime, stopTime) => {
