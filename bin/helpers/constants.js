@@ -144,7 +144,7 @@ const cliMessages = {
     REPORTER: "Specify the custom reporter to use",
     REPORTER_OPTIONS: "Specify reporter options for custom reporter",
     CYPRESS_GEO_LOCATION: "Enterprise feature to simulate website and mobile behavior from different locations.",
-    SPEC_TIMEOUT: "Specify the value for assigning timeout to each spec in the 1-120 mins range."
+    SPEC_TIMEOUT: "Specify a value for a hard timeout for each spec execution in the 1-120 mins range. Read https://browserstack.com/docs/automate/cypress/spec-timeout for more details."
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",
