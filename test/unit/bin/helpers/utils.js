@@ -3027,4 +3027,36 @@ describe('utils', () => {
       expect(bsConfig.run_settings.spec_timeout).to.eq(null);
     });
   });
+
+  describe('#isInteger', () => {
+    it('returns true if positive integer', () => {
+      expect(utils.isInteger(123)).to.eq(true);
+    });
+
+    it('returns true if negative integer', () => {
+      expect(utils.isInteger(-123)).to.eq(true);
+    });
+
+    it('returns false if string', () => {
+      expect(utils.isInteger("123")).to.eq(false);
+    });
+  });
+
+  describe('#isPositiveInteger', () => {
+    it('returns true if string positive integer', () => {
+      expect(utils.isPositiveInteger("123")).to.eq(true);
+    });
+
+    it('returns false if string negative integer', () => {
+      expect(utils.isPositiveInteger("-123")).to.eq(false);
+    });
+
+    it('returns false if complex string without integer', () => {
+      expect(utils.isPositiveInteger("abc qskbd wie")).to.eq(false);
+    });
+
+    it('returns false if complex string with integer', () => {
+      expect(utils.isPositiveInteger("123 2138 a1bc qs3kbd wie")).to.eq(false);
+    });
+  });
 });

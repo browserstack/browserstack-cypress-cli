@@ -227,7 +227,7 @@ const validate = (bsConfig, args) => {
           logger.info(Constants.userMessages.SPEC_LIMIT_SUCCESS_MESSAGE.replace("<x>", bsConfig.run_settings.spec_timeout));
         }
       } else {
-        logger.warn(Constants.userMessages.SPEC_LIMIT_WARNING)
+        logger.warn(Constants.userMessages.SPEC_TIMEOUT_LIMIT_WARNING)
       }
     } else {
       logger.warn(Constants.validationMessages.SPEC_TIMEOUT_NOT_PASSED_ERROR);

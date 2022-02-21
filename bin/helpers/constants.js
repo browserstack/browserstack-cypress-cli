@@ -63,7 +63,7 @@ const userMessages = {
   LATEST_SYNTAX_TO_ACTUAL_VERSION_MESSAGE: "Your build will run using Cypress <actualVersion> as you had specified <latestSyntaxVersion>.<frameworkUpgradeMessage> Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions",
   PROCESS_KILL_MESSAGE: "Stopping the CLI and the execution of the build on BrowserStack",
   BUILD_FAILED_ERROR: "The above stacktrace has been thrown by Cypress when we tried to run your build. If your test suite requires npm dependencies then please specify them on browserstack.json. Read more at " +  chalk.blueBright("https://www.browserstack.com/docs/automate/cypress/npm-packages") + ". Also, we recommend you to try running the build locally using ‘cypress run’ and if it works fine then please reach out to support at " + chalk.blueBright("https://www.browserstack.com/contact#technical-support"),
-  SPEC_LIMIT_WARNING: "Value for the 'spec_timeout' key not in the 1-120 range. Going ahead with 30 mins as the default spec timeout. Read more about how to specify the option in https://browserstack.com/docs/automate/cypress/spec-timeout ",
+  SPEC_TIMEOUT_LIMIT_WARNING: "Value for the 'spec_timeout' key not in the 1-120 range. Going ahead with 30 mins as the default spec timeout. Read more about how to specify the option in https://browserstack.com/docs/automate/cypress/spec-timeout",
   SPEC_LIMIT_SUCCESS_MESSAGE: "Spec timeout specified as <x> minutes. If any of your specs exceed the specified time limit, it would be forcibly killed by BrowserStack"
 };
 
@@ -144,7 +144,7 @@ const cliMessages = {
     REPORTER: "Specify the custom reporter to use",
     REPORTER_OPTIONS: "Specify reporter options for custom reporter",
     CYPRESS_GEO_LOCATION: "Enterprise feature to simulate website and mobile behavior from different locations.",
-    SPEC_TIMEOUT: "Specify the value for assigning timeout to each spec"
+    SPEC_TIMEOUT: "Specify the value for assigning timeout to each spec in the 1-120 mins range."
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",

@@ -413,7 +413,7 @@ exports.isPositiveInteger = (str) => {
 
   const num = Number(str);
 
-  if (Number.isInteger(num) && num > 0) {
+  if (this.isInteger(num) && num > 0) {
     return true;
   }
 
