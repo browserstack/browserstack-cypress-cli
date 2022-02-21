@@ -230,7 +230,7 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs) => {
             await sendUpdatesToBstack(bsConfig, buildId, args, options, rawArgs)
             utils.sendUsageReport(bsConfig, args, message, messageType, null, null, rawArgs);
           }
-          logger.debug(`Get ${options.url} %j`, resp);
+          logger.debug(`GET ${options.url} %j`, resp);
         } catch (err) {
           messageType = Constants.messageTypes.ERROR;
           errorCode = 'api_failed_build_artifacts';

@@ -1068,7 +1068,7 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs) => {
             that.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
         }
       }
-      logger.debug(`Post ${options.url} %j`, resp);
+      logger.debug(`POST ${options.url} %j`, resp);
       resolve();
     });
   });

@@ -24,7 +24,7 @@ const createBuild = (bsConfig, zip) => {
       }
 
       request.post(options, function (err, resp, body) {
-        logger.debug(`Post ${options.url} %j`, resp);
+        logger.debug(`POST ${options.url} %j`, resp);
         if (err) {
           reject(err);
         } else {

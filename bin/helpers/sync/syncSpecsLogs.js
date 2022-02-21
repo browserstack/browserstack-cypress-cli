@@ -123,7 +123,7 @@ let printSpecsStatus = (bsConfig, buildDetails, rawArgs) => {
 
 let whileProcess = (whilstCallback) => {
   request.post(options, function(error, response, body) {
-    logger.debug(`Post ${options.url} %j`, response);
+    logger.debug(`POST ${options.url} %j`, response);
     if (error) {
       logger.debug(error);
       whileTries -= 1;

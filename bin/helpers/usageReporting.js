@@ -260,7 +260,7 @@ function send(args) {
       body: body
     };
     fileLogger.info(`${JSON.stringify(response)}`);
-    logger.debug(`Post ${options.url} %j`, response);
+    logger.debug(`POST ${options.url} %j`, response);
   });
 }
 

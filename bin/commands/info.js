@@ -94,7 +94,7 @@ module.exports = function info(args, rawArgs) {
           logger.info(message);
         }
       }
-      logger.debug(`Get ${options.url} %j`, resp);
+      logger.debug(`GET ${options.url} %j`, resp);
       utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
     });
   }).catch(function (err) {
