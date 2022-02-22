@@ -994,6 +994,9 @@ exports.setCLIMode = (bsConfig, args) => {
 
 exports.setDebugMode = (_, args) => {
   if(args.cliDebug || String(process.env.DEBUG).toLowerCase() === 'true'){
+    args.cliDebug ? 
+      logger.info("CLI is running with the --cli-debug argument. Running CLI in the debug mode...") :
+      logger.info("DEBUG environment variable set to 'true'. Running CLI in the debug mode...") ;
     transports.loggerConsole.level = 'debug';
     return;
   }
