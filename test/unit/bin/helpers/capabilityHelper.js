@@ -164,11 +164,11 @@ describe("capabilityHelper.js", () => {
 
     context("handle local_identifier set when local binary spawned", () => {
       beforeEach(() => {
-        process.env.BSTACK_CYPRESS_RUN_LOCAL_BINARY = "true";
+        process.env.BSTACK_CYPRESS_LOCAL_BINARY_RUNNING = "true";
       });
 
       afterEach(() => {
-        delete process.env.BSTACK_CYPRESS_RUN_LOCAL_BINARY;
+        delete process.env.BSTACK_CYPRESS_LOCAL_BINARY_RUNNING;
       });
 
       it("handle local_identifier set", () => {
