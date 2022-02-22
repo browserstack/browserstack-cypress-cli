@@ -44,7 +44,7 @@ const configFileOptions = {
 }
 
 const debugModeOptions = {
-  'debug': {
+  'cli-debug': {
     default: false,
     describe: Constants.cliMessages.COMMON.DEBUG,
     type: "boolean"

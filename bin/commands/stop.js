@@ -23,7 +23,7 @@ module.exports = function stop(args, rawArgs) {
     // set cypress config filename
     utils.setCypressConfigFilename(bsConfig, args);
 
-    // set debug mode (--debug)
+    // set debug mode (--cli-debug)
     utils.setDebugMode(bsConfig, args);
 
     let buildId = args._[1];

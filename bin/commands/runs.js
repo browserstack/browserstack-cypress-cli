@@ -89,7 +89,7 @@ module.exports = function run(args, rawArgs) {
     // set sync/async mode (--async/--sync)
     utils.setCLIMode(bsConfig, args);
 
-    // set debug mode (--debug)
+    // set debug mode (--cli-debug)
     utils.setDebugMode(bsConfig, args);
 
     // set other cypress configs e.g. reporter and reporter-options
