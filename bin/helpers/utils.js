@@ -641,7 +641,8 @@ exports.setupLocalTesting = (bsConfig, args, rawArgs) => {
         }
       } else {
         localIdentifierRunning = true;
-        process.env.BSTACK_CYPRESS_RUN_LOCAL_BINARY = "true";
+        process.env.BSTACK_CYPRESS_LOCAL_BINARY_ALREADY_RUNNING = "true"; // shows message when binary is not spawned by the CLI process
+        process.env.BSTACK_CYPRESS_LOCAL_BINARY_RUNNING = "true";
       }
       if (!localIdentifierRunning){
         bsConfig.connection_settings.usedAutoLocal = true;
@@ -651,6 +652,7 @@ exports.setupLocalTesting = (bsConfig, args, rawArgs) => {
         logger.info('Setting up Local testing...');
         bs_local.start(bs_local_args, function (localStartError) {
           if (that.isUndefined(localStartError)) {
+            process.env.BSTACK_CYPRESS_LOCAL_BINARY_RUNNING = "true";
             resolve(bs_local);
           } else {
             let message = `name: ${localStartError.name}, message: ${localStartError.message}, extra: ${localStartError.extra}`,

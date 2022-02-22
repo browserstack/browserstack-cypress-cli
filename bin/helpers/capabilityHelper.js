@@ -73,11 +73,11 @@ const caps = (bsConfig, zip) => {
 
     // binary was spawned locally
     if(obj.local === true) {
-      if (!Utils.isUndefined(process.env.BSTACK_CYPRESS_RUN_LOCAL_BINARY) && process.env.BSTACK_CYPRESS_RUN_LOCAL_BINARY == "true") {
+      if (!Utils.isUndefined(process.env.BSTACK_CYPRESS_LOCAL_BINARY_RUNNING) && process.env.BSTACK_CYPRESS_LOCAL_BINARY_RUNNING == "true") {
         obj.localMode = null;
 
         // Local Mode
-        if (obj.local === true && bsConfig.connection_settings.local_mode) {
+        if (bsConfig.connection_settings.local_mode) {
           obj.localMode = bsConfig.connection_settings.local_mode;
           if (bsConfig.connection_settings.user_defined_local_mode_warning) {
             logger.warn(Constants.userMessages.INVALID_LOCAL_MODE_WARNING);
@@ -87,13 +87,15 @@ const caps = (bsConfig, zip) => {
 
         // Local Identifier
         obj.localIdentifier = null;
-        if (obj.local === true && (bsConfig.connection_settings.localIdentifier || bsConfig.connection_settings.local_identifier)) {
+        if (bsConfig.connection_settings.localIdentifier || bsConfig.connection_settings.local_identifier) {
           obj.localIdentifier = bsConfig.connection_settings.localIdentifier || bsConfig.connection_settings.local_identifier;
           logger.info(`Local testing identifier: ${obj.localIdentifier}`);
         }
-      } else {
-        logger.info(Constants.userMessages.LOCAL_BINARY_ALREADY_RUNNING);
       }
+    }
+
+    if (!Utils.isUndefined(process.env.BSTACK_CYPRESS_LOCAL_BINARY_ALREADY_RUNNING) && process.env.BSTACK_CYPRESS_LOCAL_BINARY_ALREADY_RUNNING == "true") {
+      logger.info(Constants.userMessages.LOCAL_BINARY_ALREADY_RUNNING);
     }
 
     logger.info(`Local is set to: ${obj.local} (${obj.local ? Constants.userMessages.LOCAL_TRUE : Constants.userMessages.LOCAL_FALSE})`);
