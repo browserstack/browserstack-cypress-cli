@@ -181,14 +181,14 @@ describe("syncSpecsLogs", () => {
   context("showSpecsStatus", () => {
     const showSpecsStatus = syncSpecsLogs.__get__("showSpecsStatus");
 
-    it('should print initial log for running specs when it is the 1st polling response', () => {
+    it('should not print initial log for running specs when it is the 1st polling response', () => {
       let data = JSON.stringify(["created"])
       var printInitialLog = sandbox.stub();
       syncSpecsLogs.__set__('printInitialLog', printInitialLog);
 
       showSpecsStatus(data);
 
-      expect(printInitialLog.calledOnce).to.be.true;
+      expect(printInitialLog.calledOnce).to.be.false;
     });
 
     it('should print spec details when spec related data is sent in polling response', () => {
@@ -202,6 +202,7 @@ describe("syncSpecsLogs", () => {
 
     it('should print initial and spec details when spec related data is sent in polling response', () => {
       let specResult = JSON.stringify({"path": "path"})
+      syncSpecsLogs.__set__('buildStarted', false)
       let data = JSON.stringify(["created", specResult])
       var printSpecData = sandbox.stub();
       syncSpecsLogs.__set__('printSpecData', printSpecData);
