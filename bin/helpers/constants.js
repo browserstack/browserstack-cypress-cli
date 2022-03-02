@@ -1,4 +1,5 @@
 let config = require("./config");
+let chalk = require('chalk');
 
 const syncCLI = {
   FAILED_SPEC_DETAILS_COL_HEADER: ['Spec', 'Status', 'Browser', 'BrowserStack Session ID'],
@@ -61,6 +62,7 @@ const userMessages = {
   DOWNLOAD_BUILD_ARTIFACTS_SUCCESS: "Your build artifact(s) have been successfully downloaded in '<user-path>/build_artifacts/<build-id>' directory",
   LATEST_SYNTAX_TO_ACTUAL_VERSION_MESSAGE: "Your build will run using Cypress <actualVersion> as you had specified <latestSyntaxVersion>.<frameworkUpgradeMessage> Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions",
   PROCESS_KILL_MESSAGE: "Stopping the CLI and the execution of the build on BrowserStack",
+  BUILD_FAILED_ERROR: "The above stacktrace has been thrown by Cypress when we tried to run your build. If your test suite requires npm dependencies then please specify them on browserstack.json. Read more at " +  chalk.blueBright("https://www.browserstack.com/docs/automate/cypress/npm-packages") + ". Also, we recommend you to try running the build locally using ‘cypress run’ and if it works fine then please reach out to support at " + chalk.blueBright("https://www.browserstack.com/contact#technical-support")
 };
 
 const validationMessages = {
@@ -225,6 +227,8 @@ const AUTH_REGEX = /"auth" *: *{[\s\S]*?}/g
 
 const ERROR_EXIT_CODE = 1;
 
+const BUILD_FAILED_EXIT_CODE = 3;
+
 const REDACTED = "[REDACTED]";
 
 const REDACTED_AUTH =`auth: { "username": ${REDACTED}, "access_key": ${REDACTED} }`;
@@ -248,5 +252,6 @@ module.exports = Object.freeze({
   LATEST_VERSION_SYNTAX_REGEX,
   ERROR_EXIT_CODE,
   AUTH_REGEX,
-  REDACTED_AUTH
+  REDACTED_AUTH,
+  BUILD_FAILED_EXIT_CODE
 });
