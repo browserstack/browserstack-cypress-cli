@@ -56,6 +56,7 @@ const userMessages = {
   LOCAL_START_FAILED: "Local Testing setup failed.",
   LOCAL_STOP_FAILED: "Local Binary stop failed.",
   INVALID_LOCAL_MODE_WARNING: "Invalid value specified for local_mode. local_mode: (\"always-on\" | \"on-demand\"). For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference",
+  LOCAL_BINARY_ALREADY_RUNNING: "We found an existing BrowserStack Local connection running from your account. Using the existing connection for this build. If you wish to use a new Local connection for your build, please specify a value for 'local_identifier' within 'connection_settings' in your browserstack.json config.",
   SPEC_LIMIT_WARNING: "You might not see all your results on the dashboard because of high spec count, please consider reducing the number of spec files in this folder.",
   DOWNLOAD_BUILD_ARTIFACTS_FAILED: "Downloading build artifacts for the build <build-id> failed for <machine-count> machines.",
   ASYNC_DOWNLOADS: "Test artifacts as specified under 'downloads' can be downloaded after the build has completed its run, using 'browserstack-cypress generate-downloads <build-id>'",

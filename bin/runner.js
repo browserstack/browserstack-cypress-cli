@@ -67,7 +67,7 @@ var argv = yargs
   .showHelpOnFail(false, Constants.cliMessages.VERSION.HELP)
   .demand(1, Constants.cliMessages.VERSION.DEMAND)
   .command('init', Constants.cliMessages.INIT.INFO, function(yargs) {
-    let rawArgv = yargs.argv;
+    let rawArgv = process.argv.slice(2);
     argv = yargs
       .usage("usage: $0 init [filename] [options]")
       .options({
@@ -87,7 +87,7 @@ var argv = yargs
     }
   })
   .command('build-info', Constants.cliMessages.BUILD.INFO, function(yargs) {
-    let rawArgv = yargs.argv;
+    let rawArgv = process.argv.slice(2);
     argv = yargs
       .usage('usage: $0 <buildId>')
       .demand(1, Constants.cliMessages.BUILD.DEMAND)
@@ -103,7 +103,7 @@ var argv = yargs
     }
   })
   .command('build-stop', Constants.cliMessages.BUILD.STOP, function (yargs) {
-    let rawArgv = yargs.argv;
+    let rawArgv = process.argv.slice(2);
     argv = yargs
       .usage('usage: $0 <buildId>')
       .demand(1, Constants.cliMessages.BUILD.DEMAND)
@@ -119,7 +119,7 @@ var argv = yargs
     }
   })
   .command('run', Constants.cliMessages.RUN.INFO, function(yargs) {
-    let rawArgv = yargs.argv;
+    let rawArgv = process.argv.slice(2);
     argv = yargs
       .usage('usage: $0 run <options>')
       .options({
@@ -252,7 +252,7 @@ var argv = yargs
     }
   })
   .command('generate-report', Constants.cliMessages.GENERATE_REPORT.INFO, function(yargs) {
-    let rawArgv = yargs.argv;
+    let rawArgv = process.argv.slice(2);
     argv = yargs
       .usage('usage: $0 generate-report <buildId>')
       .demand(1, Constants.cliMessages.BUILD.DEMAND)
@@ -268,7 +268,7 @@ var argv = yargs
     }
   })
   .command('generate-downloads', Constants.cliMessages.GENERATE_DOWNLOADS.INFO, function(yargs) {
-    let rawArgv = yargs.argv;
+    let rawArgv = process.argv.slice(2);
     argv = yargs
       .usage('usage: $0 generate-downloads <buildId>')
       .demand(1, Constants.cliMessages.BUILD.DEMAND)

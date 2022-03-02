@@ -626,11 +626,6 @@ exports.setLocalIdentifier = (bsConfig, args) => {
       !this.isUndefined(bsConfig["connection_settings"]["local_identifier"])
     ){
     bsConfig['connection_settings']['local_mode'] = 'always-on';
-  } else if (
-      bsConfig['connection_settings']['local'] &&
-      this.isUndefined(bsConfig["connection_settings"]["local_identifier"])
-    ){
-    bsConfig["connection_settings"]["local_identifier"] = this.generateLocalIdentifier(bsConfig['connection_settings']['local_mode']);
   }
 };
 
@@ -670,9 +665,18 @@ exports.setLocalMode = (bsConfig, args) => {
 exports.setupLocalTesting = (bsConfig, args, rawArgs) => {
   return new Promise(async (resolve, reject) => {
     if( bsConfig['connection_settings'] && bsConfig['connection_settings']['local'] && String(bsConfig['connection_settings']['local']) === "true" ){
-      let localIdentifierRunning = await this.checkLocalIdentifierRunning(
-        bsConfig, bsConfig['connection_settings']['local_identifier']
-      );
+      let localBinaryRunning = await this.checkLocalBinaryRunning(bsConfig, bsConfig['connection_settings']['local_identifier']);
+      let localIdentifierRunning;
+      if (localBinaryRunning['should_spawn_binary'] == true) {
+        localIdentifierRunning = false;
+        if(this.isUndefined(bsConfig["connection_settings"]["local_identifier"])) {
+          bsConfig["connection_settings"]["local_identifier"] = this.generateLocalIdentifier(bsConfig['connection_settings']['local_mode']);
+        }
+      } else {
+        localIdentifierRunning = true;
+        process.env.BSTACK_CYPRESS_LOCAL_BINARY_ALREADY_RUNNING = "true"; // shows message when binary is not spawned by the CLI process
+        process.env.BSTACK_CYPRESS_LOCAL_BINARY_RUNNING = "true";
+      }
       if (!localIdentifierRunning){
         bsConfig.connection_settings.usedAutoLocal = true;
         var bs_local = this.getLocalBinary();
@@ -681,6 +685,7 @@ exports.setupLocalTesting = (bsConfig, args, rawArgs) => {
         logger.info('Setting up Local testing...');
         bs_local.start(bs_local_args, function (localStartError) {
           if (that.isUndefined(localStartError)) {
+            process.env.BSTACK_CYPRESS_LOCAL_BINARY_RUNNING = "true";
             resolve(bs_local);
           } else {
             let message = `name: ${localStartError.name}, message: ${localStartError.message}, extra: ${localStartError.extra}`,
@@ -708,22 +713,6 @@ exports.setupLocalTesting = (bsConfig, args, rawArgs) => {
 
 exports.stopLocalBinary = (bsConfig, bs_local, args, rawArgs) => {
   return new Promise(async (resolve, reject) => {
-    if(bsConfig['connection_settings'] && bsConfig['connection_settings']['local']){
-      let localIdentifierRunning = await this.checkLocalIdentifierRunning(bsConfig,bsConfig["connection_settings"]["local_identifier"]);
-      if(!localIdentifierRunning){
-        let message = `Local Binary not running.`,
-          errorCode = 'local_identifier_error';
-        this.sendUsageReport(
-          bsConfig,
-          args,
-          message,
-          Constants.messageTypes.ERROR,
-          errorCode,
-          null,
-          rawArgs
-        );
-      }
-    }
     if (!this.isUndefined(bs_local) && bs_local.isRunning() && bsConfig['connection_settings'] && bsConfig['connection_settings']['local_mode'].toLowerCase() != "always-on") {
       let that = this;
       bs_local.stop(function (localStopError) {
@@ -777,35 +766,26 @@ exports.generateLocalIdentifier = (mode) => {
   return Buffer.from(local_identifier).toString("base64");
 };
 
-exports.checkLocalIdentifierRunning = (bsConfig, localIdentifier) => {
+exports.checkLocalBinaryRunning = (bsConfig, localIdentifier) => {
   let options = {
-    url: `${config.localTestingListUrl}?auth_token=${bsConfig.auth.access_key}&state=running`,
+    url: `${config.cypress_v1}/local_binary_running_check`,
     auth: {
       user: bsConfig.auth.username,
       password: bsConfig.auth.access_key,
     },
     headers: {
+      'Content-Type': 'application/json',
       'User-Agent': this.getUserAgent(),
     },
+    body: JSON.stringify({ localIdentifier: localIdentifier}),
   };
-  let that = this;
   return new Promise ( function(resolve, reject) {
-      request.get(options, function (err, resp, body) {
+      request.post(options, function (err, resp, body) {
         if(err){
           reject(err);
         }
         let response = JSON.parse(body);
-        let localInstances = [];
-        if(!that.isUndefined(response['instances'])){
-          localInstances = response['instances'];
-        }
-        let localIdentifiers = [];
-
-        localInstances.forEach(function(instance){
-          localIdentifiers.push(instance['localIdentifier']);
-        });
-
-        resolve(localIdentifiers.includes(localIdentifier));
+        resolve(response);
     });
   });
 };
@@ -1080,7 +1060,6 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs) => {
             logger.info(message);
           }
         } catch(err) {
-          console.log(err);
           message = Constants.userMessages.BUILD_STOP_FAILED;
           messageType = Constants.messageTypes.ERROR;
           errorCode = 'api_failed_build_stop';

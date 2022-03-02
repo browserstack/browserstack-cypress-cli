@@ -1234,7 +1234,7 @@ describe('utils', () => {
       sandbox.restore();
     });
 
-    it('if local is true and localIdentifier is not running and start error is raised', () => {
+    it('if local is true and localBinary is not running and start error is raised', () => {
       let bsConfig = {
         auth: {
           access_key: 'xyz',
@@ -1245,11 +1245,11 @@ describe('utils', () => {
         },
       };
       let args = {};
-      let checkLocalIdentifierRunningStub = sinon.stub(
+      let checkLocalBinaryRunningStub = sinon.stub(
         utils,
-        'checkLocalIdentifierRunning'
+        'checkLocalBinaryRunning'
       );
-      checkLocalIdentifierRunningStub.returns(Promise.resolve(false));
+      checkLocalBinaryRunningStub.returns(Promise.resolve({"should_spawn_binary": true}));
       let setLocalArgsStub = sinon.stub(utils, 'setLocalArgs');
       setLocalArgsStub.returns({});
       let localBinaryStartStub = sandbox
@@ -1270,7 +1270,7 @@ describe('utils', () => {
       });
     });
 
-    it('if local is true and localIdentifier is not running and start error is not raised', () => {
+    it('if local is true and localBinary is not running and start error is not raised', () => {
       let bsConfig = {
         auth: {
           access_key: 'xyz',
@@ -1286,11 +1286,11 @@ describe('utils', () => {
         localIdentifier: 'abc',
         daemon: true,
       };
-      let checkLocalIdentifierRunningStub = sinon.stub(
+      let checkLocalBinaryRunningStub = sinon.stub(
         utils,
-        'checkLocalIdentifierRunning'
+        'checkLocalBinaryRunning'
       );
-      checkLocalIdentifierRunningStub.returns(Promise.resolve(false));
+      checkLocalBinaryRunningStub.returns(Promise.resolve({"should_spawn_binary": true}));
       let setLocalArgsStub = sinon.stub(utils, 'setLocalArgs');
       setLocalArgsStub.returns(localArgs);
 
@@ -1322,11 +1322,11 @@ describe('utils', () => {
         },
       };
       let args = {};
-      let checkLocalIdentifierRunningStub = sinon.stub(
+      let checkLocalBinaryRunningStub = sinon.stub(
         utils,
-        'checkLocalIdentifierRunning'
+        'checkLocalBinaryRunning'
       );
-      checkLocalIdentifierRunningStub.returns(Promise.resolve(true));
+      checkLocalBinaryRunningStub.returns(Promise.resolve({"should_spawn_binary": false}));
       return utils.setupLocalTesting(bsConfig, args).then((result) => {
         expect(result).to.be.eq(undefined);
       });
@@ -1373,19 +1373,19 @@ describe('utils', () => {
           local: true,
         },
       };
-      let checkLocalIdentifierRunningStub = sinon.stub(
+      let checkLocalBinaryRunningStub = sinon.stub(
         utils,
-        'checkLocalIdentifierRunning'
+        'checkLocalBinaryRunning'
       );
-      checkLocalIdentifierRunningStub.returns(Promise.resolve(false));
+      checkLocalBinaryRunningStub.returns(Promise.resolve({"should_spawn_binary": true}));
       let sendUsageReportStub = sandbox
         .stub(utils, 'sendUsageReport')
         .callsFake(function () {
           return 'end';
         });
-      return utils.stopLocalBinary(bsConfig).then((result) => {
+      return utils.stopLocalBinary(bsConfig, null, null, null).then((result) => {
         expect(result).to.be.eq(undefined);
-        sinon.assert.calledOnce(sendUsageReportStub);
+        sinon.assert.notCalled(sendUsageReportStub);
       });
     });
 
@@ -1399,11 +1399,11 @@ describe('utils', () => {
       let bs_local = {
         isRunning: isRunningStub,
       };
-      let checkLocalIdentifierRunningStub = sinon.stub(
+      let checkLocalBinaryRunningStub = sinon.stub(
         utils,
-        'checkLocalIdentifierRunning'
+        'checkLocalBinaryRunning'
       );
-      checkLocalIdentifierRunningStub.returns(Promise.resolve(true));
+      checkLocalBinaryRunningStub.returns(Promise.resolve({"should_spawn_binary": false}));
       return utils.stopLocalBinary(bsConfig, bs_local).then((result) => {
         expect(result).to.be.eq(undefined);
       });
@@ -1419,11 +1419,11 @@ describe('utils', () => {
       let bs_local = {
         isRunning: isRunningStub,
       };
-      let checkLocalIdentifierRunningStub = sinon.stub(
+      let checkLocalBinaryRunningStub = sinon.stub(
         utils,
-        'checkLocalIdentifierRunning'
+        'checkLocalBinaryRunning'
       );
-      checkLocalIdentifierRunningStub.returns(Promise.resolve(true));
+      checkLocalBinaryRunningStub.returns(Promise.resolve({"should_spawn_binary": false}));
       return utils.stopLocalBinary(bsConfig, bs_local).then((result) => {
         expect(result).to.be.eq(undefined);
       });
@@ -1441,11 +1441,11 @@ describe('utils', () => {
         isRunning: isRunningStub,
         stop: stopStub,
       };
-      let checkLocalIdentifierRunningStub = sinon.stub(
+      let checkLocalBinaryRunningStub = sinon.stub(
         utils,
-        'checkLocalIdentifierRunning'
+        'checkLocalBinaryRunning'
       );
-      checkLocalIdentifierRunningStub.returns(Promise.resolve(true));
+      checkLocalBinaryRunningStub.returns(Promise.resolve({"should_spawn_binary": false}));
       return utils.stopLocalBinary(bsConfig, bs_local).then((result) => {
         expect(result).to.be.eq(undefined);
       });
@@ -1460,11 +1460,11 @@ describe('utils', () => {
       let isRunningStub = sandbox.stub().returns(true);
       let error = new Error('Local Stop Error');
       let stopStub = sandbox.stub().yields(error);
-      let checkLocalIdentifierRunningStub = sinon.stub(
+      let checkLocalBinaryRunningStub = sinon.stub(
         utils,
-        'checkLocalIdentifierRunning'
+        'checkLocalBinaryRunning'
       );
-      checkLocalIdentifierRunningStub.returns(Promise.resolve(true));
+      checkLocalBinaryRunningStub.returns(Promise.resolve({"should_spawn_binary": false}));
       let bs_local = {
         isRunning: isRunningStub,
         stop: stopStub,
@@ -1503,7 +1503,7 @@ describe('utils', () => {
     afterEach(function () {
       delete process.env.BROWSERSTACK_LOCAL_IDENTIFIER;
     });
-    it('should generate local_identifier if args.localIdentifier & process.env.BROWSERSTACK_LOCAL_IDENTIFIER is undefined', () => {
+    it('should not generate local_identifier if args.localIdentifier & process.env.BROWSERSTACK_LOCAL_IDENTIFIER is undefined', () => {
       let bsConfig = {
         connection_settings: {
           local: true,
@@ -1516,7 +1516,8 @@ describe('utils', () => {
       );
       generateLocalIdentifierStub.returns('abc');
       utils.setLocalIdentifier(bsConfig, args);
-      expect(bsConfig.connection_settings.local_identifier).to.be.eq('abc');
+      sinon.assert.notCalled(generateLocalIdentifierStub);
+      expect(bsConfig.connection_settings.local_identifier).to.be.eq(undefined);
     });
 
     it('should change local identifier to local_identifier in bsConfig if process.env.BROWSERSTACK_LOCAL_IDENTIFIER is set to local_identifier', () => {
@@ -2392,7 +2393,7 @@ describe('utils', () => {
     });
   });
 
-  describe('#checkLocalIdentifierRunning', () => {
+  describe('#checkLocalBinaryRunning', () => {
     afterEach(() => {
       sinon.restore();
     });
@@ -2404,21 +2405,10 @@ describe('utils', () => {
         },
       };
       const responseBody = {
-        status: 'success',
-        instances: [
-          {
-            localIdentifier: 'abcdef',
-          },
-          {
-            localIdentifier: 'ghij',
-          },
-          {
-            localIdentifier: 'lmno',
-          },
-        ],
+        "should_spawn_binary": true
       };
       sinon
-        .stub(request, 'get')
+        .stub(request, 'post')
         .yields(undefined, responseObject, JSON.stringify(responseBody));
 
       let bsConfig = {
@@ -2430,35 +2420,22 @@ describe('utils', () => {
 
       let localIdentifier = 'abcd';
       return utils
-        .checkLocalIdentifierRunning(bsConfig, localIdentifier)
+        .checkLocalBinaryRunning(bsConfig, localIdentifier)
         .then((result) => {
-          expect(result).to.be.eq(false);
+          chai.assert.deepEqual(result, {"should_spawn_binary": true});
         });
     });
 
-    it('if the bsConfig localIdentifier if present within the response body then the function should resolve with true', () => {
+    it('if the bsConfig localIdentifier is present within the response body', () => {
       const responseObject = {
         statusCode: 200,
         headers: {
           'content-type': 'application/json',
         },
       };
-      const responseBody = {
-        status: 'success',
-        instances: [
-          {
-            localIdentifier: 'abcdef',
-          },
-          {
-            localIdentifier: 'ghij',
-          },
-          {
-            localIdentifier: 'lmno',
-          },
-        ],
-      };
+      const responseBody = { "should_spawn_binary": false };
       sinon
-        .stub(request, 'get')
+        .stub(request, 'post')
         .yields(undefined, responseObject, JSON.stringify(responseBody));
 
       let bsConfig = {
@@ -2470,9 +2447,9 @@ describe('utils', () => {
 
       let localIdentifier = 'lmno';
       return utils
-        .checkLocalIdentifierRunning(bsConfig, localIdentifier)
+        .checkLocalBinaryRunning(bsConfig, localIdentifier)
         .then((result) => {
-          expect(result).to.be.eq(true);
+          chai.assert.deepEqual(result, {"should_spawn_binary": false})
         });
     });
   });
