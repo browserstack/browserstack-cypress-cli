@@ -147,8 +147,8 @@ const uploadCypressZip = (bsConfig, md5data, packageData) => {
       });
       return resolve(obj);
     }).catch((error) => {
-      purgeUploadBar(testZipUploadObj);
-      purgeUploadBar(npmPackageZipUploadObj);
+      testZipUploadObj.bar1 && purgeUploadBar(testZipUploadObj);
+      npmPackageZipUploadObj.bar1 && purgeUploadBar(npmPackageZipUploadObj);
       return reject(error);
     })
   })
