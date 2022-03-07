@@ -6,7 +6,8 @@ const chai = require("chai"),
   request = require("request");
 
 const logger = require("../../../../bin/helpers/logger").winstonLogger,
-  constant = require('../../../../bin/helpers/constants');
+  constant = require('../../../../bin/helpers/constants'),
+  formatRequest = require('../../../../bin/helpers/utils').formatRequest;
 
 const rewire = require("rewire"),
   cliProgress = require('cli-progress');
@@ -44,7 +45,8 @@ describe("zipUpload", () => {
     const zipUploader = rewire("../../../../bin/helpers/zipUpload");
     beforeEach(() => {
       utilsStub = {
-        generateUploadParams: sinon.stub().returns({})
+        generateUploadParams: sinon.stub().returns({}),
+        formatRequest,
       };
       loggerStub = {
         info: sandbox.stub().returns(null)

@@ -969,6 +969,14 @@ exports.setCLIMode = (bsConfig, args) => {
   }
 }
 
+exports.formatRequest = (err, resp, body) => {
+  return {
+    err,
+    status: resp ? resp.statusCode : null,
+    body: body ? JSON.stringify(body) : null
+  }
+}
+
 exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs) => {
   let that = this;
   return new Promise(function (resolve, reject) {

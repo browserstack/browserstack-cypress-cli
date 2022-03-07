@@ -5,7 +5,8 @@ const chai = require("chai"),
 
 const Constants = require("../../../../bin/helpers/constants"),
   logger = require("../../../../bin/helpers/logger").winstonLogger,
-  testObjects = require("../../support/fixtures/testObjects");
+  testObjects = require("../../support/fixtures/testObjects"),
+  formatRequest = require('../../../../bin/helpers/utils').formatRequest;
 
 const proxyquire = require("proxyquire").noCallThru();
 
@@ -60,7 +61,8 @@ describe("buildInfo", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub,
-          setDefaults: setDefaultsStub
+          setDefaults: setDefaultsStub,
+          formatRequest,
         },
         request: {get: requestStub},
       });
@@ -98,7 +100,8 @@ describe("buildInfo", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub,
-          setDefaults: setDefaultsStub
+          setDefaults: setDefaultsStub,
+          formatRequest,
         },
         request: {get: requestStub},
       });
@@ -160,7 +163,8 @@ describe("buildInfo", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub,
-          setDefaults: setDefaultsStub
+          setDefaults: setDefaultsStub,
+          formatRequest,
         },
         request: {get: requestStub},
       });
@@ -204,7 +208,8 @@ describe("buildInfo", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub,
-          setDefaults: setDefaultsStub
+          setDefaults: setDefaultsStub,
+          formatRequest,
         },
         request: {get: requestStub},
       });
@@ -243,7 +248,8 @@ describe("buildInfo", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub,
-          setDefaults: setDefaultsStub
+          setDefaults: setDefaultsStub,
+          formatRequest,
         },
         request: {get: requestStub},
       });

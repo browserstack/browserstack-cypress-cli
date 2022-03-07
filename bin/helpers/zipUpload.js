@@ -52,6 +52,7 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
     var r = request.post(options, function (err, resp, body) {
 
       if (err) {
+        logger.info(utils.formatRequest(err, resp, body));
         reject(err);
       } else {
         try {
@@ -60,6 +61,7 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
           responseData = {};
         }
         if (resp.statusCode != 200) {
+          logger.info(utils.formatRequest(err, resp, body));
           if (resp.statusCode == 401) {
             if (responseData && responseData["error"]) {
               responseData["time"] = Date.now() - obj.startTime;

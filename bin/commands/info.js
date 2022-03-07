@@ -47,6 +47,7 @@ module.exports = function info(args, rawArgs) {
         errorCode = 'api_failed_build_info';
 
         logger.info(message);
+        logger.info(utils.formatRequest(err, resp, body));
       } else {
         let build = null;
         try {
@@ -66,6 +67,7 @@ module.exports = function info(args, rawArgs) {
             message = Constants.userMessages.API_DEPRECATED;
             logger.info(message);
           }
+          logger.info(utils.formatRequest(err, resp, body));
         } else if (resp.statusCode != 200) {
           messageType = Constants.messageTypes.ERROR;
           errorCode = 'api_failed_build_info';
@@ -80,6 +82,7 @@ module.exports = function info(args, rawArgs) {
             message = Constants.userMessages.BUILD_INFO_FAILED;
             logger.error(message);
           }
+          logger.info(utils.formatRequest(err, resp, body));
         } else {
           messageType = Constants.messageTypes.SUCCESS;
           message = `Build info for build id: \n ${JSON.stringify(
