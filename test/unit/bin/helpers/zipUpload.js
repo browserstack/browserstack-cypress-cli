@@ -85,7 +85,7 @@ describe("zipUpload", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          chai.assert.equal(error.message, "test error");
+          chai.assert.equal(error.message.message, "test error");
         });
     });
 
@@ -219,7 +219,7 @@ describe("zipUpload", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          chai.assert.equal(error, "auth failed");
+          chai.assert.equal(error.message, "auth failed");
         });
     });
 
@@ -249,7 +249,7 @@ describe("zipUpload", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          chai.assert.equal(error, constant.validationMessages.INVALID_DEFAULT_AUTH_PARAMS);
+          chai.assert.equal(error.message, constant.validationMessages.INVALID_DEFAULT_AUTH_PARAMS);
         });
     });
 
@@ -311,7 +311,7 @@ describe("zipUpload", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          chai.assert.deepEqual(error, "test error");
+          chai.assert.deepEqual(error.message, "test error");
         });
     });
 
@@ -342,7 +342,7 @@ describe("zipUpload", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          chai.assert.deepEqual(error, constant.userMessages.ZIP_UPLOAD_LIMIT_EXCEEDED);
+          chai.assert.deepEqual(error.message, constant.userMessages.ZIP_UPLOAD_LIMIT_EXCEEDED);
         });
     });
 
@@ -373,7 +373,7 @@ describe("zipUpload", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          chai.assert.deepEqual(error, constant.userMessages.ZIP_UPLOADER_NOT_REACHABLE);
+          chai.assert.deepEqual(error.message, constant.userMessages.ZIP_UPLOADER_NOT_REACHABLE);
         });
     });
   });
@@ -427,7 +427,7 @@ describe("zipUpload", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          chai.assert.equal(error, "test error");
+          chai.assert.equal(error.message, "test error");
       });
     });
   });

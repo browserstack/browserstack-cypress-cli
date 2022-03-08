@@ -52,8 +52,7 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
     var r = request.post(options, function (err, resp, body) {
 
       if (err) {
-        logger.error(utils.formatRequest(err, resp, body));
-        reject(err);
+        reject({message: err, stacktrace: utils.formatRequest(err, resp, body)});
       } else {
         try {
           responseData = JSON.parse(body);
@@ -61,13 +60,12 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
           responseData = {};
         }
         if (resp.statusCode != 200) {
-          logger.error(utils.formatRequest(err, resp, body));
           if (resp.statusCode == 401) {
             if (responseData && responseData["error"]) {
               responseData["time"] = Date.now() - obj.startTime;
-              return reject(responseData["error"]);
+              return reject({message: responseData["error"], stacktrace: utils.formatRequest(err, resp, body)});
             } else {
-              return reject(Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS);
+              return reject({message: Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS, stacktrace: utils.formatRequest(err, resp, body)});
             } 
           }
           if (!opts.propogateError){
@@ -75,12 +73,12 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
           }
           if(responseData && responseData["error"]){
             responseData["time"] = Date.now() - obj.startTime;
-            reject(responseData["error"]);
+            reject({message: responseData["error"], stacktrace: utils.formatRequest(err, resp, body)});
           } else {
             if (resp.statusCode == 413) {
-              reject(Constants.userMessages.ZIP_UPLOAD_LIMIT_EXCEEDED);
+              reject({message: Constants.userMessages.ZIP_UPLOAD_LIMIT_EXCEEDED, stacktrace: utils.formatRequest(err, resp, body)});
             } else {
-              reject(Constants.userMessages.ZIP_UPLOADER_NOT_REACHABLE);
+              reject({message: Constants.userMessages.ZIP_UPLOADER_NOT_REACHABLE, stacktrace: utils.formatRequest(err, resp, body)});
             }
           }
         } else {
@@ -151,7 +149,8 @@ const uploadCypressZip = (bsConfig, md5data, packageData) => {
     }).catch((error) => {
       testZipUploadObj.bar1 && purgeUploadBar(testZipUploadObj);
       npmPackageZipUploadObj.bar1 && purgeUploadBar(npmPackageZipUploadObj);
-      return reject(error);
+      logger.error(error.stacktrace)
+      return reject(error.message);
     })
   })
 }
