@@ -7,6 +7,7 @@ const getmac = require('getmac').default;
 const { v4: uuidv4 } = require('uuid');
 const browserstack = require('browserstack-local');
 const crypto = require('crypto');
+const util = require('util');
 
 const usageReporting = require("./usageReporting"),
   logger = require("./logger").winstonLogger,
@@ -973,7 +974,7 @@ exports.formatRequest = (err, resp, body) => {
   return {
     err,
     status: resp ? resp.statusCode : null,
-    body: body ? JSON.stringify(body) : null
+    body: body ? util.format('%j', body) : null
   }
 }
 

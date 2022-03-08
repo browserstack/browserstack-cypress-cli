@@ -49,7 +49,8 @@ describe("zipUpload", () => {
         formatRequest,
       };
       loggerStub = {
-        info: sandbox.stub().returns(null)
+        info: sandbox.stub().returns(null),
+        error: sandbox.stub().returns(null),
       };
       sinon.stub(fs, 'lstatSync').returns({ size: 123 });
     });
