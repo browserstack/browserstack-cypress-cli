@@ -25,7 +25,7 @@ const createBuild = (bsConfig, zip) => {
 
       request.post(options, function (err, resp, body) {
         if (err) {
-          logger.info(utils.formatRequest(err, resp, body));
+          logger.error(utils.formatRequest(err, resp, body));
           reject(err);
         } else {
           let build = null;
@@ -39,11 +39,11 @@ const createBuild = (bsConfig, zip) => {
             if (build) {
               resolve(build.message);
             } else {
-              logger.info(utils.formatRequest(err, resp, body));
+              logger.error(utils.formatRequest(err, resp, body));
               reject(Constants.userMessages.API_DEPRECATED);
             }
           } else if (resp.statusCode != 201) {
-            logger.info(utils.formatRequest(err, resp, body));
+            logger.error(utils.formatRequest(err, resp, body));
             if (build) {
               reject(`${Constants.userMessages.BUILD_FAILED} Error: ${build.message}`);
             } else {
