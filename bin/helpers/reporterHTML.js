@@ -112,7 +112,6 @@ let reportGenerator = (bsConfig, buildId, args, rawArgs, cb) => {
       errorCode = 'api_failed_build_report';
 
       logger.error('Generating the build report failed.');
-      logger.error(message);
       logger.error(utils.formatRequest(err, resp, body));
 
       utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
@@ -136,7 +135,6 @@ let reportGenerator = (bsConfig, buildId, args, rawArgs, cb) => {
         message = Constants.userMessages.API_DEPRECATED;
         logger.info(message);
       }
-      logger.error(utils.formatRequest(err, resp, body));
     } else if (resp.statusCode === 422) {
       messageType = Constants.messageTypes.ERROR;
       errorCode = 'api_failed_build_generate_report';
@@ -147,7 +145,6 @@ let reportGenerator = (bsConfig, buildId, args, rawArgs, cb) => {
         logger.error(`Error generating the report: ${error}`);
         response = {message: message};
       }
-      logger.error(response.message);
       logger.error(utils.formatRequest(err, resp, body));
     } else if (resp.statusCode != 200) {
       messageType = Constants.messageTypes.ERROR;
@@ -161,9 +158,8 @@ let reportGenerator = (bsConfig, buildId, args, rawArgs, cb) => {
         if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
       } else {
         message = Constants.userMessages.BUILD_GENERATE_REPORT_FAILED.replace('<build-id>', buildId);
-        logger.error(message);
+        logger.error(utils.formatRequest(err, resp, body));
       }
-      logger.error(utils.formatRequest(err, resp, body));
     } else {
       messageType = Constants.messageTypes.SUCCESS;
       message = `Report for build: ${buildId} was successfully created.`;
