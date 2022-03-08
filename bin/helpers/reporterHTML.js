@@ -105,7 +105,7 @@ let reportGenerator = (bsConfig, buildId, args, rawArgs, cb) => {
     let messageType = null;
     let errorCode = null;
     let build;
-    
+  
     if (err) {
       message = err;
       messageType = Constants.messageTypes.ERROR;
