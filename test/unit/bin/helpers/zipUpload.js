@@ -410,12 +410,12 @@ describe("zipUpload", () => {
     });
 
     it("reject with error while uploading suit", () => {
-      let uploadSuitsErrorStub = sandbox.stub().returns(Promise.reject("test error"));
+      let uploadSuitsErrorStub = sandbox.stub().returns(Promise.reject({message: "test error", stacktrace: "stacktrace error"}));
       let purgeUploadBarStub = sandbox.stub().returns(true);
       zipUploader.__set__({
         utils: utilsStub,
         uploadSuits: uploadSuitsErrorStub,
-        purgeUploadBar: purgeUploadBarStub
+        purgeUploadBar: purgeUploadBarStub,
       });
       let uploadCypressZiprewire = zipUploader.__get__('uploadCypressZip');
       let bsConfig = {}
@@ -427,7 +427,7 @@ describe("zipUpload", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          chai.assert.equal(error.message, "test error");
+          chai.assert.equal(error, "test error");
       });
     });
   });
