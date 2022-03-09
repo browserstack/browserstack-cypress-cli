@@ -2919,4 +2919,15 @@ describe('utils', () => {
       expect(utils.getVideoConfig({video: false, videoUploadOnPasses: false})).to.be.eql({video: false, videoUploadOnPasses: false});
     });
   });
+
+  describe('formatRequest', () => {
+    it('should return correct JSON', () => {
+      expect(utils.formatRequest('Something went wrong.', undefined, undefined)).to.be.eql({err: 'Something went wrong.', status: null, body: null});
+      const body = {message: "Something went wrong"};
+      expect(utils.formatRequest(null, {statusCode: 400}, body)).to.be.eql({err: null, status: 400, body: JSON.stringify(body)});
+      const cricularBody = {message: "Something went wrong"};
+      cricularBody.body = cricularBody;
+      expect(utils.formatRequest(null, {statusCode: 500}, cricularBody)).to.be.eql({err: null, status: 500, body: '[Circular]'});
+    });
+  });
 });

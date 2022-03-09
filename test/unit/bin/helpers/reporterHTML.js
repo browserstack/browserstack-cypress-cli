@@ -9,7 +9,8 @@ const fs = require('fs'),
       request = require('request'),
       Constants = require("../../../../bin/helpers/constants"),
       logger = require("../../../../bin/helpers/logger").winstonLogger,
-      testObjects = require("../../support/fixtures/testObjects");
+      testObjects = require("../../support/fixtures/testObjects"),
+      formatRequest = require("../../../../bin/helpers/utils").formatRequest;
 
 const proxyquire = require("proxyquire").noCallThru();
 
@@ -69,7 +70,8 @@ describe("reportHTML", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           sendUsageReport: sendUsageReportStub,
           setDefaults: setDefaultsStub,
-          getErrorCodeFromErr: getErrorCodeFromErrStub
+          getErrorCodeFromErr: getErrorCodeFromErrStub,
+          formatRequest,
         },
         request: {get: requestStub}
       });
@@ -100,7 +102,8 @@ describe("reportHTML", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           sendUsageReport: sendUsageReportStub,
           setDefaults: setDefaultsStub,
-          getErrorCodeFromErr: getErrorCodeFromErrStub
+          getErrorCodeFromErr: getErrorCodeFromErrStub,
+          formatRequest,
         },
         request: {get: requestStub}
       });
@@ -132,7 +135,8 @@ describe("reportHTML", () => {
             setCypressConfigFilename: setCypressConfigFilenameStub,
             sendUsageReport: sendUsageReportStub,
             setDefaults: setDefaultsStub,
-            getErrorCodeFromErr: getErrorCodeFromErrStub
+            getErrorCodeFromErr: getErrorCodeFromErrStub,
+            formatRequest,
           },
           request: {get: requestStub}
         });
@@ -165,7 +169,8 @@ describe("reportHTML", () => {
             setCypressConfigFilename: setCypressConfigFilenameStub,
             sendUsageReport: sendUsageReportStub,
             setDefaults: setDefaultsStub,
-            getErrorCodeFromErr: getErrorCodeFromErrStub
+            getErrorCodeFromErr: getErrorCodeFromErrStub,
+            formatRequest,
           },
           request: {get: requestStub}
         });
@@ -198,7 +203,8 @@ describe("reportHTML", () => {
             setCypressConfigFilename: setCypressConfigFilenameStub,
             sendUsageReport: sendUsageReportStub,
             setDefaults: setDefaultsStub,
-            getErrorCodeFromErr: getErrorCodeFromErrStub
+            getErrorCodeFromErr: getErrorCodeFromErrStub,
+            formatRequest,
           },
           request: {get: requestStub}
         });
@@ -227,7 +233,8 @@ describe("reportHTML", () => {
             setCypressConfigFilename: setCypressConfigFilenameStub,
             sendUsageReport: sendUsageReportStub,
             setDefaults: setDefaultsStub,
-            getErrorCodeFromErr: getErrorCodeFromErrStub
+            getErrorCodeFromErr: getErrorCodeFromErrStub,
+            formatRequest,
           },
           request: {get: requestStub}
         });
@@ -259,7 +266,8 @@ describe("reportHTML", () => {
           setCypressConfigFilename: setCypressConfigFilenameStub,
           sendUsageReport: sendUsageReportStub,
           setDefaults: setDefaultsStub,
-          getErrorCodeFromErr: getErrorCodeFromErrStub
+          getErrorCodeFromErr: getErrorCodeFromErrStub,
+          formatRequest,
         },
         request: {get: requestStub}
       });

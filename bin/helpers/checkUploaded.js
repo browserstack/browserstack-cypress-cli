@@ -82,7 +82,7 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
       zipUrlPresent: false,
       packageUrlPresent: false,
     };
-    if (args["force-upload"] && !utils.isTrueString(bsConfig.run_settings.cache_dependencies)) {
+    if (args["force-upload"]) {
       return resolve(obj);
     }
     
