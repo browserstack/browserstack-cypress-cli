@@ -4,7 +4,8 @@ const request = require('request');
 const config = require('./config'),
   capabilityHelper = require("../helpers/capabilityHelper"),
   Constants = require('../helpers/constants'),
-  utils = require('../helpers/utils');
+  utils = require('../helpers/utils'),
+  logger = require('../helpers/logger').winstonLogger;
 
 const createBuild = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
@@ -24,6 +25,7 @@ const createBuild = (bsConfig, zip) => {
 
       request.post(options, function (err, resp, body) {
         if (err) {
+          logger.error(utils.formatRequest(err, resp, body));
           reject(err);
         } else {
           let build = null;
@@ -37,9 +39,11 @@ const createBuild = (bsConfig, zip) => {
             if (build) {
               resolve(build.message);
             } else {
+              logger.error(utils.formatRequest(err, resp, body));
               reject(Constants.userMessages.API_DEPRECATED);
             }
           } else if (resp.statusCode != 201) {
+            logger.error(utils.formatRequest(err, resp, body));
             if (build) {
               reject(`${Constants.userMessages.BUILD_FAILED} Error: ${build.message}`);
             } else {

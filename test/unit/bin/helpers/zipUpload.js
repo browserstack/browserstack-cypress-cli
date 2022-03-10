@@ -6,7 +6,8 @@ const chai = require("chai"),
   request = require("request");
 
 const logger = require("../../../../bin/helpers/logger").winstonLogger,
-  constant = require('../../../../bin/helpers/constants');
+  constant = require('../../../../bin/helpers/constants'),
+  formatRequest = require('../../../../bin/helpers/utils').formatRequest;
 
 const rewire = require("rewire"),
   cliProgress = require('cli-progress');
@@ -44,10 +45,12 @@ describe("zipUpload", () => {
     const zipUploader = rewire("../../../../bin/helpers/zipUpload");
     beforeEach(() => {
       utilsStub = {
-        generateUploadParams: sinon.stub().returns({})
+        generateUploadParams: sinon.stub().returns({}),
+        formatRequest,
       };
       loggerStub = {
-        info: sandbox.stub().returns(null)
+        info: sandbox.stub().returns(null),
+        error: sandbox.stub().returns(null),
       };
       sinon.stub(fs, 'lstatSync').returns({ size: 123 });
     });
@@ -82,7 +85,7 @@ describe("zipUpload", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          chai.assert.equal(error.message, "test error");
+          chai.assert.equal(error.message.message, "test error");
         });
     });
 
@@ -216,7 +219,7 @@ describe("zipUpload", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          chai.assert.equal(error, "auth failed");
+          chai.assert.equal(error.message, "auth failed");
         });
     });
 
@@ -246,7 +249,7 @@ describe("zipUpload", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          chai.assert.equal(error, constant.validationMessages.INVALID_DEFAULT_AUTH_PARAMS);
+          chai.assert.equal(error.message, constant.validationMessages.INVALID_DEFAULT_AUTH_PARAMS);
         });
     });
 
@@ -308,7 +311,7 @@ describe("zipUpload", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          chai.assert.deepEqual(error, "test error");
+          chai.assert.deepEqual(error.message, "test error");
         });
     });
 
@@ -339,7 +342,7 @@ describe("zipUpload", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          chai.assert.deepEqual(error, constant.userMessages.ZIP_UPLOAD_LIMIT_EXCEEDED);
+          chai.assert.deepEqual(error.message, constant.userMessages.ZIP_UPLOAD_LIMIT_EXCEEDED);
         });
     });
 
@@ -370,7 +373,7 @@ describe("zipUpload", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          chai.assert.deepEqual(error, constant.userMessages.ZIP_UPLOADER_NOT_REACHABLE);
+          chai.assert.deepEqual(error.message, constant.userMessages.ZIP_UPLOADER_NOT_REACHABLE);
         });
     });
   });
@@ -407,12 +410,12 @@ describe("zipUpload", () => {
     });
 
     it("reject with error while uploading suit", () => {
-      let uploadSuitsErrorStub = sandbox.stub().returns(Promise.reject("test error"));
+      let uploadSuitsErrorStub = sandbox.stub().returns(Promise.reject({message: "test error", stacktrace: "stacktrace error"}));
       let purgeUploadBarStub = sandbox.stub().returns(true);
       zipUploader.__set__({
         utils: utilsStub,
         uploadSuits: uploadSuitsErrorStub,
-        purgeUploadBar: purgeUploadBarStub
+        purgeUploadBar: purgeUploadBarStub,
       });
       let uploadCypressZiprewire = zipUploader.__get__('uploadCypressZip');
       let bsConfig = {}
