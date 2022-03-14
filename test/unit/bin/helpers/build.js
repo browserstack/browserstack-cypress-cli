@@ -5,7 +5,8 @@ const chai = require("chai"),
 
 const Constants = require("../../../../bin/helpers/constants"),
   logger = require("../../../../bin/helpers/logger").winstonLogger,
-  testObjects = require("../../support/fixtures/testObjects");
+  testObjects = require("../../support/fixtures/testObjects"),
+  formatRequest = require("../../../../bin/helpers/utils").formatRequest;
 
 const proxyquire = require("proxyquire").noCallThru();
 
@@ -37,6 +38,7 @@ describe("build", () => {
     const build = proxyquire("../../../../bin/helpers/build", {
       "../helpers/utils": {
         getUserAgent: getUserAgentStub,
+        formatRequest,
       },
       "../helpers/capabilityHelper": {
         caps: capsStub,
@@ -64,6 +66,7 @@ describe("build", () => {
       const build = proxyquire("../../../../bin/helpers/build", {
         "../helpers/utils": {
           getUserAgent: getUserAgentStub,
+          formatRequest,
         },
         "../helpers/capabilityHelper": {
           caps: capsStub,
@@ -121,6 +124,7 @@ describe("build", () => {
       const build = proxyquire("../../../../bin/helpers/build", {
         "../helpers/utils": {
           getUserAgent: getUserAgentStub,
+          formatRequest,
         },
         "../helpers/capabilityHelper": {
           caps: capsStub,
@@ -153,6 +157,7 @@ describe("build", () => {
       const build = proxyquire("../../../../bin/helpers/build", {
         "../helpers/utils": {
           getUserAgent: getUserAgentStub,
+          formatRequest,
         },
         "../helpers/capabilityHelper": {
           caps: capsStub,

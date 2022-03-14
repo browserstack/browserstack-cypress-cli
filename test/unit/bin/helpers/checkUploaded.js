@@ -204,7 +204,7 @@ describe("checkUploaded", () => {
         });
     });
 
-    it("resolves with zipUrlPresent false and packageUrlPresent true if force-upload enabled and cache_dependencies enabled", () => {
+    it("resolves with zipUrlPresent false and packageUrlPresent false if force-upload enabled and cache_dependencies enabled", () => {
       let requestStub = sandbox
         .stub(request, "post")
         .yields(null, { statusCode: 200 }, '{"npmPackageUrl":"bs://random_hashid2"}');
@@ -219,11 +219,12 @@ describe("checkUploaded", () => {
       bsConfig.run_settings.cache_dependencies = true
       return checkUploadedMd5rewire(bsConfig, {"force-upload": true}, instrumentBlocks)
         .then((data) => {
-          chai.assert.deepEqual(data, { zipUrlPresent: false, packageUrlPresent: true, npm_package_md5sum: 'random_md5sum', npmPackageUrl: 'bs://random_hashid2' })
-          sinon.assert.calledOnce(requestStub);
-          sinon.assert.calledOnce(checkSpecsMd5Stub);
+          chai.assert.deepEqual(data, { zipUrlPresent: false, packageUrlPresent: false })
+          sinon.assert.notCalled(requestStub);
+          sinon.assert.notCalled(checkSpecsMd5Stub);
         })
         .catch((_error) => {
+          console.log(_error)
           chai.assert.fail("Promise error");
         });
     });
