@@ -2920,6 +2920,123 @@ describe('utils', () => {
     });
   });
 
+  describe('isSpecTimeoutArgPassed', () => {
+    let searchForOptionStub;
+    beforeEach(() => {
+      searchForOptionStub = sinon.stub(utils, 'searchForOption').withArgs('--spec-timeout');
+    })
+    afterEach(() => {
+      sinon.restore();
+    })
+    it('returns true if --spec-timeout flag is passed', () => {
+      searchForOptionStub.withArgs('--spec-timeout').returns(true);
+      expect(utils.isSpecTimeoutArgPassed()).to.eq(true);
+    });
+
+    it('returns true if -t flag is passed', () => {
+      searchForOptionStub.withArgs('--spec-timeout').returns(true);
+      searchForOptionStub.withArgs('-t').returns(true);
+      // stub2.returns(true);
+      expect(utils.isSpecTimeoutArgPassed()).to.eq(true);
+    });
+
+    it('returns false if no flag is passed', () => {
+      searchForOptionStub.withArgs('--spec-timeout').returns(false);
+      searchForOptionStub.withArgs('-t').returns(false);
+      expect(utils.isSpecTimeoutArgPassed()).to.eq(false);
+    });
+  });
+
+  describe("setSpecTimeout", () => {
+    let isSpecTimeoutArgPassedStub;
+    beforeEach(() => {
+      isSpecTimeoutArgPassedStub = sinon.stub(utils, 'isSpecTimeoutArgPassed');
+    });
+
+    afterEach(() => {
+      isSpecTimeoutArgPassedStub.restore();
+    });
+    it('sets spec_timeout defined value passed in args', () => {
+      let bsConfig = {
+        run_settings: {
+          spec_timeout: "abc"
+        }
+      }
+      let args = {
+        specTimeout: 20
+      };
+      isSpecTimeoutArgPassedStub.returns(true);
+      utils.setSpecTimeout(bsConfig, args);
+      expect(bsConfig.run_settings.spec_timeout).to.eq(20);
+    });
+
+    it('sets spec_timeout undefined if no value passed in args', () => {
+      let bsConfig = {
+        run_settings: {
+          spec_timeout: "abc"
+        }
+      }
+      let args = {};
+      isSpecTimeoutArgPassedStub.returns(true);
+      utils.setSpecTimeout(bsConfig, args);
+      expect(bsConfig.run_settings.spec_timeout).to.eq('undefined');
+    });
+
+    it('sets spec_timeout to value passed in bsConfig is not in args', () => {
+      let bsConfig = {
+        run_settings: {
+          spec_timeout: 20
+        }
+      }
+      let args = {};
+      isSpecTimeoutArgPassedStub.returns(false);
+      utils.setSpecTimeout(bsConfig, args);
+      expect(bsConfig.run_settings.spec_timeout).to.eq(20);
+    });
+
+    it('sets spec_timeout to null if no value passed in args or bsConfig', () => {
+      let bsConfig = {
+        run_settings: {}
+      }
+      let args = {};
+      isSpecTimeoutArgPassedStub.returns(false);
+      utils.setSpecTimeout(bsConfig, args);
+      expect(bsConfig.run_settings.spec_timeout).to.eq(null);
+    });
+  });
+
+  describe('#isInteger', () => {
+    it('returns true if positive integer', () => {
+      expect(utils.isInteger(123)).to.eq(true);
+    });
+
+    it('returns true if negative integer', () => {
+      expect(utils.isInteger(-123)).to.eq(true);
+    });
+
+    it('returns false if string', () => {
+      expect(utils.isInteger("123")).to.eq(false);
+    });
+  });
+
+  describe('#isPositiveInteger', () => {
+    it('returns true if string positive integer', () => {
+      expect(utils.isPositiveInteger("123")).to.eq(true);
+    });
+
+    it('returns false if string negative integer', () => {
+      expect(utils.isPositiveInteger("-123")).to.eq(false);
+    });
+
+    it('returns false if complex string without integer', () => {
+      expect(utils.isPositiveInteger("abc qskbd wie")).to.eq(false);
+    });
+
+    it('returns false if complex string with integer', () => {
+      expect(utils.isPositiveInteger("123 2138 a1bc qs3kbd wie")).to.eq(false);
+    });
+  });
+
   describe('formatRequest', () => {
     it('should return correct JSON', () => {
       expect(utils.formatRequest('Something went wrong.', undefined, undefined)).to.be.eql({err: 'Something went wrong.', status: null, body: null});

@@ -63,7 +63,9 @@ const userMessages = {
   DOWNLOAD_BUILD_ARTIFACTS_SUCCESS: "Your build artifact(s) have been successfully downloaded in '<user-path>/build_artifacts/<build-id>' directory",
   LATEST_SYNTAX_TO_ACTUAL_VERSION_MESSAGE: "Your build will run using Cypress <actualVersion> as you had specified <latestSyntaxVersion>.<frameworkUpgradeMessage> Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions",
   PROCESS_KILL_MESSAGE: "Stopping the CLI and the execution of the build on BrowserStack",
-  BUILD_FAILED_ERROR: "The above stacktrace has been thrown by Cypress when we tried to run your build. If your test suite requires npm dependencies then please specify them on browserstack.json. Read more at " +  chalk.blueBright("https://www.browserstack.com/docs/automate/cypress/npm-packages") + ". Also, we recommend you to try running the build locally using ‘cypress run’ and if it works fine then please reach out to support at " + chalk.blueBright("https://www.browserstack.com/contact#technical-support")
+  BUILD_FAILED_ERROR: "The above stacktrace has been thrown by Cypress when we tried to run your build. If your test suite requires npm dependencies then please specify them on browserstack.json. Read more at " +  chalk.blueBright("https://www.browserstack.com/docs/automate/cypress/npm-packages") + ". Also, we recommend you to try running the build locally using ‘cypress run’ and if it works fine then please reach out to support at " + chalk.blueBright("https://www.browserstack.com/contact#technical-support"),
+  SPEC_TIMEOUT_LIMIT_WARNING: "Value for the 'spec_timeout' key not in the 1-120 range. Going ahead with 30 mins as the default spec timeout. Read more about how to specify the option in https://browserstack.com/docs/automate/cypress/spec-timeout",
+  SPEC_LIMIT_SUCCESS_MESSAGE: "Spec timeout specified as <x> minutes. If any of your specs exceed the specified time limit, it would be forcibly killed by BrowserStack"
 };
 
 const validationMessages = {
@@ -97,7 +99,9 @@ const validationMessages = {
   NOT_ALLOWED_GEO_LOCATION_AND_LOCAL_MODE: "IP Geolocation feature is not available in conjunction with BrowserStack Local.",
   HOME_DIRECTORY_NOT_FOUND: "Specified home directory could not be found. Please make sure the path of the home directory is correct.",
   HOME_DIRECTORY_NOT_A_DIRECTORY: "Specified home directory is not a directory. The home directory can only be a directory and not a file.",
-  CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY: "Could not find cypress.json within the specified home directory. Please make sure cypress.json resides within the home directory."
+  CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY: "Could not find cypress.json within the specified home directory. Please make sure cypress.json resides within the home directory.",
+  SPEC_TIMEOUT_LIMIT_ERROR: "The maximum allowed value of 'spec_timeout' is 120. Read more on https://browserstack.com/docs/automate/cypress/spec-timeout ",
+  SPEC_TIMEOUT_NOT_PASSED_ERROR: "'spec_timeout' key not specified. Going ahead with 30 mins as the default spec timeout. Read more about how to specify the option in https://browserstack.com/docs/automate/cypress/spec-timeout "
 };
 
 const cliMessages = {
@@ -140,7 +144,8 @@ const cliMessages = {
     CONFIG_DESCRIPTION: "Set configuration values. Separate multiple values with a comma. The values set here override any values set in your configuration file.",
     REPORTER: "Specify the custom reporter to use",
     REPORTER_OPTIONS: "Specify reporter options for custom reporter",
-    CYPRESS_GEO_LOCATION: "Enterprise feature to simulate website and mobile behavior from different locations."
+    CYPRESS_GEO_LOCATION: "Enterprise feature to simulate website and mobile behavior from different locations.",
+    SPEC_TIMEOUT: "Specify a value for a hard timeout for each spec execution in the 1-120 mins range. Read https://browserstack.com/docs/automate/cypress/spec-timeout for more details."
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",
@@ -168,7 +173,7 @@ const messageTypes = {
   NULL: null
 }
 
-const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip', 'npmrc', 'xml', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'jsx', 'coffee', 'cjsx', 'csv', 'tsv', 'yml', 'yaml', 'env', 'mov', 'mp4', 'mp3', 'wav', 'gz'];
+const allowedFileTypes = ['js', 'json', 'txt', 'ts', 'feature', 'features', 'pdf', 'jpg', 'jpeg', 'png', 'zip', 'npmrc', 'xml', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'jsx', 'coffee', 'cjsx', 'csv', 'tsv', 'yml', 'yaml', 'env', 'mov', 'mp4', 'mp3', 'wav', 'gz', 'tgz', 'tiff', 'bmp', 'msg', 'gif', 'sql'];
 
 const filesToIgnoreWhileUploading = [
   '**/node_modules/**',
@@ -234,6 +239,8 @@ const REDACTED = "[REDACTED]";
 
 const REDACTED_AUTH =`auth: { "username": ${REDACTED}, "access_key": ${REDACTED} }`;
 
+const SPEC_TIMEOUT_LIMIT = 120 // IN MINS 
+
 module.exports = Object.freeze({
   syncCLI,
   userMessages,
@@ -254,5 +261,6 @@ module.exports = Object.freeze({
   ERROR_EXIT_CODE,
   AUTH_REGEX,
   REDACTED_AUTH,
-  BUILD_FAILED_EXIT_CODE
+  BUILD_FAILED_EXIT_CODE,
+  SPEC_TIMEOUT_LIMIT
 });

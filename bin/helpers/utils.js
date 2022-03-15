@@ -310,6 +310,23 @@ exports.setGeolocation = (bsConfig, args) => {
   }
 }
 
+exports.isSpecTimeoutArgPassed = () => {
+  return this.searchForOption('--spec-timeout') || this.searchForOption('-t'); 
+}
+exports.setSpecTimeout = (bsConfig, args) => {
+  let specTimeout = null;
+  if(this.isSpecTimeoutArgPassed()) {
+    if(!this.isUndefined(args.specTimeout)) { 
+      specTimeout = args.specTimeout; 
+    } else {
+      specTimeout = 'undefined'
+    }
+  } else if (!this.isUndefined(bsConfig.run_settings.spec_timeout)) {
+    specTimeout = bsConfig.run_settings.spec_timeout;
+  }
+  bsConfig.run_settings.spec_timeout = specTimeout;
+}
+
 // specs can be passed from bstack configuration file
 // specs can be passed via command line args as a string
 // command line args takes precedence over config
@@ -390,9 +407,25 @@ exports.fixCommaSeparatedString = (string) => {
 
 exports.isUndefined = value => (value === undefined || value === null);
 
+exports.isPositiveInteger = (str) => {
+  if (typeof str !== 'string') {
+    return false;
+  }
+
+  const num = Number(str);
+
+  if (this.isInteger(num) && num > 0) {
+    return true;
+  }
+
+  return false;
+}
+
 exports.isTrueString = value => (!this.isUndefined(value) && value.toString().toLowerCase() === 'true');
 
 exports.isFloat = (value) => Number(value) && Number(value) % 1 !== 0;
+
+exports.isInteger = (value) => Number.isInteger(value);
 
 exports.nonEmptyArray = (value) => {
   if(!this.isUndefined(value) && value && value.length) {
