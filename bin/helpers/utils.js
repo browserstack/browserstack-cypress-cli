@@ -346,11 +346,12 @@ exports.setRecordKeyFlag = (bsConfig, args) => {
 exports.setProjectId = (bsConfig, args) => {
   if(!this.isUndefined(args["projectId"])) {
     return args["projectId"];
+  } else if(!this.isUndefined(bsConfig.run_settings["projectId"])) {
+    return bsConfig.run_settings["projectId"]; 
   } else {
     let cypressJson = this.getCypressJSON(bsConfig);
     if (!this.isUndefined(cypressJson) && !this.isUndefined(cypressJson["projectId"])) {  return cypressJson["projectId"]; }
   }
-  return bsConfig.run_settings["projectId"]; 
 }
 
 exports.setRecordCaps = (bsConfig, args) => {

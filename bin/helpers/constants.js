@@ -102,9 +102,8 @@ const validationMessages = {
   CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY: "Could not find cypress.json within the specified home directory. Please make sure cypress.json resides within the home directory.",
   SPEC_TIMEOUT_LIMIT_ERROR: "The maximum allowed value of 'spec_timeout' is 120. Read more on https://browserstack.com/docs/automate/cypress/spec-timeout ",
   SPEC_TIMEOUT_NOT_PASSED_ERROR: "'spec_timeout' key not specified. Going ahead with 30 mins as the default spec timeout. Read more about how to specify the option in https://browserstack.com/docs/automate/cypress/spec-timeout ",
-  PROJECT_ID_MISSING: "You passed the --record flag but this project has not been setup to record. This project is missing the 'projectId' inside of 'cypress.json'. We cannot uniquely identify this project without this id. You need to setup this project to record. This will generate a unique 'projectId'. Alternatively if you omit the --record flag this project will run without recording. https://on.cypress.io/recording-project-runs",
-  RECORD_KEY_MISSING: "You have specified '--record' flag but you've not provided the '--record-key' and we could not find any value in 'CYPRESS_RECORD_KEY' environment variable. Your record functionality on cypress.io dashboard might not work as it needs the key and projectId",
-  RECORD_MISSING: "You have not specified '--record' flag. Your record functionality on cypress.io dashboard might not work."
+  PROJECT_ID_MISSING: "You have specified '--record' flag but you've not provided the 'projectId' in cypress.json or in browserstack.json. Your record functionality on cypress.io dashboard might not work as it needs both the key and the projectId",
+  RECORD_KEY_MISSING: "You have specified '--record' flag but you've not provided the '--record-key' and we could not find any value in 'CYPRESS_RECORD_KEY' environment variable. Your record functionality on cypress.io dashboard might not work as it needs the key and projectId"
 };
 
 const cliMessages = {
@@ -149,9 +148,9 @@ const cliMessages = {
     REPORTER_OPTIONS: "Specify reporter options for custom reporter",
     CYPRESS_GEO_LOCATION: "Enterprise feature to simulate website and mobile behavior from different locations.",
     SPEC_TIMEOUT: "Specify a value for a hard timeout for each spec execution in the 1-120 mins range. Read https://browserstack.com/docs/automate/cypress/spec-timeout for more details.",
-    RECORD: "Run your tests with record functionality on cypress.io dashboard",
-    RECORD_KEY: "Specify a value for record key.",
-    PROJECT_ID: "Specify a value for project id."
+    RECORD: "Pass the --record flag to record your Cypress runs on Cypress.io dashboard. Note: You also need to specify '--record-key' and '--projectId' arguments either in CLI or in browserstack.json.",
+    RECORD_KEY: "You can specify the 'key' that is needed to record your runs on Cypress.io dashboard using the '--record-key' argument. Alternatively, you can also pass it on browserstack.json",
+    PROJECT_ID: "You can pass the 'projectId' of your Cypress.io project where you want to record your runs if specifying the '--record' key. You can also specify this in your cypress.json or in your browserstack.json."
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",

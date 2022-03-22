@@ -244,7 +244,6 @@ var argv = yargs
           type: "string"
         },
         'record': {
-          default: false,
           describe: Constants.cliMessages.RUN.RECORD,
           type: "boolean"
         },
