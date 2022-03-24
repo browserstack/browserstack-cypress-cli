@@ -3041,11 +3041,26 @@ describe('utils', () => {
       let args = {
         projectId: "def"
       }
+      process.env.CYPRESS_PROJECT_ID = "jkl"
       getCypressJSONStub.returns({ projectId: "ghi" })
       expect(utils.setProjectId(bsConfig, args)).to.eq("def")
+      delete process.env.CYPRESS_PROJECT_ID;
     });
 
-    it("prioritizes projectId passed in the bsConfig if args not passed", () => {
+    it("prioritizes env var if args not passed", () => {
+      let bsConfig = {
+        run_settings: {
+          projectId: "abc"
+        }
+      }
+      let args = {};
+      process.env.CYPRESS_PROJECT_ID = "jkl"
+      getCypressJSONStub.returns({ projectId: "ghi" })
+      expect(utils.setProjectId(bsConfig, args)).to.eq("jkl")
+      delete process.env.CYPRESS_PROJECT_ID;
+    });
+
+    it("prioritizes projectId passed in the bsConfig if args and env var not passed", () => {
       let bsConfig = {
         run_settings: {
           projectId: "abc"
@@ -3056,7 +3071,7 @@ describe('utils', () => {
       expect(utils.setProjectId(bsConfig, args)).to.eq("abc")
     });
 
-    it("prioritizes projectId passed in cypress json when no args and bsConfig is passed", () => {
+    it("prioritizes projectId passed in cypress json when no args, env var and bsConfig is passed", () => {
       let bsConfig = {
         run_settings: {}
       }

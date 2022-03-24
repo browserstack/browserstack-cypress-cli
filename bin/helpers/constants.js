@@ -266,6 +266,7 @@ module.exports = Object.freeze({
   ERROR_EXIT_CODE,
   AUTH_REGEX,
   REDACTED_AUTH,
+  REDACTED,
   BUILD_FAILED_EXIT_CODE,
   SPEC_TIMEOUT_LIMIT
 });

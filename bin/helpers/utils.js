@@ -346,6 +346,8 @@ exports.setRecordKeyFlag = (bsConfig, args) => {
 exports.setProjectId = (bsConfig, args) => {
   if(!this.isUndefined(args["projectId"])) {
     return args["projectId"];
+  } else if(!this.isUndefined(process.env.CYPRESS_PROJECT_ID)) {
+    return process.env.CYPRESS_PROJECT_ID;
   } else if(!this.isUndefined(bsConfig.run_settings["projectId"])) {
     return bsConfig.run_settings["projectId"]; 
   } else {
