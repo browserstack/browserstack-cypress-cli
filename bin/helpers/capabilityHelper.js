@@ -241,7 +241,7 @@ const validate = (bsConfig, args) => {
       logger.warn(Constants.validationMessages.SPEC_TIMEOUT_NOT_PASSED_ERROR);
     }
 
-    if(!Utils.isUndefined(bsConfig.run_settings["record"]) && String(bsConfig.run_settings["record"]) != 'false') {
+    if(!Utils.isUndefined(bsConfig.run_settings["record"]) && String(bsConfig.run_settings["record"]) == 'true') {
       if(Utils.isUndefined(bsConfig.run_settings.projectId) && Utils.isUndefined(bsConfig.run_settings["record-key"])) {
         logger.warn(Constants.validationMessages.PROJECT_ID_MISSING);
         logger.warn(Constants.validationMessages.RECORD_KEY_MISSING);
