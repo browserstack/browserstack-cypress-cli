@@ -9,7 +9,7 @@ const config = require('./config'),
   fileLogger = require('./logger').fileLogger,
   utils = require('./utils');
   
-const { AUTH_REGEX, REDACTED_AUTH } = require("./constants");
+const { AUTH_REGEX, REDACTED_AUTH, REDACTED, CLI_ARGS_REGEX, RAW_ARGS_REGEX } = require("./constants");
 
 function get_version(package_name) {
   try {
@@ -185,10 +185,12 @@ function send(args) {
     runSettings = bsConfig.run_settings;
     data.cypress_version = bsConfig.run_settings.cypress_version;
   }
-
+  
   sanitizedbsConfig = `${(typeof bsConfig === 'string') ? bsConfig : 
   JSON.stringify(bsConfig)}`.replace(AUTH_REGEX, REDACTED_AUTH);
-
+  args.cli_args = args.cli_args && JSON.stringify(args.cli_args).replace(CLI_ARGS_REGEX, REDACTED);
+  args.raw_args = args.raw_args && JSON.stringify(args.raw_args).replace(RAW_ARGS_REGEX, REDACTED);
+  
   delete args.bstack_config;
 
   let zipUploadDetails = {
