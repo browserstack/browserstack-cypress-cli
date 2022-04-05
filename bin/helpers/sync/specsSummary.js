@@ -39,9 +39,6 @@ let printSpecsRunSummary = (data, machines, customErrorsToPrint) => {
           case 'info':
             winstonlogger.info(error.message);
             break;
-          case 'warn':
-            winstonlogger.warn(error.message);
-            break;
           case 'error':
             winstonlogger.error(error.message);
             break;
