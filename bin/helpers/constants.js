@@ -231,7 +231,7 @@ const LATEST_VERSION_SYNTAX_REGEX = /\d*.latest(.\d*)?/gm
 
 const AUTH_REGEX = /"auth" *: *{[\s\S]*?}/g
 
-const CLI_ARGS_REGEX = /(?<=("u"|"username"|"k"|"key") *: *)"[^,|}]*/g
+const CLI_ARGS_REGEX = /(?<=("u"|"username"|"k"|"key") *: *)"[^,}]*/g
 
 const RAW_ARGS_REGEX = /(?<=("-u"|"-username"|"-k"|"-key") *, *)"[^,\]]*/g
 
