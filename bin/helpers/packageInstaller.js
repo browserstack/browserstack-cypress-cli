@@ -66,7 +66,7 @@ const packageInstall = (packageDir) => {
       logger.error(`Some error occurred while installing packages: ${util.inspect(error)}`);
       reject(`Packages were not installed successfully. Error Description ${util.inspect(error)}`);
     };
-    nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir});
+    nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true});
     nodeProcess.on('close', nodeProcessCloseCallback);
     nodeProcess.on('error', nodeProcessErrorCallback);
   });
