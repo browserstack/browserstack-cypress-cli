@@ -7,7 +7,8 @@
   Constants = require('./constants'),
   process = require('process'),
   utils = require('./utils'),
-  { spawn } = require('child_process');
+  { spawn } = require('child_process'),
+  util = require('util');
 
 let nodeProcess;
 
@@ -54,16 +55,18 @@ const packageInstall = (packageDir) => {
   return new Promise(function (resolve, reject) {
     const nodeProcessCloseCallback = (code) => {
       if(code == 0) {
+        logger.info(`Packages were installed locally successfully.`);
         resolve('Packages were installed successfully.');
       } else {
-        reject('Packages were not installed successfully.');
+        logger.error(`Some error occurred while installing packages. Error code ${code}`);
+        reject('Packages were not installed successfully. Error code ${code}');
       }
     };
     const nodeProcessErrorCallback = (error) => {
-      logger.error(`Some error occurred while installing packages: ${error}`);
-      reject(`Packages were not installed successfully.`);
+      logger.error(`Some error occurred while installing packages: ${util.inspect(error)}`);
+      reject(`Packages were not installed successfully. Error Description ${util.inspect(error)}`);
     };
-    nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install'], {cwd: packageDir});
+    nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir});
     nodeProcess.on('close', nodeProcessCloseCallback);
     nodeProcess.on('error', nodeProcessErrorCallback);
   });
