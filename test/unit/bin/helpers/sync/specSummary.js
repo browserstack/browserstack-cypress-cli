@@ -6,6 +6,7 @@ const chai = require("chai"),
 
 chai.use(chaiAsPromised);
 var logger = require("../../../../../bin/helpers/logger").syncCliLogger;
+var winstonLogger = require("../../../../../bin/helpers/logger").winstonLogger;
 var specSummary = require('../../../../../bin/helpers/sync/specsSummary');
 
 describe("printSpecsRunSummary", () => {
@@ -50,6 +51,38 @@ describe("printSpecsRunSummary", () => {
       sinon.assert.calledWith(loggerInfoSpy, `Done in ${time / 1000} seconds using ${machines} machines\n`);
 
       loggerInfoSpy.restore();
+    });
+  });
+
+  context("with custom error data", () => {
+    let time = 6000,
+        machines = 2,
+        specs = [
+          {specName: 'spec2.name.js', status: 'Failed', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'},
+          {specName: 'spec2.name.js', status: 'Skipped', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'},
+          {specName: 'spec2.name.js', status: 'Failed', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'},
+          {specName: 'spec2.name.js', status: 'Passed', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'}
+        ],
+        data = {
+          specs: specs,
+          duration: time,
+          exitCode: 0
+        },
+        customErrorsToPrint = [
+          { id: "custom_error", type: "custom_errors_to_print", level: "warn", should_be_unique: true, message: "custom error message" }
+        ];
+
+    it('prints the custom error message along with build details', () => {
+      var loggerInfoSpy = sinon.spy(logger, 'info');
+      var loggerWarnSpy = sinon.spy(winstonLogger, 'warn');
+
+      specSummary.printSpecsRunSummary(data, machines, customErrorsToPrint);
+      sinon.assert.calledWith(loggerInfoSpy, 'Total tests: 4, passed: 1, failed: 2, skipped: 1');
+      sinon.assert.calledWith(loggerInfoSpy, `Done in ${time / 1000} seconds using ${machines} machines\n`);
+      sinon.assert.calledWith(loggerWarnSpy, `custom error message`);
+
+      loggerInfoSpy.restore();
+      loggerWarnSpy.restore();
     });
   });
 });
