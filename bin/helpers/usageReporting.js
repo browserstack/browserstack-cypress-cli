@@ -172,6 +172,10 @@ function isUsageReportingEnabled() {
   return process.env.DISABLE_USAGE_REPORTING;
 }
 
+function redactKeys(str, regex, redact) {
+  return str.replace(regex, redact);
+}
+
 function send(args) {
   if (isUsageReportingEnabled() === "true") return;
 
@@ -186,10 +190,10 @@ function send(args) {
     data.cypress_version = bsConfig.run_settings.cypress_version;
   }
   
-  sanitizedbsConfig = `${(typeof bsConfig === 'string') ? bsConfig : 
-  JSON.stringify(bsConfig)}`.replace(AUTH_REGEX, REDACTED_AUTH);
-  args.cli_args = args.cli_args && JSON.stringify(args.cli_args).replace(CLI_ARGS_REGEX, REDACTED);
-  args.raw_args = args.raw_args && JSON.stringify(args.raw_args).replace(RAW_ARGS_REGEX, REDACTED);
+  sanitizedbsConfig = redactKeys(`${(typeof bsConfig === 'string') ? bsConfig : 
+  JSON.stringify(bsConfig)}`, AUTH_REGEX, REDACTED_AUTH);
+  args.cli_args = args.cli_args && redactKeys(JSON.stringify(args.cli_args), CLI_ARGS_REGEX, REDACTED);
+  args.raw_args = args.raw_args && redactKeys(JSON.stringify(args.raw_args), RAW_ARGS_REGEX, REDACTED);
   
   delete args.bstack_config;
 
