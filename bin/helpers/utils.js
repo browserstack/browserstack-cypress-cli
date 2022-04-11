@@ -327,6 +327,41 @@ exports.setSpecTimeout = (bsConfig, args) => {
   bsConfig.run_settings.spec_timeout = specTimeout;
 }
 
+exports.setRecordFlag = (bsConfig, args) => {
+  if(!this.isUndefined(args["record"])) {
+    return true;
+  }
+  return bsConfig.run_settings["record"];
+}
+
+exports.setRecordKeyFlag = (bsConfig, args) => {
+  if(!this.isUndefined(args["record-key"])) {
+    return args["record-key"];
+  } else if (!this.isUndefined(process.env.CYPRESS_RECORD_KEY)) {
+    return process.env.CYPRESS_RECORD_KEY;
+  }
+  return bsConfig.run_settings["record-key"];
+}
+
+exports.setProjectId = (bsConfig, args) => {
+  if(!this.isUndefined(args["projectId"])) {
+    return args["projectId"];
+  } else if(!this.isUndefined(process.env.CYPRESS_PROJECT_ID)) {
+    return process.env.CYPRESS_PROJECT_ID;
+  } else if(!this.isUndefined(bsConfig.run_settings["projectId"])) {
+    return bsConfig.run_settings["projectId"]; 
+  } else {
+    let cypressJson = this.getCypressJSON(bsConfig);
+    if (!this.isUndefined(cypressJson) && !this.isUndefined(cypressJson["projectId"])) {  return cypressJson["projectId"]; }
+  }
+}
+
+exports.setRecordCaps = (bsConfig, args) => {
+  bsConfig.run_settings["record"] = this.setRecordFlag(bsConfig, args);
+  bsConfig.run_settings["record-key"] = this.setRecordKeyFlag(bsConfig, args);
+  bsConfig.run_settings["projectId"] = this.setProjectId(bsConfig, args);
+}
+
 // specs can be passed from bstack configuration file
 // specs can be passed via command line args as a string
 // command line args takes precedence over config

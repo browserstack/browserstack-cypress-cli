@@ -9,7 +9,7 @@ const config = require('./config'),
   fileLogger = require('./logger').fileLogger,
   utils = require('./utils');
   
-const { AUTH_REGEX, REDACTED_AUTH } = require("./constants");
+const { AUTH_REGEX, REDACTED_AUTH, REDACTED } = require("./constants");
 
 function get_version(package_name) {
   try {
@@ -172,6 +172,27 @@ function isUsageReportingEnabled() {
   return process.env.DISABLE_USAGE_REPORTING;
 }
 
+function redactBsConfig(bsConfig) {
+  if(typeof bsConfig === 'object' && !utils.isUndefined(bsConfig.run_settings)) {
+    if(!utils.isUndefined(bsConfig.run_settings["projectId"])) { bsConfig.run_settings["projectId"] = REDACTED }
+    if(!utils.isUndefined(bsConfig.run_settings["record-key"])) { bsConfig.run_settings["record-key"] = REDACTED }
+  }
+}
+
+function redactArgs(args) {
+  if(typeof args === 'object' && !utils.isUndefined(args.cli_args)) {
+    if(!utils.isUndefined(args.cli_args["projectId"])) { args.cli_args["projectId"] = REDACTED }
+    if(!utils.isUndefined(args.cli_args["project-id"])) { args.cli_args["project-id"] = REDACTED }
+    if(!utils.isUndefined(args.cli_args["record-key"])) { args.cli_args["record-key"] = REDACTED }
+    if(!utils.isUndefined(args.cli_args["recordKey"])) { args.cli_args["recordKey"] = REDACTED }
+  }
+}
+
+function redactRecordCaps(bsConfig, args) {
+  redactBsConfig(bsConfig);
+  redactArgs(args);
+}
+
 function send(args) {
   if (isUsageReportingEnabled() === "true") return;
 
@@ -179,8 +200,10 @@ function send(args) {
   let runSettings = "";
   let sanitizedbsConfig = "";
   let cli_details = cli_version_and_path(bsConfig);
-  let data = utils.isUndefined(args.data) ? {} : args.data;
 
+  redactRecordCaps(bsConfig, args);
+
+  let data = utils.isUndefined(args.data) ? {} : args.data;
   if (bsConfig && bsConfig.run_settings) {
     runSettings = bsConfig.run_settings;
     data.cypress_version = bsConfig.run_settings.cypress_version;

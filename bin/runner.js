@@ -243,6 +243,20 @@ var argv = yargs
           describe: Constants.cliMessages.RUN.REPORTER_OPTIONS,
           type: "string"
         },
+        'record': {
+          describe: Constants.cliMessages.RUN.RECORD,
+          type: "boolean"
+        },
+        'record-key': {
+          default: undefined,
+          describe: Constants.cliMessages.RUN.RECORD_KEY,
+          type: "string"
+        },
+        'projectId': {
+          default: undefined,
+          describe: Constants.cliMessages.RUN.PROJECT_ID,
+          type: "string"
+        }
       })
       .help('help')
       .wrap(null)
