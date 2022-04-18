@@ -250,6 +250,8 @@ const REDACTED_AUTH =`auth: { "username": ${REDACTED}, "access_key": ${REDACTED}
 
 const SPEC_TIMEOUT_LIMIT = 120 // IN MINS 
 
+const CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY = "custom_errors_to_print";
+
 module.exports = Object.freeze({
   syncCLI,
   userMessages,
@@ -274,5 +276,6 @@ module.exports = Object.freeze({
   REDACTED_AUTH,
   REDACTED,
   BUILD_FAILED_EXIT_CODE,
-  SPEC_TIMEOUT_LIMIT
+  SPEC_TIMEOUT_LIMIT,
+  CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY
 });
