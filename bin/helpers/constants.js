@@ -231,6 +231,10 @@ const LATEST_VERSION_SYNTAX_REGEX = /\d*.latest(.\d*)?/gm
 
 const AUTH_REGEX = /"auth" *: *{[\s\S]*?}/g
 
+const CLI_ARGS_REGEX = /(?<=("u"|"username"|"k"|"key") *: *)"[^,}]*/g
+
+const RAW_ARGS_REGEX = /(?<=("-u"|"-username"|"-k"|"-key") *, *)"[^,\]]*/g
+
 const ERROR_EXIT_CODE = 1;
 
 const BUILD_FAILED_EXIT_CODE = 3;
@@ -262,7 +266,10 @@ module.exports = Object.freeze({
   LATEST_VERSION_SYNTAX_REGEX,
   ERROR_EXIT_CODE,
   AUTH_REGEX,
+  CLI_ARGS_REGEX,
+  RAW_ARGS_REGEX,
   REDACTED_AUTH,
+  REDACTED,
   BUILD_FAILED_EXIT_CODE,
   SPEC_TIMEOUT_LIMIT,
   CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY
