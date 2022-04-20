@@ -1,5 +1,6 @@
 const cp = require("child_process"),
   fs = require("fs");
+const { CLI_ARGS_REGEX, REDACTED } = require("../../../../bin/helpers/constants");
 
 const chai = require("chai"),
   expect = chai.expect,
@@ -9,7 +10,8 @@ const chai = require("chai"),
   rewire = require("rewire");
 
 const logger = require("../../../../bin/helpers/logger").winstonLogger,
-  testObjects = require("../../support/fixtures/testObjects");
+  testObjects = require("../../support/fixtures/testObjects"),
+  constant = require('../../../../bin/helpers/constants');
 
 const usageReporting = rewire("../../../../bin/helpers/usageReporting");
 
@@ -27,6 +29,7 @@ bstack_json_found_in_pwd = usageReporting.__get__("bstack_json_found_in_pwd");
 cypress_json_found_in_pwd = usageReporting.__get__("cypress_json_found_in_pwd");
 npm_global_path = usageReporting.__get__("npm_global_path");
 cli_version_and_path = usageReporting.__get__("cli_version_and_path");
+redactKeys = usageReporting.__get__("redactKeys");
 
 describe("usageReporting", () => {
   describe("_os", () => {
@@ -408,4 +411,77 @@ describe("usageReporting", () => {
       expect(ci_environment()).to.be.null;
     });
   });
+
+  describe("redactKeys", () => {
+    it("filters username and access_key from bstack_config", () => {
+      const bstack_config = { auth: { username: "test_123", access_key: "test_key" } };
+      const sanitizedbsConfig = redactKeys(JSON.stringify(bstack_config), constant.AUTH_REGEX, constant.REDACTED_AUTH);
+      expect(sanitizedbsConfig.includes("[REDACTED]")).to.be.true;
+      expect(sanitizedbsConfig.includes("test_123")).to.be.false;
+      expect(sanitizedbsConfig.includes("test_key")).to.be.false;
+    });
+
+    it("filters keys from cli_args", () => {
+      const cli_args = {
+        _: [ 'generate-report', 'ceb31f07eb386706ae7ab52ebe5d9b2ebf2fdebf' ],
+        u: 'test_123',
+        username: 'test_123',
+        k: 'test_key',
+        key: 'test_key',
+        cf: 'browserstack.json',
+        'config-file': 'browserstack.json',
+        configFile: 'browserstack.json',
+        '$0': 'browserstack-cypress'
+      }
+      const sanitizedCliArgs = redactKeys(JSON.stringify(cli_args), constant.CLI_ARGS_REGEX, constant.REDACTED);
+      expect(sanitizedCliArgs.includes("[REDACTED]")).to.be.true;
+      expect(sanitizedCliArgs.includes("test_123")).to.be.false;
+      expect(sanitizedCliArgs.includes("test_key")).to.be.false;
+      expect(sanitizedCliArgs).to.be.equal("{\"_\":[\"generate-report\",\"ceb31f07eb386706ae7ab52ebe5d9b2ebf2fdebf\"],\"u\":[REDACTED],\"username\":[REDACTED],\"k\":[REDACTED],\"key\":[REDACTED],\"cf\":\"browserstack.json\",\"config-file\":\"browserstack.json\",\"configFile\":\"browserstack.json\",\"$0\":\"browserstack-cypress\"}");
+      expect(redactKeys(JSON.stringify({
+        u: 'test_123',
+        username: 'test_123',
+        k: 'test_key',
+        key: 'test_key',
+        cf: 'browserstack.json',
+        'config-file': 'browserstack.json',
+        configFile: 'browserstack.json',
+        '$0': 'browserstack-cypress'
+      }), CLI_ARGS_REGEX, REDACTED)).to.be.equal("{\"u\":[REDACTED],\"username\":[REDACTED],\"k\":[REDACTED],\"key\":[REDACTED],\"cf\":\"browserstack.json\",\"config-file\":\"browserstack.json\",\"configFile\":\"browserstack.json\",\"$0\":\"browserstack-cypress\"}");
+      expect(redactKeys(JSON.stringify({
+        u: 'test_123',
+        username: 'test_123',
+        k: 'test_key',
+        key: 'test_key'
+      }), CLI_ARGS_REGEX, REDACTED)).to.be.equal("{\"u\":[REDACTED],\"username\":[REDACTED],\"k\":[REDACTED],\"key\":[REDACTED]}");
+    });
+
+    it("filters keys from raw_args", () => {
+      const raw_args = [
+        'generate-report',
+        'ceb31f07eb386706ae7ab52ebe5d9b2ebf2fdebf',
+        '-u',
+        'test_123',
+        '-k',
+        'test_key'
+      ]
+      let sanitizedRawArgs = redactKeys(JSON.stringify(raw_args), constant.RAW_ARGS_REGEX, constant.REDACTED);
+      expect(sanitizedRawArgs.includes("[REDACTED]")).to.be.true;
+      expect(sanitizedRawArgs.includes("test_123")).to.be.false;
+      expect(sanitizedRawArgs.includes("test_key")).to.be.false;
+      expect(sanitizedRawArgs).to.be.equal("[\"generate-report\",\"ceb31f07eb386706ae7ab52ebe5d9b2ebf2fdebf\",\"-u\",[REDACTED],\"-k\",[REDACTED]]");
+      raw_args.push('-files', "test.txt");
+      sanitizedRawArgs = redactKeys(JSON.stringify(raw_args), constant.RAW_ARGS_REGEX, constant.REDACTED);
+      expect(sanitizedRawArgs.includes("[REDACTED]")).to.be.true;
+      expect(sanitizedRawArgs.includes("test_123")).to.be.false;
+      expect(sanitizedRawArgs.includes("test_key")).to.be.false;
+      expect(sanitizedRawArgs).to.be.equal("[\"generate-report\",\"ceb31f07eb386706ae7ab52ebe5d9b2ebf2fdebf\",\"-u\",[REDACTED],\"-k\",[REDACTED],\"-files\",\"test.txt\"]");
+      raw_args.shift(); raw_args.shift();
+      sanitizedRawArgs = redactKeys(JSON.stringify(raw_args), constant.RAW_ARGS_REGEX, constant.REDACTED);
+      expect(sanitizedRawArgs.includes("[REDACTED]")).to.be.true;
+      expect(sanitizedRawArgs.includes("test_123")).to.be.false;
+      expect(sanitizedRawArgs.includes("test_key")).to.be.false;
+      expect(sanitizedRawArgs).to.be.equal("[\"-u\",[REDACTED],\"-k\",[REDACTED],\"-files\",\"test.txt\"]");
+    });
+  })
 });
