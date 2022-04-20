@@ -739,7 +739,7 @@ exports.stopLocalBinary = (bsConfig, bs_local, args, rawArgs) => {
         if (that.isUndefined(localStopError)) {
           resolve();
         } else {
-          logger.debug(`Stopping local binary failed with error ${localStopError}`);
+          logger.debug(`Stopping local binary failed with error`, localStopError);
           let message = `name: ${localStopError.name}, message: ${localStopError.message}, extra: ${localStopError.extra}`,
             errorCode = 'local_stop_error';
           that.sendUsageReport(
