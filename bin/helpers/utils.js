@@ -857,7 +857,7 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressJson) => {
   let globSearchPattern = this.sanitizeSpecsPattern(bsConfig.run_settings.specs) || `${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`;
   let ignoreFiles = args.exclude || bsConfig.run_settings.exclude;
   let files = glob.sync(globSearchPattern, {cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles});
-  logger.debug(`${files.length} spec files found at ${testFolderPath}`);
+  logger.debug(`${files ? files.length : 0} spec files found at ${testFolderPath}`);
   return files;
 };
 

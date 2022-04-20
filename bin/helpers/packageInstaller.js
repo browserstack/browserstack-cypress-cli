@@ -65,7 +65,7 @@ const packageInstall = (packageDir) => {
         resolve('Packages were installed successfully.');
       } else {
         logger.error(`Some error occurred while installing packages. Error code ${code}`);
-        reject('Packages were not installed successfully. Error code ${code}');
+        reject(`Packages were not installed successfully. Error code ${code}`);
       }
     };
     const nodeProcessErrorCallback = (error) => {

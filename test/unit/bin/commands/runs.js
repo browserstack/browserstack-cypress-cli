@@ -21,6 +21,7 @@ describe("runs", () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
+      setDebugModeStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
@@ -50,7 +51,8 @@ describe("runs", () => {
           setUsageReportingFlag: setUsageReportingFlagStub,
           getConfigPath: getConfigPathStub,
           deleteResults: deleteResultsStub,
-          readBsConfigJSON: readBsConfigJSONStub
+          readBsConfigJSON: readBsConfigJSONStub,
+          setDebugMode: setDebugModeStub
         },
       });
 
@@ -158,7 +160,8 @@ describe("runs", () => {
           setConfig: setConfigStub,
           setCLIMode: setCLIModeStub,
           setGeolocation: setGeolocationStub,
-          setSpecTimeout: setSpecTimeoutStub
+          setSpecTimeout: setSpecTimeoutStub,
+          setDebugMode: setDebugModeStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub
@@ -302,7 +305,8 @@ describe("runs", () => {
           setCLIMode: setCLIModeStub,
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
-          setSpecTimeout: setSpecTimeoutStub
+          setSpecTimeout: setSpecTimeoutStub,
+          setDebugMode: setDebugModeStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -468,7 +472,8 @@ describe("runs", () => {
           fetchZipSize: fetchZipSizeStub,
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
-          setSpecTimeout: setSpecTimeoutStub
+          setSpecTimeout: setSpecTimeoutStub,
+          setDebugMode: setDebugModeStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -642,7 +647,8 @@ describe("runs", () => {
           fetchZipSize: fetchZipSizeStub,
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
-          setSpecTimeout: setSpecTimeoutStub
+          setSpecTimeout: setSpecTimeoutStub,
+          setDebugMode: setDebugModeStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -849,7 +855,8 @@ describe("runs", () => {
           fetchZipSize: fetchZipSizeStub,
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
-          setSpecTimeout: setSpecTimeoutStub
+          setSpecTimeout: setSpecTimeoutStub,
+          setDebugMode: setDebugModeStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
