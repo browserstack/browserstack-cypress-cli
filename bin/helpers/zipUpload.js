@@ -69,6 +69,9 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
             } 
           }
           if (!opts.propogateError){
+            if (resp.statusCode == 413) {
+              logger.warn("node_modules upload failed as the size is more than 200 MB. Dependencies will be installed in runtime. This will have a negative impact on performance.");
+            }
             return resolve({});
           }
           if(responseData && responseData["error"]){
