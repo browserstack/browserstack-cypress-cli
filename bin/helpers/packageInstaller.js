@@ -15,11 +15,13 @@ let nodeProcess;
 const setupPackageFolder = (runSettings, directoryPath) => {
   return new Promise(function (resolve, reject) {
     fileHelpers.deletePackageArchieve(false);
+    logger.debug(`Started creating ${directoryPath} folder`);
     fs.mkdir(directoryPath, function (err) {
       try {
         if (err) {
           return reject(err);
         }
+        logger.debug(`Completed creating ${directoryPath}`);
         let packageJSON = {};
         if (typeof runSettings.package_config_options === 'object') {
           Object.assign(packageJSON, runSettings.package_config_options);
@@ -39,12 +41,16 @@ const setupPackageFolder = (runSettings, directoryPath) => {
           let sourceNpmrc = path.join(cypressFolderPath, ".npmrc");
           let destNpmrc = path.join(directoryPath, ".npmrc");
           if (fs.existsSync(sourceNpmrc)) {
+            logger.debug(`Copying .npmrc file from ${sourceNpmrc} to ${destNpmrc}`);
             fs.copyFileSync(sourceNpmrc, destNpmrc);
           }
+          logger.debug(`${packagePath} file created with ${packageJSONString}`);
           return resolve("Package file created");
         }
+        logger.debug("Nothing in package file");
         return reject("Nothing in package file");
       } catch(error) {
+        logger.debug(`Creating ${directoryPath} failed with error ${error}`);
         return reject(error);
       }
     })
@@ -82,6 +88,7 @@ const packageArchiver = (packageDir, packageFile) => {
       if (err.code === 'ENOENT') {
         logger.info(err);
       } else {
+        logger.debug(`Archiving of node_modules failed with error ${err}`);
         reject(err);
       }
     });
@@ -95,6 +102,7 @@ const packageArchiver = (packageDir, packageFile) => {
     });
 
     archive.on('error', function (err) {
+      logger.debug(`Archiving of node_modules failed with error ${err}`);
       reject(err);
     });
 
@@ -110,24 +118,32 @@ const packageWrapper = (bsConfig, packageDir, packageFile, md5data, instrumentBl
       packageArchieveCreated: false
     };
     if (md5data.packageUrlPresent || !utils.isTrueString(bsConfig.run_settings.cache_dependencies)) {
+      logger.debug("Skipping the caching of npm packages since BrowserStack has already cached your npm dependencies that have not changed since the last run.")
       return resolve(obj);
     }
     logger.info(Constants.userMessages.NPM_INSTALL_AND_UPLOAD);
     instrumentBlocks.markBlockStart("packageInstaller.folderSetup");
+    logger.debug("Started setting up package folder");
     return setupPackageFolder(bsConfig.run_settings, packageDir).then((_result) => {
+      logger.debug("Completed setting up package folder");
       process.env.CYPRESS_INSTALL_BINARY = 0
       instrumentBlocks.markBlockEnd("packageInstaller.folderSetup");
       instrumentBlocks.markBlockStart("packageInstaller.packageInstall");
+      logger.debug("Started installing dependencies specified in browserstack.json");
       return packageInstall(packageDir);
     }).then((_result) => {
+      logger.debug("Completed installing dependencies");
       instrumentBlocks.markBlockEnd("packageInstaller.packageInstall");
       instrumentBlocks.markBlockStart("packageInstaller.packageArchive");
+      logger.debug("Started archiving node_modules")
       return packageArchiver(packageDir, packageFile);
     }).then((_result) => {
+      logger.debug("Archiving of node_modules completed");
       instrumentBlocks.markBlockEnd("packageInstaller.packageArchive");
       Object.assign(obj, { packageArchieveCreated: true });
       return resolve(obj);
     }).catch((err) => {
+      logger.warn(`Error occured while caching npm dependencies. Dependencies will be installed in runtime. This will have a negative impact on performance. Reach out to browserstack.com/contact, if you persistantly face this issue.`);
       obj.error = err.stack ? err.stack.toString().substring(0,100) : err.toString().substring(0,100);
       return resolve(obj);
     })

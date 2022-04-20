@@ -16,7 +16,8 @@ const usageReporting = require("./usageReporting"),
   syncCliLogger = require("../helpers/logger").syncCliLogger,
   fileHelpers = require("./fileHelpers"),
   config = require("../helpers/config"),
-  pkg = require('../../package.json');
+  pkg = require('../../package.json'),
+  transports = require('./logger').transports;
 
 const request = require('request');
 
@@ -154,6 +155,7 @@ exports.setUsageReportingFlag = (bsConfig, disableUsageReporting) => {
   } else {
     process.env.DISABLE_USAGE_REPORTING = disableUsageReporting;
   }
+  logger.debug(`Setting disable_usage_reporting flag as ${process.env.DISABLE_USAGE_REPORTING}`);
 };
 
 exports.getParallels = (bsConfig, args) => {
@@ -226,6 +228,7 @@ exports.setDefaults = (bsConfig, args) => {
 exports.setUsername = (bsConfig, args) => {
   if (!this.isUndefined(args.username)) {
     bsConfig["auth"]["username"] = args.username;
+    logger.debug(`Reading username from command line = ${args.username}`);
   } else if (!this.isUndefined(process.env.BROWSERSTACK_USERNAME)) {
     bsConfig["auth"]["username"] = process.env.BROWSERSTACK_USERNAME;
     logger.info(
@@ -237,6 +240,7 @@ exports.setUsername = (bsConfig, args) => {
 exports.setAccessKey = (bsConfig, args) => {
   if (!this.isUndefined(args.key)) {
     bsConfig["auth"]["access_key"] = args.key;
+    logger.debug("Reading access_key from command line");
   } else if (!this.isUndefined(process.env.BROWSERSTACK_ACCESS_KEY)) {
     bsConfig["auth"]["access_key"] = process.env.BROWSERSTACK_ACCESS_KEY;
     logger.info(
@@ -247,6 +251,7 @@ exports.setAccessKey = (bsConfig, args) => {
 
 exports.setBuildName = (bsConfig, args) => {
   if (!this.isUndefined(args["build-name"])) {
+    logger.debug(`Reading build name from command line = ${args["build-name"]}`);
     bsConfig["run_settings"]["build_name"] = args["build-name"];
   }
 };
@@ -286,6 +291,8 @@ exports.setCypressConfigFilename = (bsConfig, args) => {
     bsConfig.run_settings.cypressConfigFilePath = path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json');
     bsConfig.run_settings.cypressProjectDir = bsConfig.run_settings.cypress_proj_dir;
   }
+  logger.debug(`Setting cypress config file path = ${bsConfig.run_settings.cypressConfigFilePath}`);
+  logger.debug(`Setting cypress project dir = ${bsConfig.run_settings.cypressProjDir}`);
 }
 
 exports.verifyGeolocationOption = () => {
@@ -308,6 +315,7 @@ exports.setGeolocation = (bsConfig, args) => {
   } else {
     bsConfig.run_settings.geolocation = bsConfig.run_settings.geolocation.toUpperCase();
   }
+  logger.debug(`Setting geolocation = ${bsConfig.run_settings.geolocation}`);
 }
 
 exports.isSpecTimeoutArgPassed = () => {
@@ -325,6 +333,7 @@ exports.setSpecTimeout = (bsConfig, args) => {
     specTimeout = bsConfig.run_settings.spec_timeout;
   }
   bsConfig.run_settings.spec_timeout = specTimeout;
+  logger.debug(`Setting spec timeout = ${specTimeout}`);
 }
 
 // specs can be passed from bstack configuration file
@@ -335,6 +344,7 @@ exports.setUserSpecs = (bsConfig, args) => {
 
   if (!this.isUndefined(args.specs)) {
     bsConfig.run_settings.specs = this.fixCommaSeparatedString(args.specs);
+    logger.debug(`Specs provided to run using CLI argument = ${bsConfig.run_settings.specs}`);
   } else if (!this.isUndefined(bsConfigSpecs) && Array.isArray(bsConfigSpecs)) {
     bsConfig.run_settings.specs = bsConfigSpecs.join(',');
   } else if (!this.isUndefined(bsConfigSpecs) && typeof(bsConfigSpecs) == "string") {
@@ -365,6 +375,8 @@ exports.setTestEnvs = (bsConfig, args) => {
   } else {
     bsConfig.run_settings.env = Object.keys(envKeys).map(key => (`${key}=${envKeys[key]}`)).join(',');
   }
+
+  logger.debug(`Setting env vars = ${bsConfig.run_settings.env}`);
 }
 
 exports.setSystemEnvs = (bsConfig) => {
@@ -392,6 +404,8 @@ exports.setSystemEnvs = (bsConfig) => {
   } else {
     bsConfig.run_settings.system_env_vars = Object.keys(envKeys).map(key => (`${key}=${envKeys[key]}`));
   }
+
+  logger.debug(`Setting system env vars = ${bsConfig.run_settings.system_env_vars}`);
 }
 
 exports.getKeysMatchingPattern = (obj, pattern) => {
@@ -466,6 +480,7 @@ exports.configCreated = (args) => {
 
 exports.exportResults = (buildId, buildUrl) => {
   let data = "BUILD_ID=" + buildId + "\nBUILD_URL=" + buildUrl;
+  logger.debug("Writing build results to log/build_results.txt");
   fs.writeFileSync("log/build_results.txt", data, function (err) {
     if (err) {
       logger.warn(
@@ -586,6 +601,7 @@ exports.setLocal = (bsConfig, args) => {
       local = true;
     }
     bsConfig['connection_settings']['local'] = local;
+    logger.debug(`Reading local setting from command line as ${local}`);
   } else if (!this.isUndefined(process.env.BROWSERSTACK_LOCAL)) {
     let local = false;
     if (String(process.env.BROWSERSTACK_LOCAL).toLowerCase() === 'true') {
@@ -660,6 +676,7 @@ exports.setLocalMode = (bsConfig, args) => {
     if (localModeInferred && localModeUndefined) {
       bsConfig.connection_settings.local_mode_inferred = local_mode;
     }
+    logger.debug(`local_mode set to ${bsConfig.connection_settings.local_mode_inferred}`);
   }
 };
 
@@ -679,6 +696,7 @@ exports.setupLocalTesting = (bsConfig, args, rawArgs) => {
         process.env.BSTACK_CYPRESS_LOCAL_BINARY_RUNNING = "true";
       }
       if (!localIdentifierRunning){
+        logger.debug(`Local binary with identifier ${bsConfig["connection_settings"]["local_identifier"]} not running. Starting a new connection.`);
         bsConfig.connection_settings.usedAutoLocal = true;
         var bs_local = this.getLocalBinary();
         var bs_local_args = this.setLocalArgs(bsConfig, args);
@@ -689,6 +707,7 @@ exports.setupLocalTesting = (bsConfig, args, rawArgs) => {
             process.env.BSTACK_CYPRESS_LOCAL_BINARY_RUNNING = "true";
             resolve(bs_local);
           } else {
+            logger.debug(`Error occured while starting a new Local connection with error :`,localStartError);
             let message = `name: ${localStartError.name}, message: ${localStartError.message}, extra: ${localStartError.extra}`,
                 errorCode = "local_start_error";
             that.sendUsageReport(
@@ -718,6 +737,7 @@ exports.stopLocalBinary = (bsConfig, bs_local, args, rawArgs) => {
       let that = this;
       bs_local.stop(function (localStopError) {
         if (that.isUndefined(localStopError)) {
+          logger.debug(`Stopping local binary failed with error ${localStopError}`);
           resolve();
         } else {
           let message = `name: ${localStopError.name}, message: ${localStopError.message}, extra: ${localStopError.extra}`,
@@ -768,6 +788,7 @@ exports.generateLocalIdentifier = (mode) => {
 };
 
 exports.checkLocalBinaryRunning = (bsConfig, localIdentifier) => {
+  logger.debug("Checking if local binary running");
   let options = {
     url: `${config.cypress_v1}/local_binary_running_check`,
     auth: {
@@ -794,6 +815,7 @@ exports.checkLocalBinaryRunning = (bsConfig, localIdentifier) => {
 exports.setLocalConfigFile = (bsConfig, args) => {
   if(!this.isUndefined(args.localConfigFile)){
     bsConfig['connection_settings']['local_config_file'] = args.localConfigFile;
+    logger.debug(`local_config_file set to ${bsConfig['connection_settings']['local_config_file']}`);
   }
 };
 
@@ -801,6 +823,7 @@ exports.setHeaded = (bsConfig, args) => {
   if (!this.isUndefined(args.headed) && args.headed === true) {
     bsConfig.run_settings.headless = false;
   }
+  logger.debug(`headless mode set to ${bsConfig.run_settings.headless}`);
 };
 
 exports.setNoWrap = (_bsConfig, args) => {
@@ -809,6 +832,7 @@ exports.setNoWrap = (_bsConfig, args) => {
   } else {
     process.env.SYNC_NO_WRAP = false;
   }
+  logger.debug(`no-wrap set to ${process.env.SYNC_NO_WRAP}`);
 }
 
 exports.getFilesToIgnore = (runSettings, excludeFiles, logging = true) => {
@@ -833,6 +857,7 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressJson) => {
   let globSearchPattern = this.sanitizeSpecsPattern(bsConfig.run_settings.specs) || `${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`;
   let ignoreFiles = args.exclude || bsConfig.run_settings.exclude;
   let files = glob.sync(globSearchPattern, {cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles});
+  logger.debug(`${files.length} spec files found at ${testFolderPath}`);
   return files;
 };
 
@@ -949,6 +974,7 @@ exports.setBrowsers = async (bsConfig, args) => {
           browserHash['versions'].push(this.isUndefined(browserDetails[1]) ? "latest" : browserDetails[1].trim())
           bsConfig["browsers"].push(browserHash)
         });
+        logger.debug(`Browsers provided ${bsConfig["browsers"]}`);
       } catch(err){
         reject(Constants.validationMessages.INVALID_BROWSER_ARGS)
       }
@@ -960,6 +986,7 @@ exports.setBrowsers = async (bsConfig, args) => {
 exports.setConfig = (bsConfig, args) => {
   if (!this.isUndefined(args.config)) {
     bsConfig["run_settings"]["config"] = args.config
+    logger.debug(`Config set to ${bsConfig["run_settings"]["config"]}`);
   }
 }
 
@@ -967,9 +994,11 @@ exports.setConfig = (bsConfig, args) => {
 exports.setOtherConfigs = (bsConfig, args) => {
   if (!this.isUndefined(args.reporter)) {
     bsConfig["run_settings"]["reporter"] = args.reporter;
+    logger.debug(`reporter set to ${args.reporter}`);
   }
   if (!this.isUndefined(args.reporterOptions)) {
     bsConfig["run_settings"]["reporter_options"] = args.reporterOptions;
+    logger.debug(`reporter-options set to ${args.reporterOptions}`);
   }
 }
 
@@ -1001,6 +1030,7 @@ exports.setCLIMode = (bsConfig, args) => {
   if(!this.isUndefined(args.async) && args.async){
     args.sync = false;
   }
+  logger.debug(`sync mode set to ${args.sync}`);
 }
 
 exports.formatRequest = (err, resp, body) => {
@@ -1010,6 +1040,19 @@ exports.formatRequest = (err, resp, body) => {
     body: body ? util.format('%j', body) : null
   }
 }
+
+exports.setDebugMode = (args) => {
+  if(args.cliDebug || String(process.env.DEBUG).toLowerCase() === 'true'){
+    args.cliDebug ? 
+      logger.info("CLI is running with the --cli-debug argument. Running CLI in the debug mode...") :
+      logger.info("DEBUG environment variable set to 'true'. Running CLI in the debug mode...") ;
+    transports.loggerConsole.level = 'debug';
+    return;
+  }
+
+  transports.loggerConsole.level = 'info';
+}
+
 
 exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs) => {
   let that = this;
@@ -1120,5 +1163,7 @@ exports.getVideoConfig = (cypressJson) => {
   if (!this.isUndefined(cypressJson.video)) conf.video = cypressJson.video;
   if (!this.isUndefined(cypressJson.videoUploadOnPasses)) conf.videoUploadOnPasses = cypressJson.videoUploadOnPasses;
 
+  logger.debug(`Setting video = ${conf.video}`);
+  logger.debug(`Setting videoUploadOnPasses = ${conf.videoUploadOnPasses}`);
   return conf;
 }

@@ -87,7 +87,10 @@ let setNoWrapParams = () => {
   noWrap = (process.env.SYNC_NO_WRAP && (process.env.SYNC_NO_WRAP === 'true'));
   // Do not show the separator based on terminal width if no-wrap provided.
   if (noWrap) {
+    winstonLogger.debug("no-wrap is set to true, showing the default line separator irrespective of terminal width");
     lineSeparator = Constants.syncCLI.DEFAULT_LINE_SEP;
+  } else {
+    winstonLogger.debug("no-wrap set to false, showing line separator based on terminal width.");
   }
 };
 
@@ -107,6 +110,7 @@ let printSpecsStatus = (bsConfig, buildDetails, rawArgs) => {
       },
       function(err, result) { // when loop ends
         if (err) {
+          winstonLogger.debug(`Error while fetching spec status :`, err);
           if(err.status == 204) {
             reject(specSummary.exitCode);
           } else {
