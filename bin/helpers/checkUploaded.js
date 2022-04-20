@@ -7,7 +7,8 @@ const crypto = require('crypto'),
   config = require('./config'),
   path = require('path'),
   fs = require("fs"),
-  utils = require('./utils');
+  utils = require('./utils'),
+  logger = require('./logger').winstonLogger;
 
 
 const checkSpecsMd5 = (runSettings, args, instrumentBlocks) => {
@@ -83,6 +84,7 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
       packageUrlPresent: false,
     };
     if (args["force-upload"]) {
+      logger.debug("force-upload set to true. Uploading tests and npm packages.");
       return resolve(obj);
     }
     
