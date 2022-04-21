@@ -71,7 +71,7 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
           if (!opts.propogateError){
             purgeUploadBar(obj);
             if (resp.statusCode == 413) {
-              return resolve({warn: `node_modules upload failed as the size ${(size / 1000000).toFixed(2)} MB is not supported. Dependencies will be installed in runtime. This will have a negative impact on build performance. Reach out to us at browserstack.com/support if you see this warning.`});
+              return resolve({warn: Constants.userMessages.NODE_MODULES_LIMIT_EXCEEDED.replace("%SIZE%", (size / 1000000).toFixed(2))});
             }
             return resolve({})
           }
