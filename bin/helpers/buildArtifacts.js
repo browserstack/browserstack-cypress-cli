@@ -134,7 +134,7 @@ const unzipFile = async (filePath, fileName) => {
   });
 }
 
-const sendUpdatesToBstack = async (bsConfig, buildId, args, options, rawArgs) => {
+const sendUpdatesToBstack = async (bsConfig, buildId, args, options, rawArgs, buildReportData) => {
   options.url = `${config.buildUrl}${buildId}/build_artifacts/status`;
 
   let cypressJSON = utils.getCypressJSON(bsConfig);
@@ -161,7 +161,7 @@ const sendUpdatesToBstack = async (bsConfig, buildId, args, options, rawArgs) =>
   return new Promise (async (resolve, reject) => {
     request.post(options, function (err, resp, data) {
       if(err) {
-        utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'api_failed_build_artifacts_status_update', null, rawArgs);
+        utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'api_failed_build_artifacts_status_update', buildReportData, rawArgs);
         logger.error(utils.formatRequest(err, resp, body));
         reject(err);
       } else {
@@ -172,7 +172,7 @@ const sendUpdatesToBstack = async (bsConfig, buildId, args, options, rawArgs) =>
         }
         if (resp.statusCode != 200) {
           if (responseData && responseData["error"]) {
-            utils.sendUsageReport(bsConfig, args, responseData["error"], Constants.messageTypes.ERROR, 'api_failed_build_artifacts_status_update', null, rawArgs);
+            utils.sendUsageReport(bsConfig, args, responseData["error"], Constants.messageTypes.ERROR, 'api_failed_build_artifacts_status_update', buildReportData, rawArgs);
             reject(responseData["error"])
           }
         }
@@ -182,7 +182,7 @@ const sendUpdatesToBstack = async (bsConfig, buildId, args, options, rawArgs) =>
   });
 }
 
-exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs) => {
+exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs, buildReportData = null) => {
   return new Promise ( async (resolve, reject) => {
     BUILD_ARTIFACTS_FAIL_COUNT = 0;
     BUILD_ARTIFACTS_TOTAL_COUNT = 0;
@@ -205,7 +205,7 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs) => {
     request.get(options, async function (err, resp, body) {
       if(err) {
         logger.error(utils.formatRequest(err, resp, body));
-        utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'api_failed_build_artifacts', null, rawArgs);
+        utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'api_failed_build_artifacts', buildReportData, rawArgs);
         process.exitCode = Constants.ERROR_EXIT_CODE;
       } else {
         try {
@@ -214,7 +214,7 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs) => {
             logger.error('Downloading the build artifacts failed.');
             logger.error(`Error: Request failed with status code ${resp.statusCode}`)
             logger.error(utils.formatRequest(err, resp, body));
-            utils.sendUsageReport(bsConfig, args, buildDetails, Constants.messageTypes.ERROR, 'api_failed_build_artifacts', null, rawArgs);
+            utils.sendUsageReport(bsConfig, args, buildDetails, Constants.messageTypes.ERROR, 'api_failed_build_artifacts', buildReportData, rawArgs);
             process.exitCode = Constants.ERROR_EXIT_CODE;
           } else {
             await createDirectories(buildId, buildDetails);
@@ -229,8 +229,8 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs) => {
               message = Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_SUCCESS.replace('<build-id>', buildId).replace('<user-path>', process.cwd());
               logger.info(message);
             }
-            await sendUpdatesToBstack(bsConfig, buildId, args, options, rawArgs)
-            utils.sendUsageReport(bsConfig, args, message, messageType, null, null, rawArgs);
+            await sendUpdatesToBstack(bsConfig, buildId, args, options, rawArgs, buildReportData)
+            utils.sendUsageReport(bsConfig, args, message, messageType, null, buildReportData, rawArgs);
           }
         } catch (err) {
           messageType = Constants.messageTypes.ERROR;
@@ -242,7 +242,7 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs) => {
           } else {
             logger.error('Downloading the build artifacts failed.');
           }
-          utils.sendUsageReport(bsConfig, args, err, messageType, errorCode, null, rawArgs);
+          utils.sendUsageReport(bsConfig, args, err, messageType, errorCode, buildReportData, rawArgs);
           logger.error(`Error: Request failed with status code ${resp.statusCode}`)
           logger.error(utils.formatRequest(err, resp, body));
           process.exitCode = Constants.ERROR_EXIT_CODE;

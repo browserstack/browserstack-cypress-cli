@@ -180,7 +180,7 @@ exports.setParallels = (bsConfig, args, numOfSpecs) => {
   }
 };
 
-exports.warnSpecLimit = (bsConfig, args, specFiles, rawArgs) => {
+exports.warnSpecLimit = (bsConfig, args, specFiles, rawArgs, buildReportData) => {
   let expectedCharLength = specFiles.join("").length + Constants.METADATA_CHAR_BUFFER_PER_SPEC * specFiles.length;
   let parallels = bsConfig.run_settings.parallels;
   let combinations = this.getBrowserCombinations(bsConfig).length;
@@ -194,7 +194,7 @@ exports.warnSpecLimit = (bsConfig, args, specFiles, rawArgs) => {
       Constants.userMessages.SPEC_LIMIT_WARNING,
       Constants.messageTypes.WARNING,
       null,
-      null,
+      buildReportData,
       rawArgs
     );
   }
@@ -663,7 +663,7 @@ exports.setLocalMode = (bsConfig, args) => {
   }
 };
 
-exports.setupLocalTesting = (bsConfig, args, rawArgs) => {
+exports.setupLocalTesting = (bsConfig, args, rawArgs, buildReportData) => {
   return new Promise(async (resolve, reject) => {
     if( bsConfig['connection_settings'] && bsConfig['connection_settings']['local'] && String(bsConfig['connection_settings']['local']) === "true" ){
       let localBinaryRunning = await this.checkLocalBinaryRunning(bsConfig, bsConfig['connection_settings']['local_identifier']);
@@ -697,7 +697,7 @@ exports.setupLocalTesting = (bsConfig, args, rawArgs) => {
               message,
               Constants.messageTypes.ERROR,
               errorCode,
-              null,
+              buildReportData,
               rawArgs
             );
             reject(Constants.userMessages.LOCAL_START_FAILED);
@@ -712,7 +712,7 @@ exports.setupLocalTesting = (bsConfig, args, rawArgs) => {
   });
 };
 
-exports.stopLocalBinary = (bsConfig, bs_local, args, rawArgs) => {
+exports.stopLocalBinary = (bsConfig, bs_local, args, rawArgs, buildReportData) => {
   return new Promise(async (resolve, reject) => {
     if (!this.isUndefined(bs_local) && bs_local.isRunning() && bsConfig['connection_settings'] && bsConfig['connection_settings']['local_mode'].toLowerCase() != "always-on") {
       let that = this;
@@ -728,7 +728,7 @@ exports.stopLocalBinary = (bsConfig, bs_local, args, rawArgs) => {
             message,
             Constants.messageTypes.ERROR,
             errorCode,
-            null,
+            buildReportData,
             rawArgs
           );
           resolve(Constants.userMessages.LOCAL_STOP_FAILED);
@@ -1011,7 +1011,7 @@ exports.formatRequest = (err, resp, body) => {
   }
 }
 
-exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs) => {
+exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs, buildReportData = null) => {
   let that = this;
   return new Promise(function (resolve, reject) {
     let url = config.buildStopUrl + buildId;
@@ -1074,7 +1074,7 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs) => {
           errorCode = 'api_failed_build_stop';
           logger.info(message);
         } finally {
-            that.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
+            that.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
         }
       }
       resolve();
@@ -1082,12 +1082,13 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs) => {
   });
 }
 
-exports.setProcessHooks = (buildId, bsConfig, bsLocal, args) => {
+exports.setProcessHooks = (buildId, bsConfig, bsLocal, args, buildReportData) => {
   let bindData = {
     buildId: buildId,
     bsConfig: bsConfig,
     bsLocalInstance: bsLocal,
-    args: args
+    args: args,
+    buildReportData: buildReportData
   }
   process.on('SIGINT', processExitHandler.bind(this, bindData));
   process.on('SIGTERM', processExitHandler.bind(this, bindData));
@@ -1097,7 +1098,7 @@ exports.setProcessHooks = (buildId, bsConfig, bsLocal, args) => {
 
 async function processExitHandler(exitData){
   logger.warn(Constants.userMessages.PROCESS_KILL_MESSAGE);
-  await this.stopBrowserStackBuild(exitData.bsConfig, exitData.args, exitData.buildId);
+  await this.stopBrowserStackBuild(exitData.bsConfig, exitData.args, exitData.buildId, null, exitData.buildReportData);
   await this.stopLocalBinary(exitData.bsConfig, exitData.bsLocalInstance, exitData.args);
   process.exit(0);
 }

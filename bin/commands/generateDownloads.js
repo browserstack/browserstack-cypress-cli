@@ -3,7 +3,8 @@
 const logger = require("../helpers/logger").winstonLogger,
       Constants = require("../helpers/constants"),
       utils = require("../helpers/utils"),
-      downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts;
+      downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts,
+      getInitialDetails = require('../helpers/getInitialDetails').getInitialDetails;
 
 
 module.exports = async function generateDownloads(args, rawArgs) {
@@ -19,6 +20,12 @@ module.exports = async function generateDownloads(args, rawArgs) {
     // accept the access key from command line if provided
     utils.setAccessKey(bsConfig, args);
 
+    let initDetails = await getInitialDetails(bsConfig, args, rawArgs);
+
+    let buildReportData = {
+      'user_id': initDetails.user_id
+    };
+
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
     // set cypress config filename
@@ -28,12 +35,12 @@ module.exports = async function generateDownloads(args, rawArgs) {
     let errorCode = null;
     let buildId = args._[1];
 
-    await downloadBuildArtifacts(bsConfig, buildId, args, rawArgs);
-    utils.sendUsageReport(bsConfig, args, Constants.usageReportingConstants.GENERATE_DOWNLOADS, messageType, errorCode, null, rawArgs);
+    await downloadBuildArtifacts(bsConfig, buildId, args, rawArgs, buildReportData);
+    utils.sendUsageReport(bsConfig, args, Constants.usageReportingConstants.GENERATE_DOWNLOADS, messageType, errorCode, buildReportData, rawArgs);
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
-    utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), null, rawArgs);
+    utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), buildReportData, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;
   });
 };

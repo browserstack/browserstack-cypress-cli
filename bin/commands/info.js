@@ -4,7 +4,8 @@ const request = require('request');
 const config = require("../helpers/config"),
   logger = require("../helpers/logger").winstonLogger,
   Constants = require("../helpers/constants"),
-  utils = require("../helpers/utils");
+  utils = require("../helpers/utils"),
+  getInitialDetails = require('../helpers/getInitialDetails').getInitialDetails;
 
 module.exports = function info(args, rawArgs) {
   let bsConfigPath = utils.getConfigPath(args.cf);
@@ -17,6 +18,12 @@ module.exports = function info(args, rawArgs) {
 
     // accept the access key from command line if provided
     utils.setAccessKey(bsConfig, args);
+
+    let initDetails = await getInitialDetails(bsConfig, args, rawArgs);
+
+    let buildReportData = {
+      'user_id': initDetails.user_id
+    };
 
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
@@ -93,12 +100,12 @@ module.exports = function info(args, rawArgs) {
           logger.info(message);
         }
       }
-      utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, null, rawArgs);
+      utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
     });
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
-    utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), null, rawArgs);
+    utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), buildReportData, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;
   })
 }

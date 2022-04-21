@@ -3,7 +3,8 @@
 const logger = require("../helpers/logger").winstonLogger,
       Constants = require("../helpers/constants"),
       utils = require("../helpers/utils"),
-      reporterHTML = require('../helpers/reporterHTML');
+      reporterHTML = require('../helpers/reporterHTML'),
+      getInitialDetails = require('../helpers/getInitialDetails').getInitialDetails;
 
 
 module.exports = function generateReport(args, rawArgs) {
@@ -20,6 +21,12 @@ module.exports = function generateReport(args, rawArgs) {
     // accept the access key from command line if provided
     utils.setAccessKey(bsConfig, args);
 
+    let initDetails = await getInitialDetails(bsConfig, args, rawArgs);
+
+    let buildReportData = {
+      'user_id': initDetails.user_id
+    };
+
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
     // set cypress config filename
@@ -29,12 +36,12 @@ module.exports = function generateReport(args, rawArgs) {
     let errorCode = null;
     let buildId = args._[1];
 
-    reportGenerator(bsConfig, buildId, args, rawArgs);
-    utils.sendUsageReport(bsConfig, args, 'generate-report called', messageType, errorCode, null, rawArgs);
+    reportGenerator(bsConfig, buildId, args, rawArgs, buildReportData);
+    utils.sendUsageReport(bsConfig, args, 'generate-report called', messageType, errorCode, buildReportData, rawArgs);
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
-    utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), null, rawArgs);
+    utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), buildReportData, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;
   });
 };
