@@ -1,6 +1,5 @@
 'use strict';
 const path = require('path');
-const { inspect } = require('util');
 
 const archiver = require("../helpers/archiver"),
   zipUploader = require("../helpers/zipUpload"),
@@ -52,7 +51,6 @@ module.exports = function run(args, rawArgs) {
       'user_id': initDetails.user_id
     };
 
-    console.log(`roshan1: bhai the initDetails are the ${inspect(buildReportData)}`)
     // accept the build name from command line if provided
     utils.setBuildName(bsConfig, args);
 
@@ -271,7 +269,7 @@ module.exports = function run(args, rawArgs) {
                 // Build creation failed
                 logger.error(err);
                 // stop the Local instance
-                await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs);
+                await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs, buildReportData);
 
                 utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'build_failed', buildReportData, rawArgs);
                 process.exitCode = Constants.ERROR_EXIT_CODE;

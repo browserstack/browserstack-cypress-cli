@@ -43,7 +43,7 @@ module.exports = function generateReport(args, rawArgs) {
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
-    utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), buildReportData, rawArgs);
+    utils.sendUsageReport(null, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), null, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;
   });
 };
