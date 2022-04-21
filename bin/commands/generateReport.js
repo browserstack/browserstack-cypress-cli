@@ -21,23 +21,25 @@ module.exports = function generateReport(args, rawArgs) {
     // accept the access key from command line if provided
     utils.setAccessKey(bsConfig, args);
 
-    let initDetails = await getInitialDetails(bsConfig, args, rawArgs);
+    getInitialDetails(bsConfig, args, rawArgs).then((initDetails) => {
+      let buildReportData = {
+        'user_id': initDetails.user_id
+      };
 
-    let buildReportData = {
-      'user_id': initDetails.user_id
-    };
-
-    utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
-
-    // set cypress config filename
-    utils.setCypressConfigFilename(bsConfig, args);
-
-    let messageType = Constants.messageTypes.INFO;
-    let errorCode = null;
-    let buildId = args._[1];
-
-    reportGenerator(bsConfig, buildId, args, rawArgs, buildReportData);
-    utils.sendUsageReport(bsConfig, args, 'generate-report called', messageType, errorCode, buildReportData, rawArgs);
+      utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
+  
+      // set cypress config filename
+      utils.setCypressConfigFilename(bsConfig, args);
+  
+      let messageType = Constants.messageTypes.INFO;
+      let errorCode = null;
+      let buildId = args._[1];
+  
+      reportGenerator(bsConfig, buildId, args, rawArgs, buildReportData);
+      utils.sendUsageReport(bsConfig, args, 'generate-report called', messageType, errorCode, buildReportData, rawArgs);
+    }).catch(() => {
+      process.exitCode = Constants.ERROR_EXIT_CODE;
+    });
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
