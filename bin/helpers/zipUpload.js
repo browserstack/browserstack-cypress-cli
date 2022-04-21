@@ -69,10 +69,11 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
             } 
           }
           if (!opts.propogateError){
+            purgeUploadBar(obj);
             if (resp.statusCode == 413) {
-              logger.warn("node_modules upload failed as the size is more than 200 MB. Dependencies will be installed in runtime. This will have a negative impact on performance.");
+              return resolve({warn: `node_modules upload failed as the size ${(size / 1000000).toFixed(2)} MB is not supported. Dependencies will be installed in runtime. This will have a negative impact on build performance. Reach out to us at browserstack.com/support if you see this warning.`});
             }
-            return resolve({});
+            return resolve({})
           }
           if(responseData && responseData["error"]){
             responseData["time"] = Date.now() - obj.startTime;
@@ -140,6 +141,9 @@ const uploadCypressZip = (bsConfig, md5data, packageData) => {
     let npmPackageUpload = uploadSuits(bsConfig, config.packageFileName, npmOptions, npmPackageZipUploadObj);
     Promise.all([zipUpload, npmPackageUpload]).then(function (uploads) {
       uploads.forEach(upload => {
+        if(upload.warn) {
+          logger.warn(upload.warn);
+        }
         if(upload.zip_url && upload.time) {
           upload.tests_upload_time = upload.time;
         } else if (upload.npm_package_url && upload.time) {
