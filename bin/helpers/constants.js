@@ -21,6 +21,7 @@ const userMessages = {
   ZIP_UPLOADER_NOT_REACHABLE: "Could not reach BrowserStack APIs. Please check your network or see if you need to whitelist *.browserstack.com",
   ZIP_UPLOAD_FAILED: "Zip Upload failed.",
   ZIP_UPLOAD_LIMIT_EXCEEDED: "The directory size which contains the cypress config file is more than 200 MB. For more info, check out https://www.browserstack.com/docs/automate/cypress/exclude-files",
+  NODE_MODULES_LIMIT_EXCEEDED: "node_modules upload failed as the size %SIZE% MB is not supported. Dependencies will be installed in runtime. This will have a negative impact on build performance. Reach out to us at browserstack.com/support if you see this warning.",
   CONFIG_FILE_CREATED: "BrowserStack Config File created, you can now run browserstack-cypress --config-file run",
   CONFIG_FILE_EXISTS: "File already exists, delete the browserstack.json file manually. skipping...",
   DIR_NOT_FOUND: "Given path does not exist. Failed to create browserstack.json in %s",
