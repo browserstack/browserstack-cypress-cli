@@ -3,8 +3,7 @@
 const logger = require("../helpers/logger").winstonLogger,
       Constants = require("../helpers/constants"),
       utils = require("../helpers/utils"),
-      reporterHTML = require('../helpers/reporterHTML'),
-      getInitialDetails = require('../helpers/getInitialDetails').getInitialDetails;
+      reporterHTML = require('../helpers/reporterHTML');
 
 
 module.exports = function generateReport(args, rawArgs) {
@@ -21,10 +20,7 @@ module.exports = function generateReport(args, rawArgs) {
     // accept the access key from command line if provided
     utils.setAccessKey(bsConfig, args);
 
-    getInitialDetails(bsConfig, args, rawArgs).then((initDetails) => {
-      let buildReportData = {
-        'user_id': initDetails.user_id
-      };
+    utils.getInitialDetails(bsConfig, args, rawArgs).then((buildReportData) => {
 
       utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
   

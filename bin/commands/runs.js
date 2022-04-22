@@ -11,7 +11,6 @@ const archiver = require("../helpers/archiver"),
   utils = require("../helpers/utils"),
   fileHelpers = require("../helpers/fileHelpers"),
   syncRunner = require("../helpers/syncRunner"),
-  getInitialDetails = require("../helpers/getInitialDetails").getInitialDetails,
   checkUploaded = require("../helpers/checkUploaded"),
   packageInstaller = require("../helpers/packageInstaller"),
   reportGenerator = require('../helpers/reporterHTML').reportGenerator,
@@ -45,11 +44,7 @@ module.exports = function run(args, rawArgs) {
     // accept the access key from command line or env variable if provided
     utils.setAccessKey(bsConfig, args);
 
-    let initDetails = await getInitialDetails(bsConfig, args, rawArgs);
-
-    let buildReportData = {
-      'user_id': initDetails.user_id
-    };
+    let buildReportData = await utils.getInitialDetails(bsConfig, args, rawArgs);
 
     // accept the build name from command line if provided
     utils.setBuildName(bsConfig, args);
@@ -157,7 +152,7 @@ module.exports = function run(args, rawArgs) {
                 utils.setProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
                 let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
                 let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
-                buildReportData = { 'build_id': data.build_id, 'user_id': data.user_id, ...buildReportData }
+                buildReportData = { 'build_id': data.build_id, 'parallels': userSpecifiedParallels, ...buildReportData }
                 utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
                 if ((utils.isUndefined(bsConfig.run_settings.parallels) && utils.isUndefined(args.parallels)) || (!utils.isUndefined(bsConfig.run_settings.parallels) && bsConfig.run_settings.parallels == Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE)) {
                   logger.warn(Constants.userMessages.NO_PARALLELS);
