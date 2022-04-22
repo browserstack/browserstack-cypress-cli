@@ -33,8 +33,8 @@ module.exports = function generateReport(args, rawArgs) {
   
       reportGenerator(bsConfig, buildId, args, rawArgs, buildReportData);
       utils.sendUsageReport(bsConfig, args, 'generate-report called', messageType, errorCode, buildReportData, rawArgs);
-    }).catch(() => {
-      process.exitCode = Constants.ERROR_EXIT_CODE;
+    }).catch((err) => {
+      logger.error(err);
     });
   }).catch(function (err) {
     logger.error(err);

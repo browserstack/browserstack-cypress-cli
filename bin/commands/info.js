@@ -97,7 +97,7 @@ module.exports = function info(args, rawArgs) {
         utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
       });
     }).catch((err) => {
-      process.exitCode = Constants.ERROR_EXIT_CODE;
+      logger.error(err);
     });
   }).catch(function (err) {
     logger.error(err);
