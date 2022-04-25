@@ -19,7 +19,7 @@ exports.getInitialDetailsFromAPI = (bsConfig, args, rawArgs) => {
     let responseData = {};
     request.get(options, function (err, resp, data) {
       if(err) {
-        logger.error(utils.formatRequest(err, resp, data));
+        logger.warn(utils.formatRequest(err, resp, data));
         utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'get_initial_details_failed', null, rawArgs);
         resolve({});
       } else {
@@ -29,7 +29,7 @@ exports.getInitialDetailsFromAPI = (bsConfig, args, rawArgs) => {
           responseData = {};
         }
         if(resp.statusCode != 200) {
-          logger.error(`Error: Get Initial Details Request failed with status code ${resp.statusCode}`);
+          logger.warn(`Warn: Get Initial Details Request failed with status code ${resp.statusCode}`);
           utils.sendUsageReport(bsConfig, args, responseData["error"], Constants.messageTypes.ERROR, 'get_initial_details_failed', null, rawArgs);
           resolve({});
         } else {
