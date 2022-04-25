@@ -97,7 +97,7 @@ module.exports = function info(args, rawArgs) {
         utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
       });
     }).catch((err) => {
-      logger.error(err);
+      logger.warn(err);
     });
   }).catch(function (err) {
     logger.error(err);
