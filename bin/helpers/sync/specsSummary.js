@@ -22,14 +22,15 @@ let printSpecsRunSummary = (data, machines) => {
       total: 0,
       failed: 0,
       passed: 0,
-      skipped: 0
+      skipped: 0,
+      pending: 0
     };
 
     data.specs.forEach((spec) => {
       specSummaryCount(summary, spec.status.toLowerCase());
     });
 
-    logger.info(`Total tests: ${summary.total}, passed: ${summary.passed}, failed: ${summary.failed}, skipped: ${summary.skipped}`);
+    logger.info(`Total tests: ${summary.total}, passed: ${summary.passed}, failed: ${summary.failed}, skipped: ${summary.skipped}, pending: ${summary.pending}`);
     logger.info(`Done in ${data.duration/1000} seconds using ${machines} machines\n`);
 
     resolve(data.exitCode);
@@ -41,8 +42,13 @@ let specSummaryCount = (summary, status) => {
     case 'failed':
       summary.failed++;
       break;
+    case "passed_with_skipped":
     case 'skipped':
       summary.skipped++;
+      break;
+    case "passed_with_pending":
+    case "pending":
+      summary.pending++;
       break;
     case 'passed':
       summary.passed++;

@@ -192,7 +192,6 @@ let printInitialLog = () => {
 }
 
 let printSpecData = (data) => {
-  console.log(`roshan1: the printSpecData ${inspect(data)}`)
   let combination = getCombinationName(data["spec"]);
   let status = data["spec"]["status"];
   let statusMark = getStatus(status);

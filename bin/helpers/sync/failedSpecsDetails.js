@@ -38,10 +38,7 @@ let failedSpecsDetails = (data) => {
       if (spec.status && spec.status.toLowerCase() === 'failed' && !failedSpecs)
         failedSpecs = true;
 
-      let specStatus =
-        spec.status && spec.status.toLowerCase() === 'failed'
-          ? chalk.red(spec.status)
-          : chalk.yellow(spec.status);
+      let specStatus = getSpecStatus(spec.status)
       specData.push([
         spec.specName,
         specStatus,
@@ -77,6 +74,18 @@ let failedSpecsDetails = (data) => {
     if (failedSpecs && data.exitCode !== config.networkErrorExitCode) data.exitCode = 1 ; // specs failed, send exitCode as 1
     resolve(data); // No Specs failed, maybe skipped, but not failed, send exitCode as 0
   });
+}
+
+let getSpecStatus = (specStatus) => {
+  console.log(`roshan1: specStatus is ${specStatus} ::`)
+  switch(specStatus.toLowerCase()) {
+    case specStatus == 'failed': return chalk.red(specStatus);
+    case specStatus == 'pending':
+    case specStatus == 'passed_with_pending':
+    case specStatus == 'skipped':
+    case specStatus == 'passed_with_skipped': return chalk.blueBright(specStatus);
+    default: chalk.yellow(specStatus);
+  }
 }
 
 exports.failedSpecsDetails = failedSpecsDetails;
