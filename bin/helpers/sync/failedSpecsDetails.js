@@ -77,13 +77,12 @@ let failedSpecsDetails = (data) => {
 }
 
 let getSpecStatus = (specStatus) => {
-  console.log(`roshan1: specStatus is ${specStatus} ::`)
   switch(specStatus.toLowerCase()) {
-    case specStatus == 'failed': return chalk.red(specStatus);
-    case specStatus == 'pending':
-    case specStatus == 'passed_with_pending':
-    case specStatus == 'skipped':
-    case specStatus == 'passed_with_skipped': return chalk.blueBright(specStatus);
+    case 'failed': return chalk.red(specStatus);
+    case 'pending':
+    case 'passed_with_pending':
+    case 'skipped':
+    case 'passed_with_skipped': return chalk.blueBright(specStatus);
     default: chalk.yellow(specStatus);
   }
 }
