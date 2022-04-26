@@ -9,6 +9,8 @@ const request = require("request"),
   tableStream = require('table').createStream,
   chalk = require('chalk');
 
+const { inspect } = require('util');
+
 let whileLoop = true, whileTries = config.retries, options, timeout = 3000, n = 2, tableConfig, stream, endTime, startTime = Date.now(), buildStarted = false;
 let specSummary = {
   "buildError": null,
@@ -190,14 +192,16 @@ let printInitialLog = () => {
 }
 
 let printSpecData = (data) => {
+  console.log(`roshan1: the printSpecData ${inspect(data)}`)
   let combination = getCombinationName(data["spec"]);
-  let status = getStatus(data["spec"]["status"]);
-  writeToTable(combination, data["path"], status)
-  addSpecToSummary(data["path"], data["spec"]["status"], combination, data["session_id"])
+  let status = data["spec"]["status"];
+  let statusMark = getStatus(status);
+  writeToTable(combination, data["path"], status, statusMark)
+  addSpecToSummary(data["path"], status, combination, data["session_id"])
 }
 
-let writeToTable = (combination, specName, status) => {
-  stream.write([combination , ":", `${specName} ${status}`]);
+let writeToTable = (combination, specName, status, statusMark) => {
+  stream.write([combination , ":", `${specName} ${statusMark} [${status}]`]);
 }
 
 let addSpecToSummary = (specName, status, combination, session_id) => {
@@ -220,6 +224,9 @@ let getStatus = (status) => {
       return chalk.green("✔");
     case "failed":
       return chalk.red("✘");
+    case "passed_with_pending":
+    case "passed_with_skipped":
+      return chalk.blueBright("✔");
     default:
       return chalk.blue(`[${status}]`);
   }
