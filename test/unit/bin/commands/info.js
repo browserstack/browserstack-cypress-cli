@@ -26,6 +26,7 @@ describe("buildInfo", () => {
       sandbox = sinon.createSandbox();
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
+      getInitialDetailsStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
@@ -54,6 +55,7 @@ describe("buildInfo", () => {
         '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
+          getInitialDetails: getInitialDetailsStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -68,13 +70,15 @@ describe("buildInfo", () => {
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
+      getInitialDetailsStub.returns(Promise.resolve({}));
 
       return info(args, rawArgs)
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getUserAgentStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
+          sinon.assert.calledOnce(getInitialDetailsStub);
+          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, {}, rawArgs);
         }).catch((error) => {
           chai.assert.isNotOk(error,'Promise error');
         });
@@ -93,6 +97,7 @@ describe("buildInfo", () => {
         '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
+          getInitialDetails: getInitialDetailsStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -106,6 +111,7 @@ describe("buildInfo", () => {
         request: {get: requestStub},
       });
 
+      getInitialDetailsStub.returns(Promise.resolve({}));
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
 
       return info(args, rawArgs)
@@ -113,7 +119,8 @@ describe("buildInfo", () => {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnce(getConfigPathStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
+          sinon.assert.calledOnce(getInitialDetailsStub);
+          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, {}, rawArgs);
         })
         .catch((error) => {
           chai.assert.isNotOk(error, "Promise error");
@@ -126,6 +133,7 @@ describe("buildInfo", () => {
       sandbox = sinon.createSandbox();
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
+      getInitialDetailsStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
@@ -156,6 +164,7 @@ describe("buildInfo", () => {
         '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
+          getInitialDetails: getInitialDetailsStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -170,13 +179,15 @@ describe("buildInfo", () => {
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
+      getInitialDetailsStub.returns(Promise.resolve({}));
 
       return info(args, rawArgs)
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnce(getConfigPathStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
+          sinon.assert.calledOnce(getInitialDetailsStub);
+          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, {}, rawArgs);
         })
         .catch((error) => {
           chai.assert.isNotOk(error, "Promise error");
@@ -201,6 +212,7 @@ describe("buildInfo", () => {
         '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
+          getInitialDetails: getInitialDetailsStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -215,13 +227,14 @@ describe("buildInfo", () => {
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
-
+      getInitialDetailsStub.returns(Promise.resolve({}));
       return info(args, rawArgs)
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnce(getConfigPathStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
+          sinon.assert.calledOnce(getInitialDetailsStub);
+          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, {}, rawArgs);
         })
         .catch((error) => {
           chai.assert.isNotOk(error, "Promise error");
@@ -241,6 +254,7 @@ describe("buildInfo", () => {
         '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
+          getInitialDetails: getInitialDetailsStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -255,13 +269,15 @@ describe("buildInfo", () => {
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
+      getInitialDetailsStub.returns(Promise.resolve({}));
 
       return info(args, rawArgs)
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnce(getConfigPathStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
+          sinon.assert.calledOnce(getInitialDetailsStub);
+          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, {}, rawArgs);
         })
         .catch((error) => {
           chai.assert.isNotOk(error, "Promise error");
@@ -276,6 +292,7 @@ describe("buildInfo", () => {
       sandbox = sinon.createSandbox();
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
+      getInitialDetailsStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
@@ -304,6 +321,7 @@ describe("buildInfo", () => {
         '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
+          getInitialDetails: getInitialDetailsStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -317,13 +335,15 @@ describe("buildInfo", () => {
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
+      getInitialDetailsStub.returns(Promise.resolve({}));
 
       return info(args, rawArgs)
         .then(function (_bsConfig) {
           sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnce(getConfigPathStub);
-          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
+          sinon.assert.calledOnce(getInitialDetailsStub);
+          sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, {}, rawArgs);
         }).catch((error) => {
           chai.assert.isNotOk(error,'Promise error');
         });
@@ -337,6 +357,7 @@ describe("buildInfo", () => {
       sandbox = sinon.createSandbox();
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
+      getInitialDetailsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       validateBstackJsonStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
@@ -358,6 +379,7 @@ describe("buildInfo", () => {
         '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
+          getInitialDetails: getInitialDetailsStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -369,6 +391,7 @@ describe("buildInfo", () => {
       });
 
       validateBstackJsonStub.returns(Promise.reject({ message: "reject error" }));
+      getInitialDetailsStub.returns(Promise.reject({ message: "reject error" }));
 
       return info(args, rawArgs)
         .then(function (_bsConfig) {

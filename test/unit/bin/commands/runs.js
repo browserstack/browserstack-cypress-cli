@@ -97,6 +97,7 @@ describe("runs", () => {
       setSystemEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setupLocalTestingStub = sandbox.stub();
+      getInitialDetailsStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -158,7 +159,8 @@ describe("runs", () => {
           setConfig: setConfigStub,
           setCLIMode: setCLIModeStub,
           setGeolocation: setGeolocationStub,
-          setSpecTimeout: setSpecTimeoutStub
+          setSpecTimeout: setSpecTimeoutStub,
+          getInitialDetails: getInitialDetailsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub
@@ -168,6 +170,7 @@ describe("runs", () => {
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
       setupLocalTestingStub.returns(Promise.resolve("return nothing"));
       capabilityValidatorStub.returns(Promise.reject("random-error"));
+      getInitialDetailsStub.returns(Promise.resolve({}))
 
       return runs(args, rawArgs)
         .then(function (_bsConfig) {
@@ -200,6 +203,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnce(setSpecTimeoutStub);
+          sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -207,7 +211,7 @@ describe("runs", () => {
             message,
             messageType,
             errorCode,
-            null,
+            {},
             rawArgs
           );
         });
@@ -257,6 +261,7 @@ describe("runs", () => {
       setCLIModeStub = sandbox.stub();
       setGeolocationStub = sandbox.stub();
       getVideoConfigStub = sandbox.stub();
+      getInitialDetailsStub = sandbox.stub();
       setSpecTimeoutStub = sandbox.stub().returns(undefined);
     });
 
@@ -302,7 +307,8 @@ describe("runs", () => {
           setCLIMode: setCLIModeStub,
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
-          setSpecTimeout: setSpecTimeoutStub
+          setSpecTimeout: setSpecTimeoutStub,
+          getInitialDetails: getInitialDetailsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -319,7 +325,7 @@ describe("runs", () => {
         },
         '../helpers/packageInstaller': {
           packageWrapper: packageInstallerStub,
-        },
+        }
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -327,6 +333,7 @@ describe("runs", () => {
       capabilityValidatorStub.returns(Promise.resolve(Constants.validationMessages.VALIDATED));
       checkUploadedStub.returns(Promise.resolve({ zipUrlPresent: false }));
       packageInstallerStub.returns(Promise.resolve({ packageArchieveCreated: false }));
+      getInitialDetailsStub.returns(Promise.resolve({}));
       archiverStub.returns(Promise.reject("random-error"));
 
       return runs(args, rawArgs)
@@ -363,6 +370,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnce(setSpecTimeoutStub);
+          sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -370,7 +378,7 @@ describe("runs", () => {
             message,
             messageType,
             errorCode,
-            null,
+            {},
             rawArgs
           );
         });
@@ -423,6 +431,7 @@ describe("runs", () => {
       setGeolocationStub = sandbox.stub();
       getVideoConfigStub = sandbox.stub();
       setSpecTimeoutStub = sandbox.stub().returns(undefined);
+      getInitialDetailsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -468,7 +477,8 @@ describe("runs", () => {
           fetchZipSize: fetchZipSizeStub,
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
-          setSpecTimeout: setSpecTimeoutStub
+          setSpecTimeout: setSpecTimeoutStub,
+          getInitialDetails: getInitialDetailsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -499,6 +509,7 @@ describe("runs", () => {
       archiverStub.returns(Promise.resolve("Zipping completed"));
       zipUploadStub.returns(Promise.reject("random-error"));
       fetchZipSizeStub.returns(123);
+      getInitialDetailsStub.returns({});
 
       return runs(args, rawArgs)
         .then(function (_bsConfig) {
@@ -531,6 +542,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnce(setSpecTimeoutStub);
+          sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -538,7 +550,7 @@ describe("runs", () => {
             message,
             messageType,
             errorCode,
-            null,
+            {},
             rawArgs
           );
         })
@@ -596,6 +608,7 @@ describe("runs", () => {
       setGeolocationStub = sandbox.stub();
       getVideoConfigStub = sandbox.stub();
       setSpecTimeoutStub = sandbox.stub().returns(undefined);
+      getInitialDetailsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -642,7 +655,8 @@ describe("runs", () => {
           fetchZipSize: fetchZipSizeStub,
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
-          setSpecTimeout: setSpecTimeoutStub
+          setSpecTimeout: setSpecTimeoutStub,
+          getInitialDetails: getInitialDetailsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -680,6 +694,7 @@ describe("runs", () => {
       stopLocalBinaryStub.returns(Promise.resolve("nothing"));
       createBuildStub.returns(Promise.reject("random-error"));
       fetchZipSizeStub.returns(123);
+      getInitialDetailsStub.returns(Promise.resolve({}));
 
       return runs(args, rawArgs)
         .then(function (_bsConfig) {
@@ -716,7 +731,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnce(setSpecTimeoutStub);
-
+          sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -724,7 +739,7 @@ describe("runs", () => {
             message,
             messageType,
             errorCode,
-            null,
+            {},
             rawArgs
           );
         });
@@ -795,6 +810,7 @@ describe("runs", () => {
       setGeolocationStub = sandbox.stub();
       getVideoConfigStub = sandbox.stub();
       setSpecTimeoutStub = sandbox.stub().returns(undefined);
+      getInitialDetailsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -849,7 +865,8 @@ describe("runs", () => {
           fetchZipSize: fetchZipSizeStub,
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
-          setSpecTimeout: setSpecTimeoutStub
+          setSpecTimeout: setSpecTimeoutStub,
+          getInitialDetails: getInitialDetailsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -903,6 +920,7 @@ describe("runs", () => {
       getParallelsStub.returns(10);
       createBuildStub.returns(Promise.resolve({ message: 'Success', build_id: 'random_build_id', dashboard_url: dashboardUrl, user_id: 1234 }));
       fetchZipSizeStub.returns(123);
+      getInitialDetailsStub.returns(Promise.resolve({user_id: 1234}));
 
       return runs(args, rawArgs)
         .then(function (_bsConfig) {
@@ -939,6 +957,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setGeolocationStub);
+          sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.match(
             sendUsageReportStub.getCall(0).args,
             [

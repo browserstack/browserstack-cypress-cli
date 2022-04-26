@@ -163,7 +163,7 @@ exports.getParallels = (bsConfig, args) => {
 
 exports.getInitialDetails = (bsConfig, args, rawArgs) => {
   let initObj = null;
-  return new Promise((reject, resolve) => {
+  return new Promise(async (reject, resolve) => {
     if(Object.keys(Constants.INITIAL_DETAILS).length > 0) {
       initObj = Constants.INITIAL_DETAILS;
       resolve(initObj);

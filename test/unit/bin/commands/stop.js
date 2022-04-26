@@ -26,6 +26,7 @@ describe("buildStop", () => {
       validateBstackJsonStub = sandbox.stub();
       setUsernameStub = sandbox.stub();
       setAccessKeyStub = sandbox.stub();
+      getInitialDetailsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       setCypressConfigFilenameStub = sandbox.stub().returns(undefined);
@@ -49,6 +50,7 @@ describe("buildStop", () => {
           validateBstackJson: validateBstackJsonStub,
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
+          getInitialDetails: getInitialDetailsStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
@@ -60,6 +62,7 @@ describe("buildStop", () => {
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
+      getInitialDetailsStub.returns(Promise.resolve({}));
 
       return stop(args, rawArgs)
         .then(function (_bsConfig) {
