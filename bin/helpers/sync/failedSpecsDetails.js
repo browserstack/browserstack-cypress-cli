@@ -83,8 +83,9 @@ let getSpecStatus = (specStatus) => {
     case 'passed_with_pending':
     case 'skipped':
     case 'passed_with_skipped': return chalk.blueBright(specStatus);
-    default: chalk.yellow(specStatus);
+    default: return chalk.yellow(specStatus);
   }
 }
 
 exports.failedSpecsDetails = failedSpecsDetails;
+exports.getSpecStatus = getSpecStatus;

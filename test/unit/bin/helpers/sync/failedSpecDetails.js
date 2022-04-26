@@ -1,7 +1,8 @@
 'use strict';
 const chai = require("chai"),
   expect = chai.expect,
-  chaiAsPromised = require("chai-as-promised");
+  chaiAsPromised = require("chai-as-promised"),
+  chalk = require('chalk');
 
 const sinon = require("sinon");
 chai.use(chaiAsPromised);
@@ -72,5 +73,44 @@ describe("failedSpecsDetails", () => {
         expect(result).to.equal(data);
       });
     });
+  });
+});
+
+describe("#getSpecStatus", () => {
+  
+  it("returns failed in red if specStatus is failed", () => {
+    let specStatus = "failed";
+    let response = chalk.red(specStatus);
+    expect(specDetails.getSpecStatus(specStatus)).to.eq(response);
+  });
+
+  it("returns passed_with_skipped in blueBright if specStatus is passed_with_skipped", () => {
+    let specStatus = "passed_with_skipped";
+    let response = chalk.blueBright(specStatus);
+    expect(specDetails.getSpecStatus(specStatus)).to.eq(response);
+  });
+
+  it("returns pending in blueBright if specStatus is pending", () => {
+    let specStatus = "pending";
+    let response = chalk.blueBright(specStatus);
+    expect(specDetails.getSpecStatus(specStatus)).to.eq(response);
+  });
+
+  it("returns passed_with_pending in blueBright if specStatus is passed_with_pending", () => {
+    let specStatus = "passed_with_pending";
+    let response = chalk.blueBright(specStatus);
+    expect(specDetails.getSpecStatus(specStatus)).to.eq(response);
+  });
+
+  it("returns skipped in blueBright if specStatus is skipped", () => {
+    let specStatus = "skipped";
+    let response = chalk.blueBright(specStatus);
+    expect(specDetails.getSpecStatus(specStatus)).to.eq(response);
+  });
+
+  it("returns other statuses in yellow if specStatus is other than something known", () => {
+    let specStatus = "xyz";
+    let response = chalk.yellow(specStatus);
+    expect(specDetails.getSpecStatus(specStatus)).to.eq(response);
   });
 });

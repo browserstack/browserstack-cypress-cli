@@ -136,9 +136,9 @@ describe("syncSpecsLogs", () => {
       const stream = sandbox.stub();
       stream.write = sandbox.stub();
       syncSpecsLogs.__set__('stream', stream);
-      let combination = "Windows 10", path = "path", status = "passed";
-      writeToTable(combination, path, status);
-      sinon.assert.calledOnceWithExactly(stream.write, [combination , ":", `${path} ${status}`]);
+      let combination = "Windows 10", path = "path", status = "passed", statusMark = "passed";
+      writeToTable(combination, path, status, statusMark);
+      sinon.assert.calledOnceWithExactly(stream.write, [combination , ":", `${path} ${statusMark} [${status}]`]);
     });
   });
 
