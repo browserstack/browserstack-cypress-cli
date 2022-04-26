@@ -9,8 +9,6 @@ const request = require("request"),
   tableStream = require('table').createStream,
   chalk = require('chalk');
 
-const { inspect } = require('util');
-
 let whileLoop = true, whileTries = config.retries, options, timeout = 3000, n = 2, tableConfig, stream, endTime, startTime = Date.now(), buildStarted = false;
 let specSummary = {
   "buildError": null,
