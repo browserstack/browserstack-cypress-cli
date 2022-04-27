@@ -146,6 +146,7 @@ const addCypressZipStartLocation = (runSettings) => {
   let resolvedCypressConfigFilePath = path.resolve(runSettings.cypressConfigFilePath);
   runSettings.cypressZipStartLocation = path.dirname(resolvedCypressConfigFilePath.split(resolvedHomeDirectoryPath)[1]);
   runSettings.cypressZipStartLocation = runSettings.cypressZipStartLocation.substring(1);
+  logger.debug(`Setting cypress zip start location = ${runSettings.cypressZipStartLocation}`);
 }
 
 const validate = (bsConfig, args) => {
@@ -190,8 +191,10 @@ const validate = (bsConfig, args) => {
     let cypressConfigFilePath = bsConfig.run_settings.cypressConfigFilePath;
     let cypressJson = {};
 
+    logger.debug(`Checking for cypress config file at ${cypressConfigFilePath}`);
     if (!fs.existsSync(cypressConfigFilePath) && bsConfig.run_settings.cypress_config_filename !== 'false') reject(Constants.validationMessages.INVALID_CYPRESS_CONFIG_FILE);
 
+    logger.debug("Validating cypress.json");
     try {
       if (bsConfig.run_settings.cypress_config_filename !== 'false') {
         let cypressJsonContent = fs.readFileSync(cypressConfigFilePath);
@@ -210,6 +213,7 @@ const validate = (bsConfig, args) => {
     //check if home_directory is present or not in user run_settings
     if (!Utils.isUndefined(bsConfig.run_settings.home_directory)) {
       // check if home_directory exists or not
+      logger.debug(`Validating home_directory at ${bsConfig.run_settings.home_directory}`);
       if (!fs.existsSync(bsConfig.run_settings.home_directory)) {
         reject(Constants.validationMessages.HOME_DIRECTORY_NOT_FOUND);
       }

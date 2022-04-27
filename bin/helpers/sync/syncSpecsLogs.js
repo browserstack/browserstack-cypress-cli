@@ -13,8 +13,10 @@ let whileLoop = true, whileTries = config.retries, options, timeout = 3000, n = 
 let specSummary = {
   "buildError": null,
   "specs": [],
-  "duration": null
+  "duration": null,
+  "customErrorsToPrint": []
 }
+
 let noWrap = false;
 let terminalWidth = (process.stdout.columns) * 0.9;
 let lineSeparator = Constants.syncCLI.DEFAULT_LINE_SEP;
@@ -87,7 +89,10 @@ let setNoWrapParams = () => {
   noWrap = (process.env.SYNC_NO_WRAP && (process.env.SYNC_NO_WRAP === 'true'));
   // Do not show the separator based on terminal width if no-wrap provided.
   if (noWrap) {
+    winstonLogger.debug("no-wrap is set to true, showing the default line separator irrespective of terminal width");
     lineSeparator = Constants.syncCLI.DEFAULT_LINE_SEP;
+  } else {
+    winstonLogger.debug("no-wrap set to false, showing line separator based on terminal width.");
   }
 };
 
@@ -107,6 +112,7 @@ let printSpecsStatus = (bsConfig, buildDetails, rawArgs, buildReportData) => {
       },
       function(err, result) { // when loop ends
         if (err) {
+          winstonLogger.debug(`Error while fetching spec status :`, err);
           if(err.status == 204) {
             reject(specSummary.exitCode);
           } else {
@@ -166,18 +172,22 @@ let getStackTraceUrl = () => {
 let showSpecsStatus = (data) => {
   let specData = JSON.parse(data);
   specData.forEach(specDetails => {
-    if (specDetails == "created") {
-      return;
-    } else if (specDetails["stacktrace_url"]) {
-      specSummary.exitCode = Constants.BUILD_FAILED_EXIT_CODE;
-      specSummary.buildError = specDetails["stacktrace_url"]
-      winstonLogger.error(chalk.red(specDetails["message"]));
+    if (specDetails.type === Constants.CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY) {
+      addCustomErrorToPrint(specDetails);
     } else {
-      if(!buildStarted) {
-        buildStarted = true
-        printInitialLog();
+      if (specDetails == "created") {
+        return;
+      } else if (specDetails["stacktrace_url"]) {
+        specSummary.exitCode = Constants.BUILD_FAILED_EXIT_CODE;
+        specSummary.buildError = specDetails["stacktrace_url"]
+        winstonLogger.error(chalk.red(specDetails["message"]));
+      } else {
+        if(!buildStarted) {
+          buildStarted = true
+          printInitialLog();
+        }
+        printSpecData(JSON.parse(specDetails));
       }
-      printSpecData(JSON.parse(specDetails));
     }
   });
 }
@@ -198,6 +208,17 @@ let printSpecData = (data) => {
 
 let writeToTable = (combination, specName, status) => {
   stream.write([combination , ":", `${specName} ${status}`]);
+}
+
+let addCustomErrorToPrint = (error_object) => {
+  if (error_object["should_be_unique"]) {
+    for (const error of specSummary.customErrorsToPrint) {
+      if (error.id === error_object.id) {
+        return;
+      }
+    }
+  }
+  specSummary.customErrorsToPrint.push(error_object);
 }
 
 let addSpecToSummary = (specName, status, combination, session_id) => {

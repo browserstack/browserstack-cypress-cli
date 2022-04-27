@@ -162,7 +162,7 @@ const sendUpdatesToBstack = async (bsConfig, buildId, args, options, rawArgs, bu
     request.post(options, function (err, resp, data) {
       if(err) {
         utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'api_failed_build_artifacts_status_update', buildReportData, rawArgs);
-        logger.error(utils.formatRequest(err, resp, body));
+        logger.error(utils.formatRequest(err, resp, data));
         reject(err);
       } else {
         try {

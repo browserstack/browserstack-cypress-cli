@@ -45,6 +45,7 @@ exports.deletePackageArchieve = (logging = true) => {
     return 0;
   } catch (err) {
     if (logging) logger.info(Constants.userMessages.NPM_DELETE_FAILED);
+    logger.debug("Could not delete the dependency packages with error :", err);
     return 1;
   }
 };

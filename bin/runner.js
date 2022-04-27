@@ -43,11 +43,20 @@ const configFileOptions = {
   },
 }
 
+const debugModeOptions = {
+  'cli-debug': {
+    default: false,
+    describe: Constants.cliMessages.COMMON.DEBUG,
+    type: "boolean"
+  },
+}
+
 const commonBuildOptions = {
   ...configFileOptions,
   ...disableUsageReportingOptions,
   ...usernameOptions,
   ...accessKeyOptions,
+  ...debugModeOptions,
 }
 
 function checkCommands(yargs, argv, numRequired) {
