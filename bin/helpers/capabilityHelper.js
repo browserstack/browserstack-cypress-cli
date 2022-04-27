@@ -245,6 +245,15 @@ const validate = (bsConfig, args) => {
       logger.warn(Constants.validationMessages.SPEC_TIMEOUT_NOT_PASSED_ERROR);
     }
 
+    if(!Utils.isUndefined(bsConfig.run_settings["record"]) && String(bsConfig.run_settings["record"]) == 'true') {
+      if(Utils.isUndefined(bsConfig.run_settings.projectId) || bsConfig.run_settings.projectId == "" ) {
+        logger.warn(Constants.validationMessages.PROJECT_ID_MISSING);
+      } 
+      if (Utils.isUndefined(bsConfig.run_settings["record-key"]) ||  bsConfig.run_settings["record-key"] == "" ) {
+        logger.warn(Constants.validationMessages.RECORD_KEY_MISSING);
+      }
+    }
+
     resolve(cypressJson);
   });
 }

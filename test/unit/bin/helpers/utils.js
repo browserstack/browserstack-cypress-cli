@@ -2947,6 +2947,181 @@ describe('utils', () => {
     });
   });
 
+
+  describe("#setRecordKeyFlag", () => {
+    it("the value of args record-key is given preference", () => {
+      let bsConfig = {
+        run_settings: {
+          "record-key": "abc"
+        }
+      }
+      let args = {
+        "record-key": "def"
+      }
+      process.env.CYPRESS_RECORD_KEY = "ghi"
+      expect(utils.setRecordKeyFlag(bsConfig, args)).to.eq("def")
+      delete process.env.CYPRESS_RECORD_KEY;
+    });
+
+    it("prioritizes env vars over bsconfig", () => {
+      let bsConfig = { 
+        run_settings: {
+          "record-key": "abc"
+        } 
+      };
+      let args = {}
+      process.env.CYPRESS_RECORD_KEY = "ghi"
+      expect(utils.setRecordKeyFlag(bsConfig, args)).to.eq("ghi")
+      delete process.env.CYPRESS_RECORD_KEY;
+    });
+
+    it("set bsconfig values if env is not set and args flag is not passed", () => {
+      let bsConfig = {
+        run_settings: {
+          "record-key": "abc"
+        }
+      }
+      let args = {}
+      expect(utils.setRecordKeyFlag(bsConfig, args)).to.eq("abc")
+    });
+
+    it("returns undefined is nothing is specified", () => {
+      let bsConfig = { run_settings: {} };
+      let args = {};
+      expect(utils.setRecordKeyFlag(bsConfig, args)).to.eq(undefined)
+    });
+  });
+
+  describe("#setRecordFlag", () => {
+    it("returns true if record set in args", () => {
+      let bsConfig = {
+        run_settings: {}
+      };
+      let args = {
+        record: true
+      };
+      expect(utils.setRecordFlag(bsConfig, args)).to.eq(true);
+    });
+
+    it("returns true if not passed in args but set in bsConfig", () => {
+      let bsConfig = {
+        run_settings: {
+          record: true
+        }
+      };
+      let args = {};
+      expect(utils.setRecordFlag(bsConfig, args)).to.eq(true);
+    });
+
+    it("returns undefined when not set in args and the bsConfig", () => {
+      let bsConfig = {
+        run_settings: {}
+      };
+      let args = {};
+      expect(utils.setRecordFlag(bsConfig, args)).to.eq(undefined);
+    });
+  });
+
+  describe("#setProjectId", () => {
+    let getCypressJSONStub;
+    beforeEach(() => {
+      getCypressJSONStub = sinon.stub(utils, 'getCypressJSON');
+    });
+
+    afterEach(() => {
+      getCypressJSONStub.restore();
+    });
+
+    it("prioritizes projectId passed in the args", () => {
+      let bsConfig = {
+        run_settings: {
+          projectId: "abc"
+        }
+      }
+      let args = {
+        projectId: "def"
+      }
+      process.env.CYPRESS_PROJECT_ID = "jkl"
+      getCypressJSONStub.returns({ projectId: "ghi" })
+      expect(utils.setProjectId(bsConfig, args)).to.eq("def")
+      delete process.env.CYPRESS_PROJECT_ID;
+    });
+
+    it("prioritizes env var if args not passed", () => {
+      let bsConfig = {
+        run_settings: {
+          projectId: "abc"
+        }
+      }
+      let args = {};
+      process.env.CYPRESS_PROJECT_ID = "jkl"
+      getCypressJSONStub.returns({ projectId: "ghi" })
+      expect(utils.setProjectId(bsConfig, args)).to.eq("jkl")
+      delete process.env.CYPRESS_PROJECT_ID;
+    });
+
+    it("prioritizes projectId passed in the bsConfig if args and env var not passed", () => {
+      let bsConfig = {
+        run_settings: {
+          projectId: "abc"
+        }
+      }
+      let args = {};
+      getCypressJSONStub.returns({ projectId: "ghi" })
+      expect(utils.setProjectId(bsConfig, args)).to.eq("abc")
+    });
+
+    it("prioritizes projectId passed in cypress json when no args, env var and bsConfig is passed", () => {
+      let bsConfig = {
+        run_settings: {}
+      }
+      let args = {}
+      getCypressJSONStub.returns({ projectId: "ghi" })
+      expect(utils.setProjectId(bsConfig, args)).to.eq("ghi")
+    });
+
+    it("returns undefined when nothing is passed", () => {
+      let bsConfig = {
+        run_settings: {}
+      }
+      let args = {}
+      getCypressJSONStub.returns({})
+      expect(utils.setProjectId(bsConfig, args)).to.eq(undefined)
+    });
+  });
+
+  describe("#setRecordCaps", () => {
+    let setRecordFlagStub, setRecordKeyFlagStub, setProjectIdStub;
+    beforeEach(() => {
+      setRecordFlagStub = sinon.stub(utils, 'setRecordFlag');
+      setRecordKeyFlagStub = sinon.stub(utils, 'setRecordKeyFlag');
+      setProjectIdStub = sinon.stub(utils, 'setProjectId');
+    });
+
+    afterEach(() => {
+      setRecordFlagStub.restore();
+      setRecordKeyFlagStub.restore();
+      setProjectIdStub.restore();
+    });
+
+    it("sets the bsConfig runsetting params to values passed by the setRecordFlag, setRecordKeyFlag and setProjectId", () => {
+      setRecordFlagStub.returns(true);
+      setRecordKeyFlagStub.returns("def");
+      setProjectIdStub.returns("ghi");
+      let bsConfig = {
+        run_settings: {}
+      };
+      let args = {};
+      let expectedRespone = {
+        "record": true,
+        "record-key": "def",
+        "projectId": "ghi"
+      };
+      utils.setRecordCaps(bsConfig, args);
+      expect(JSON.stringify(bsConfig.run_settings)).to.eq(JSON.stringify(expectedRespone));
+    })
+  })
+
   describe("setSpecTimeout", () => {
     let isSpecTimeoutArgPassedStub;
     beforeEach(() => {
