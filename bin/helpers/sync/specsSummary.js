@@ -1,4 +1,5 @@
 const logger = require("../logger").syncCliLogger;
+const winstonlogger = require("../logger").winstonLogger;
 
 /**
  *
@@ -16,7 +17,7 @@ const logger = require("../logger").syncCliLogger;
 //   {specName: 'spec8.alias.js', status: 'Skipped', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'}
 // ]
 //
-let printSpecsRunSummary = (data, machines) => {
+let printSpecsRunSummary = (data, machines, customErrorsToPrint) => {
   return new Promise((resolve, _reject) => {
     let summary = {
       total: 0,
@@ -31,6 +32,21 @@ let printSpecsRunSummary = (data, machines) => {
 
     logger.info(`Total tests: ${summary.total}, passed: ${summary.passed}, failed: ${summary.failed}, skipped: ${summary.skipped}`);
     logger.info(`Done in ${data.duration/1000} seconds using ${machines} machines\n`);
+
+    if (customErrorsToPrint && customErrorsToPrint.length > 0) {
+      for (const error of customErrorsToPrint) {
+        switch(error.level) {
+          case 'info':
+            winstonlogger.info(error.message);
+            break;
+          case 'error':
+            winstonlogger.error(error.message);
+            break;
+          default:
+            winstonlogger.warn(error.message);
+        }
+      }
+    }
 
     resolve(data.exitCode);
   })
