@@ -159,12 +159,14 @@ describe("runs", () => {
           setConfig: setConfigStub,
           setCLIMode: setCLIModeStub,
           setGeolocation: setGeolocationStub,
-          setSpecTimeout: setSpecTimeoutStub,
-          getInitialDetails: getInitialDetailsStub
+          setSpecTimeout: setSpecTimeoutStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub
         },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
+        }
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -307,8 +309,7 @@ describe("runs", () => {
           setCLIMode: setCLIModeStub,
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
-          setSpecTimeout: setSpecTimeoutStub,
-          getInitialDetails: getInitialDetailsStub
+          setSpecTimeout: setSpecTimeoutStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -325,6 +326,9 @@ describe("runs", () => {
         },
         '../helpers/packageInstaller': {
           packageWrapper: packageInstallerStub,
+        },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
         }
       });
 
@@ -477,8 +481,7 @@ describe("runs", () => {
           fetchZipSize: fetchZipSizeStub,
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
-          setSpecTimeout: setSpecTimeoutStub,
-          getInitialDetails: getInitialDetailsStub
+          setSpecTimeout: setSpecTimeoutStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -498,6 +501,9 @@ describe("runs", () => {
         },
         '../helpers/packageInstaller': {
           packageWrapper: packageInstallerStub,
+        },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
         },
       });
 
@@ -655,8 +661,7 @@ describe("runs", () => {
           fetchZipSize: fetchZipSizeStub,
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
-          setSpecTimeout: setSpecTimeoutStub,
-          getInitialDetails: getInitialDetailsStub
+          setSpecTimeout: setSpecTimeoutStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -680,6 +685,9 @@ describe("runs", () => {
         '../helpers/packageInstaller': {
           packageWrapper: packageInstallerStub,
         },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
+        }
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -865,8 +873,7 @@ describe("runs", () => {
           fetchZipSize: fetchZipSizeStub,
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
-          setSpecTimeout: setSpecTimeoutStub,
-          getInitialDetails: getInitialDetailsStub
+          setSpecTimeout: setSpecTimeoutStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -902,6 +909,9 @@ describe("runs", () => {
           getTimeComponents: getTimeComponentsStub,
           markBlockStart: markBlockStartStub,
           markBlockEnd: markBlockEndStub,
+        },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
         }
       });
 

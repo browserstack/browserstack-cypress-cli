@@ -4,7 +4,7 @@ const request = require('request'),
       config = require("./config"),
       Constants = require('./constants');
 
-exports.getInitialDetailsFromAPI = (bsConfig, args, rawArgs) => {
+exports.getInitialDetails = (bsConfig, args, rawArgs) => {
   return new Promise((resolve, reject) => {
     let options = {
       url: config.getInitialDetails,

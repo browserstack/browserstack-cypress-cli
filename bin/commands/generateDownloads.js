@@ -3,7 +3,8 @@
 const logger = require("../helpers/logger").winstonLogger,
       Constants = require("../helpers/constants"),
       utils = require("../helpers/utils"),
-      downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts;
+      downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts,
+      getInitialDetails = require('../helpers/getInitialDetails').getInitialDetails;
 
 
 module.exports = async function generateDownloads(args, rawArgs) {
@@ -19,7 +20,7 @@ module.exports = async function generateDownloads(args, rawArgs) {
     // accept the access key from command line if provided
     utils.setAccessKey(bsConfig, args);
 
-    let buildReportData = await utils.getInitialDetails(bsConfig, args, rawArgs);
+    let buildReportData = await getInitialDetails(bsConfig, args, rawArgs);
 
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 

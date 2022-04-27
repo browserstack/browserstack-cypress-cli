@@ -50,7 +50,6 @@ describe("buildStop", () => {
           validateBstackJson: validateBstackJsonStub,
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
-          getInitialDetails: getInitialDetailsStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
@@ -58,6 +57,9 @@ describe("buildStop", () => {
           getConfigPath: getConfigPathStub,
           setDefaults: setDefaultsStub,
           stopBrowserStackBuild: stopBrowserStackBuildStub
+        },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub
         }
       });
 

@@ -237,7 +237,6 @@ const RAW_ARGS_REGEX = /(?<=("-u"|"-username"|"-k"|"-key") *, *)"[^,\]]*/g
 
 const ERROR_EXIT_CODE = 1;
 
-const INITIAL_DETAILS = {};
 
 const BUILD_FAILED_EXIT_CODE = 3;
 
@@ -262,7 +261,6 @@ module.exports = Object.freeze({
   DEFAULT_CYPRESS_SPEC_PATH,
   SPEC_TOTAL_CHAR_LIMIT,
   METADATA_CHAR_BUFFER_PER_SPEC,
-  INITIAL_DETAILS,
   usageReportingConstants,
   LATEST_VERSION_SYNTAX_REGEX,
   ERROR_EXIT_CODE,

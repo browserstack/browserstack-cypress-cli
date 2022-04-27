@@ -55,7 +55,6 @@ describe("buildInfo", () => {
         '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
-          getInitialDetails: getInitialDetailsStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -65,6 +64,9 @@ describe("buildInfo", () => {
           getConfigPath: getConfigPathStub,
           setDefaults: setDefaultsStub,
           formatRequest,
+        },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
         },
         request: {get: requestStub},
       });
@@ -97,7 +99,6 @@ describe("buildInfo", () => {
         '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
-          getInitialDetails: getInitialDetailsStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -107,6 +108,9 @@ describe("buildInfo", () => {
           getConfigPath: getConfigPathStub,
           setDefaults: setDefaultsStub,
           formatRequest,
+        },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
         },
         request: {get: requestStub},
       });
@@ -164,7 +168,6 @@ describe("buildInfo", () => {
         '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
-          getInitialDetails: getInitialDetailsStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -174,6 +177,9 @@ describe("buildInfo", () => {
           getConfigPath: getConfigPathStub,
           setDefaults: setDefaultsStub,
           formatRequest,
+        },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
         },
         request: {get: requestStub},
       });
@@ -212,7 +218,6 @@ describe("buildInfo", () => {
         '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
-          getInitialDetails: getInitialDetailsStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -222,6 +227,9 @@ describe("buildInfo", () => {
           getConfigPath: getConfigPathStub,
           setDefaults: setDefaultsStub,
           formatRequest,
+        },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
         },
         request: {get: requestStub},
       });
@@ -254,7 +262,6 @@ describe("buildInfo", () => {
         '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
-          getInitialDetails: getInitialDetailsStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -264,6 +271,9 @@ describe("buildInfo", () => {
           getConfigPath: getConfigPathStub,
           setDefaults: setDefaultsStub,
           formatRequest,
+        },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
         },
         request: {get: requestStub},
       });
@@ -321,7 +331,6 @@ describe("buildInfo", () => {
         '../helpers/utils': {
           setUsername: setUsernameStub,
           setAccessKey: setAccessKeyStub,
-          getInitialDetails: getInitialDetailsStub,
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -330,6 +339,9 @@ describe("buildInfo", () => {
           getUserAgent: getUserAgentStub,
           getConfigPath: getConfigPathStub,
           setDefaults: setDefaultsStub
+        },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
         },
         request: {get: requestStub},
       });
@@ -378,8 +390,7 @@ describe("buildInfo", () => {
       const info = proxyquire('../../../../bin/commands/info', {
         '../helpers/utils': {
           setUsername: setUsernameStub,
-          setAccessKey: setAccessKeyStub,
-          getInitialDetails: getInitialDetailsStub,
+          setAccessKey: setAccessKeyStub,          
           validateBstackJson: validateBstackJsonStub,
           getErrorCodeFromErr: getErrorCodeFromErrStub,
           sendUsageReport: sendUsageReportStub,
@@ -388,6 +399,9 @@ describe("buildInfo", () => {
           getConfigPath: getConfigPathStub,
           setDefaults: setDefaultsStub
         },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
+        }
       });
 
       validateBstackJsonStub.returns(Promise.reject({ message: "reject error" }));

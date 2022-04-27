@@ -14,7 +14,6 @@ const usageReporting = require("./usageReporting"),
   Constants = require("./constants"),
   chalk = require('chalk'),
   syncCliLogger = require("../helpers/logger").syncCliLogger,
-  getInitialDetailsFromAPI = require("../helpers/getInitialDetails").getInitialDetailsFromAPI,
   fileHelpers = require("./fileHelpers"),
   config = require("../helpers/config"),
   pkg = require('../../package.json');
@@ -159,20 +158,6 @@ exports.setUsageReportingFlag = (bsConfig, disableUsageReporting) => {
 
 exports.getParallels = (bsConfig, args) => {
   return args.parallels || bsConfig['run_settings']['parallels'];
-}
-
-exports.getInitialDetails = (bsConfig, args, rawArgs) => {
-  let initObj = null;
-  return new Promise(async (reject, resolve) => {
-    if(Object.keys(Constants.INITIAL_DETAILS).length > 0) {
-      initObj = Constants.INITIAL_DETAILS;
-      resolve(initObj);
-    } else {
-    initObj = await getInitialDetailsFromAPI(bsConfig, args, rawArgs);
-    Constants.INITIAL_DETAILS = initObj;
-    resolve(initObj);
-    }
-  });
 }
 
 exports.setParallels = (bsConfig, args, numOfSpecs) => {
@@ -1114,7 +1099,7 @@ exports.setProcessHooks = (buildId, bsConfig, bsLocal, args, buildReportData) =>
 async function processExitHandler(exitData){
   logger.warn(Constants.userMessages.PROCESS_KILL_MESSAGE);
   await this.stopBrowserStackBuild(exitData.bsConfig, exitData.args, exitData.buildId, null, exitData.buildReportData);
-  await this.stopLocalBinary(exitData.bsConfig, exitData.bsLocalInstance, exitData.args);
+  await this.stopLocalBinary(exitData.bsConfig, exitData.bsLocalInstance, exitData.args, null, exitData.buildReportData);
   process.exit(0);
 }
 

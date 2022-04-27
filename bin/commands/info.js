@@ -4,7 +4,8 @@ const request = require('request');
 const config = require("../helpers/config"),
   logger = require("../helpers/logger").winstonLogger,
   Constants = require("../helpers/constants"),
-  utils = require("../helpers/utils");
+  utils = require("../helpers/utils"),
+  getInitialDetails = require('../helpers/getInitialDetails').getInitialDetails;
 
 module.exports = function info(args, rawArgs) {
   let bsConfigPath = utils.getConfigPath(args.cf);
@@ -18,7 +19,7 @@ module.exports = function info(args, rawArgs) {
     // accept the access key from command line if provided
     utils.setAccessKey(bsConfig, args);
 
-    utils.getInitialDetails(bsConfig, args, rawArgs).then((buildReportData) => {
+    getInitialDetails(bsConfig, args, rawArgs).then((buildReportData) => {
 
       utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
