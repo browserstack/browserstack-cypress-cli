@@ -8,8 +8,8 @@ const cp = require("child_process"),
 const config = require('./config'),
   fileLogger = require('./logger').fileLogger,
   utils = require('./utils');
-  
-const { AUTH_REGEX, REDACTED_AUTH, REDACTED } = require("./constants");
+
+const { AUTH_REGEX, REDACTED_AUTH, REDACTED, CLI_ARGS_REGEX, RAW_ARGS_REGEX } = require("./constants");
 
 function get_version(package_name) {
   try {
@@ -193,6 +193,10 @@ function redactRecordCaps(bsConfig, args) {
   redactArgs(args);
 }
 
+function redactKeys(str, regex, redact) {
+  return str.replace(regex, redact);
+}
+
 function send(args) {
   if (isUsageReportingEnabled() === "true") return;
 
@@ -208,10 +212,12 @@ function send(args) {
     runSettings = bsConfig.run_settings;
     data.cypress_version = bsConfig.run_settings.cypress_version;
   }
-
-  sanitizedbsConfig = `${(typeof bsConfig === 'string') ? bsConfig : 
-  JSON.stringify(bsConfig)}`.replace(AUTH_REGEX, REDACTED_AUTH);
-
+  
+  sanitizedbsConfig = redactKeys(`${(typeof bsConfig === 'string') ? bsConfig : 
+  JSON.stringify(bsConfig)}`, AUTH_REGEX, REDACTED_AUTH);
+  args.cli_args = args.cli_args && redactKeys(JSON.stringify(args.cli_args), CLI_ARGS_REGEX, REDACTED);
+  args.raw_args = args.raw_args && redactKeys(JSON.stringify(args.raw_args), RAW_ARGS_REGEX, REDACTED);
+  
   delete args.bstack_config;
 
   let zipUploadDetails = {
