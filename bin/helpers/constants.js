@@ -21,6 +21,7 @@ const userMessages = {
   ZIP_UPLOADER_NOT_REACHABLE: "Could not reach BrowserStack APIs. Please check your network or see if you need to whitelist *.browserstack.com",
   ZIP_UPLOAD_FAILED: "Zip Upload failed.",
   ZIP_UPLOAD_LIMIT_EXCEEDED: "The directory size which contains the cypress config file is more than 200 MB. For more info, check out https://www.browserstack.com/docs/automate/cypress/exclude-files",
+  NODE_MODULES_LIMIT_EXCEEDED: "node_modules upload failed as the size %SIZE% MB is not supported. Dependencies will be installed in runtime. This will have a negative impact on build performance. Reach out to us at browserstack.com/support if you see this warning.",
   CONFIG_FILE_CREATED: "BrowserStack Config File created, you can now run browserstack-cypress --config-file run",
   CONFIG_FILE_EXISTS: "File already exists, delete the browserstack.json file manually. skipping...",
   DIR_NOT_FOUND: "Given path does not exist. Failed to create browserstack.json in %s",
@@ -160,6 +161,7 @@ const cliMessages = {
     NO_NPM_WARNING: "No NPM warning if npm_dependencies is empty",
     CONFIG_DEMAND: "config file is required",
     CONFIG_FILE_PATH: "Path to BrowserStack config",
+    DEBUG: "Use this option to get debug logs on the CLI console.",
   },
   GENERATE_REPORT: {
     INFO: "Generates the build report"
@@ -250,6 +252,8 @@ const REDACTED_AUTH =`auth: { "username": ${REDACTED}, "access_key": ${REDACTED}
 
 const SPEC_TIMEOUT_LIMIT = 120 // IN MINS 
 
+const CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY = "custom_errors_to_print";
+
 module.exports = Object.freeze({
   syncCLI,
   userMessages,
@@ -274,5 +278,6 @@ module.exports = Object.freeze({
   REDACTED_AUTH,
   REDACTED,
   BUILD_FAILED_EXIT_CODE,
-  SPEC_TIMEOUT_LIMIT
+  SPEC_TIMEOUT_LIMIT,
+  CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY
 });

@@ -22,7 +22,12 @@ const archiver = require("../helpers/archiver"),
 const { getStackTraceUrl } = require('../helpers/sync/syncSpecsLogs');
 
 module.exports = function run(args, rawArgs) {
+
+  // set debug mode (--cli-debug)
+  utils.setDebugMode(args);
+
   let bsConfigPath = utils.getConfigPath(args.cf);
+  logger.debug(`browserstack.json path : ${bsConfigPath}`);
   //Delete build_results.txt from log folder if already present.
   initTimeComponents();
   instrumentEventTime("cliStart")
@@ -31,9 +36,12 @@ module.exports = function run(args, rawArgs) {
   markBlockEnd('deleteOldResults');
 
   markBlockStart('validateBstackJson');
+  logger.debug('Started browserstack.json validation');
   return utils.validateBstackJson(bsConfigPath).then(async function (bsConfig) {
     markBlockEnd('validateBstackJson');
+    logger.debug('Completed browserstack.json validation');
     markBlockStart('setConfig');
+    logger.debug('Started setting the configs');
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
     utils.setDefaults(bsConfig, args);
@@ -98,12 +106,16 @@ module.exports = function run(args, rawArgs) {
     // set other cypress configs e.g. reporter and reporter-options
     utils.setOtherConfigs(bsConfig, args);
     markBlockEnd('setConfig');
+    logger.debug("Completed setting the configs");
 
     // Validate browserstack.json values and parallels specified via arguments
     markBlockStart('validateConfig');
+    logger.debug("Started configs validation");
     return capabilityHelper.validate(bsConfig, args).then(function (cypressJson) {
       markBlockEnd('validateConfig');
+      logger.debug("Completed configs validation");
       markBlockStart('preArchiveSteps');
+      logger.debug("Started pre-archive steps");
       //get the number of spec files
       let specFiles = utils.getNumberOfSpecFiles(bsConfig, args, cypressJson);
 
@@ -118,36 +130,51 @@ module.exports = function run(args, rawArgs) {
       // warn if specFiles cross our limit
       utils.warnSpecLimit(bsConfig, args, specFiles, rawArgs);
       markBlockEnd('preArchiveSteps');
+      logger.debug("Completed pre-archive steps");
       markBlockStart('zip');
+      logger.debug("Checking if test suite zip and dependencies is already available on browserstack");
       markBlockStart('zip.checkAlreadyUploaded');
       return checkUploaded.checkUploadedMd5(bsConfig, args, {markBlockStart, markBlockEnd}).then(function (md5data) {
         markBlockEnd('zip.checkAlreadyUploaded');
+        logger.debug("Completed checking if test suite zip and dependencies already uploaded");
 
+        logger.debug("Started caching npm dependencies.");
         markBlockStart('zip.packageInstaller');
         return packageInstaller.packageWrapper(bsConfig, config.packageDirName, config.packageFileName, md5data, {markBlockStart, markBlockEnd}).then(function (packageData) {
+          logger.debug("Completed caching npm dependencies.")
           markBlockEnd('zip.packageInstaller');
 
           // Archive the spec files
+          logger.debug("Started archiving test suite");
           markBlockStart('zip.archive');
           return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude, md5data).then(function (data) {
+            logger.debug("Completed archiving test suite");
             markBlockEnd('zip.archive');
 
             let test_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.fileName));
             let npm_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.packageFileName));
 
             // Uploaded zip file
+            logger.debug("Started uploading the test suite zip");
+            logger.debug("Started uploading the node_module zip");
             markBlockStart('zip.zipUpload');
             return zipUploader.zipUpload(bsConfig, md5data, packageData).then(async function (zip) {
+              logger.debug("Completed uploading the test suite zip");
+              logger.debug("Completed uploading the node_module zip");
               markBlockEnd('zip.zipUpload');
               markBlockEnd('zip');
 
               // Create build
               //setup Local Testing
               markBlockStart('localSetup');
+              logger.debug("Started setting up BrowserStack Local connection");
               let bs_local = await utils.setupLocalTesting(bsConfig, args, rawArgs);
+              logger.debug('Completed setting up BrowserStack Local connection');
               markBlockEnd('localSetup');
+              logger.debug("Started build creation");
               markBlockStart('createBuild');
               return build.createBuild(bsConfig, zip).then(function (data) {
+                logger.debug("Completed build creation");
                 markBlockEnd('createBuild');
                 markBlockEnd('total');
                 utils.setProcessHooks(data.build_id, bsConfig, bs_local, args);
@@ -180,7 +207,9 @@ module.exports = function run(args, rawArgs) {
 
 
                 if (args.sync) {
+                  logger.debug("Started polling build status from BrowserStack");
                   syncRunner.pollBuildStatus(bsConfig, data, rawArgs).then(async (exitCode) => {
+                    logger.debug("Completed polling of build status");
 
                     // stop the Local instance
                     await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs);
@@ -191,6 +220,7 @@ module.exports = function run(args, rawArgs) {
                     // download build artifacts
                     if (exitCode != Constants.BUILD_FAILED_EXIT_CODE) {
                       if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
+                        logger.debug("Downloading build artifacts");
                         await downloadBuildArtifacts(bsConfig, data.build_id, args, rawArgs);
                       }
 
