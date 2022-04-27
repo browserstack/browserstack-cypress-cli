@@ -94,6 +94,9 @@ module.exports = function run(args, rawArgs) {
     // set the no-wrap
     utils.setNoWrap(bsConfig, args);
 
+    // set record feature caps
+    utils.setRecordCaps(bsConfig, args);
+
     //set browsers
     await utils.setBrowsers(bsConfig, args);
 

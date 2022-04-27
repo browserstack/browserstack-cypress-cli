@@ -120,6 +120,7 @@ describe("runs", () => {
       setCLIModeStub = sandbox.stub();
       setGeolocationStub = sandbox.stub();
       setSpecTimeoutStub = sandbox.stub().returns(undefined);
+      setRecordCapsStub = sandbox.stub().returns(undefined);
     });
 
     afterEach(() => {
@@ -162,6 +163,7 @@ describe("runs", () => {
           setCLIMode: setCLIModeStub,
           setGeolocation: setGeolocationStub,
           setSpecTimeout: setSpecTimeoutStub,
+          setRecordCaps: setRecordCapsStub,
           setDebugMode: setDebugModeStub
         },
         '../helpers/capabilityHelper': {
@@ -209,6 +211,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnce(setSpecTimeoutStub);
           sinon.assert.calledOnce(getInitialDetailsStub);
+          sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -268,6 +271,7 @@ describe("runs", () => {
       getVideoConfigStub = sandbox.stub();
       getInitialDetailsStub = sandbox.stub();
       setSpecTimeoutStub = sandbox.stub().returns(undefined);
+      setRecordCapsStub = sandbox.stub().returns(undefined);
     });
 
     afterEach(() => {
@@ -313,6 +317,7 @@ describe("runs", () => {
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
           setSpecTimeout: setSpecTimeoutStub,
+          setRecordCaps: setRecordCapsStub,
           setDebugMode: setDebugModeStub
         },
         '../helpers/capabilityHelper': {
@@ -379,6 +384,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnce(setSpecTimeoutStub);
           sinon.assert.calledOnce(getInitialDetailsStub);
+          sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -440,6 +446,7 @@ describe("runs", () => {
       getVideoConfigStub = sandbox.stub();
       setSpecTimeoutStub = sandbox.stub().returns(undefined);
       getInitialDetailsStub = sandbox.stub();
+      setRecordCapsStub = sandbox.stub().returns(undefined);
     });
 
     afterEach(() => {
@@ -486,6 +493,7 @@ describe("runs", () => {
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
           setSpecTimeout: setSpecTimeoutStub,
+          setRecordCaps: setRecordCapsStub,
           setDebugMode: setDebugModeStub
         },
         '../helpers/capabilityHelper': {
@@ -554,6 +562,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnce(setSpecTimeoutStub);
           sinon.assert.calledOnce(getInitialDetailsStub);
+          sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -620,6 +629,7 @@ describe("runs", () => {
       getVideoConfigStub = sandbox.stub();
       setSpecTimeoutStub = sandbox.stub().returns(undefined);
       getInitialDetailsStub = sandbox.stub();
+      setRecordCapsStub = sandbox.stub().returns(undefined);
     });
 
     afterEach(() => {
@@ -667,6 +677,7 @@ describe("runs", () => {
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
           setSpecTimeout: setSpecTimeoutStub,
+          setRecordCaps: setRecordCapsStub,
           setDebugMode: setDebugModeStub
         },
         '../helpers/capabilityHelper': {
@@ -746,6 +757,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnce(setSpecTimeoutStub);
           sinon.assert.calledOnce(getInitialDetailsStub);
+          sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -825,6 +837,7 @@ describe("runs", () => {
       getVideoConfigStub = sandbox.stub();
       setSpecTimeoutStub = sandbox.stub().returns(undefined);
       getInitialDetailsStub = sandbox.stub();
+      setRecordCapsStub = sandbox.stub().returns(undefined);
     });
 
     afterEach(() => {
@@ -880,6 +893,7 @@ describe("runs", () => {
           setGeolocation: setGeolocationStub,
           getVideoConfig: getVideoConfigStub,
           setSpecTimeout: setSpecTimeoutStub,
+          setRecordCaps: setRecordCapsStub,
           setDebugMode: setDebugModeStub
         },
         '../helpers/capabilityHelper': {
@@ -975,6 +989,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnce(getInitialDetailsStub);
+          sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.match(
             sendUsageReportStub.getCall(0).args,
             [
