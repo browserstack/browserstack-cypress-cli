@@ -45,9 +45,7 @@ module.exports = function run(args, rawArgs) {
     // accept the access key from command line or env variable if provided
     utils.setAccessKey(bsConfig, args);
 
-    console.log(`roshan1: the constant before runs is ${Constants.STATE_CHANGING_HASH.initial_details} ::`)
     let buildReportData = await getInitialDetails(bsConfig, args, rawArgs);
-    console.log(`roshan1: the constant after runs is ${Constants.STATE_CHANGING_HASH.initial_details} ::`)
 
     // accept the build name from command line if provided
     utils.setBuildName(bsConfig, args);
