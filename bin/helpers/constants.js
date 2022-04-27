@@ -239,7 +239,6 @@ const RAW_ARGS_REGEX = /(?<=("-u"|"-username"|"-k"|"-key") *, *)"[^,\]]*/g
 
 const ERROR_EXIT_CODE = 1;
 
-
 const BUILD_FAILED_EXIT_CODE = 3;
 
 const REDACTED = "[REDACTED]";
