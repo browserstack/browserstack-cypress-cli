@@ -4,11 +4,15 @@ const syncSpecsLogs = require('./sync/syncSpecsLogs'),
   specsSummary = require('./sync/specsSummary');
 
 exports.pollBuildStatus = (bsConfig, buildDetails) => {
+  let customErrorsToPrint;
   return new Promise((resolve, reject) => {
     syncSpecsLogs.printSpecsStatus(bsConfig, buildDetails).then((data) => {
+      if(data.customErrorsToPrint && data.customErrorsToPrint.length > 0) {
+        customErrorsToPrint = data.customErrorsToPrint;
+      }
       return specDetails.failedSpecsDetails(data);
     }).then((data) => {
-      return specsSummary.printSpecsRunSummary(data, buildDetails.machines);
+      return specsSummary.printSpecsRunSummary(data, buildDetails.machines, customErrorsToPrint);
     }).then((successExitCode) => {
       resolve(successExitCode); // exit code 0
     }).catch((nonZeroExitCode) => {

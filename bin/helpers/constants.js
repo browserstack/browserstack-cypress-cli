@@ -21,6 +21,7 @@ const userMessages = {
   ZIP_UPLOADER_NOT_REACHABLE: "Could not reach BrowserStack APIs. Please check your network or see if you need to whitelist *.browserstack.com",
   ZIP_UPLOAD_FAILED: "Zip Upload failed.",
   ZIP_UPLOAD_LIMIT_EXCEEDED: "The directory size which contains the cypress config file is more than 200 MB. For more info, check out https://www.browserstack.com/docs/automate/cypress/exclude-files",
+  NODE_MODULES_LIMIT_EXCEEDED: "node_modules upload failed as the size %SIZE% MB is not supported. Dependencies will be installed in runtime. This will have a negative impact on build performance. Reach out to us at browserstack.com/support if you see this warning.",
   CONFIG_FILE_CREATED: "BrowserStack Config File created, you can now run browserstack-cypress --config-file run",
   CONFIG_FILE_EXISTS: "File already exists, delete the browserstack.json file manually. skipping...",
   DIR_NOT_FOUND: "Given path does not exist. Failed to create browserstack.json in %s",
@@ -101,7 +102,9 @@ const validationMessages = {
   HOME_DIRECTORY_NOT_A_DIRECTORY: "Specified home directory is not a directory. The home directory can only be a directory and not a file.",
   CYPRESS_CONFIG_FILE_NOT_PART_OF_HOME_DIRECTORY: "Could not find cypress.json within the specified home directory. Please make sure cypress.json resides within the home directory.",
   SPEC_TIMEOUT_LIMIT_ERROR: "The maximum allowed value of 'spec_timeout' is 120. Read more on https://browserstack.com/docs/automate/cypress/spec-timeout ",
-  SPEC_TIMEOUT_NOT_PASSED_ERROR: "'spec_timeout' key not specified. Going ahead with 30 mins as the default spec timeout. Read more about how to specify the option in https://browserstack.com/docs/automate/cypress/spec-timeout "
+  SPEC_TIMEOUT_NOT_PASSED_ERROR: "'spec_timeout' key not specified. Going ahead with 30 mins as the default spec timeout. Read more about how to specify the option in https://browserstack.com/docs/automate/cypress/spec-timeout ",
+  PROJECT_ID_MISSING: "You have specified '--record' flag but you've not provided the 'projectId' in cypress.json or in browserstack.json. Your record functionality on cypress.io dashboard might not work as it needs both the key and the projectId",
+  RECORD_KEY_MISSING: "You have specified '--record' flag but you've not provided the '--record-key' and we could not find any value in 'CYPRESS_RECORD_KEY' environment variable. Your record functionality on cypress.io dashboard might not work as it needs the key and projectId"
 };
 
 const cliMessages = {
@@ -145,7 +148,10 @@ const cliMessages = {
     REPORTER: "Specify the custom reporter to use",
     REPORTER_OPTIONS: "Specify reporter options for custom reporter",
     CYPRESS_GEO_LOCATION: "Enterprise feature to simulate website and mobile behavior from different locations.",
-    SPEC_TIMEOUT: "Specify a value for a hard timeout for each spec execution in the 1-120 mins range. Read https://browserstack.com/docs/automate/cypress/spec-timeout for more details."
+    SPEC_TIMEOUT: "Specify a value for a hard timeout for each spec execution in the 1-120 mins range. Read https://browserstack.com/docs/automate/cypress/spec-timeout for more details.",
+    RECORD: "Pass the --record flag to record your Cypress runs on Cypress.io dashboard. Note: You also need to specify '--record-key' and '--projectId' arguments either in CLI or in browserstack.json.",
+    RECORD_KEY: "You can specify the 'key' that is needed to record your runs on Cypress.io dashboard using the '--record-key' argument. Alternatively, you can also pass it on browserstack.json",
+    PROJECT_ID: "You can pass the 'projectId' of your Cypress.io project where you want to record your runs if specifying the '--record' key. You can also specify this in your cypress.json or in your browserstack.json."
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",
@@ -155,6 +161,7 @@ const cliMessages = {
     NO_NPM_WARNING: "No NPM warning if npm_dependencies is empty",
     CONFIG_DEMAND: "config file is required",
     CONFIG_FILE_PATH: "Path to BrowserStack config",
+    DEBUG: "Use this option to get debug logs on the CLI console.",
   },
   GENERATE_REPORT: {
     INFO: "Generates the build report"
@@ -245,6 +252,8 @@ const REDACTED_AUTH =`auth: { "username": ${REDACTED}, "access_key": ${REDACTED}
 
 const SPEC_TIMEOUT_LIMIT = 120 // IN MINS 
 
+const CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY = "custom_errors_to_print";
+
 module.exports = Object.freeze({
   syncCLI,
   userMessages,
@@ -269,5 +278,6 @@ module.exports = Object.freeze({
   REDACTED_AUTH,
   REDACTED,
   BUILD_FAILED_EXIT_CODE,
-  SPEC_TIMEOUT_LIMIT
+  SPEC_TIMEOUT_LIMIT,
+  CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY
 });
