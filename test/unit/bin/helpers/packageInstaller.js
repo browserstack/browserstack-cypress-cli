@@ -312,7 +312,8 @@ describe("packageInstaller", () => {
           return archiverStub;
         },
         logger: {
-          info: winstonLoggerInfoStub
+          info: winstonLoggerInfoStub,
+          debug: winstonLoggerInfoStub
         }
       });
       let packageArchiverrewire = packageInstaller.__get__('packageArchiver');

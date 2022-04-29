@@ -87,6 +87,42 @@ describe("syncSpecsLogs", () => {
     });
   });
 
+  context("addCustomErrorToPrint", () => {
+    const addCustomErrorToPrint = syncSpecsLogs.__get__("addCustomErrorToPrint");
+    let specSummary = {
+      "buildError": null,
+      "specs": [],
+      "duration": null,
+      "customErrorsToPrint": [
+        { id: "custom_error_1", type: "custom_errors_to_print", level: "warn", should_be_unique: true, message: "custom error message" }
+      ]
+    }
+    const uniqueError = { id: "custom_error_1", type: "custom_errors_to_print", level: "warn", should_be_unique: true, message: "custom error message" };
+    const notUniqueError = { id: "custom_error_2", type: "custom_errors_to_print", level: "warn", should_be_unique: false, message: "custom error message" };
+
+    it('should add a new Error if its meant to be unique and not added to the error list', () => {
+      addCustomErrorToPrint(uniqueError);
+      expect(JSON.stringify(syncSpecsLogs.__get__("specSummary"))).to.equal(JSON.stringify(specSummary));
+    });
+
+    it('should not add a new Error if its meant to be unique and already added to the error list', () => {
+      addCustomErrorToPrint(uniqueError);
+      expect(JSON.stringify(syncSpecsLogs.__get__("specSummary"))).to.equal(JSON.stringify(specSummary));
+    });
+
+    it('should add a new Error if its not meant to be unique and not added to the error list', () => {
+      addCustomErrorToPrint(notUniqueError);
+      specSummary.customErrorsToPrint.push(notUniqueError);
+      expect(JSON.stringify(syncSpecsLogs.__get__("specSummary"))).to.equal(JSON.stringify(specSummary));
+    });
+
+    it('should not add a new Error if its not meant to not be unique and already added to the error list', () => {
+      addCustomErrorToPrint(notUniqueError);
+      specSummary.customErrorsToPrint.push(notUniqueError);
+      expect(JSON.stringify(syncSpecsLogs.__get__("specSummary"))).to.equal(JSON.stringify(specSummary));
+    });
+  });
+
   context("getTableConfig", () => {
     const getTableConfig = syncSpecsLogs.__get__("getTableConfig");
 
@@ -211,6 +247,23 @@ describe("syncSpecsLogs", () => {
       showSpecsStatus(data);
       expect(printSpecData.calledOnce).to.be.true;
       expect(printInitialLog.calledOnce).to.be.true;
+    });
+
+    it('should add custom error, print initial and spec details when spec related data is sent in polling response', () => {
+      let specResult = JSON.stringify({"path": "path"})
+      let customError = { id: "custom_error_1", type: "custom_errors_to_print", level: "warn", should_be_unique: true, message: "custom error message" }
+      syncSpecsLogs.__set__('buildStarted', false)
+      let data = JSON.stringify(["created", specResult, customError])
+      var printSpecData = sandbox.stub();
+      syncSpecsLogs.__set__('printSpecData', printSpecData);
+      var printInitialLog = sandbox.stub();
+      syncSpecsLogs.__set__('printInitialLog', printInitialLog);
+      var addCustomErrorToPrint = sandbox.stub();
+      syncSpecsLogs.__set__('addCustomErrorToPrint', addCustomErrorToPrint);
+      showSpecsStatus(data);
+      expect(printSpecData.calledOnce).to.be.true;
+      expect(printInitialLog.calledOnce).to.be.true;
+      expect(addCustomErrorToPrint.calledOnce).to.be.true;
     });
   });
 

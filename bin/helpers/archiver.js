@@ -10,6 +10,7 @@ const archiver = require("archiver"),
 const archiveSpecs = (runSettings, filePath, excludeFiles, md5data) => {
   return new Promise(function (resolve, reject) {
     if (md5data.zipUrlPresent) {
+      logger.debug("Skipping test suite upload since BrowserStack already has your test suite that has not changed since the last run.");
       return resolve('Zipping not required');
     }
     var output = fs.createWriteStream(filePath);
@@ -55,6 +56,7 @@ const archiveSpecs = (runSettings, filePath, excludeFiles, md5data) => {
     archive.pipe(output);
 
     let ignoreFiles = utils.getFilesToIgnore(runSettings, excludeFiles);
+    logger.debug(`Patterns ignored during zip ${ignoreFiles}`);
     archive.glob(`**/*.+(${Constants.allowedFileTypes.join("|")})`, { cwd: cypressFolderPath, matchBase: true, ignore: ignoreFiles, dot:true });
 
     let packageJSON = {};
