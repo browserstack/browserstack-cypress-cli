@@ -96,12 +96,6 @@ describe("#getSpecStatus", () => {
     expect(specDetails.getSpecStatus(specStatus)).to.eq(response);
   });
 
-  it("returns passed_with_pending in blueBright if specStatus is passed_with_pending", () => {
-    let specStatus = "passed_with_pending";
-    let response = chalk.blueBright(specStatus);
-    expect(specDetails.getSpecStatus(specStatus)).to.eq(response);
-  });
-
   it("returns skipped in blueBright if specStatus is skipped", () => {
     let specStatus = "skipped";
     let response = chalk.blueBright(specStatus);

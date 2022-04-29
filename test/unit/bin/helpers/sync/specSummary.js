@@ -46,7 +46,7 @@ describe("printSpecsRunSummary", () => {
       var loggerInfoSpy = sinon.spy(logger, 'info');
 
       specSummary.printSpecsRunSummary(data, machines);
-      sinon.assert.calledWith(loggerInfoSpy, 'Total tests: 4, passed: 1, failed: 2, skipped: 1, pending: 0');
+      sinon.assert.calledWith(loggerInfoSpy, 'Total tests: 4, passed: 1, failed: 2, skipped: 1, passed_with_skipped: 0, pending: 0');
       sinon.assert.calledWith(loggerInfoSpy, `Done in ${time / 1000} seconds using ${machines} machines\n`);
 
       loggerInfoSpy.restore();
