@@ -80,7 +80,6 @@ let getSpecStatus = (specStatus) => {
   switch(specStatus.toLowerCase()) {
     case 'failed': return chalk.red(specStatus);
     case 'pending':
-    case 'passed_with_pending':
     case 'skipped':
     case 'passed_with_skipped': return chalk.blueBright(specStatus);
     default: return chalk.yellow(specStatus);

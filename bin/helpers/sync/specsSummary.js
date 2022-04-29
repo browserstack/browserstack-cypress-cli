@@ -23,6 +23,7 @@ let printSpecsRunSummary = (data, machines) => {
       failed: 0,
       passed: 0,
       skipped: 0,
+      passed_with_skipped: 0,
       pending: 0
     };
 
@@ -30,7 +31,7 @@ let printSpecsRunSummary = (data, machines) => {
       specSummaryCount(summary, spec.status.toLowerCase());
     });
 
-    logger.info(`Total tests: ${summary.total}, passed: ${summary.passed}, failed: ${summary.failed}, skipped: ${summary.skipped}, pending: ${summary.pending}`);
+    logger.info(`Total tests: ${summary.total}, passed: ${summary.passed}, failed: ${summary.failed}, skipped: ${summary.skipped}, passed_with_skipped: ${summary.passed_with_skipped}, pending: ${summary.pending}`);
     logger.info(`Done in ${data.duration/1000} seconds using ${machines} machines\n`);
 
     resolve(data.exitCode);
@@ -43,10 +44,11 @@ let specSummaryCount = (summary, status) => {
       summary.failed++;
       break;
     case "passed_with_skipped":
+      summary.passed_with_skipped++;
+      break;
     case 'skipped':
       summary.skipped++;
       break;
-    case "passed_with_pending":
     case "pending":
       summary.pending++;
       break;

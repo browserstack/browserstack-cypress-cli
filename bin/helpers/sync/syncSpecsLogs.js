@@ -221,7 +221,6 @@ let getStatus = (status) => {
       return chalk.green("✔");
     case "failed":
       return chalk.red("✘");
-    case "passed_with_pending":
     case "passed_with_skipped":
       return chalk.blueBright("✔");
     default:
