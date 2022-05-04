@@ -256,7 +256,7 @@ describe("packageInstaller", () => {
       })
       .catch((error) => {
         spawnStub.restore();
-        chai.assert.equal(error, "Packages were not installed successfully. Error code ${code}")
+        chai.assert.equal(error, "Packages were not installed successfully. Error code 1")
       });
     });
   });

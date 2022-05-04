@@ -77,7 +77,7 @@ describe("printSpecsRunSummary", () => {
       var loggerWarnSpy = sinon.spy(winstonLogger, 'warn');
 
       specSummary.printSpecsRunSummary(data, machines, customErrorsToPrint);
-      sinon.assert.calledWith(loggerInfoSpy, 'Total tests: 4, passed: 1, failed: 2, skipped: 1');
+      sinon.assert.calledWith(loggerInfoSpy, 'Total tests: 4, passed: 1, failed: 2, skipped: 1, passed_with_skipped: 0, pending: 0');
       sinon.assert.calledWith(loggerInfoSpy, `Done in ${time / 1000} seconds using ${machines} machines\n`);
       sinon.assert.calledWith(loggerWarnSpy, `custom error message`);
 
