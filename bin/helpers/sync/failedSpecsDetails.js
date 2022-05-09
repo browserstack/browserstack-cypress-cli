@@ -38,10 +38,7 @@ let failedSpecsDetails = (data) => {
       if (spec.status && spec.status.toLowerCase() === 'failed' && !failedSpecs)
         failedSpecs = true;
 
-      let specStatus =
-        spec.status && spec.status.toLowerCase() === 'failed'
-          ? chalk.red(spec.status)
-          : chalk.yellow(spec.status);
+      let specStatus = getSpecStatus(spec.status)
       specData.push([
         spec.specName,
         specStatus,
@@ -79,4 +76,15 @@ let failedSpecsDetails = (data) => {
   });
 }
 
+let getSpecStatus = (specStatus) => {
+  switch(specStatus.toLowerCase()) {
+    case 'failed': return chalk.red(specStatus);
+    case 'pending':
+    case 'skipped':
+    case 'passed_with_skipped': return chalk.blueBright(specStatus);
+    default: return chalk.yellow(specStatus);
+  }
+}
+
 exports.failedSpecsDetails = failedSpecsDetails;
+exports.getSpecStatus = getSpecStatus;

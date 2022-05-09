@@ -201,13 +201,14 @@ let printInitialLog = () => {
 
 let printSpecData = (data) => {
   let combination = getCombinationName(data["spec"]);
-  let status = getStatus(data["spec"]["status"]);
-  writeToTable(combination, data["path"], status)
-  addSpecToSummary(data["path"], data["spec"]["status"], combination, data["session_id"])
+  let status = data["spec"]["status"];
+  let statusMark = getStatus(status);
+  writeToTable(combination, data["path"], status, statusMark)
+  addSpecToSummary(data["path"], status, combination, data["session_id"])
 }
 
-let writeToTable = (combination, specName, status) => {
-  stream.write([combination , ":", `${specName} ${status}`]);
+let writeToTable = (combination, specName, status, statusMark) => {
+  stream.write([combination , ":", `${specName} ${statusMark} [${status}]`]);
 }
 
 let addCustomErrorToPrint = (error_object) => {
@@ -241,6 +242,8 @@ let getStatus = (status) => {
       return chalk.green("✔");
     case "failed":
       return chalk.red("✘");
+    case "passed_with_skipped":
+      return chalk.blueBright("✔");
     default:
       return chalk.blue(`[${status}]`);
   }
