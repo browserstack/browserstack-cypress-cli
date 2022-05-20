@@ -96,7 +96,7 @@ let setNoWrapParams = () => {
   }
 };
 
-let printSpecsStatus = (bsConfig, buildDetails, rawArgs) => {
+let printSpecsStatus = (bsConfig, buildDetails, rawArgs, buildReportData) => {
   setNoWrapParams();
   return new Promise((resolve, reject) => {
     options = getOptions(bsConfig.auth, buildDetails.build_id)
@@ -116,7 +116,7 @@ let printSpecsStatus = (bsConfig, buildDetails, rawArgs) => {
           if(err.status == 204) {
             reject(specSummary.exitCode);
           } else {
-          utils.sendUsageReport(bsConfig, {}, `buildId: ${buildDetails.build_id}`, 'error', 'sync_cli_error', err, rawArgs);
+          utils.sendUsageReport(bsConfig, {}, `buildId: ${buildDetails.build_id}`, 'error', 'sync_cli_error', { ...err , ...buildReportData}, rawArgs);
           }
         }
         logger.info(lineSeparator);
