@@ -99,6 +99,7 @@ describe("runs", () => {
       setSystemEnvsStub = sandbox.stub();
       getConfigPathStub = sandbox.stub();
       setupLocalTestingStub = sandbox.stub();
+      getInitialDetailsStub = sandbox.stub();
       setUsageReportingFlagStub = sandbox.stub().returns(undefined);
       sendUsageReportStub = sandbox.stub().callsFake(function () {
         return "end";
@@ -170,11 +171,15 @@ describe("runs", () => {
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub
         },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
+        }
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
       setupLocalTestingStub.returns(Promise.resolve("return nothing"));
       capabilityValidatorStub.returns(Promise.reject("random-error"));
+      getInitialDetailsStub.returns(Promise.resolve({}))
 
       return runs(args, rawArgs)
         .then(function (_bsConfig) {
@@ -207,6 +212,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnce(setSpecTimeoutStub);
+          sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnce(setNodeVersionStub);
           sinon.assert.calledOnceWithExactly(
@@ -216,7 +222,7 @@ describe("runs", () => {
             message,
             messageType,
             errorCode,
-            null,
+            {},
             rawArgs
           );
         });
@@ -266,6 +272,7 @@ describe("runs", () => {
       setCLIModeStub = sandbox.stub();
       setGeolocationStub = sandbox.stub();
       getVideoConfigStub = sandbox.stub();
+      getInitialDetailsStub = sandbox.stub();
       setSpecTimeoutStub = sandbox.stub().returns(undefined);
       setRecordCapsStub = sandbox.stub().returns(undefined);
       setNodeVersionStub = sandbox.stub();
@@ -334,6 +341,9 @@ describe("runs", () => {
         '../helpers/packageInstaller': {
           packageWrapper: packageInstallerStub,
         },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
+        }
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -341,6 +351,7 @@ describe("runs", () => {
       capabilityValidatorStub.returns(Promise.resolve(Constants.validationMessages.VALIDATED));
       checkUploadedStub.returns(Promise.resolve({ zipUrlPresent: false }));
       packageInstallerStub.returns(Promise.resolve({ packageArchieveCreated: false }));
+      getInitialDetailsStub.returns(Promise.resolve({}));
       archiverStub.returns(Promise.reject("random-error"));
 
       return runs(args, rawArgs)
@@ -377,6 +388,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnce(setSpecTimeoutStub);
+          sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnce(setNodeVersionStub);
           sinon.assert.calledOnceWithExactly(
@@ -386,7 +398,7 @@ describe("runs", () => {
             message,
             messageType,
             errorCode,
-            null,
+            {},
             rawArgs
           );
         });
@@ -439,6 +451,7 @@ describe("runs", () => {
       setGeolocationStub = sandbox.stub();
       getVideoConfigStub = sandbox.stub();
       setSpecTimeoutStub = sandbox.stub().returns(undefined);
+      getInitialDetailsStub = sandbox.stub();
       setRecordCapsStub = sandbox.stub().returns(undefined);
       setNodeVersionStub = sandbox.stub();
     });
@@ -510,6 +523,9 @@ describe("runs", () => {
         '../helpers/packageInstaller': {
           packageWrapper: packageInstallerStub,
         },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
+        },
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -520,6 +536,7 @@ describe("runs", () => {
       archiverStub.returns(Promise.resolve("Zipping completed"));
       zipUploadStub.returns(Promise.reject("random-error"));
       fetchZipSizeStub.returns(123);
+      getInitialDetailsStub.returns({});
 
       return runs(args, rawArgs)
         .then(function (_bsConfig) {
@@ -552,6 +569,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnce(setSpecTimeoutStub);
+          sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnce(setNodeVersionStub);
           sinon.assert.calledOnceWithExactly(
@@ -561,7 +579,7 @@ describe("runs", () => {
             message,
             messageType,
             errorCode,
-            null,
+            {},
             rawArgs
           );
         })
@@ -619,6 +637,7 @@ describe("runs", () => {
       setGeolocationStub = sandbox.stub();
       getVideoConfigStub = sandbox.stub();
       setSpecTimeoutStub = sandbox.stub().returns(undefined);
+      getInitialDetailsStub = sandbox.stub();
       setRecordCapsStub = sandbox.stub().returns(undefined);
       setNodeVersionStub = sandbox.stub();
     });
@@ -694,6 +713,9 @@ describe("runs", () => {
         '../helpers/packageInstaller': {
           packageWrapper: packageInstallerStub,
         },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
+        }
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -708,6 +730,7 @@ describe("runs", () => {
       stopLocalBinaryStub.returns(Promise.resolve("nothing"));
       createBuildStub.returns(Promise.reject("random-error"));
       fetchZipSizeStub.returns(123);
+      getInitialDetailsStub.returns(Promise.resolve({}));
 
       return runs(args, rawArgs)
         .then(function (_bsConfig) {
@@ -744,6 +767,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnce(setSpecTimeoutStub);
+          sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnce(setNodeVersionStub);
 
@@ -754,7 +778,7 @@ describe("runs", () => {
             message,
             messageType,
             errorCode,
-            null,
+            {},
             rawArgs
           );
         });
@@ -825,6 +849,7 @@ describe("runs", () => {
       setGeolocationStub = sandbox.stub();
       getVideoConfigStub = sandbox.stub();
       setSpecTimeoutStub = sandbox.stub().returns(undefined);
+      getInitialDetailsStub = sandbox.stub();
       setRecordCapsStub = sandbox.stub().returns(undefined);
       setNodeVersionStub = sandbox.stub();
     });
@@ -920,6 +945,9 @@ describe("runs", () => {
           getTimeComponents: getTimeComponentsStub,
           markBlockStart: markBlockStartStub,
           markBlockEnd: markBlockEndStub,
+        },
+        '../helpers/getInitialDetails': {
+          getInitialDetails: getInitialDetailsStub,
         }
       });
 
@@ -938,6 +966,7 @@ describe("runs", () => {
       getParallelsStub.returns(10);
       createBuildStub.returns(Promise.resolve({ message: 'Success', build_id: 'random_build_id', dashboard_url: dashboardUrl, user_id: 1234 }));
       fetchZipSizeStub.returns(123);
+      getInitialDetailsStub.returns(Promise.resolve({user_id: 1234}));
 
       return runs(args, rawArgs)
         .then(function (_bsConfig) {
@@ -974,6 +1003,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setGeolocationStub);
+          sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnce(setNodeVersionStub);
           sinon.assert.match(
