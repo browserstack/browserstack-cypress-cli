@@ -127,11 +127,7 @@ let reportGenerator = (bsConfig, buildId, args, rawArgs, cb) => {
     if (resp.statusCode == 299) {
       messageType = Constants.messageTypes.INFO;
       errorCode = 'api_deprecated';
-
-      if (build) {
-        message = build.message;
-        logger.info(message);
-      } else {
+      if (!build) {
         message = Constants.userMessages.API_DEPRECATED;
         logger.info(message);
       }
@@ -175,29 +171,16 @@ let reportGenerator = (bsConfig, buildId, args, rawArgs, cb) => {
 
 async function renderReportHTML(report_data) {
   let resultsDir = 'results';
-  let metaCharSet = `<meta charset="utf-8">`;
-  let metaViewPort = `<meta name="viewport" content="width=device-width, initial-scale=1"> `;
-  let pageTitle = `<title> BrowserStack Cypress Report </title>`;
-  let inlineCss = `<style type="text/css"> ${loadInlineCss()} </style>`;
-  let head = `<head> ${metaCharSet} ${metaViewPort} ${pageTitle} ${inlineCss} </head>`;
-  let htmlOpenTag = `<!DOCTYPE HTML><html>`;
-  let htmlClosetag = `</html>`;
-  let bodyBuildHeader = createBodyBuildHeader(report_data);
-  let bodyBuildTable = createBodyBuildTable(report_data);
-  let bodyReporterContainer = `<div class='report-container'> ${bodyBuildHeader} ${bodyBuildTable} </div>`;
-  let body = `<body> ${bodyReporterContainer} </body>`;
-  let html = `${htmlOpenTag} ${head} ${body} ${htmlClosetag}`;
-
 
   if (!fs.existsSync(resultsDir)){
     fs.mkdirSync(resultsDir);
   }
 
   // Writing the JSON used in creating the HTML file.
-  let reportData = await cypressReportData(report_data);
+  let jsonReportData = await getJsonReportResponse(report_data.cypress_custom_json_report_url)
   fs.writeFileSync(
     `${resultsDir}/browserstack-cypress-report.json`,
-    JSON.stringify(reportData),
+    JSON.stringify(jsonReportData),
     () => {
       if (err) {
         return logger.error(err);
@@ -205,9 +188,10 @@ async function renderReportHTML(report_data) {
       logger.info("The JSON file is saved");
     }
   );
-
+  
+  let htmlReportData = await getHtmlReportResponse(report_data.cypress_custom_html_report_url)
   // Writing the HTML file generated from the JSON data.
-  fs.writeFileSync(`${resultsDir}/browserstack-cypress-report.html`, html, () => {
+  fs.writeFileSync(`${resultsDir}/browserstack-cypress-report.html`, htmlReportData, () => {
     if(err) {
       return logger.error(err);
     }
@@ -215,47 +199,55 @@ async function renderReportHTML(report_data) {
   });
 }
 
-async function cypressReportData(report_data) {
-  specFiles = Object.keys(report_data.rows);
-  combinationPromises = [];
-  for (let spec of specFiles) {
-    let specSessions = report_data.rows[spec]["sessions"];
-    if (specSessions.length > 0) {
-      for (let combination of specSessions) {
-        if(utils.isUndefined(report_data.cypress_version) || report_data.cypress_version < "6"){
-          combinationPromises.push(generateCypressCombinationSpecReportDataWithoutConfigJson(combination));
-        }else{
-          combinationPromises.push(generateCypressCombinationSpecReportDataWithConfigJson(combination));
-        }
-      }
-    }
-  }
-  await Promise.all(combinationPromises);
-  return report_data;
-}
-
-function getConfigJsonResponse(combination) {
+function getHtmlReportResponse(htmlReportUrl) {
   return new Promise(async (resolve, reject) => {
-    configJsonResponse = null;
-    configJsonError = false
-    request.get(combination.tests.config_json , function(err, resp, body) {
+    let reportHtmlResponse = null;
+    request.get(htmlReportUrl , function(err, resp, body) {
       if(err) {
-        configJsonError = true;
-        reject([configJsonResponse, configJsonError]);
+        logger.error('Failed to download html report')
+        logger.error(utils.formatRequest(err, resp, body));
+        reject({});
       } else {
         if(resp.statusCode != 200) {
-          configJsonError = true;
-          reject([configJsonResponse, configJsonError]);
+          logger.error(`Non 200 response while downloading html report. Response code: ${resp.statusCode}`)
+          reject({});
         } else {
           try {
-            configJsonResponse = JSON.parse(body);
+            reportHtmlResponse = body;
+            console.log(`roshan1: the getHtmlReportResponse ${inspect(reportHtmlResponse)} ::`);
           } catch (err) {
-            configJsonError = true
-            reject([configJsonResponse, configJsonError]);
+            logger.error(`Report html response parsing failed. Error: ${inspect(err)}`)
+            reject({});
           }
         }
       }
-      resolve([configJsonResponse, configJsonError]);
+      resolve(reportHtmlResponse);
+    }); 
+  });
+}
+
+function getJsonReportResponse(reportJsonUrl) {
+  return new Promise(async (resolve, reject) => {
+    let reportJsonResponse = null;
+    request.get(reportJsonUrl , function(err, resp, body) {
+      if(err) {
+        logger.error('Failed to download json report')
+        logger.error(utils.formatRequest(err, resp, body));
+        reject({});
+      } else {
+        if(resp.statusCode != 200) {
+          logger.error(`Non 200 response while downloading json report. Response code: ${resp.statusCode}`)
+          reject({});
+        } else {
+          try {
+            reportJsonResponse = JSON.parse(body);
+          } catch (err) {
+            logger.error(`Report json response parsing failed. Error: ${inspect(err)}`)
+            reject({});
+          }
+        }
+      }
+      resolve(reportJsonResponse);
     }); 
   });
 }
