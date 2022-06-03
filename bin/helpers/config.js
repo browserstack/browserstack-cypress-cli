@@ -16,6 +16,7 @@ config.cypress_v1 = `${config.rails_host}/automate/cypress/v1`;
 config.buildUrl = `${config.cypress_v1}/builds/`;
 config.buildStopUrl = `${config.cypress_v1}/builds/stop/`;
 config.checkMd5sum = `${config.cypress_v1}/md5sumcheck/`;
+config.getInitialDetails = `${config.cypress_v1}/get_initial_details/`;
 config.fileName = "tests.zip";
 config.packageFileName = "bstackPackages.tar.gz";
 config.packageDirName = "tmpBstackPackages";
