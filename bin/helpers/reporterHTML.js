@@ -1,11 +1,11 @@
 const fs = require('fs'),
       path = require('path'),
       request = require('request'),
+      unzipper = require('unzipper'),
       logger = require('./logger').winstonLogger,
       utils = require("./utils"),
       Constants = require('./constants'),
       config = require("./config");
-const unzipper = require('unzipper');
 
 let reportGenerator = (bsConfig, buildId, args, rawArgs, buildReportData, cb) => {
   let options = {
@@ -18,6 +18,8 @@ let reportGenerator = (bsConfig, buildId, args, rawArgs, buildReportData, cb) =>
       'User-Agent': utils.getUserAgent(),
     },
   };
+
+  logger.debug('Started fetching the build json and html reports.');
 
   return request.get(options, async function (err, resp, body) {
     let message = null;
@@ -84,6 +86,7 @@ let reportGenerator = (bsConfig, buildId, args, rawArgs, buildReportData, cb) =>
       await generateCypressBuildReport(build);
       logger.info(message);
     }
+    logger.debug('Finished fetching the build json and html reports.');
     utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
     if (cb){
       cb();
@@ -95,6 +98,9 @@ async function generateCypressBuildReport(report_data) {
   let resultsDir = path.join('./', 'results');
 
   if (!fs.existsSync(resultsDir)){
+    logger.debug("results directory doesn't exists");
+    logger.info();
+    logger.debug("creating results directory");
     fs.mkdirSync(resultsDir);
   }
   await getReportResponse(resultsDir, 'report.zip', report_data.cypress_custom_report_url)
@@ -120,6 +126,7 @@ function getReportResponse(filePath, fileName, reportJsonUrl) {
         });
         writer.on('close', async () => {
           if (!error) {
+            logger.debug("Unzipping downloaded html and json reports.");
             await unzipFile(filePath, fileName);
             fs.unlinkSync(tmpFilePath);
             resolve(true);
