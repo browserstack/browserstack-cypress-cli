@@ -38,6 +38,7 @@ let reportGenerator = (bsConfig, buildId, args, rawArgs, buildReportData, cb) =>
       utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
       return;
     } else {
+      logger.debug('Received reports data from upstream.');
       try {
         build = JSON.parse(body);
       } catch (error) {
@@ -98,12 +99,16 @@ async function generateCypressBuildReport(report_data) {
   let resultsDir = path.join('./', 'results');
 
   if (!fs.existsSync(resultsDir)){
-    logger.debug("results directory doesn't exists");
-    logger.info();
-    logger.debug("creating results directory");
+    logger.debug("Results directory doesn't exists.");
+    logger.debug("Creating results directory.");
     fs.mkdirSync(resultsDir);
   }
-  await getReportResponse(resultsDir, 'report.zip', report_data.cypress_custom_report_url)
+  getReportResponse(resultsDir, 'report.zip', report_data.cypress_custom_report_url).then((message) => {
+    logger.debug(message);
+  }).catch((errorMessage) =>{
+    logger.error(errorMessage);
+    process.exitCode = Constants.ERROR_EXIT_CODE;
+  });
 }
 
 function getReportResponse(filePath, fileName, reportJsonUrl) {
@@ -113,7 +118,8 @@ function getReportResponse(filePath, fileName, reportJsonUrl) {
     request.get(reportJsonUrl).on('response', function(response) {
 
       if(response.statusCode != 200) {
-        reject();
+        let message = `Received non 200 response while fetching reports, code: ${response.statusCode}`;
+        reject(message);
       } else {
         //ensure that the user can call `then()` only when the file has
         //been downloaded entirely.
@@ -127,9 +133,14 @@ function getReportResponse(filePath, fileName, reportJsonUrl) {
         writer.on('close', async () => {
           if (!error) {
             logger.debug("Unzipping downloaded html and json reports.");
-            await unzipFile(filePath, fileName);
+            unzipFile(filePath, fileName).then((message) => {
+              logger.debug(message);
+            }).catch((err) =>{
+              logger.debug(`Unzipping html and json report failed. Error: ${err}`);
+            });
             fs.unlinkSync(tmpFilePath);
-            resolve(true);
+            let message = "Successfully prepared json and html reports.";
+            resolve(message);
           }
           //no need to call the reject here, as it will have been called in the
           //'error' stream;
@@ -142,9 +153,11 @@ function getReportResponse(filePath, fileName, reportJsonUrl) {
 const unzipFile = async (filePath, fileName) => {
   return new Promise( async (resolve, reject) => {
     await unzipper.Open.file(path.join(filePath, fileName))
-      .then(d => d.extract({path: filePath, concurrency: 5}))
-      .catch((err) => reject(err));
-    resolve();
+      .then((d) =>{
+        d.extract({path: filePath, concurrency: 5});
+      }).catch((err) => reject(err));
+      let message = "Unzipped the json and html successfully." 
+      resolve(message);
   });
 }
 
