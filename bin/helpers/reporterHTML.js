@@ -114,6 +114,7 @@ async function generateCypressBuildReport(report_data) {
 function getReportResponse(filePath, fileName, reportJsonUrl) {
   let tmpFilePath = path.join(filePath, fileName);
   const writer = fs.createWriteStream(tmpFilePath);
+  logger.debug(`Fetching build reports zip.`)
   return new Promise(async (resolve, reject) => {
     request.get(reportJsonUrl).on('response', function(response) {
 
