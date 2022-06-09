@@ -150,12 +150,19 @@ module.exports = function run(args, rawArgs) {
           // Archive the spec files
           logger.debug("Started archiving test suite");
           markBlockStart('zip.archive');
-          return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude, md5data).then(function (data) {
+          return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude, md5data).then(async function (data) {
             logger.debug("Completed archiving test suite");
             markBlockEnd('zip.archive');
 
             let test_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.fileName));
             let npm_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.packageFileName));
+
+            // Setup Local Testing
+            markBlockStart('localSetup');
+            logger.debug("Started setting up BrowserStack Local connection");
+            let bs_local = await utils.setupLocalTesting(bsConfig, args, rawArgs, buildReportData);
+            logger.debug('Completed setting up BrowserStack Local connection');
+            markBlockEnd('localSetup');
 
             // Uploaded zip file
             logger.debug("Started uploading the test suite zip");
@@ -168,12 +175,6 @@ module.exports = function run(args, rawArgs) {
               markBlockEnd('zip');
 
               // Create build
-              //setup Local Testing
-              markBlockStart('localSetup');
-              logger.debug("Started setting up BrowserStack Local connection");
-              let bs_local = await utils.setupLocalTesting(bsConfig, args, rawArgs, buildReportData);
-              logger.debug('Completed setting up BrowserStack Local connection');
-              markBlockEnd('localSetup');
               logger.debug("Started build creation");
               markBlockStart('createBuild');
               return build.createBuild(bsConfig, zip).then(function (data) {
@@ -303,9 +304,13 @@ module.exports = function run(args, rawArgs) {
                 utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'build_failed', buildReportData, rawArgs);
                 process.exitCode = Constants.ERROR_EXIT_CODE;
               });
-            }).catch(function (err) {
+            }).catch(async function (err) {
               // Zip Upload failed | Local Start failed
               logger.error(err);
+
+              // stop the Local instance
+              await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs, buildReportData);
+
               if(err === Constants.userMessages.LOCAL_START_FAILED){
                 utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.LOCAL_START_FAILED}`, Constants.messageTypes.ERROR, 'local_start_failed', buildReportData, rawArgs);
               } else {
