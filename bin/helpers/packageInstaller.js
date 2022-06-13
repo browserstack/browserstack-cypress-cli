@@ -5,8 +5,9 @@
   fileHelpers = require('./fileHelpers'),
   logger = require("./logger").winstonLogger,
   Constants = require('./constants'),
-  process = require('process'),
   utils = require('./utils'),
+  { get_version } = require('./usageReporting'),
+  process = require('process'),
   { spawn } = require('child_process'),
   util = require('util');
 
@@ -64,7 +65,7 @@ const packageInstall = (packageDir) => {
         logger.info(`Packages were installed locally successfully.`);
         resolve('Packages were installed successfully.');
       } else {
-        logger.error(`Some error occurred while installing packages. Error code ${code}`);
+        logger.error(`Some error occurred while installing packages. Error code ${code}. Please read npm_install_debug.log for more info.}`);
         reject(`Packages were not installed successfully. Error code ${code}`);
       }
     };
@@ -72,7 +73,22 @@ const packageInstall = (packageDir) => {
       logger.error(`Some error occurred while installing packages: %j`, error);
       reject(`Packages were not installed successfully. Error Description ${util.format('%j', error)}`);
     };
-    nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true});
+
+    let nodeProcess;
+    logger.debug(`Fetching npm version and its major version`);
+    const npm_version = get_version('npm')
+    const npm_major_version = utils.getMajorVersion(npm_version);
+    logger.debug(`Fetched npm version: ${npm_version} and its major version: ${npm_major_version}`);
+
+    // add --legacy-peer-deps flag while installing dependencies for npm v7+
+    // For more info please read "Peer Dependencies" section here -> https://github.blog/2021-02-02-npm-7-is-now-generally-available/
+    if (parseInt(npm_major_version) >= 7) {
+      logger.debug(`Running NPM install command: npm install --legacy-peer-deps --loglevel verbose > ../npm_install_debug.log`);
+      nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--legacy-peer-deps', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true});
+    } else {
+      logger.debug(`Running NPM install command: 'npm install --loglevel verbose > ../npm_install_debug.log'`);
+      nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true});
+    }
     nodeProcess.on('close', nodeProcessCloseCallback);
     nodeProcess.on('error', nodeProcessErrorCallback);
   });

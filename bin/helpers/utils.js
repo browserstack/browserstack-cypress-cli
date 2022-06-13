@@ -1203,3 +1203,21 @@ exports.getVideoConfig = (cypressJson) => {
   logger.debug(`Setting videoUploadOnPasses = ${conf.videoUploadOnPasses}`);
   return conf;
 }
+
+exports.getMajorVersion = (version) => {
+  try {
+    if (!version || !version.match(/^(\d+\.)?(\d+\.)?(\*|\d+)$/)) {
+      return null;
+    }
+
+    const matches = version.match(/^(\d+\.)?(\d+\.)?(\*|\d+)$/)
+    if(matches && matches.length >= 2) {
+      return matches[1].replace('.','');
+    } else {
+      return null;
+    }
+  } catch(error) {
+    logger.debug(`Some Error occurred while fetching major version of ${version}. Returning null. Error Details: ${error}`)
+    return null;
+  } 
+}
