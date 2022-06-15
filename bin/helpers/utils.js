@@ -1212,6 +1212,9 @@ exports.getMajorVersion = (version) => {
 
     const matches = version.match(/^(\d+\.)?(\d+\.)?(\*|\d+)$/)
     if(matches && matches.length >= 2) {
+      if (!matches[1]) {
+        return matches[0];
+      }
       return matches[1].replace('.','');
     } else {
       return null;
