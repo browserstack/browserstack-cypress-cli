@@ -103,12 +103,7 @@ async function generateCypressBuildReport(report_data) {
     logger.debug("Creating results directory.");
     fs.mkdirSync(resultsDir);
   }
-  getReportResponse(resultsDir, 'report.zip', report_data.cypress_custom_report_url).then((message) => {
-    logger.debug(message);
-  }).catch((errorMessage) =>{
-    logger.error(errorMessage);
-    process.exitCode = Constants.ERROR_EXIT_CODE;
-  });
+  await getReportResponse(resultsDir, 'report.zip', report_data.cypress_custom_report_url);
 }
 
 function getReportResponse(filePath, fileName, reportJsonUrl) {
@@ -129,19 +124,16 @@ function getReportResponse(filePath, fileName, reportJsonUrl) {
         writer.on('error', err => {
           error = err;
           writer.close();
+          process.exitCode = Constants.ERROR_EXIT_CODE;
           reject(err);
         });
         writer.on('close', async () => {
           if (!error) {
             logger.debug("Unzipping downloaded html and json reports.");
-            unzipFile(filePath, fileName).then((message) => {
-              logger.debug(message);
-            }).catch((err) =>{
-              logger.debug(`Unzipping html and json report failed. Error: ${err}`);
-            });
+            await unzipFile(filePath, fileName);
             fs.unlinkSync(tmpFilePath);
-            let message = "Successfully prepared json and html reports.";
-            resolve(message);
+            logger.debug("Successfully prepared json and html reports.");
+            resolve(true);
           }
           //no need to call the reject here, as it will have been called in the
           //'error' stream;
@@ -154,11 +146,14 @@ function getReportResponse(filePath, fileName, reportJsonUrl) {
 const unzipFile = async (filePath, fileName) => {
   return new Promise( async (resolve, reject) => {
     await unzipper.Open.file(path.join(filePath, fileName))
-      .then((d) =>{
-        d.extract({path: filePath, concurrency: 5});
-      }).catch((err) => reject(err));
-      let message = "Unzipped the json and html successfully." 
-      resolve(message);
+      .then(d => d.extract({path: filePath, concurrency: 5}))
+      .catch((err) => {
+        logger.debug(`Unzipping html and json report failed. Error: ${err}`);
+        process.exitCode = Constants.ERROR_EXIT_CODE;
+        reject(err);
+      });
+      logger.debug("Unzipped the json and html successfully.")
+      resolve();
   });
 }
 
