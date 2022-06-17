@@ -104,7 +104,8 @@ const validationMessages = {
   SPEC_TIMEOUT_LIMIT_ERROR: "The maximum allowed value of 'spec_timeout' is 120. Read more on https://browserstack.com/docs/automate/cypress/spec-timeout ",
   SPEC_TIMEOUT_NOT_PASSED_ERROR: "'spec_timeout' key not specified. Going ahead with 30 mins as the default spec timeout. Read more about how to specify the option in https://browserstack.com/docs/automate/cypress/spec-timeout ",
   PROJECT_ID_MISSING: "You have specified '--record' flag but you've not provided the 'projectId' in cypress.json or in browserstack.json. Your record functionality on cypress.io dashboard might not work as it needs both the key and the projectId",
-  RECORD_KEY_MISSING: "You have specified '--record' flag but you've not provided the '--record-key' and we could not find any value in 'CYPRESS_RECORD_KEY' environment variable. Your record functionality on cypress.io dashboard might not work as it needs the key and projectId"
+  RECORD_KEY_MISSING: "You have specified '--record' flag but you've not provided the '--record-key' and we could not find any value in 'CYPRESS_RECORD_KEY' environment variable. Your record functionality on cypress.io dashboard might not work as it needs the key and projectId",
+  NODE_VERSION_PARSING_ERROR: "We weren't able to successfully parse the specified nodeVersion. We will be using the default nodeVersion to run your tests."
 };
 
 const cliMessages = {
@@ -151,7 +152,8 @@ const cliMessages = {
     SPEC_TIMEOUT: "Specify a value for a hard timeout for each spec execution in the 1-120 mins range. Read https://browserstack.com/docs/automate/cypress/spec-timeout for more details.",
     RECORD: "Pass the --record flag to record your Cypress runs on Cypress.io dashboard. Note: You also need to specify '--record-key' and '--projectId' arguments either in CLI or in browserstack.json.",
     RECORD_KEY: "You can specify the 'key' that is needed to record your runs on Cypress.io dashboard using the '--record-key' argument. Alternatively, you can also pass it on browserstack.json",
-    PROJECT_ID: "You can pass the 'projectId' of your Cypress.io project where you want to record your runs if specifying the '--record' key. You can also specify this in your cypress.json or in your browserstack.json."
+    PROJECT_ID: "You can pass the 'projectId' of your Cypress.io project where you want to record your runs if specifying the '--record' key. You can also specify this in your cypress.json or in your browserstack.json.",
+    NODE_VERSION: "Pass the node version that you want BrowserStack to use to run your Cypress tests on."
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",
