@@ -1170,6 +1170,42 @@ describe("capabilityHelper.js", () => {
       });
     });
 
+    describe("validate nodeVersion", () => {
+      beforeEach(() => {
+        bsConfig = {
+          auth: {},
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            cypress_proj_dir: "random path",
+            cypressConfigFilePath: "random path",
+            cypressProjectDir: "random path",
+            cypress_config_filename: "false"
+          },
+          connection_settings: {}
+        };
+        loggerWarningSpy = sinon.stub(logger, 'warn');
+      });
+
+      afterEach(function() {
+        loggerWarningSpy.restore();
+      });
+
+      it("should log a warning if nodeVersion is not in x.x.x format where x is a number", () => {      
+  
+        return capabilityHelper
+          .validate(bsConfig, {})
+          .then(function (data) {
+            sinon.assert.called(loggerWarningSpy);
+          });
+      });
+    });
+
     describe("validate home directory", () => {
       beforeEach(() => {
         bsConfig = {
