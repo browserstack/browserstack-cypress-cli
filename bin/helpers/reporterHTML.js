@@ -124,8 +124,8 @@ function getReportResponse(filePath, fileName, reportJsonUrl) {
         writer.on('error', err => {
           error = err;
           writer.close();
-          process.exitCode = Constants.ERROR_EXIT_CODE;
           reject(err);
+          process.exitCode = Constants.ERROR_EXIT_CODE;
         });
         writer.on('close', async () => {
           if (!error) {
@@ -149,8 +149,8 @@ const unzipFile = async (filePath, fileName) => {
       .then(d => d.extract({path: filePath, concurrency: 5}))
       .catch((err) => {
         logger.debug(`Unzipping html and json report failed. Error: ${err}`);
-        process.exitCode = Constants.ERROR_EXIT_CODE;
         reject(err);
+        process.exitCode = Constants.ERROR_EXIT_CODE;
       });
       logger.debug("Unzipped the json and html successfully.")
       resolve();
