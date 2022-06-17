@@ -130,10 +130,15 @@ function getReportResponse(filePath, fileName, reportJsonUrl) {
         writer.on('close', async () => {
           if (!error) {
             logger.debug("Unzipping downloaded html and json reports.");
-            await unzipFile(filePath, fileName);
-            fs.unlinkSync(tmpFilePath);
-            logger.debug("Successfully prepared json and html reports.");
-            resolve(true);
+            unzipFile(filePath, fileName).then((msg) => {
+              logger.debug(msg);
+              fs.unlinkSync(tmpFilePath);
+              logger.debug("Successfully prepared json and html reports.");
+              resolve(true);
+            }).catch((err) =>{
+              logger.debug(`Unzipping html and json report failed. Error: ${err}`)
+              reject(true);
+            });
           }
           //no need to call the reject here, as it will have been called in the
           //'error' stream;
@@ -148,12 +153,11 @@ const unzipFile = async (filePath, fileName) => {
     await unzipper.Open.file(path.join(filePath, fileName))
       .then(d => d.extract({path: filePath, concurrency: 5}))
       .catch((err) => {
-        logger.debug(`Unzipping html and json report failed. Error: ${err}`);
         reject(err);
         process.exitCode = Constants.ERROR_EXIT_CODE;
       });
-      logger.debug("Unzipped the json and html successfully.")
-      resolve();
+      let message = "Unzipped the json and html successfully."
+      resolve(message);
   });
 }
 
