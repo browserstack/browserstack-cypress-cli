@@ -65,7 +65,7 @@ const packageInstall = (packageDir) => {
         logger.info(`Packages were installed locally successfully.`);
         resolve('Packages were installed successfully.');
       } else {
-        logger.error(`Some error occurred while installing packages. Error code ${code}. Please read npm_install_debug.log for more info.}`);
+        logger.error(`Some error occurred while installing packages. Error code ${code}. Please read npm_install_debug.log for more info.`);
         reject(`Packages were not installed successfully. Error code ${code}`);
       }
     };
