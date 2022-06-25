@@ -97,6 +97,9 @@ module.exports = function run(args, rawArgs) {
     // set record feature caps
     utils.setRecordCaps(bsConfig, args);
 
+    // set build tag caps
+    utils.setBuildTags(bsConfig, args);
+
     //set browsers
     await utils.setBrowsers(bsConfig, args);
 

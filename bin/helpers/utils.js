@@ -414,6 +414,13 @@ exports.setTestEnvs = (bsConfig, args) => {
   logger.debug(`Setting env vars = ${bsConfig.run_settings.env}`);
 }
 
+exports.setBuildTags = (bsConfig, args) => {
+  if(!this.isUndefined(args.buildTag)) {
+    bsConfig.run_settings.build_tag = args.buildTag;
+  }
+  logger.debug(`Setting build tag =  ${bsConfig.run_settings.build_tag}`);
+};
+
 exports.setSystemEnvs = (bsConfig) => {
   let envKeys = {};
 
