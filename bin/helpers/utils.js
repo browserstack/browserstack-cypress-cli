@@ -445,10 +445,17 @@ exports.setTestEnvs = (bsConfig, args) => {
 }
 
 exports.setBuildTags = (bsConfig, args) => {
-  if(!this.isUndefined(args.buildTag)) {
-    bsConfig.run_settings.build_tag = args.buildTag;
+  let buildTag = undefined;
+  if(!this.isUndefined(args["build-tag"])) {
+    buildTag = args["build-tag"];
+  } else {
+    buildTag = bsConfig.run_settings.build_tag;
   }
-  logger.debug(`Setting build tag =  ${bsConfig.run_settings.build_tag}`);
+  if(!this.isUndefined(buildTag)) {
+    buildTag = buildTag.toString();
+  }
+  bsConfig.run_settings.build_tag = buildTag;
+  logger.debug(`Setting the build tag =  ${bsConfig.run_settings.build_tag}`);
 };
 
 exports.setSystemEnvs = (bsConfig) => {
