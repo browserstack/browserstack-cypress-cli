@@ -371,6 +371,36 @@ exports.setRecordCaps = (bsConfig, args) => {
   bsConfig.run_settings["projectId"] = this.setProjectId(bsConfig, args);
 }
 
+exports.verifyNodeVersionOption = () => {
+  let nvOptionsSet = (this.searchForOption('-nv') || this.searchForOption('--nv'));
+  let nodeVersionHyphenLocationOptionsSet = (this.searchForOption('-node-version') || this.searchForOption('--node-version'));
+  let nodeVersionOptionsSet = (this.searchForOption('-nodeVersion') || this.searchForOption('--nodeVersion'));
+  return (nvOptionsSet || nodeVersionHyphenLocationOptionsSet || nodeVersionOptionsSet);
+}
+
+exports.setNodeVersion = (bsConfig, args) => {
+  let userProvidedNodeVersion = this.verifyNodeVersionOption();
+  bsConfig.run_settings.userProvidedNodeVersion = (userProvidedNodeVersion || (!this.isUndefined(bsConfig.run_settings.nodeVersion)) || (!this.isUndefined(bsConfig.run_settings.nodeversion)));
+
+  if (bsConfig.run_settings.userProvidedNodeVersion) {
+    if(!this.isUndefined(args.nodeVersion)) {
+      bsConfig.run_settings.nodeVersion = args.nodeVersion;
+    } else if (!this.isUndefined(bsConfig.run_settings.nodeversion)) {
+      bsConfig.run_settings.nodeVersion = bsConfig.run_settings.nodeversion;
+    }
+  }
+
+  if (this.isUndefined(bsConfig.run_settings.nodeVersion)) {
+    bsConfig.run_settings.nodeVersion = usageReporting.get_version('node') || '';
+  }
+
+  if (bsConfig.run_settings.nodeVersion && typeof(bsConfig.run_settings.nodeVersion) === 'string' && bsConfig.run_settings.nodeVersion.charAt(0).toLowerCase() === 'v') {
+    bsConfig.run_settings.nodeVersion = bsConfig.run_settings.nodeVersion.substr(1);
+  }
+
+  logger.debug(`Setting nodeVersion = ${bsConfig.run_settings.nodeVersion}`);
+}
+
 // specs can be passed from bstack configuration file
 // specs can be passed via command line args as a string
 // command line args takes precedence over config
