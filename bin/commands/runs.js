@@ -100,7 +100,6 @@ module.exports = function run(args, rawArgs) {
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
     // set node version
-
     utils.setNodeVersion(bsConfig, args);
 
     //set browsers
