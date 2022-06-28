@@ -265,6 +265,12 @@ var argv = yargs
           default: undefined,
           describe: Constants.cliMessages.RUN.PROJECT_ID,
           type: "string"
+        },
+        'nv': {
+          alias: ['node-version', 'nodeVersion'],
+          default: undefined,
+          describe: Constants.cliMessages.RUN.NODE_VERSION,
+          type: "string"
         }
       })
       .help('help')
