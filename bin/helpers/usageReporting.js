@@ -291,4 +291,5 @@ function send(args) {
 module.exports = {
   send,
   cli_version_and_path,
+  get_version
 };
