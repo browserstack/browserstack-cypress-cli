@@ -3378,4 +3378,34 @@ describe('utils', () => {
       expect(utils.formatRequest(null, {statusCode: 500}, cricularBody)).to.be.eql({err: null, status: 500, body: '[Circular]'});
     });
   });
+
+  describe('getMajorVersion', () => {
+    it('should return null if undefined version is sent', () => {
+      expect(utils.getMajorVersion()).to.be.eql(null);
+    });
+
+    it('should return null if null version is sent', () => {
+      expect(utils.getMajorVersion(null)).to.be.eql(null);
+    });
+
+    it('should return null if improper version is sent', () => {
+      expect(utils.getMajorVersion('test')).to.be.eql(null);
+      expect(utils.getMajorVersion('a1.1.1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1a.1.1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1.a1.1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1.1a.1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1.1.a1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1.1.1a')).to.be.eql(null);
+      expect(utils.getMajorVersion('.1.1.1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1.')).to.be.eql(null);
+      expect(utils.getMajorVersion('$')).to.be.eql(null);
+    });
+
+    it('should return proper major version if proper version is sent', () => {
+      expect(utils.getMajorVersion('1.1.1')).to.be.eql('1');
+      expect(utils.getMajorVersion('2.1')).to.be.eql('2');
+      expect(utils.getMajorVersion('3')).to.be.eql('3');
+      expect(utils.getMajorVersion('4.1')).to.be.eql('4');
+    });
+  });
 });

@@ -7,7 +7,8 @@ const chai = require("chai"),
   cp = require('child_process');
 
 const logger = require("../../../../bin/helpers/logger").winstonLogger,
-fileHelpers = require("../../../../bin/helpers/fileHelpers");
+fileHelpers = require("../../../../bin/helpers/fileHelpers"),
+utils = require('../../../../bin/helpers/utils');
 
 const rewire = require("rewire");
 
@@ -214,15 +215,19 @@ describe("packageInstaller", () => {
   context("packageInstall", () => {
     const packageInstaller = rewire("../../../../bin/helpers/packageInstaller");
 
-    it("should call npm install on directory and resolve if spawn is closed successfully", () => {
+    it("should call npm install on directory with npm <= 6 and resolve if spawn is closed successfully", () => {
       let spawnStub = sandbox.stub(cp, 'spawn').returns({
         on: (_close, nodeProcessCloseCallback) => {
           nodeProcessCloseCallback(0);
         }
       });
+      let getMajorVersionStub = sandbox.stub(utils, 'getMajorVersion').returns('7');
       packageInstaller.__set__({
         nodeProcess: {},
-        spawn: spawnStub
+        spawn: spawnStub,
+        utils: {
+          getMajorVersion: getMajorVersionStub
+        }
       });
       let packageInstallrewire = packageInstaller.__get__('packageInstall');
       let directoryPath = "/random/path";
@@ -231,6 +236,35 @@ describe("packageInstaller", () => {
         console.log(data);
         chai.assert.equal(data, "Packages were installed successfully.")
         spawnStub.restore();
+        getMajorVersionStub.restore();
+      })
+      .catch((_error) => {
+        chai.assert.fail(`Promise error ${_error}`);
+      });
+    });
+
+    it("should call npm install on directory with npm >= 7 and resolve if spawn is closed successfully", () => {
+      let spawnStub = sandbox.stub(cp, 'spawn').returns({
+        on: (_close, nodeProcessCloseCallback) => {
+          nodeProcessCloseCallback(0);
+        }
+      });
+      let getMajorVersionStub = sandbox.stub(utils, 'getMajorVersion').returns('7');
+      packageInstaller.__set__({
+        nodeProcess: {},
+        spawn: spawnStub,
+        utils: {
+          getMajorVersion: getMajorVersionStub
+        }
+      });
+      let packageInstallrewire = packageInstaller.__get__('packageInstall');
+      let directoryPath = "/random/path";
+      return packageInstallrewire(directoryPath)
+      .then((data) => {
+        console.log(data);
+        chai.assert.equal(data, "Packages were installed successfully.")
+        spawnStub.restore();
+        getMajorVersionStub.restore();
       })
       .catch((_error) => {
         chai.assert.fail(`Promise error ${_error}`);
