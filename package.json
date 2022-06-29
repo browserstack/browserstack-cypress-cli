@@ -22,7 +22,7 @@
     "glob": "7.2.0",
     "mkdirp": "1.0.4",
     "request": "2.88.2",
-    "requestretry": "4.1.2",
+    "requestretry": "7.1.0",
     "table": "5.4.6",
     "unzipper": "0.10.11",
     "update-notifier": "5.1.0",
