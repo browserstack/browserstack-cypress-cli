@@ -1975,6 +1975,162 @@ describe('utils', () => {
     });
   });
 
+  describe('verifyNodeVersionOption', () => {
+    let utilsearchForOptionNodeVersionStub, userOption, testOption;
+
+    beforeEach(function () {
+      utilsearchForOptionNodeVersionStub = sinon
+        .stub(utils, 'searchForOption')
+        .callsFake((...userOption) => {
+          return userOption == testOption;
+        });
+    });
+
+    afterEach(function () {
+      utilsearchForOptionNodeVersionStub.restore();
+    });
+
+    it('-nv user option', () => {
+      testOption = '-nv';
+      expect(utils.verifyNodeVersionOption()).to.be.true;
+      sinon.assert.calledWithExactly(
+        utilsearchForOptionNodeVersionStub,
+        testOption
+      );
+    });
+
+    it('--nv user option', () => {
+      testOption = '--nv';
+      expect(utils.verifyNodeVersionOption()).to.be.true;
+      sinon.assert.calledWithExactly(
+        utilsearchForOptionNodeVersionStub,
+        testOption
+      );
+    });
+
+    it('-node-version user option', () => {
+      testOption = '-node-version';
+      expect(utils.verifyNodeVersionOption()).to.be.true;
+      sinon.assert.calledWithExactly(
+        utilsearchForOptionNodeVersionStub,
+        testOption
+      );
+    });
+
+    it('--node-version user option', () => {
+      testOption = '--node-version';
+      expect(utils.verifyNodeVersionOption()).to.be.true;
+      sinon.assert.calledWithExactly(
+        utilsearchForOptionNodeVersionStub,
+        testOption
+      );
+    });
+
+    it('-nodeVersion user option', () => {
+      testOption = '-nodeVersion';
+      expect(utils.verifyNodeVersionOption()).to.be.true;
+      sinon.assert.calledWithExactly(
+        utilsearchForOptionNodeVersionStub,
+        testOption
+      );
+    });
+
+    it('--nodeVersion user option', () => {
+      testOption = '--nodeVersion';
+      expect(utils.verifyNodeVersionOption()).to.be.true;
+      sinon.assert.calledWithExactly(
+        utilsearchForOptionNodeVersionStub,
+        testOption
+      );
+    });
+  });
+
+  describe('setNodeVersion', () => {
+    let verifyNodeVersionOptionStub,
+      nvBool,
+      args,
+      bsConfig,
+      nodeVersion,
+      get_versionStub;
+    let userNodeVersion = 'z.z.z';
+
+    beforeEach(function () {
+      verifyNodeVersionOptionStub = sinon
+        .stub(utils, 'verifyNodeVersionOption')
+        .callsFake(() => nvBool);
+
+        get_versionStub = sinon
+          .stub(usageReporting, 'get_version')
+          .callsFake(() => userNodeVersion);
+
+      args = {
+        nodeVersion: 'x.x.x',
+      };
+    });
+
+    afterEach(function () {
+      sinon.restore();
+    });
+
+    it('has user provided nv flag', () => {
+      nvBool = true;
+
+      bsConfig = {
+        run_settings: {
+          nodeVersion: 'y.y.y',
+        },
+      };
+
+      utils.setNodeVersion(bsConfig, args);
+
+      expect(bsConfig.run_settings.nodeVersion).to.be.eq(
+        args.nodeVersion
+      );
+      expect(bsConfig.run_settings.userProvidedNodeVersion).to.be.true;
+    });
+
+    it('does not have user provided nv flag, sets the value from bsConfig', () => {
+      nvBool = false;
+      args = {
+        nodeVersion: null
+      };
+      bsConfig = {
+        run_settings: {
+          nodeVersion: 'x.x.x',
+        },
+      };
+
+      utils.setNodeVersion(bsConfig, args);
+
+      expect(bsConfig.run_settings.nodeVersion).to.not.be.eq(
+        args.nodeVersion
+      );
+      expect(bsConfig.run_settings.nodeVersion).to.be.eq('x.x.x');
+      expect(bsConfig.run_settings.userProvidedNodeVersion).to.be.true;
+    });
+
+    it('does not have user provided nv flag and config value, sets nodeVersion to the value of the user\'s nodeVersion that was used to trigger the build', () => {
+      nvBool = false;
+      args = {
+        nodeVersion: null
+      };
+      bsConfig = {
+        run_settings: {
+          nodeVersion: null,
+        },
+      };
+
+      utils.setNodeVersion(bsConfig, args);
+
+      expect(bsConfig.run_settings.nodeVersion).to.be.eq(userNodeVersion);
+      expect(bsConfig.run_settings.userProvidedNodeVersion).to.be.false;
+    });
+
+    afterEach(function () {
+      verifyNodeVersionOptionStub.restore();
+    });
+  });
+
   describe('setDefaults', () => {
     beforeEach(function () {
       delete process.env.BROWSERSTACK_USERNAME;
@@ -3220,6 +3376,36 @@ describe('utils', () => {
       const cricularBody = {message: "Something went wrong"};
       cricularBody.body = cricularBody;
       expect(utils.formatRequest(null, {statusCode: 500}, cricularBody)).to.be.eql({err: null, status: 500, body: '[Circular]'});
+    });
+  });
+
+  describe('getMajorVersion', () => {
+    it('should return null if undefined version is sent', () => {
+      expect(utils.getMajorVersion()).to.be.eql(null);
+    });
+
+    it('should return null if null version is sent', () => {
+      expect(utils.getMajorVersion(null)).to.be.eql(null);
+    });
+
+    it('should return null if improper version is sent', () => {
+      expect(utils.getMajorVersion('test')).to.be.eql(null);
+      expect(utils.getMajorVersion('a1.1.1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1a.1.1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1.a1.1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1.1a.1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1.1.a1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1.1.1a')).to.be.eql(null);
+      expect(utils.getMajorVersion('.1.1.1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1.')).to.be.eql(null);
+      expect(utils.getMajorVersion('$')).to.be.eql(null);
+    });
+
+    it('should return proper major version if proper version is sent', () => {
+      expect(utils.getMajorVersion('1.1.1')).to.be.eql('1');
+      expect(utils.getMajorVersion('2.1')).to.be.eql('2');
+      expect(utils.getMajorVersion('3')).to.be.eql('3');
+      expect(utils.getMajorVersion('4.1')).to.be.eql('4');
     });
   });
 });
