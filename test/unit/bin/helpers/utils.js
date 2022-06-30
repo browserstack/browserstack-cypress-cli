@@ -3393,39 +3393,69 @@ describe('utils', () => {
       utils.setBuildTags(bsConfig, args);
       expect(bsConfig.run_settings.build_tag).to.be.eq("def");
     });
-  });
 
-  it('should honour bstack json if args not passed', () => {
-    let bsConfig = {
-      run_settings: {
-        build_tag: "abc"
+    it('should honour bstack json if args not passed', () => {
+      let bsConfig = {
+        run_settings: {
+          build_tag: "abc"
+        }
       }
-    }
 
-    let args = {}
-    utils.setBuildTags(bsConfig, args);
-    expect(bsConfig.run_settings.build_tag).to.be.eq("abc");
-  });
+      let args = {}
+      utils.setBuildTags(bsConfig, args);
+      expect(bsConfig.run_settings.build_tag).to.be.eq("abc");
+    });
 
-  it('should convert values to string', () => {
-    let bsConfig = {
-      run_settings: {
-        build_tag: 1234
+    it('should convert values to string', () => {
+      let bsConfig = {
+        run_settings: {
+          build_tag: 1234
+        }
       }
-    }
 
-    let args = {}
-    utils.setBuildTags(bsConfig, args);
-    expect(bsConfig.run_settings.build_tag).to.be.eq("1234");
+      let args = {}
+      utils.setBuildTags(bsConfig, args);
+      expect(bsConfig.run_settings.build_tag).to.be.eq("1234");
+    });
+
+    it('should set undefined if args and bstack json caps not passed', () => {
+      let bsConfig = {
+        run_settings: {}
+      }
+
+      let args = {}
+      utils.setBuildTags(bsConfig, args);
+      expect(bsConfig.run_settings.build_tag).to.be.eq(undefined);
+    });
   });
 
-  it('should set undefined if args and bstack json caps not passed', () => {
-    let bsConfig = {
-      run_settings: {}
-    }
+  describe('getMajorVersion', () => {
+    it('should return null if undefined version is sent', () => {
+      expect(utils.getMajorVersion()).to.be.eql(null);
+    });
 
-    let args = {}
-    utils.setBuildTags(bsConfig, args);
-    expect(bsConfig.run_settings.build_tag).to.be.eq(undefined);
+    it('should return null if null version is sent', () => {
+      expect(utils.getMajorVersion(null)).to.be.eql(null);
+    });
+
+    it('should return null if improper version is sent', () => {
+      expect(utils.getMajorVersion('test')).to.be.eql(null);
+      expect(utils.getMajorVersion('a1.1.1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1a.1.1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1.a1.1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1.1a.1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1.1.a1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1.1.1a')).to.be.eql(null);
+      expect(utils.getMajorVersion('.1.1.1')).to.be.eql(null);
+      expect(utils.getMajorVersion('1.')).to.be.eql(null);
+      expect(utils.getMajorVersion('$')).to.be.eql(null);
+    });
+
+    it('should return proper major version if proper version is sent', () => {
+      expect(utils.getMajorVersion('1.1.1')).to.be.eql('1');
+      expect(utils.getMajorVersion('2.1')).to.be.eql('2');
+      expect(utils.getMajorVersion('3')).to.be.eql('3');
+      expect(utils.getMajorVersion('4.1')).to.be.eql('4');
+    });
   });
 });
