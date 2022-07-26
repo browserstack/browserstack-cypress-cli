@@ -76,6 +76,7 @@ const validationMessages = {
   EMPTY_BROWSERSTACK_JSON: "Empty browserstack.json",
   EMPTY_RUN_SETTINGS: "Empty run settings",
   EMPTY_CYPRESS_PROJ_DIR: "cypress_proj_dir is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/sample-tutorial to learn more.",
+  EMPTY_CYPRESS_CONFIG_FILE: "cypress_config_file is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/sample-tutorial to learn more.",
   VALIDATED: "browserstack.json file is validated",
   NOT_VALID: "browerstack.json is not valid",
   NOT_VALID_JSON: "browerstack.json is not a valid json",
@@ -192,6 +193,10 @@ const filesToIgnoreWhileUploading = [
   'browserstack-package.json',
   'tests.zip',
   'cypress.json',
+  'cypress.config.js',
+  'cypress.config.ts',
+  'cypress.config.cjs',
+  'cypress.config.mjs',
   '.idea/**',
   '.vscode/**',
   '.npm/**',
@@ -256,6 +261,30 @@ const SPEC_TIMEOUT_LIMIT = 120 // IN MINS
 
 const CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY = "custom_errors_to_print";
 
+const CYPRESS_V9_AND_OLDER_TYPE = "CYPRESS_V9_AND_OLDER_TYPE";
+
+const CYPRESS_V10_AND_ABOVE_TYPE = "CYPRESS_V10_AND_ABOVE_TYPE";
+
+const CYPRESS_CONFIG_FILE_MAPPING = {
+  "cypress.json": {
+    type: CYPRESS_V9_AND_OLDER_TYPE
+  },
+  "cypress.config.js": {
+    type: CYPRESS_V10_AND_ABOVE_TYPE
+  },
+  "cypress.config.ts": {
+    type: CYPRESS_V10_AND_ABOVE_TYPE
+  },
+  "cypress.config.mjs": {
+    type: CYPRESS_V10_AND_ABOVE_TYPE
+  },
+  "cypress.config.cjs": {
+    type: CYPRESS_V10_AND_ABOVE_TYPE
+  }
+};
+
+const CYPRESS_CONFIG_FILE_NAMES = Object.keys(CYPRESS_CONFIG_FILE_MAPPING);
+
 module.exports = Object.freeze({
   syncCLI,
   userMessages,
@@ -281,5 +310,9 @@ module.exports = Object.freeze({
   REDACTED,
   BUILD_FAILED_EXIT_CODE,
   SPEC_TIMEOUT_LIMIT,
-  CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY
+  CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY,
+  CYPRESS_V9_AND_OLDER_TYPE,
+  CYPRESS_V10_AND_ABOVE_TYPE,
+  CYPRESS_CONFIG_FILE_MAPPING,
+  CYPRESS_CONFIG_FILE_NAMES
 });

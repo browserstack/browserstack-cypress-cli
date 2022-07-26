@@ -162,8 +162,8 @@ const validate = (bsConfig, args) => {
 
     if (!bsConfig.run_settings) reject(Constants.validationMessages.EMPTY_RUN_SETTINGS);
 
-    if (!bsConfig.run_settings.cypress_proj_dir && !bsConfig.run_settings.userProvidedCypessConfigFile) {
-      reject(Constants.validationMessages.EMPTY_CYPRESS_PROJ_DIR);
+    if (!bsConfig.run_settings.cypressConfigFilePath && !bsConfig.run_settings.userProvidedCypessConfigFile) {
+      reject(Constants.validationMessages.EMPTY_CYPRESS_CONFIG_FILE);
     }
 
     // validate parallels specified in browserstack.json if parallels are not specified via arguments
@@ -194,20 +194,25 @@ const validate = (bsConfig, args) => {
     logger.debug(`Checking for cypress config file at ${cypressConfigFilePath}`);
     if (!fs.existsSync(cypressConfigFilePath) && bsConfig.run_settings.cypress_config_filename !== 'false') reject(Constants.validationMessages.INVALID_CYPRESS_CONFIG_FILE);
 
-    logger.debug("Validating cypress.json");
-    try {
-      if (bsConfig.run_settings.cypress_config_filename !== 'false') {
-        let cypressJsonContent = fs.readFileSync(cypressConfigFilePath);
-        cypressJson = JSON.parse(cypressJsonContent);
+    if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
+      logger.debug(`Validating ${bsConfig.run_settings.cypress_config_filename}`);
+      // TODO: add validations for cypress_config_filename
+    } else {
+      logger.debug("Validating cypress.json");
+      try {
+        if (bsConfig.run_settings.cypress_config_filename !== 'false') {
+          let cypressJsonContent = fs.readFileSync(cypressConfigFilePath);
+          cypressJson = JSON.parse(cypressJsonContent);
 
-        // Cypress Json Base Url & Local true check
-        if (!Utils.isUndefined(cypressJson.baseUrl) && cypressJson.baseUrl.includes("localhost") && !Utils.getLocalFlag(bsConfig.connection_settings)) reject(Constants.validationMessages.LOCAL_NOT_SET.replace("<baseUrlValue>", cypressJson.baseUrl));
+          // Cypress Json Base Url & Local true check
+          if (!Utils.isUndefined(cypressJson.baseUrl) && cypressJson.baseUrl.includes("localhost") && !Utils.getLocalFlag(bsConfig.connection_settings)) reject(Constants.validationMessages.LOCAL_NOT_SET.replace("<baseUrlValue>", cypressJson.baseUrl));
 
-        // Detect if the user is not using the right directory structure, and throw an error
-        if (!Utils.isUndefined(cypressJson.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,cypressJson.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
+          // Detect if the user is not using the right directory structure, and throw an error
+          if (!Utils.isUndefined(cypressJson.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,cypressJson.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
+        }
+      } catch(error){
+        reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
       }
-    } catch(error){
-      reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
     }
 
     //check if home_directory is present or not in user run_settings

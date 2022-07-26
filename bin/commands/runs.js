@@ -61,6 +61,9 @@ module.exports = function run(args, rawArgs) {
     // set cypress config filename
     utils.setCypressConfigFilename(bsConfig, args);
 
+    // set cypress test suite type
+    utils.setCypressTestSuiteType(bsConfig);
+
     // set cypress geo location
     utils.setGeolocation(bsConfig, args);
 
