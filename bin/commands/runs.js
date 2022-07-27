@@ -97,6 +97,8 @@ module.exports = function run(args, rawArgs) {
     // set record feature caps
     utils.setRecordCaps(bsConfig, args);
 
+    // set build tag caps
+    utils.setBuildTags(bsConfig, args);
     // set node version
     utils.setNodeVersion(bsConfig, args);
 

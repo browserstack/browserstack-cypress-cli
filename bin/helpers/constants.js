@@ -224,18 +224,13 @@ const cliMessages = {
       "Set configuration values. Separate multiple values with a comma. The values set here override any values set in your configuration file.",
     REPORTER: "Specify the custom reporter to use",
     REPORTER_OPTIONS: "Specify reporter options for custom reporter",
-    CYPRESS_GEO_LOCATION:
-      "Enterprise feature to simulate website and mobile behavior from different locations.",
-    SPEC_TIMEOUT:
-      "Specify a value for a hard timeout for each spec execution in the 1-120 mins range. Read https://browserstack.com/docs/automate/cypress/spec-timeout for more details.",
-    RECORD:
-      "Pass the --record flag to record your Cypress runs on Cypress.io dashboard. Note: You also need to specify '--record-key' and '--projectId' arguments either in CLI or in browserstack.json.",
-    RECORD_KEY:
-      "You can specify the 'key' that is needed to record your runs on Cypress.io dashboard using the '--record-key' argument. Alternatively, you can also pass it on browserstack.json",
-    PROJECT_ID:
-      "You can pass the 'projectId' of your Cypress.io project where you want to record your runs if specifying the '--record' key. You can also specify this in your cypress.json or in your browserstack.json.",
-    NODE_VERSION:
-      "Pass the node version that you want BrowserStack to use to run your Cypress tests on.",
+    CYPRESS_GEO_LOCATION: "Enterprise feature to simulate website and mobile behavior from different locations.",
+    SPEC_TIMEOUT: "Specify a value for a hard timeout for each spec execution in the 1-120 mins range. Read https://browserstack.com/docs/automate/cypress/spec-timeout for more details.",
+    RECORD: "Pass the --record flag to record your Cypress runs on Cypress.io dashboard. Note: You also need to specify '--record-key' and '--projectId' arguments either in CLI or in browserstack.json.",
+    RECORD_KEY: "You can specify the 'key' that is needed to record your runs on Cypress.io dashboard using the '--record-key' argument. Alternatively, you can also pass it on browserstack.json",
+    PROJECT_ID: "You can pass the 'projectId' of your Cypress.io project where you want to record your runs if specifying the '--record' key. You can also specify this in your cypress.json or in your browserstack.json.",
+    NODE_VERSION: "Pass the node version that you want BrowserStack to use to run your Cypress tests on.",
+    BUILD_TAG: "Add a tag to your build to filter builds based on tag values on the Dashboard."
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",

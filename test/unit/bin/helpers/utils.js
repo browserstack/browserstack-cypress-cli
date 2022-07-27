@@ -3379,6 +3379,56 @@ describe('utils', () => {
     });
   });
 
+  describe('setBuildTags', () => {
+    it('should give preference to args', () => {
+      let bsConfig = {
+        run_settings: {
+          build_tag: "abc"
+        }
+      }
+
+      let args = {
+        "build-tag": "def"
+      }
+      utils.setBuildTags(bsConfig, args);
+      expect(bsConfig.run_settings.build_tag).to.be.eq("def");
+    });
+
+    it('should honour bstack json if args not passed', () => {
+      let bsConfig = {
+        run_settings: {
+          build_tag: "abc"
+        }
+      }
+
+      let args = {}
+      utils.setBuildTags(bsConfig, args);
+      expect(bsConfig.run_settings.build_tag).to.be.eq("abc");
+    });
+
+    it('should convert values to string', () => {
+      let bsConfig = {
+        run_settings: {
+          build_tag: 1234
+        }
+      }
+
+      let args = {}
+      utils.setBuildTags(bsConfig, args);
+      expect(bsConfig.run_settings.build_tag).to.be.eq("1234");
+    });
+
+    it('should set undefined if args and bstack json caps not passed', () => {
+      let bsConfig = {
+        run_settings: {}
+      }
+
+      let args = {}
+      utils.setBuildTags(bsConfig, args);
+      expect(bsConfig.run_settings.build_tag).to.be.eq(undefined);
+    });
+  });
+
   describe('getMajorVersion', () => {
     it('should return null if undefined version is sent', () => {
       expect(utils.getMajorVersion()).to.be.eql(null);

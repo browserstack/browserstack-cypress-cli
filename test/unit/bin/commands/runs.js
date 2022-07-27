@@ -122,6 +122,7 @@ describe("runs", () => {
       setSpecTimeoutStub = sandbox.stub().returns(undefined);
       setRecordCapsStub = sandbox.stub().returns(undefined);
       setNodeVersionStub = sandbox.stub();
+      setBuildTagsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -166,7 +167,8 @@ describe("runs", () => {
           setSpecTimeout: setSpecTimeoutStub,
           setRecordCaps: setRecordCapsStub,
           setDebugMode: setDebugModeStub,
-          setNodeVersion: setNodeVersionStub
+          setNodeVersion: setNodeVersionStub,
+          setBuildTags: setBuildTagsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub
@@ -215,6 +217,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnce(setNodeVersionStub);
+          sinon.assert.calledOnce(setBuildTagsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -276,6 +279,7 @@ describe("runs", () => {
       setSpecTimeoutStub = sandbox.stub().returns(undefined);
       setRecordCapsStub = sandbox.stub().returns(undefined);
       setNodeVersionStub = sandbox.stub();
+      setBuildTagsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -323,7 +327,8 @@ describe("runs", () => {
           setSpecTimeout: setSpecTimeoutStub,
           setRecordCaps: setRecordCapsStub,
           setDebugMode: setDebugModeStub,
-          setNodeVersion: setNodeVersionStub
+          setNodeVersion: setNodeVersionStub,
+          setBuildTags: setBuildTagsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -391,6 +396,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnce(setNodeVersionStub);
+          sinon.assert.calledOnce(setBuildTagsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -454,6 +460,7 @@ describe("runs", () => {
       getInitialDetailsStub = sandbox.stub();
       setRecordCapsStub = sandbox.stub().returns(undefined);
       setNodeVersionStub = sandbox.stub();
+      setBuildTagsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -502,7 +509,8 @@ describe("runs", () => {
           setSpecTimeout: setSpecTimeoutStub,
           setRecordCaps: setRecordCapsStub,
           setDebugMode: setDebugModeStub,
-          setNodeVersion: setNodeVersionStub
+          setNodeVersion: setNodeVersionStub,
+          setBuildTags: setBuildTagsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -572,6 +580,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnce(setNodeVersionStub);
+          sinon.assert.calledOnce(setBuildTagsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -640,6 +649,7 @@ describe("runs", () => {
       getInitialDetailsStub = sandbox.stub();
       setRecordCapsStub = sandbox.stub().returns(undefined);
       setNodeVersionStub = sandbox.stub();
+      setBuildTagsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -690,6 +700,7 @@ describe("runs", () => {
           setRecordCaps: setRecordCapsStub,
           setDebugMode: setDebugModeStub,
           setNodeVersion: setNodeVersionStub,
+          setBuildTags: setBuildTagsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -770,6 +781,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnce(setNodeVersionStub);
+          sinon.assert.calledOnce(setBuildTagsStub);
 
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
@@ -852,6 +864,7 @@ describe("runs", () => {
       getInitialDetailsStub = sandbox.stub();
       setRecordCapsStub = sandbox.stub().returns(undefined);
       setNodeVersionStub = sandbox.stub();
+      setBuildTagsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -910,6 +923,7 @@ describe("runs", () => {
           setRecordCaps: setRecordCapsStub,
           setDebugMode: setDebugModeStub,
           setNodeVersion: setNodeVersionStub,
+          setBuildTags: setBuildTagsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -1006,6 +1020,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnce(setNodeVersionStub);
+          sinon.assert.calledOnce(setBuildTagsStub);
           sinon.assert.match(
             sendUsageReportStub.getCall(0).args,
             [
