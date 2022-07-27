@@ -189,7 +189,7 @@ const validate = (bsConfig, args) => {
     // validate if config file provided exists or not when cypress_config_file provided
     // validate the cypressProjectDir key otherwise.
     let cypressConfigFilePath = bsConfig.run_settings.cypressConfigFilePath;
-    let cypressJson = {};
+    let cypressConfigFile = {};
 
     logger.debug(`Checking for cypress config file at ${cypressConfigFilePath}`);
     if (!fs.existsSync(cypressConfigFilePath) && bsConfig.run_settings.cypress_config_filename !== 'false') reject(Constants.validationMessages.INVALID_CYPRESS_CONFIG_FILE);
@@ -201,14 +201,23 @@ const validate = (bsConfig, args) => {
       logger.debug("Validating cypress.json");
       try {
         if (bsConfig.run_settings.cypress_config_filename !== 'false') {
-          let cypressJsonContent = fs.readFileSync(cypressConfigFilePath);
-          cypressJson = JSON.parse(cypressJsonContent);
+          
+          if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
+            if (cypressConfigFilePath.endsWith("cypress.config.js")) {
+              cypressConfigFile = require(cypressConfigFilePath);
+            } else {
+              cypressConfigFile = {};
+            }
+          } else {
+            let cypressJsonContent = fs.readFileSync(cypressConfigFilePath);
+            cypressConfigFile = JSON.parse(cypressJsonContent);
+          }
 
           // Cypress Json Base Url & Local true check
-          if (!Utils.isUndefined(cypressJson.baseUrl) && cypressJson.baseUrl.includes("localhost") && !Utils.getLocalFlag(bsConfig.connection_settings)) reject(Constants.validationMessages.LOCAL_NOT_SET.replace("<baseUrlValue>", cypressJson.baseUrl));
+          if (!Utils.isUndefined(cypressConfigFile.baseUrl) && cypressConfigFile.baseUrl.includes("localhost") && !Utils.getLocalFlag(bsConfig.connection_settings)) reject(Constants.validationMessages.LOCAL_NOT_SET.replace("<baseUrlValue>", cypressConfigFile.baseUrl));
 
           // Detect if the user is not using the right directory structure, and throw an error
-          if (!Utils.isUndefined(cypressJson.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,cypressJson.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
+          if (!Utils.isUndefined(cypressConfigFile.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,cypressConfigFile.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
         }
       } catch(error){
         reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
@@ -234,6 +243,22 @@ const validate = (bsConfig, args) => {
       }
 
       addCypressZipStartLocation(bsConfig.run_settings);
+    }
+
+    // check if two config files are present at the same location
+    let cypressFileDirectory = path.dirname(cypressConfigFilePath);
+    let listOfFiles = fs.readdirSync(cypressFileDirectory);
+    let configFilesPresent = [];
+    for (const possibleCypressFileName of Constants.CYPRESS_CONFIG_FILE_NAMES) {
+      if (listOfFiles.includes(possibleCypressFileName)) {
+        configFilesPresent.push(possibleCypressFileName);
+      }
+    }
+
+    if (configFilesPresent.length === 0) reject(Constants.validationMessages.CYPRESS_CONFIG_FILE_NOT_FOUND)
+    if (configFilesPresent.length > 1) {
+      logger.warn(`We found the following cypress config files ${configFilesPresent.join(', ')} at this location: ${cypressFileDirectory}`);
+      reject(Constants.validationMessages.MORE_THAN_ONE_CYPRESS_CONFIG_FILE_FOUND);
     }
 
     if(!Utils.isUndefined(bsConfig.run_settings.spec_timeout)) {
@@ -262,7 +287,7 @@ const validate = (bsConfig, args) => {
     if (!Utils.isUndefined(bsConfig.run_settings.nodeVersion) && typeof(bsConfig.run_settings.nodeVersion) === 'string' && !bsConfig.run_settings.nodeVersion.match(/^(\d+\.)?(\d+\.)?(\*|\d+)$/))
         logger.warn(Constants.validationMessages.NODE_VERSION_PARSING_ERROR);
 
-    resolve(cypressJson);
+    resolve(cypressConfigFile);
   });
 }
 
