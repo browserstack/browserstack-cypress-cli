@@ -153,7 +153,8 @@ const cliMessages = {
     RECORD: "Pass the --record flag to record your Cypress runs on Cypress.io dashboard. Note: You also need to specify '--record-key' and '--projectId' arguments either in CLI or in browserstack.json.",
     RECORD_KEY: "You can specify the 'key' that is needed to record your runs on Cypress.io dashboard using the '--record-key' argument. Alternatively, you can also pass it on browserstack.json",
     PROJECT_ID: "You can pass the 'projectId' of your Cypress.io project where you want to record your runs if specifying the '--record' key. You can also specify this in your cypress.json or in your browserstack.json.",
-    NODE_VERSION: "Pass the node version that you want BrowserStack to use to run your Cypress tests on."
+    NODE_VERSION: "Pass the node version that you want BrowserStack to use to run your Cypress tests on.",
+    BUILD_TAG: "Add a tag to your build to filter builds based on tag values on the Dashboard."
   },
   COMMON: {
     DISABLE_USAGE_REPORTING: "Disable usage reporting",

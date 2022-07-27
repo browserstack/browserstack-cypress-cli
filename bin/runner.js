@@ -271,6 +271,11 @@ var argv = yargs
           default: undefined,
           describe: Constants.cliMessages.RUN.NODE_VERSION,
           type: "string"
+        },
+        'build-tag': {
+          default: undefined,
+          describe: Constants.cliMessages.RUN.BUILD_TAG,
+          type: "string"
         }
       })
       .help('help')
