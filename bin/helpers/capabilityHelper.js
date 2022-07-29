@@ -246,7 +246,7 @@ const validate = (bsConfig, args) => {
     }
 
     // check if two config files are present at the same location
-    let cypressFileDirectory = path.dirname(cypressConfigFilePath);
+    let cypressFileDirectory = path.dirname(path.resolve(bsConfig.run_settings.cypressConfigFilePath));
     let listOfFiles = fs.readdirSync(cypressFileDirectory);
     let configFilesPresent = [];
     for (const possibleCypressFileName of Constants.CYPRESS_CONFIG_FILE_NAMES) {
@@ -255,8 +255,8 @@ const validate = (bsConfig, args) => {
       }
     }
 
-    if (configFilesPresent.length === 0) reject(Constants.validationMessages.CYPRESS_CONFIG_FILE_NOT_FOUND)
-    if (configFilesPresent.length > 1) {
+    if (configFilesPresent.length === 0 && bsConfig.run_settings.cypress_config_filename !== 'false') reject(Constants.validationMessages.CYPRESS_CONFIG_FILE_NOT_FOUND)
+    if (configFilesPresent.length > 1 && bsConfig.run_settings.cypress_config_filename !== 'false') {
       logger.warn(`We found the following cypress config files ${configFilesPresent.join(', ')} at this location: ${cypressFileDirectory}`);
       reject(Constants.validationMessages.MORE_THAN_ONE_CYPRESS_CONFIG_FILE_FOUND);
     }

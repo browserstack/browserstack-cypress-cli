@@ -94,6 +94,7 @@ describe("runs", () => {
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
       setCypressConfigFilenameStub = sandbox.stub();
+      setCypressTestSuiteTypeStub = sandbox.stub();
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
       setSystemEnvsStub = sandbox.stub();
@@ -145,6 +146,7 @@ describe("runs", () => {
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
           setCypressConfigFilename: setCypressConfigFilenameStub,
+          setCypressTestSuiteType: setCypressTestSuiteTypeStub,
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
           getConfigPath: getConfigPathStub,
@@ -197,6 +199,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setAccessKeyStub);
           sinon.assert.calledOnce(setBuildNameStub);
           sinon.assert.calledOnce(setCypressConfigFilenameStub);
+          sinon.assert.calledOnce(setCypressTestSuiteTypeStub);
           sinon.assert.calledOnce(setUserSpecsStub);
           sinon.assert.calledOnce(setTestEnvsStub);
           sinon.assert.calledOnce(setSystemEnvsStub);
@@ -245,6 +248,7 @@ describe("runs", () => {
       getConfigPathStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
       setCypressConfigFilenameStub = sandbox.stub();
+      setCypressTestSuiteTypeStub = sandbox.stub();
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
       setSystemEnvsStub = sandbox.stub();
@@ -303,6 +307,7 @@ describe("runs", () => {
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
           setCypressConfigFilename: setCypressConfigFilenameStub,
+          setCypressTestSuiteType: setCypressTestSuiteTypeStub,
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
           setUsageReportingFlag: setUsageReportingFlagStub,
@@ -372,6 +377,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setBuildNameStub);
           sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(setCypressConfigFilenameStub);
+          sinon.assert.calledOnce(setCypressTestSuiteTypeStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
           sinon.assert.calledOnce(getParallelsStub);
           sinon.assert.calledOnce(setParallelsStub);
@@ -424,6 +430,7 @@ describe("runs", () => {
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
       setCypressConfigFilenameStub = sandbox.stub();
+      setCypressTestSuiteTypeStub = sandbox.stub();
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
       setSystemEnvsStub = sandbox.stub();
@@ -484,6 +491,7 @@ describe("runs", () => {
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
           setCypressConfigFilename: setCypressConfigFilenameStub,
+          setCypressTestSuiteType: setCypressTestSuiteTypeStub,
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
           setSystemEnvs: setSystemEnvsStub,
@@ -558,6 +566,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalModeStub);
           sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+          sinon.assert.calledOnce(setCypressTestSuiteTypeStub);
           sinon.assert.calledOnce(getParallelsStub);
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(warnSpecLimitStub);
@@ -611,6 +620,7 @@ describe("runs", () => {
       setAccessKeyStub = sandbox.stub();
       setBuildNameStub = sandbox.stub();
       setCypressConfigFilenameStub = sandbox.stub();
+      setCypressTestSuiteTypeStub = sandbox.stub();
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
       setSystemEnvsStub = sandbox.stub();
@@ -673,6 +683,7 @@ describe("runs", () => {
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
           setCypressConfigFilename: setCypressConfigFilenameStub,
+          setCypressTestSuiteType: setCypressTestSuiteTypeStub,
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
           setSystemEnvs: setSystemEnvsStub,
@@ -812,6 +823,7 @@ describe("runs", () => {
       setBuildNameStub = sandbox.stub();
       generateUniqueHashStub =  sandbox.stub().returns('random_hash');
       setCypressConfigFilenameStub = sandbox.stub();
+      setCypressTestSuiteTypeStub = sandbox.stub();
       setUserSpecsStub = sandbox.stub();
       setTestEnvsStub = sandbox.stub();
       setSystemEnvsStub = sandbox.stub();
@@ -887,6 +899,7 @@ describe("runs", () => {
           setAccessKey: setAccessKeyStub,
           setBuildName: setBuildNameStub,
           setCypressConfigFilename: setCypressConfigFilenameStub,
+          setCypressTestSuiteType: setCypressTestSuiteTypeStub,
           setUserSpecs: setUserSpecsStub,
           setTestEnvs: setTestEnvsStub,
           setSystemEnvs: setSystemEnvsStub,
@@ -993,6 +1006,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
           sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+          sinon.assert.calledOnce(setCypressTestSuiteTypeStub);
           sinon.assert.calledOnce(getParallelsStub);
           sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(warnSpecLimitStub);

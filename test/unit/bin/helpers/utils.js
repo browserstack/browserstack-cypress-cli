@@ -20,7 +20,8 @@ const utils = require('../../../../bin/helpers/utils'),
   config = require('../../../../bin/helpers/config'),
   fileHelpers = require('../../../../bin/helpers/fileHelpers'),
   testObjects = require('../../support/fixtures/testObjects'),
-  syncLogger = require('../../../../bin/helpers/logger').syncCliLogger;
+  syncLogger = require('../../../../bin/helpers/logger').syncCliLogger,
+  Contants = require('../../../../bin/helpers/constants');
 const browserstack = require('browserstack-local');
 chai.use(chaiAsPromised);
 logger.transports['console.info'].silent = true;
@@ -1782,18 +1783,24 @@ describe('utils', () => {
         },
       };
 
+      args = {};
+
+      sinon.stub(fs, 'existsSync').returns(true);
+
       utils.setCypressConfigFilename(bsConfig, args);
 
       expect(bsConfig.run_settings.cypress_config_file).to.be.eq(
-        args.cypressConfigFile
+        path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json')
       );
       expect(bsConfig.run_settings.cypress_config_filename).to.be.eq(
-        path.basename(args.cypressConfigFile)
+        path.basename(path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json'))
       );
       expect(bsConfig.run_settings.userProvidedCypessConfigFile).to.be.false;
       expect(bsConfig.run_settings.cypressConfigFilePath).to.be.eq(
         path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json')
       );
+
+      fs.existsSync.restore();
     });
 
     it('does not have user provided ccf flag, sets from config file', () => {
@@ -1821,6 +1828,65 @@ describe('utils', () => {
 
     afterEach(function () {
       verifyCypressConfigFileOptionStub.restore();
+    });
+  });
+
+  describe('setCypressTestSuiteType', () => {
+
+    it('sets correct cypressTestSuiteType when cypress.json is the cypress config file ', () => {
+      bsConfig = {
+        run_settings: {
+          cypressConfigFilePath: 'cypress.json',
+        },
+      };
+
+      utils.setCypressTestSuiteType(bsConfig);
+
+      expect(bsConfig.run_settings.cypressTestSuiteType).to.be.eq(Contants.CYPRESS_V9_AND_OLDER_TYPE);
+    });
+
+    it('sets correct cypressTestSuiteType when cypress.config.js|.ts|.cjs|.mjs is the cypress config file ', () => {
+      bsConfig = {
+        run_settings: {
+          cypressConfigFilePath: 'cypress.config.js',
+        },
+      };
+      utils.setCypressTestSuiteType(bsConfig);
+      expect(bsConfig.run_settings.cypressTestSuiteType).to.be.eq(Contants.CYPRESS_V10_AND_ABOVE_TYPE);
+
+      bsConfig = {
+        run_settings: {
+          cypressConfigFilePath: 'cypress.config.ts',
+        },
+      };
+      utils.setCypressTestSuiteType(bsConfig);
+      expect(bsConfig.run_settings.cypressTestSuiteType).to.be.eq(Contants.CYPRESS_V10_AND_ABOVE_TYPE);
+
+      bsConfig = {
+        run_settings: {
+          cypressConfigFilePath: 'cypress.config.cjs',
+        },
+      };
+      utils.setCypressTestSuiteType(bsConfig);
+      expect(bsConfig.run_settings.cypressTestSuiteType).to.be.eq(Contants.CYPRESS_V10_AND_ABOVE_TYPE);
+
+      bsConfig = {
+        run_settings: {
+          cypressConfigFilePath: 'cypress.config.mjs',
+        },
+      };
+      utils.setCypressTestSuiteType(bsConfig);
+      expect(bsConfig.run_settings.cypressTestSuiteType).to.be.eq(Contants.CYPRESS_V10_AND_ABOVE_TYPE);
+    });
+
+    it('by default assumes that CYPRESS_V9_AND_OLDER_TYPE is the test suite type', () => {
+      bsConfig = {
+        run_settings: {
+          cypressConfigFilePath: 'anyOtherFile.js',
+        },
+      };
+      utils.setCypressTestSuiteType(bsConfig);
+      expect(bsConfig.run_settings.cypressTestSuiteType).to.be.eq(Contants.CYPRESS_V9_AND_OLDER_TYPE);
     });
   });
 
@@ -2652,7 +2718,7 @@ describe('utils', () => {
     });
   });
 
-  describe('getCypressJSON', () => {
+  describe('getCypressConfigFile', () => {
     let sampleJson = {
       a: 'b',
     };
@@ -2669,7 +2735,7 @@ describe('utils', () => {
       let bsConfig = {
         run_settings: {},
       };
-      expect(utils.getCypressJSON(bsConfig)).to.be.eql(undefined);
+      expect(utils.getCypressConfigFile(bsConfig)).to.be.eql(undefined);
     });
 
     it('read file and return json if param present', () => {
@@ -2679,7 +2745,7 @@ describe('utils', () => {
         },
       };
 
-      expect(utils.getCypressJSON(bsConfig)).to.be.eql(sampleJson);
+      expect(utils.getCypressConfigFile(bsConfig)).to.be.eql(sampleJson);
     });
   });
 
@@ -3179,13 +3245,13 @@ describe('utils', () => {
   });
 
   describe("#setProjectId", () => {
-    let getCypressJSONStub;
+    let getCypressConfigFileStub;
     beforeEach(() => {
-      getCypressJSONStub = sinon.stub(utils, 'getCypressJSON');
+      getCypressConfigFileStub = sinon.stub(utils, 'getCypressConfigFile');
     });
 
     afterEach(() => {
-      getCypressJSONStub.restore();
+      getCypressConfigFileStub.restore();
     });
 
     it("prioritizes projectId passed in the args", () => {
@@ -3198,7 +3264,7 @@ describe('utils', () => {
         projectId: "def"
       }
       process.env.CYPRESS_PROJECT_ID = "jkl"
-      getCypressJSONStub.returns({ projectId: "ghi" })
+      getCypressConfigFileStub.returns({ projectId: "ghi" })
       expect(utils.setProjectId(bsConfig, args)).to.eq("def")
       delete process.env.CYPRESS_PROJECT_ID;
     });
@@ -3211,7 +3277,7 @@ describe('utils', () => {
       }
       let args = {};
       process.env.CYPRESS_PROJECT_ID = "jkl"
-      getCypressJSONStub.returns({ projectId: "ghi" })
+      getCypressConfigFileStub.returns({ projectId: "ghi" })
       expect(utils.setProjectId(bsConfig, args)).to.eq("jkl")
       delete process.env.CYPRESS_PROJECT_ID;
     });
@@ -3223,7 +3289,7 @@ describe('utils', () => {
         }
       }
       let args = {};
-      getCypressJSONStub.returns({ projectId: "ghi" })
+      getCypressConfigFileStub.returns({ projectId: "ghi" })
       expect(utils.setProjectId(bsConfig, args)).to.eq("abc")
     });
 
@@ -3232,7 +3298,7 @@ describe('utils', () => {
         run_settings: {}
       }
       let args = {}
-      getCypressJSONStub.returns({ projectId: "ghi" })
+      getCypressConfigFileStub.returns({ projectId: "ghi" })
       expect(utils.setProjectId(bsConfig, args)).to.eq("ghi")
     });
 
@@ -3241,7 +3307,7 @@ describe('utils', () => {
         run_settings: {}
       }
       let args = {}
-      getCypressJSONStub.returns({})
+      getCypressConfigFileStub.returns({})
       expect(utils.setProjectId(bsConfig, args)).to.eq(undefined)
     });
   });
