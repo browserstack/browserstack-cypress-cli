@@ -255,7 +255,9 @@ const validate = (bsConfig, args) => {
       }
     }
 
-    if (configFilesPresent.length === 0 && bsConfig.run_settings.cypress_config_filename !== 'false') reject(Constants.validationMessages.CYPRESS_CONFIG_FILE_NOT_FOUND)
+    if (configFilesPresent.length === 0 && bsConfig.run_settings.cypress_config_filename !== 'false') {
+      reject(Constants.validationMessages.CYPRESS_CONFIG_FILE_NOT_FOUND.replace('<location>', cypressFileDirectory));
+    }
     if (configFilesPresent.length > 1 && bsConfig.run_settings.cypress_config_filename !== 'false') {
       logger.warn(`We found the following cypress config files ${configFilesPresent.join(', ')} at this location: ${cypressFileDirectory}`);
       reject(Constants.validationMessages.MORE_THAN_ONE_CYPRESS_CONFIG_FILE_FOUND);

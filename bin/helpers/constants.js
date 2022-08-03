@@ -121,7 +121,7 @@ const validationMessages = {
   EMPTY_CYPRESS_PROJ_DIR:
     "cypress_proj_dir is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/sample-tutorial to learn more.",
   EMPTY_CYPRESS_CONFIG_FILE: 
-    "cypress_config_file is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/sample-tutorial to learn more.",
+    "cypress_config_file is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/configuration-file to learn more.",
   VALIDATED: "browserstack.json file is validated",
   NOT_VALID: "browerstack.json is not valid",
   NOT_VALID_JSON: "browerstack.json is not a valid json",
@@ -130,7 +130,7 @@ const validationMessages = {
     "Invalid value specified for parallels to use. Maximum parallels to use should be a number greater than 0.",
   INVALID_CYPRESS_CONFIG_FILE: "Invalid cypress_config_file",
   CYPRESS_CONFIG_FILE_NOT_FOUND: 
-    "No cypress config file was found.",
+    "No cypress config file was found at <location> directory.",
   MORE_THAN_ONE_CYPRESS_CONFIG_FILE_FOUND: 
     "Cypress does not allow more than one cypress config file.",
   INVALID_CYPRESS_JSON: "cypress.json is not a valid json",
