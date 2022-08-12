@@ -137,13 +137,13 @@ const unzipFile = async (filePath, fileName) => {
 const sendUpdatesToBstack = async (bsConfig, buildId, args, options, rawArgs, buildReportData) => {
   options.url = `${config.buildUrl}${buildId}/build_artifacts/status`;
 
-  let cypressJSON = utils.getCypressJSON(bsConfig);
+  let cypressConfigFile = utils.getCypressConfigFile(bsConfig);
 
   let reporter = null;
   if(!utils.isUndefined(args.reporter)) {
     reporter = args.reporter;
-  } else if(cypressJSON !== undefined){
-    reporter = cypressJSON.reporter;
+  } else if(cypressConfigFile !== undefined){
+    reporter = cypressConfigFile.reporter;
   }
 
   let data = {

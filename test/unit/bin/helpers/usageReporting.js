@@ -26,7 +26,7 @@ get_version = usageReporting.__get__("get_version");
 ci_environment = usageReporting.__get__("ci_environment");
 local_cypress_version = usageReporting.__get__("local_cypress_version");
 bstack_json_found_in_pwd = usageReporting.__get__("bstack_json_found_in_pwd");
-cypress_json_found_in_pwd = usageReporting.__get__("cypress_json_found_in_pwd");
+cypress_config_file_found_in_pwd = usageReporting.__get__("cypress_config_file_found_in_pwd");
 npm_global_path = usageReporting.__get__("npm_global_path");
 cli_version_and_path = usageReporting.__get__("cli_version_and_path");
 redactKeys = usageReporting.__get__("redactKeys");
@@ -184,7 +184,7 @@ describe("usageReporting", () => {
     });
   });
 
-  describe("cypress_json_found_in_pwd", () => {
+  describe("cypress_config_file_found_in_pwd", () => {
     var sandbox;
 
     before(() => {
@@ -199,7 +199,7 @@ describe("usageReporting", () => {
     it("should return true file exists", () => {
       let existsSyncStub = sandbox.stub(fs, "existsSync").returns(true);
 
-      let result = cypress_json_found_in_pwd();
+      let result = cypress_config_file_found_in_pwd("file");
       sinon.assert.calledOnce(existsSyncStub);
       assert.equal(result, true);
 
@@ -209,7 +209,7 @@ describe("usageReporting", () => {
     it("should return false if file doesn not exist", () => {
       let existsSyncStub = sandbox.stub(fs, "existsSync").returns(false);
 
-      let result = cypress_json_found_in_pwd();
+      let result = cypress_config_file_found_in_pwd("file");
       sinon.assert.calledOnce(existsSyncStub);
       assert.equal(result, false);
 
@@ -221,7 +221,7 @@ describe("usageReporting", () => {
         .stub(fs, "existsSync")
         .yields(new Error("random error"));
 
-      let result = cypress_json_found_in_pwd();
+      let result = cypress_config_file_found_in_pwd("file");
       sinon.assert.calledOnce(existsSyncStub);
       expect(result).to.be.null;
 

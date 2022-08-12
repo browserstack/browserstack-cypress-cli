@@ -61,6 +61,9 @@ module.exports = function run(args, rawArgs) {
     // set cypress config filename
     utils.setCypressConfigFilename(bsConfig, args);
 
+    // set cypress test suite type
+    utils.setCypressTestSuiteType(bsConfig);
+
     // set cypress geo location
     utils.setGeolocation(bsConfig, args);
 
@@ -119,15 +122,15 @@ module.exports = function run(args, rawArgs) {
     // Validate browserstack.json values and parallels specified via arguments
     markBlockStart('validateConfig');
     logger.debug("Started configs validation");
-    return capabilityHelper.validate(bsConfig, args).then(function (cypressJson) {
+    return capabilityHelper.validate(bsConfig, args).then(function (cypressConfigFile) {
       markBlockEnd('validateConfig');
       logger.debug("Completed configs validation");
       markBlockStart('preArchiveSteps');
       logger.debug("Started pre-archive steps");
       //get the number of spec files
-      let specFiles = utils.getNumberOfSpecFiles(bsConfig, args, cypressJson);
+      let specFiles = utils.getNumberOfSpecFiles(bsConfig, args, cypressConfigFile);
 
-      bsConfig['run_settings']['video_config'] = utils.getVideoConfig(cypressJson);
+      bsConfig['run_settings']['video_config'] = utils.getVideoConfig(cypressConfigFile);
 
       // return the number of parallels user specified
       let userSpecifiedParallels = utils.getParallels(bsConfig, args);

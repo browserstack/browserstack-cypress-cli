@@ -594,7 +594,8 @@ describe("capabilityHelper.js", () => {
           ],
           run_settings: {
             cypress_proj_dir: "random path",
-            cypressConfigFilePath: "random path"
+            cypressConfigFilePath: "random path",
+            cypress_config_filename: "false"
           },
           connection_settings: {local: false}
         };
@@ -898,7 +899,7 @@ describe("capabilityHelper.js", () => {
         });
     });
 
-    it("validate bsConfig.run_settings.cypress_proj_dir", () => {
+    it("validate bsConfig.run_settings.cypress_config_file", () => {
       let bsConfig = {
         auth: {},
         browsers: [
@@ -919,7 +920,7 @@ describe("capabilityHelper.js", () => {
         .catch((error) => {
           chai.assert.equal(
             error,
-            Constants.validationMessages.EMPTY_CYPRESS_PROJ_DIR
+            Constants.validationMessages.EMPTY_CYPRESS_CONFIG_FILE
           );
         });
     });
