@@ -61,9 +61,9 @@ function bstack_json_found_in_pwd() {
   }
 }
 
-function cypress_json_found_in_pwd() {
+function cypress_config_file_found_in_pwd(cypress_config_filename) {
   try {
-    if (fs.existsSync(path.join(process.cwd(), 'cypress.json'))) {
+    if (fs.existsSync(path.join(process.cwd(), cypress_config_filename))) {
       //file exists
       return true;
     }
@@ -244,7 +244,7 @@ function send(args) {
       os: _os(),
       os_version: os_version(),
       bstack_json_found_in_pwd: bstack_json_found_in_pwd(),
-      cypress_json_found_in_pwd: cypress_json_found_in_pwd(),
+      cypress_config_file_found_in_pwd: cypress_config_file_found_in_pwd(runSettings.cypress_config_filename),
       cli_version: cli_details.version,
       cli_path: cli_details.path,
       npm_version: npm_version(),

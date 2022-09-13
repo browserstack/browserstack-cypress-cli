@@ -37,11 +37,14 @@ const checkSpecsMd5 = (runSettings, args, instrumentBlocks) => {
         runSettings.cypress_config_file &&
         runSettings.cypress_config_filename !== 'false'
       ) {
-        let cypressJSON = JSON.parse(
-          fs.readFileSync(runSettings.cypressConfigFilePath)
-        );
-        let cypressJSONString = JSON.stringify(cypressJSON);
-        outputHash.update(cypressJSONString);
+        let cypressConfigFileString = "";
+        if (runSettings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
+          cypressConfigFileString = fs.readFileSync(runSettings.cypressConfigFilePath).toString();
+        } else {
+          let cypressJSON = JSON.parse(fs.readFileSync(runSettings.cypressConfigFilePath));
+          cypressConfigFileString = JSON.stringify(cypressJSON);
+        }
+        outputHash.update(cypressConfigFileString);
       }
       resolve(outputHash.digest(Constants.hashingOptions.encoding));
     }).catch(function (error) {

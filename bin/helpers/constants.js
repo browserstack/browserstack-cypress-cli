@@ -120,6 +120,8 @@ const validationMessages = {
   EMPTY_RUN_SETTINGS: "Empty run settings",
   EMPTY_CYPRESS_PROJ_DIR:
     "cypress_proj_dir is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/sample-tutorial to learn more.",
+  EMPTY_CYPRESS_CONFIG_FILE: 
+    "cypress_config_file is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/configuration-file to learn more.",
   VALIDATED: "browserstack.json file is validated",
   NOT_VALID: "browerstack.json is not valid",
   NOT_VALID_JSON: "browerstack.json is not a valid json",
@@ -127,8 +129,10 @@ const validationMessages = {
   INVALID_PARALLELS_CONFIGURATION:
     "Invalid value specified for parallels to use. Maximum parallels to use should be a number greater than 0.",
   INVALID_CYPRESS_CONFIG_FILE: "Invalid cypress_config_file",
-  CYPRESS_JSON_NOT_FOUND:
-    "cypress.json file is not found at cypress_proj_dir path ",
+  CYPRESS_CONFIG_FILE_NOT_FOUND: 
+    "No cypress config file was found at <location> directory.",
+  MORE_THAN_ONE_CYPRESS_CONFIG_FILE_FOUND: 
+    "Cypress does not allow more than one cypress config file.",
   INVALID_CYPRESS_JSON: "cypress.json is not a valid json",
   INVALID_DEFAULT_AUTH_PARAMS:
     "Your username and access key are required to run your tests on BrowserStack. Learn more at https://www.browserstack.com/docs/automate/cypress/authentication",
@@ -312,13 +316,17 @@ const filesToIgnoreWhileUploading = [
   "browserstack-package.json",
   "tests.zip",
   "cypress.json",
+  "cypress.config.js",
+  "cypress.config.ts",
+  "cypress.config.cjs",
+  "cypress.config.mjs",
   ".idea/**",
   ".vscode/**",
   ".npm/**",
   "bstackPackages.tar.gz",
   "tmpBstackPackages/**",
   ".yarn/**",
-  "build_artifacts/**",
+  "build_artifacts/**"
 ];
 
 const readDirOptions = {
@@ -376,6 +384,30 @@ const SPEC_TIMEOUT_LIMIT = 120; // IN MINS
 
 const CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY = "custom_errors_to_print";
 
+const CYPRESS_V9_AND_OLDER_TYPE = "CYPRESS_V9_AND_OLDER_TYPE";
+
+const CYPRESS_V10_AND_ABOVE_TYPE = "CYPRESS_V10_AND_ABOVE_TYPE";
+
+const CYPRESS_CONFIG_FILE_MAPPING = {
+  "cypress.json": {
+    type: CYPRESS_V9_AND_OLDER_TYPE
+  },
+  "cypress.config.js": {
+    type: CYPRESS_V10_AND_ABOVE_TYPE
+  },
+  "cypress.config.ts": {
+    type: CYPRESS_V10_AND_ABOVE_TYPE
+  },
+  "cypress.config.mjs": {
+    type: CYPRESS_V10_AND_ABOVE_TYPE
+  },
+  "cypress.config.cjs": {
+    type: CYPRESS_V10_AND_ABOVE_TYPE
+  }
+};
+
+const CYPRESS_CONFIG_FILE_NAMES = Object.keys(CYPRESS_CONFIG_FILE_MAPPING);
+
 module.exports = Object.freeze({
   syncCLI,
   userMessages,
@@ -402,4 +434,8 @@ module.exports = Object.freeze({
   BUILD_FAILED_EXIT_CODE,
   SPEC_TIMEOUT_LIMIT,
   CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY,
+  CYPRESS_V9_AND_OLDER_TYPE,
+  CYPRESS_V10_AND_ABOVE_TYPE,
+  CYPRESS_CONFIG_FILE_MAPPING,
+  CYPRESS_CONFIG_FILE_NAMES
 });

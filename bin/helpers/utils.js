@@ -57,6 +57,9 @@ exports.getErrorCodeFromMsg = (errMsg) => {
     case Constants.validationMessages.EMPTY_CYPRESS_PROJ_DIR:
       errorCode = 'bstack_json_invalid_no_cypress_proj_dir';
       break;
+    case Constants.validationMessages.EMPTY_CYPRESS_CONFIG_FILE:
+      errorCode = 'bstack_json_invalid_no_cypress_config_file';
+      break;
     case Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS:
       errorCode = 'bstack_json_default_auth_keys';
       break;
@@ -288,11 +291,41 @@ exports.setCypressConfigFilename = (bsConfig, args) => {
     bsConfig.run_settings.cypressConfigFilePath = bsConfig.run_settings.cypress_config_file;
     bsConfig.run_settings.cypressProjectDir = path.dirname(bsConfig.run_settings.cypress_config_file);
   } else {
-    bsConfig.run_settings.cypressConfigFilePath = path.join(bsConfig.run_settings.cypress_proj_dir, 'cypress.json');
-    bsConfig.run_settings.cypressProjectDir = bsConfig.run_settings.cypress_proj_dir;
+    logger.debug(`Looks like cypress config file was not provided. Looking for ${Constants.CYPRESS_CONFIG_FILE_NAMES.join(", ")} files at ${process.cwd()}`);
+    for (const possibleCypressFileName of Constants.CYPRESS_CONFIG_FILE_NAMES) {
+      let directoryPath = !this.isUndefined(bsConfig.run_settings.cypress_proj_dir) ? bsConfig.run_settings.cypress_proj_dir :  process.cwd();
+      if (directoryPath.endsWith("/")) {
+        directoryPath = directoryPath.slice(0,-1);
+      }
+      if (fs.existsSync(path.join(directoryPath, possibleCypressFileName))) {
+        bsConfig.run_settings.cypressConfigFilePath = `${directoryPath}/${possibleCypressFileName}`;
+        bsConfig.run_settings.cypress_config_file = `${directoryPath}/${possibleCypressFileName}`;
+        bsConfig.run_settings.cypress_config_filename = path.basename(bsConfig.run_settings.cypress_config_file);
+        bsConfig.run_settings.cypressProjectDir = directoryPath;
+        break;
+      }
+    }
   }
+
   logger.debug(`Setting cypress config file path = ${bsConfig.run_settings.cypressConfigFilePath}`);
   logger.debug(`Setting cypress project dir = ${bsConfig.run_settings.cypressProjDir}`);
+}
+
+exports.setCypressTestSuiteType = (bsConfig) => {
+  for (const possibleCypressFileName of Constants.CYPRESS_CONFIG_FILE_NAMES) {
+    if (bsConfig.run_settings.cypressConfigFilePath && 
+        typeof(bsConfig.run_settings.cypressConfigFilePath) === 'string' && 
+        bsConfig.run_settings.cypressConfigFilePath.endsWith(possibleCypressFileName)) {
+          bsConfig.run_settings.cypressTestSuiteType = Constants.CYPRESS_CONFIG_FILE_MAPPING[possibleCypressFileName].type;
+          break;
+    }
+  }
+
+  if (this.isUndefined(bsConfig.run_settings.cypressTestSuiteType)) {
+    bsConfig.run_settings.cypressTestSuiteType = Constants.CYPRESS_V9_AND_OLDER_TYPE;
+  }
+
+  logger.debug(`Setting cypress test suite type as ${bsConfig.run_settings.cypressTestSuiteType}`);
 }
 
 exports.verifyGeolocationOption = () => {
@@ -360,8 +393,10 @@ exports.setProjectId = (bsConfig, args) => {
   } else if(!this.isUndefined(bsConfig.run_settings["projectId"])) {
     return bsConfig.run_settings["projectId"]; 
   } else {
-    let cypressJson = this.getCypressJSON(bsConfig);
-    if (!this.isUndefined(cypressJson) && !this.isUndefined(cypressJson["projectId"])) {  return cypressJson["projectId"]; }
+    let cypressConfigFile = this.getCypressConfigFile(bsConfig);
+    if (!this.isUndefined(cypressConfigFile) && !this.isUndefined(cypressConfigFile["projectId"])) {  
+      return cypressConfigFile["projectId"]; 
+    }
   }
 }
 
@@ -931,8 +966,8 @@ exports.getFilesToIgnore = (runSettings, excludeFiles, logging = true) => {
   return ignoreFiles;
 }
 
-exports.getNumberOfSpecFiles = (bsConfig, args, cypressJson) => {
-  let testFolderPath = cypressJson.integrationFolder || Constants.DEFAULT_CYPRESS_SPEC_PATH;
+exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
+  let testFolderPath = cypressConfig.integrationFolder || Constants.DEFAULT_CYPRESS_SPEC_PATH;
   let globSearchPattern = this.sanitizeSpecsPattern(bsConfig.run_settings.specs) || `${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`;
   let ignoreFiles = args.exclude || bsConfig.run_settings.exclude;
   let files = glob.sync(globSearchPattern, {cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles});
@@ -1090,18 +1125,26 @@ exports.readBsConfigJSON = (bsConfigPath) => {
   }
 }
 
-exports.getCypressJSON = (bsConfig) => {
-  let cypressJSON = undefined;
-  if (bsConfig.run_settings.cypress_config_file && bsConfig.run_settings.cypress_config_filename !== 'false') {
-    cypressJSON = JSON.parse(
-      fs.readFileSync(bsConfig.run_settings.cypressConfigFilePath)
-    );
-  } else if (bsConfig.run_settings.cypressProjectDir) {
-    cypressJSON = JSON.parse(
-      fs.readFileSync(path.join(bsConfig.run_settings.cypressProjectDir, 'cypress.json'))
-    );
+exports.getCypressConfigFile = (bsConfig) => {
+  let cypressConfigFile = undefined;
+  if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
+    if (bsConfig.run_settings.cypress_config_filename.endsWith("cypress.config.js")) {
+      if (bsConfig.run_settings.cypress_config_file && bsConfig.run_settings.cypress_config_filename !== 'false') {
+        cypressConfigFile = require(path.resolve(bsConfig.run_settings.cypressConfigFilePath));
+      } else if (bsConfig.run_settings.cypressProjectDir) {
+        cypressConfigFile = require(path.join(bsConfig.run_settings.cypressProjectDir, bsConfig.run_settings.cypress_config_filename));
+      }
+    } else {
+      cypressConfigFile = {};
+    }
+  } else {
+    if (bsConfig.run_settings.cypress_config_file && bsConfig.run_settings.cypress_config_filename !== 'false') {
+      cypressConfigFile = JSON.parse(fs.readFileSync(bsConfig.run_settings.cypressConfigFilePath))
+    } else if (bsConfig.run_settings.cypressProjectDir) {
+      cypressConfigFile = JSON.parse(fs.readFileSync(path.join(bsConfig.run_settings.cypressProjectDir, bsConfig.run_settings.cypress_config_filename)));
+    }
   }
-  return cypressJSON;
+  return cypressConfigFile;
 }
 
 exports.setCLIMode = (bsConfig, args) => {
@@ -1235,13 +1278,13 @@ exports.fetchZipSize = (fileName) => {
   }
 }
 
-exports.getVideoConfig = (cypressJson) => {
+exports.getVideoConfig = (cypressConfig) => {
   let conf = {
     video: true,
     videoUploadOnPasses: true
   }
-  if (!this.isUndefined(cypressJson.video)) conf.video = cypressJson.video;
-  if (!this.isUndefined(cypressJson.videoUploadOnPasses)) conf.videoUploadOnPasses = cypressJson.videoUploadOnPasses;
+  if (!this.isUndefined(cypressConfig.video)) conf.video = cypressConfig.video;
+  if (!this.isUndefined(cypressConfig.videoUploadOnPasses)) conf.videoUploadOnPasses = cypressConfig.videoUploadOnPasses;
 
   logger.debug(`Setting video = ${conf.video}`);
   logger.debug(`Setting videoUploadOnPasses = ${conf.videoUploadOnPasses}`);
