@@ -1881,9 +1881,7 @@ describe('utils', () => {
 
     it('by default assumes that CYPRESS_V9_AND_OLDER_TYPE is the test suite type', () => {
       bsConfig = {
-        run_settings: {
-          cypressConfigFilePath: 'anyOtherFile.js',
-        },
+        run_settings: {},
       };
       utils.setCypressTestSuiteType(bsConfig);
       expect(bsConfig.run_settings.cypressTestSuiteType).to.be.eq(Contants.CYPRESS_V9_AND_OLDER_TYPE);
