@@ -83,7 +83,12 @@ const archiveSpecs = (runSettings, filePath, excludeFiles, md5data) => {
     ) {
       if (runSettings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
         let cypressConfigFileString = fs.readFileSync(runSettings.cypressConfigFilePath, {encoding: "utf-8"});
-        archive.append(cypressConfigFileString, {name: `${cypressAppendFilesZipLocation}${runSettings.cypress_config_filename}`});
+        for (const possibleCypressFileName of Constants.CYPRESS_CONFIG_FILE_NAMES) {
+          if (path.extname(runSettings.cypress_config_filename) == path.extname(possibleCypressFileName)) {
+            archive.append(cypressConfigFileString, {name: `${cypressAppendFilesZipLocation}${possibleCypressFileName}`});
+            break;
+          }
+        }
       } else if (runSettings.cypressTestSuiteType === Constants.CYPRESS_V9_AND_OLDER_TYPE) {
         let cypressJSON = JSON.parse(fs.readFileSync(runSettings.cypressConfigFilePath));
         let cypressJSONString = JSON.stringify(cypressJSON, null, 4);

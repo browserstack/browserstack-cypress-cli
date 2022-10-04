@@ -250,7 +250,7 @@ const validate = (bsConfig, args) => {
     let listOfFiles = fs.readdirSync(cypressFileDirectory);
     let configFilesPresent = [];
     for (const possibleCypressFileName of Constants.CYPRESS_CONFIG_FILE_NAMES) {
-      if (listOfFiles.includes(possibleCypressFileName)) {
+      if (listOfFiles.includes(possibleCypressFileName) || path.extname(possibleCypressFileName) == path.extname(bsConfig.run_settings.cypress_config_filename)) {
         configFilesPresent.push(possibleCypressFileName);
       }
     }
