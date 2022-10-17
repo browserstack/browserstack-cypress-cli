@@ -308,14 +308,14 @@ exports.setCypressConfigFilename = (bsConfig, args) => {
   }
 
   logger.debug(`Setting cypress config file path = ${bsConfig.run_settings.cypressConfigFilePath}`);
-  logger.debug(`Setting cypress project dir = ${bsConfig.run_settings.cypressProjDir}`);
+  logger.debug(`Setting cypress project dir = ${bsConfig.run_settings.cypressProjectDir}`);
 }
 
 exports.setCypressTestSuiteType = (bsConfig) => {
   for (const possibleCypressFileName of Constants.CYPRESS_CONFIG_FILE_NAMES) {
     if (bsConfig.run_settings.cypressConfigFilePath && 
         typeof(bsConfig.run_settings.cypressConfigFilePath) === 'string' && 
-        bsConfig.run_settings.cypressConfigFilePath.endsWith(possibleCypressFileName)) {
+        (path.extname(bsConfig.run_settings.cypressConfigFilePath) == path.extname(possibleCypressFileName) || bsConfig.run_settings.cypressConfigFilePath.endsWith(possibleCypressFileName))) {
           bsConfig.run_settings.cypressTestSuiteType = Constants.CYPRESS_CONFIG_FILE_MAPPING[possibleCypressFileName].type;
           break;
     }
