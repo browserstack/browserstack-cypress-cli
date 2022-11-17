@@ -2313,6 +2313,54 @@ describe('utils', () => {
       );
       glob.sync.restore();
     });
+
+    it('glob search pattern should contain default cypress 10 folder when cypressTestSuiteType is CYPRESS_V10_AND_ABOVE_TYPE', () => {
+      let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
+      let bsConfig = {
+        run_settings: {
+          cypressProjectDir: 'cypressProjectDir',
+          exclude: 'exclude',
+          cypressTestSuiteType: constant.CYPRESS_V10_AND_ABOVE_TYPE
+        },
+      };
+
+      utils.getNumberOfSpecFiles(bsConfig, {}, {});
+
+      sinon.assert.calledOnceWithExactly(
+        getNumberOfSpecFilesStub,
+        `cypress/e2e/**/*.+(${constant.specFileTypes.join('|')})`,
+        {
+          cwd: 'cypressProjectDir',
+          matchBase: true,
+          ignore: 'exclude',
+        }
+      );
+      glob.sync.restore();
+    });
+
+    it('glob search pattern should contain default cypress folder when cypressTestSuiteType is not CYPRESS_V10_AND_ABOVE_TYPE', () => {
+      let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
+      let bsConfig = {
+        run_settings: {
+          cypressProjectDir: 'cypressProjectDir',
+          exclude: 'exclude',
+          cypressTestSuiteType: constant.CYPRESS_V9_AND_OLDER_TYPE
+        },
+      };
+
+      utils.getNumberOfSpecFiles(bsConfig, {}, {});
+
+      sinon.assert.calledOnceWithExactly(
+        getNumberOfSpecFilesStub,
+        `cypress/integration/**/*.+(${constant.specFileTypes.join('|')})`,
+        {
+          cwd: 'cypressProjectDir',
+          matchBase: true,
+          ignore: 'exclude',
+        }
+      );
+      glob.sync.restore();
+    });
   });
 
   describe('warnSpecLimit', () => {
