@@ -2328,7 +2328,7 @@ describe('utils', () => {
 
       sinon.assert.calledOnceWithExactly(
         getNumberOfSpecFilesStub,
-        `cypress/e2e/**/*.+(${constant.specFileTypes.join('|')})`,
+        `${constant.DEFAULT_CYPRESS_10_SPEC_PATH}/**/*.+(${constant.specFileTypes.join('|')})`,
         {
           cwd: 'cypressProjectDir',
           matchBase: true,
@@ -2352,7 +2352,7 @@ describe('utils', () => {
 
       sinon.assert.calledOnceWithExactly(
         getNumberOfSpecFilesStub,
-        `cypress/integration/**/*.+(${constant.specFileTypes.join('|')})`,
+        `${constant.DEFAULT_CYPRESS_SPEC_PATH}/**/*.+(${constant.specFileTypes.join('|')})`,
         {
           cwd: 'cypressProjectDir',
           matchBase: true,
