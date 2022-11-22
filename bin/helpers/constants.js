@@ -308,7 +308,8 @@ const allowedFileTypes = [
   "max",
   "mjpeg",
   "y4m",
-  "tsx"
+  "tsx",
+  "pfx"
 ];
 
 const filesToIgnoreWhileUploading = [
