@@ -173,7 +173,7 @@ function isUsageReportingEnabled() {
 }
 
 function redactBsConfig(bsConfig) {
-  if(typeof bsConfig === 'object' && !utils.isUndefined(bsConfig.run_settings)) {
+  if(typeof bsConfig === 'object' && !utils.isUndefined(bsConfig) && !utils.isUndefined(bsConfig.run_settings)) {
     if(!utils.isUndefined(bsConfig.run_settings["projectId"])) { bsConfig.run_settings["projectId"] = REDACTED }
     if(!utils.isUndefined(bsConfig.run_settings["record-key"])) { bsConfig.run_settings["record-key"] = REDACTED }
   }
@@ -200,6 +200,7 @@ function redactKeys(str, regex, redact) {
 function send(args) {
   if (isUsageReportingEnabled() === "true") return;
 
+  // console.log(args)
   let bsConfig = JSON.parse(JSON.stringify(args.bstack_config));
   let runSettings = "";
   let sanitizedbsConfig = "";
