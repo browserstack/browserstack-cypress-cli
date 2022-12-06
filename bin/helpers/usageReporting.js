@@ -200,7 +200,6 @@ function redactKeys(str, regex, redact) {
 function send(args) {
   if (isUsageReportingEnabled() === "true") return;
 
-  // console.log(args)
   let bsConfig = JSON.parse(JSON.stringify(args.bstack_config));
   let runSettings = "";
   let sanitizedbsConfig = "";
