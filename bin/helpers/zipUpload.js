@@ -96,11 +96,15 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
     });
 
     obj.zipInterval = setInterval(function () {
-      let dispatched = r.req.connection._bytesDispatched;
-      let percent = dispatched * 100.0 / size;
-      obj.bar1.update(percent, {
-        speed: ((dispatched / (Date.now() - obj.startTime)) / 125).toFixed(2) //kbits per sec
-      });
+      if (r && r.req && r.req.connection) {
+        let dispatched = r.req.connection._bytesDispatched;
+        let percent = dispatched * 100.0 / size;
+        obj.bar1.update(percent, {
+          speed: ((dispatched / (Date.now() - obj.startTime)) / 125).toFixed(2) //kbits per sec
+        });
+      } else {
+        logger.warn('Connection is undefined/null for zip upload request. Unable to determine progress.');
+      }
     }, 150);
 
   });
