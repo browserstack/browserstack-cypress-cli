@@ -110,7 +110,7 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
           });
         } else {
           if (!uploadProgressBarErrorFlags.noConnectionReportSent) {
-            logger.warn(Constants.userMessages.NO_CONNECTION_WHILE_UPDATING_UPLOAD_PROGRESS_BAR);
+            logger.debug(Constants.userMessages.NO_CONNECTION_WHILE_UPDATING_UPLOAD_PROGRESS_BAR);
             utils.sendUsageReport(
               bsConfig,
               null,
@@ -125,8 +125,8 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
         }
       } catch (error) {
         if (!uploadProgressBarErrorFlags.unknownErrorReportSent) {
-          logger.warn('Unable to determine progress.');
-          logger.error(error);
+          logger.debug('Unable to determine progress.');
+          logger.debug(error);
           utils.sendUsageReport(
             bsConfig,
             null,
