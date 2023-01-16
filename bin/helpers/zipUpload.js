@@ -21,6 +21,10 @@ const purgeUploadBar = (obj) => {
 
 const uploadSuits = (bsConfig, filePath, opts, obj) => {
   return new Promise(function (resolve, reject) {
+    let uploadProgressBarErrorFlags = {
+      noConnectionReportSent: false,
+      unknownErrorReportSent: false
+    };
     obj.startTime = Date.now();
 
     if (opts.urlPresent) {
@@ -96,6 +100,7 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
     });
 
     obj.zipInterval = setInterval(function () {
+      const errorCode = 'update_upload_progress_bar_failed';
       try {
         if (r && r.req && r.req.connection) {
           let dispatched = r.req.connection._bytesDispatched;
@@ -104,11 +109,35 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
             speed: ((dispatched / (Date.now() - obj.startTime)) / 125).toFixed(2) //kbits per sec
           });
         } else {
-          logger.warn('Connection is undefined/null for zip upload request. Unable to determine progress.');
+          if (!uploadProgressBarErrorFlags.noConnectionReportSent) {
+            logger.warn(Constants.userMessages.NO_CONNECTION_WHILE_UPDATING_UPLOAD_PROGRESS_BAR);
+            utils.sendUsageReport(
+              bsConfig,
+              null,
+              Constants.userMessages.NO_CONNECTION_WHILE_UPDATING_UPLOAD_PROGRESS_BAR,
+              Constants.messageTypes.WARNING,
+              errorCode,
+              null,
+              null
+            );
+            uploadProgressBarErrorFlags.noConnectionReportSent = true;
+          }
         }
       } catch (error) {
-        logger.warn('Unable to determine progress.');
-        logger.error(error);
+        if (!uploadProgressBarErrorFlags.unknownErrorReportSent) {
+          logger.warn('Unable to determine progress.');
+          logger.error(error);
+          utils.sendUsageReport(
+            bsConfig,
+            null,
+            error.message,
+            Constants.messageTypes.WARNING,
+            errorCode,
+            null,
+            null
+          );
+          uploadProgressBarErrorFlags.unknownErrorReportSent = true;
+        }
       }
     }, 150);
 
