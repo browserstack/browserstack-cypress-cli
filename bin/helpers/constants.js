@@ -111,7 +111,7 @@ const userMessages = {
   SPEC_LIMIT_SUCCESS_MESSAGE:
     "Spec timeout specified as <x> minutes. If any of your specs exceed the specified time limit, it would be forcibly killed by BrowserStack",
   NO_CONNECTION_WHILE_UPDATING_UPLOAD_PROGRESS_BAR:
-    "Connection is undefined/null for zip upload request. Unable to determine progress."
+    "Unable to determine zip upload progress due to undefined/null connection request"
 };
 
 const validationMessages = {

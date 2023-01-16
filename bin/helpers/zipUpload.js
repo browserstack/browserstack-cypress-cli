@@ -130,7 +130,7 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
           utils.sendUsageReport(
             bsConfig,
             null,
-            error.message,
+            error.stack,
             Constants.messageTypes.WARNING,
             errorCode,
             null,
