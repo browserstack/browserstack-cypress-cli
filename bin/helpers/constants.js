@@ -320,6 +320,7 @@ const filesToIgnoreWhileUploading = [
   "package.json",
   "browserstack-package.json",
   "tests.zip",
+  "**/tests.zip",
   "cypress.json",
   "cypress.config.js",
   "cypress.config.ts",
