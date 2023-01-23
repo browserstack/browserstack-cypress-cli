@@ -61,6 +61,17 @@ const checkPackageMd5 = (runSettings) => {
   }
 
   if (typeof runSettings.npm_dependencies === 'object') {
+    logger.debug(`---> checkMD5 NPM dependency:\n ${JSON.stringify(runSettings.npm_dependencies)}`)
+    logger.debug(`---> checkMD5 Cypress in: ${"cypress" in runSettings.npm_dependencies}`)
+    if (!("cypress" in runSettings.npm_dependencies)) {
+      logger.debug(`---> checkMD5 cypress not present`)
+      if ("cypress_version" in runSettings && !runSettings.cypress_version.toString().match(Constants.LATEST_VERSION_SYNTAX_REGEX)) {
+        logger.debug(`---> checkMD5 cypress in runsettings: ${runSettings.cypress_version}`)
+        runSettings.npm_dependencies.cypress = runSettings.cypress_version;
+      } else {
+        runSettings.npm_dependencies.cypress = "latest";
+      }
+    }
     Object.assign(packageJSON, {
       devDependencies: utils.sortJsonKeys(runSettings.npm_dependencies),
     });
