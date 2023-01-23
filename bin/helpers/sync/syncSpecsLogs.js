@@ -1,4 +1,7 @@
 "use strict";
+
+const { util } = require("chai");
+
 const request = require("request"),
   config = require("../config"),
   utils = require("../utils"),
@@ -148,12 +151,6 @@ let whileProcess = (whilstCallback) => {
     switch (response.statusCode) {
       case 202: // get data here and print it
         n = 2
-        // try {
-        //   parsed_body = JSON.parse(JSON.stringify(body));
-        //   showSpecsStatus(parsed_body['data']);
-        // } catch (error) {
-        //   console.log(`---> Got error: ${JSON.stringify(error)}`)
-        // }
         showSpecsStatus(body, 202);
         return setTimeout(whilstCallback, timeout * n, null);
       case 204: // No data available, wait for some time and ask again
@@ -162,12 +159,6 @@ let whileProcess = (whilstCallback) => {
       case 200: // Build is completed.
         whileLoop = false;
         endTime = Date.now();
-        // try {
-        //   parsed_body = JSON.parse(body);
-        //   showSpecsStatus(JSON.stringify(parsed_body['data']));
-        // } catch (error) {
-        //   console.log(`---> Got error: ${JSON.stringify(error)}`)
-        // }
         showSpecsStatus(body, 200);
         return specSummary.exitCode == Constants.BUILD_FAILED_EXIT_CODE ? 
         whilstCallback({ status: 204, message: "No specs ran in the build"} ) : whilstCallback(null, body);
@@ -184,7 +175,7 @@ let getStackTraceUrl = () => {
 
 let showSpecsStatus = (data, statusCode) => {
   let specData = JSON.parse(data);
-  specData["specDetails"].forEach(specDetails => {
+  specData["specData"].forEach(specDetails => {
     if (specDetails.type === Constants.CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY) {
       addCustomErrorToPrint(specDetails);
     } else {
@@ -205,12 +196,14 @@ let showSpecsStatus = (data, statusCode) => {
   });
   if ( statusCode != 200 ) return; 
   // Below block is for printing build details, return if non 200 status code
-  if ("buildDetails" in specData) {
-    const buildDetails = specData["buildDetails"];
-    logger.info(`Done in ${buildDetails["duration"]} seconds with ${buildDetails["parallels"]} parallels.\n`);
+  if ("buildData" in specData) {
+    const buildDetails = specData.buildData;
+    const totalDuration = buildDetails.duration?.total_duration
+    const parallels = buildDetails.parallels
+    logger.info(`Done in ${totalDuration} seconds with ${parallels} parallels.\n`);
   } else {
     logger.debug(`Build details not sent`)
-  } 
+  }
 }
 
 let printInitialLog = () => {
