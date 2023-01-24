@@ -318,7 +318,7 @@ exports.setCypressConfigFilename = (bsConfig, args) => {
     const bsconf_cypress = require(bsconf_dir)
     logger.info(`---> bsconf: ${JSON.stringify(bsconf_cypress.e2e)}`)
   } catch (error) {
-    logger.debug(`Got error reading cypress config file: ${error.message}`)
+    logger.debug(`Got error reading cypress config file: ${JSON.stringify(error)}`)
   }
   
 }
