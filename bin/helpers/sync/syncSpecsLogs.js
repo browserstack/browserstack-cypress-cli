@@ -147,7 +147,6 @@ let whileProcess = (whilstCallback) => {
 
     whileTries = config.retries; // reset to default after every successful request
 
-    console.log(`---> response code: ${response.statusCode} body is: ${JSON.stringify(body)}`)
     switch (response.statusCode) {
       case 202: // get data here and print it
         n = 2
