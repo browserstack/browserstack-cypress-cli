@@ -309,13 +309,18 @@ exports.setCypressConfigFilename = (bsConfig, args) => {
 
   logger.debug(`Setting cypress config file path = ${bsConfig.run_settings.cypressConfigFilePath}`);
   logger.debug(`Setting cypress project dir = ${bsConfig.run_settings.cypressProjectDir}`);
-  let directoryPath = !this.isUndefined(bsConfig.run_settings.cypress_proj_dir) ? bsConfig.run_settings.cypress_proj_dir :  process.cwd();
-  if (directoryPath.endsWith("/")) {
-    directoryPath = directoryPath.slice(0,-1);
+  try {
+    let directoryPath = !this.isUndefined(bsConfig.run_settings.cypress_proj_dir) ? bsConfig.run_settings.cypress_proj_dir :  process.cwd();
+    if (directoryPath.endsWith("/")) {
+      directoryPath = directoryPath.slice(0,-1);
+    }
+    const bsconf_dir = path.join(directoryPath, bsConfig.run_settings.cypressConfigFilePath)
+    const bsconf_cypress = require(bsconf_dir)
+    logger.info(`---> bsconf: ${JSON.stringify(bsconf_cypress.e2e)}`)
+  } catch (error) {
+    logger.debug(`Got error reading cypress config file: ${error.message}`)
   }
-  const bsconf_dir = path.join(directoryPath, bsConfig.run_settings.cypressConfigFilePath)
-  const bsconf_cypress = require(bsconf_dir)
-  logger.info(`---> bsconf: ${JSON.stringify(bsconf_cypress.e2e)}`)
+  
 }
 
 exports.setCypressTestSuiteType = (bsConfig) => {
