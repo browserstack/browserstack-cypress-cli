@@ -80,7 +80,7 @@ describe("syncSpecsLogs", () => {
 
     it('should return proper request option for polling', () => {
       let options = getOptions(auth, build_id);
-      expect(options.url).to.equal(`${config.buildUrl}${build_id}`);
+      expect(options.url).to.equal(`${config.buildUrlV2}${build_id}`);
       expect(options.auth.user).to.equal(auth.username);
       expect(options.auth.password).to.equal(auth.access_key);
       expect(options.headers["Content-Type"]).to.equal("application/json");
@@ -216,35 +216,38 @@ describe("syncSpecsLogs", () => {
 
   context("showSpecsStatus", () => {
     const showSpecsStatus = syncSpecsLogs.__get__("showSpecsStatus");
+    const buildCreatedStatusCode = 202
+    const buildRunningStatusCode = 204
+    const buildCompletedStatusCode = 200
 
     it('should not print initial log for running specs when it is the 1st polling response', () => {
-      let data = JSON.stringify(["created"])
+      let data = JSON.stringify({ "specData": ["created"], "buildData": {"duration": "NA", "parallels": "NA"}})
       var printInitialLog = sandbox.stub();
       syncSpecsLogs.__set__('printInitialLog', printInitialLog);
 
-      showSpecsStatus(data);
+      showSpecsStatus(data, buildCreatedStatusCode);
 
       expect(printInitialLog.calledOnce).to.be.false;
     });
 
     it('should print spec details when spec related data is sent in polling response', () => {
       let specResult = JSON.stringify({"path": "path"})
-      let data = JSON.stringify([specResult])
+      let data = JSON.stringify({ "specData": [specResult], "buildData": {"duration": "NA", "parallels": "NA"}})
       var printSpecData = sandbox.stub();
       syncSpecsLogs.__set__('printSpecData', printSpecData);
-      showSpecsStatus(data);
+      showSpecsStatus(data, buildRunningStatusCode);
       expect(printSpecData.calledOnce).to.be.true;
     });
 
     it('should print initial and spec details when spec related data is sent in polling response', () => {
       let specResult = JSON.stringify({"path": "path"})
       syncSpecsLogs.__set__('buildStarted', false)
-      let data = JSON.stringify(["created", specResult])
+      let data = JSON.stringify({ "specData": [specResult], "buildData": {"duration": "NA", "parallels": "NA"}})
       var printSpecData = sandbox.stub();
       syncSpecsLogs.__set__('printSpecData', printSpecData);
       var printInitialLog = sandbox.stub();
       syncSpecsLogs.__set__('printInitialLog', printInitialLog);
-      showSpecsStatus(data);
+      showSpecsStatus(data, buildCreatedStatusCode);
       expect(printSpecData.calledOnce).to.be.true;
       expect(printInitialLog.calledOnce).to.be.true;
     });
@@ -253,17 +256,37 @@ describe("syncSpecsLogs", () => {
       let specResult = JSON.stringify({"path": "path"})
       let customError = { id: "custom_error_1", type: "custom_errors_to_print", level: "warn", should_be_unique: true, message: "custom error message" }
       syncSpecsLogs.__set__('buildStarted', false)
-      let data = JSON.stringify(["created", specResult, customError])
+      let data = JSON.stringify({ "specData": ["created", specResult, customError], "buildData": {"duration": "NA", "parallels": "NA"}})
       var printSpecData = sandbox.stub();
       syncSpecsLogs.__set__('printSpecData', printSpecData);
       var printInitialLog = sandbox.stub();
       syncSpecsLogs.__set__('printInitialLog', printInitialLog);
       var addCustomErrorToPrint = sandbox.stub();
       syncSpecsLogs.__set__('addCustomErrorToPrint', addCustomErrorToPrint);
-      showSpecsStatus(data);
+      showSpecsStatus(data, buildRunningStatusCode);
       expect(printSpecData.calledOnce).to.be.true;
       expect(printInitialLog.calledOnce).to.be.true;
       expect(addCustomErrorToPrint.calledOnce).to.be.true;
+    });
+
+    it('should add custom error, print initial and spec details when spec related data and duration is sent in polling response', () => {
+      let specResult = JSON.stringify({"path": "path"})
+      let customError = { id: "custom_error_1", type: "custom_errors_to_print", level: "warn", should_be_unique: true, message: "custom error message" }
+      var loggerInfoSpy = sinon.spy(logger, 'info');
+      syncSpecsLogs.__set__('buildStarted', false)
+      let data = JSON.stringify({ "specData": ["created", specResult, customError], "buildData": {"duration": {"total_duration": "87"}, "parallels": "2"}})
+      var printSpecData = sandbox.stub();
+      syncSpecsLogs.__set__('printSpecData', printSpecData);
+      var printInitialLog = sandbox.stub();
+      syncSpecsLogs.__set__('printInitialLog', printInitialLog);
+      var addCustomErrorToPrint = sandbox.stub();
+      syncSpecsLogs.__set__('addCustomErrorToPrint', addCustomErrorToPrint);
+      showSpecsStatus(data, buildCompletedStatusCode);
+      expect(printSpecData.calledOnce).to.be.true;
+      expect(printInitialLog.calledOnce).to.be.true;
+      expect(addCustomErrorToPrint.calledOnce).to.be.true;
+      sinon.assert.calledWith(loggerInfoSpy, 'Done in 87 seconds with 2 parallels.\n');
+      loggerInfoSpy.restore();
     });
   });
 

@@ -1,7 +1,4 @@
 "use strict";
-
-const { util } = require("chai");
-
 const request = require("request"),
   config = require("../config"),
   utils = require("../utils"),
