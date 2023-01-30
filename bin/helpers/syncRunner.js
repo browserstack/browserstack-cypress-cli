@@ -1,10 +1,6 @@
 'use strict';
-const logger = require("./logger").syncCliLogger;
-const request = require('request');
 const syncSpecsLogs = require('./sync/syncSpecsLogs'),
   specDetails = require('./sync/failedSpecsDetails'),
-  config = require("../helpers/config"),
-  utils = require('./utils'),
   specsSummary = require('./sync/specsSummary');
 
 exports.pollBuildStatus = (bsConfig, buildDetails, rawArgs, buildReportData) => {
