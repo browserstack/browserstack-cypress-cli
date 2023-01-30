@@ -29,7 +29,7 @@ describe("printSpecsRunSummary", () => {
   });
 
   context("with data", () => {
-    let time = 6000,
+    let time = 6,
         machines = 2,
         specs = [
           {specName: 'spec2.name.js', status: 'Failed', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'},
@@ -40,24 +40,23 @@ describe("printSpecsRunSummary", () => {
         data = {
           specs: specs,
           duration: time,
+          parallels: machines,
           exitCode: 0
         };
 
     it('returns passed specs data', () => {
       var loggerInfoSpy = sinon.spy(logger, 'info');
-      var loggerDebugSpy = sinon.spy(logger, 'debug');
 
       specSummary.printSpecsRunSummary(data, machines);
       sinon.assert.calledWith(loggerInfoSpy, 'Total tests: 4, passed: 1, failed: 2, skipped: 1, passed_with_skipped: 0, pending: 0');
-      sinon.assert.calledWith(loggerDebugSpy, `CLI calculated duration: ${time / 1000} seconds using ${machines} machines\n`);
+      sinon.assert.calledWith(loggerInfoSpy, `Done in ${data.duration} seconds using ${data.parallels} machines\n`);
 
       loggerInfoSpy.restore();
-      loggerDebugSpy.restore();
     });
   });
 
   context("with custom error data", () => {
-    let time = 6000,
+    let time = 6,
         machines = 2,
         specs = [
           {specName: 'spec2.name.js', status: 'Failed', combination: 'Win 10 / Chrome 78', sessionId: '3d3rdf3r...'},
@@ -68,6 +67,7 @@ describe("printSpecsRunSummary", () => {
         data = {
           specs: specs,
           duration: time,
+          parallels: machines,
           exitCode: 0
         },
         customErrorsToPrint = [
@@ -76,16 +76,15 @@ describe("printSpecsRunSummary", () => {
 
     it('prints the custom error message along with build details', () => {
       var loggerInfoSpy = sinon.spy(logger, 'info');
-      var loggerDebugSpy = sinon.spy(logger, 'debug');
       var loggerWarnSpy = sinon.spy(winstonLogger, 'warn');
 
       specSummary.printSpecsRunSummary(data, machines, customErrorsToPrint);
       sinon.assert.calledWith(loggerInfoSpy, 'Total tests: 4, passed: 1, failed: 2, skipped: 1, passed_with_skipped: 0, pending: 0');
-      sinon.assert.calledWith(loggerDebugSpy, `CLI calculated duration: ${time / 1000} seconds using ${machines} machines\n`);
+      sinon.assert.calledWith(loggerInfoSpy, `Done in ${data.duration} seconds using ${data.parallels} machines\n`);
+
       sinon.assert.calledWith(loggerWarnSpy, `custom error message`);
 
       loggerInfoSpy.restore();
-      loggerDebugSpy.restore();
       loggerWarnSpy.restore();
     });
   });

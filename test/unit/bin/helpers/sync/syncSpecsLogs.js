@@ -93,6 +93,8 @@ describe("syncSpecsLogs", () => {
       "buildError": null,
       "specs": [],
       "duration": null,
+      "parallels": null,
+      "cliDuration": null,
       "customErrorsToPrint": [
         { id: "custom_error_1", type: "custom_errors_to_print", level: "warn", should_be_unique: true, message: "custom error message" }
       ]
@@ -268,26 +270,6 @@ describe("syncSpecsLogs", () => {
       expect(printInitialLog.calledOnce).to.be.true;
       expect(addCustomErrorToPrint.calledOnce).to.be.true;
     });
-
-    it('should add custom error, print initial and spec details when spec related data and duration is sent in polling response', () => {
-      let specResult = JSON.stringify({"path": "path"})
-      let customError = { id: "custom_error_1", type: "custom_errors_to_print", level: "warn", should_be_unique: true, message: "custom error message" }
-      var loggerInfoSpy = sinon.spy(logger, 'info');
-      syncSpecsLogs.__set__('buildStarted', false)
-      let data = JSON.stringify({ "specData": ["created", specResult, customError], "buildData": {"duration": {"total_duration": "87"}, "parallels": "2"}})
-      var printSpecData = sandbox.stub();
-      syncSpecsLogs.__set__('printSpecData', printSpecData);
-      var printInitialLog = sandbox.stub();
-      syncSpecsLogs.__set__('printInitialLog', printInitialLog);
-      var addCustomErrorToPrint = sandbox.stub();
-      syncSpecsLogs.__set__('addCustomErrorToPrint', addCustomErrorToPrint);
-      showSpecsStatus(data, buildCompletedStatusCode);
-      expect(printSpecData.calledOnce).to.be.true;
-      expect(printInitialLog.calledOnce).to.be.true;
-      expect(addCustomErrorToPrint.calledOnce).to.be.true;
-      sinon.assert.calledWith(loggerInfoSpy, 'Done in 87 seconds with 2 parallels.\n');
-      loggerInfoSpy.restore();
-    });
   });
 
   context("printSpecsStatus", () => {
@@ -330,7 +312,7 @@ describe("syncSpecsLogs", () => {
         expect(tableStream.calledOnce).to.be.true;
         expect(whileProcess.calledOnce).to.be.false;
         expect(specSummary.specs).deep.to.equal([])
-        expect(specSummary.duration).to.eql(endTime - startTime);
+        expect(specSummary.cliDuration).to.eql(endTime - startTime);
       });
     });
 
@@ -345,7 +327,7 @@ describe("syncSpecsLogs", () => {
         expect(getTableConfig.calledOnce).to.be.true;
         expect(tableStream.calledOnce).to.be.true;
         expect(whileProcess.callCount).to.eql(3);
-        expect(specSummary.duration).to.eql(endTime - startTime);
+        expect(specSummary.cliDuration).to.eql(endTime - startTime);
       });
     });
   });

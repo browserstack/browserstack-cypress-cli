@@ -14,6 +14,8 @@ let specSummary = {
   "buildError": null,
   "specs": [],
   "duration": null,
+  "parallels": null,
+  "cliDuration": null,
   "customErrorsToPrint": []
 }
 
@@ -120,7 +122,7 @@ let printSpecsStatus = (bsConfig, buildDetails, rawArgs, buildReportData) => {
           }
         }
         logger.info(lineSeparator);
-        specSummary.duration =  endTime - startTime
+        specSummary.cliDuration =  endTime - startTime
         resolve(specSummary);
       }
     );
@@ -196,7 +198,8 @@ let showSpecsStatus = (data, statusCode) => {
     const buildDetails = specData.buildData;
     const totalDuration = buildDetails.duration?.total_duration
     const parallels = buildDetails.parallels
-    logger.info(`Done in ${totalDuration} seconds with ${parallels} parallels.\n`);
+    specSummary.duration = totalDuration;
+    specSummary.parallels = parallels;
   } else {
     logger.debug(`Build details not sent`)
   }
