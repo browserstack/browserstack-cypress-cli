@@ -137,7 +137,8 @@ describe("packageInstaller", () => {
         "name": "test",
         "devDependencies": {
           "random-package-1": "1.2.3",
-          "random-package-2": "1.2.4"
+          "random-package-2": "1.2.4",
+          "cypress": "latest"
         }
       })
       let directoryPath = "/random/path";
@@ -189,7 +190,8 @@ describe("packageInstaller", () => {
         "name": "test",
         "devDependencies": {
           "random-package-1": "1.2.3",
-          "random-package-2": "1.2.4"
+          "random-package-2": "1.2.4",
+          "cypress": "latest"
         }
       })
       let directoryPath = "/random/path";
