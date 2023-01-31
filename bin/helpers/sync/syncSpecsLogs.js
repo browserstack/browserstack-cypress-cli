@@ -14,8 +14,6 @@ let specSummary = {
   "buildError": null,
   "specs": [],
   "duration": null,
-  "parallels": null,
-  "cliDuration": null,
   "customErrorsToPrint": []
 }
 
@@ -26,7 +24,7 @@ if (!isNaN(terminalWidth)) lineSeparator = "\n" + "-".repeat(terminalWidth);
 
 let  getOptions = (auth, build_id) => {
   return {
-    url: `${config.buildUrlV2}${build_id}`,
+    url: `${config.buildUrl}${build_id}`,
     auth: {
       user: auth.username,
       password: auth.access_key
@@ -122,7 +120,7 @@ let printSpecsStatus = (bsConfig, buildDetails, rawArgs, buildReportData) => {
           }
         }
         logger.info(lineSeparator);
-        specSummary.cliDuration =  endTime - startTime
+        specSummary.duration =  endTime - startTime
         resolve(specSummary);
       }
     );
@@ -149,7 +147,7 @@ let whileProcess = (whilstCallback) => {
     switch (response.statusCode) {
       case 202: // get data here and print it
         n = 2
-        showSpecsStatus(body, 202);
+        showSpecsStatus(body);
         return setTimeout(whilstCallback, timeout * n, null);
       case 204: // No data available, wait for some time and ask again
         n = 1
@@ -157,7 +155,7 @@ let whileProcess = (whilstCallback) => {
       case 200: // Build is completed.
         whileLoop = false;
         endTime = Date.now();
-        showSpecsStatus(body, 200);
+        showSpecsStatus(body);
         return specSummary.exitCode == Constants.BUILD_FAILED_EXIT_CODE ? 
         whilstCallback({ status: 204, message: "No specs ran in the build"} ) : whilstCallback(null, body);
       default:
@@ -171,9 +169,9 @@ let getStackTraceUrl = () => {
   return specSummary.buildError
 }
 
-let showSpecsStatus = (data, statusCode) => {
+let showSpecsStatus = (data) => {
   let specData = JSON.parse(data);
-  specData["specData"].forEach(specDetails => {
+  specData.forEach(specDetails => {
     if (specDetails.type === Constants.CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY) {
       addCustomErrorToPrint(specDetails);
     } else {
@@ -192,17 +190,6 @@ let showSpecsStatus = (data, statusCode) => {
       }
     }
   });
-  if ( statusCode != 200 ) return; 
-  // Below block is for printing build details, return if non 200 status code
-  if ("buildData" in specData) {
-    const buildDetails = specData.buildData;
-    const totalDuration = buildDetails.duration?.total_duration
-    const parallels = buildDetails.parallels
-    specSummary.duration = totalDuration;
-    specSummary.parallels = parallels;
-  } else {
-    logger.debug(`Build details not sent`)
-  }
 }
 
 let printInitialLog = () => {

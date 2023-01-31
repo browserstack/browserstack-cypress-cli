@@ -13,9 +13,7 @@ if(config.env !== "production") {
 }
 
 config.cypress_v1 = `${config.rails_host}/automate/cypress/v1`;
-config.cypress_v2 = `${config.rails_host}/automate/cypress/v2`;
 config.buildUrl = `${config.cypress_v1}/builds/`;
-config.buildUrlV2 = `${config.cypress_v2}/builds/`;
 config.buildStopUrl = `${config.cypress_v1}/builds/stop/`;
 config.checkMd5sum = `${config.cypress_v1}/md5sumcheck/`;
 config.getInitialDetails = `${config.cypress_v1}/get_initial_details/`;

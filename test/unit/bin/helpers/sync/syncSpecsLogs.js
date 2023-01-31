@@ -80,7 +80,7 @@ describe("syncSpecsLogs", () => {
 
     it('should return proper request option for polling', () => {
       let options = getOptions(auth, build_id);
-      expect(options.url).to.equal(`${config.buildUrlV2}${build_id}`);
+      expect(options.url).to.equal(`${config.buildUrl}${build_id}`);
       expect(options.auth.user).to.equal(auth.username);
       expect(options.auth.password).to.equal(auth.access_key);
       expect(options.headers["Content-Type"]).to.equal("application/json");
@@ -93,8 +93,6 @@ describe("syncSpecsLogs", () => {
       "buildError": null,
       "specs": [],
       "duration": null,
-      "parallels": null,
-      "cliDuration": null,
       "customErrorsToPrint": [
         { id: "custom_error_1", type: "custom_errors_to_print", level: "warn", should_be_unique: true, message: "custom error message" }
       ]
@@ -218,38 +216,35 @@ describe("syncSpecsLogs", () => {
 
   context("showSpecsStatus", () => {
     const showSpecsStatus = syncSpecsLogs.__get__("showSpecsStatus");
-    const buildCreatedStatusCode = 202
-    const buildRunningStatusCode = 204
-    const buildCompletedStatusCode = 200
 
     it('should not print initial log for running specs when it is the 1st polling response', () => {
-      let data = JSON.stringify({ "specData": ["created"], "buildData": {"duration": "NA", "parallels": "NA"}})
+      let data = JSON.stringify(["created"])
       var printInitialLog = sandbox.stub();
       syncSpecsLogs.__set__('printInitialLog', printInitialLog);
 
-      showSpecsStatus(data, buildCreatedStatusCode);
+      showSpecsStatus(data);
 
       expect(printInitialLog.calledOnce).to.be.false;
     });
 
     it('should print spec details when spec related data is sent in polling response', () => {
       let specResult = JSON.stringify({"path": "path"})
-      let data = JSON.stringify({ "specData": [specResult], "buildData": {"duration": "NA", "parallels": "NA"}})
+      let data = JSON.stringify([specResult])
       var printSpecData = sandbox.stub();
       syncSpecsLogs.__set__('printSpecData', printSpecData);
-      showSpecsStatus(data, buildRunningStatusCode);
+      showSpecsStatus(data);
       expect(printSpecData.calledOnce).to.be.true;
     });
 
     it('should print initial and spec details when spec related data is sent in polling response', () => {
       let specResult = JSON.stringify({"path": "path"})
       syncSpecsLogs.__set__('buildStarted', false)
-      let data = JSON.stringify({ "specData": [specResult], "buildData": {"duration": "NA", "parallels": "NA"}})
+      let data = JSON.stringify(["created", specResult])
       var printSpecData = sandbox.stub();
       syncSpecsLogs.__set__('printSpecData', printSpecData);
       var printInitialLog = sandbox.stub();
       syncSpecsLogs.__set__('printInitialLog', printInitialLog);
-      showSpecsStatus(data, buildCreatedStatusCode);
+      showSpecsStatus(data);
       expect(printSpecData.calledOnce).to.be.true;
       expect(printInitialLog.calledOnce).to.be.true;
     });
@@ -258,14 +253,14 @@ describe("syncSpecsLogs", () => {
       let specResult = JSON.stringify({"path": "path"})
       let customError = { id: "custom_error_1", type: "custom_errors_to_print", level: "warn", should_be_unique: true, message: "custom error message" }
       syncSpecsLogs.__set__('buildStarted', false)
-      let data = JSON.stringify({ "specData": ["created", specResult, customError], "buildData": {"duration": "NA", "parallels": "NA"}})
+      let data = JSON.stringify(["created", specResult, customError])
       var printSpecData = sandbox.stub();
       syncSpecsLogs.__set__('printSpecData', printSpecData);
       var printInitialLog = sandbox.stub();
       syncSpecsLogs.__set__('printInitialLog', printInitialLog);
       var addCustomErrorToPrint = sandbox.stub();
       syncSpecsLogs.__set__('addCustomErrorToPrint', addCustomErrorToPrint);
-      showSpecsStatus(data, buildRunningStatusCode);
+      showSpecsStatus(data);
       expect(printSpecData.calledOnce).to.be.true;
       expect(printInitialLog.calledOnce).to.be.true;
       expect(addCustomErrorToPrint.calledOnce).to.be.true;
@@ -312,7 +307,7 @@ describe("syncSpecsLogs", () => {
         expect(tableStream.calledOnce).to.be.true;
         expect(whileProcess.calledOnce).to.be.false;
         expect(specSummary.specs).deep.to.equal([])
-        expect(specSummary.cliDuration).to.eql(endTime - startTime);
+        expect(specSummary.duration).to.eql(endTime - startTime);
       });
     });
 
@@ -327,7 +322,7 @@ describe("syncSpecsLogs", () => {
         expect(getTableConfig.calledOnce).to.be.true;
         expect(tableStream.calledOnce).to.be.true;
         expect(whileProcess.callCount).to.eql(3);
-        expect(specSummary.cliDuration).to.eql(endTime - startTime);
+        expect(specSummary.duration).to.eql(endTime - startTime);
       });
     });
   });

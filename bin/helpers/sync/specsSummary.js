@@ -33,8 +33,7 @@ let printSpecsRunSummary = (data, machines, customErrorsToPrint) => {
     });
 
     logger.info(`Total tests: ${summary.total}, passed: ${summary.passed}, failed: ${summary.failed}, skipped: ${summary.skipped}, passed_with_skipped: ${summary.passed_with_skipped}, pending: ${summary.pending}`);
-    logger.info(`Done in ${data.duration} seconds using ${data.parallels} machines\n`);
-    winstonlogger.debug(`CLI calculated duration is ${data.cliDuration/1000}`);
+    logger.info(`Done in ${data.duration/1000} seconds using ${machines} machines\n`);
 
     if (customErrorsToPrint && customErrorsToPrint.length > 0) {
       for (const error of customErrorsToPrint) {
