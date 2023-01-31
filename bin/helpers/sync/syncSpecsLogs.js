@@ -196,8 +196,8 @@ let showSpecsStatus = (data, statusCode) => {
   // Below block is for printing build details, return if non 200 status code
   if ("buildData" in specData) {
     const buildDetails = specData.buildData;
-    const totalDuration = buildDetails.duration?.total_duration
-    const parallels = buildDetails.parallels
+    const totalDuration = (utils.isUndefined(buildDetails.duration)) ? "-" : buildDetails.duration.total_duration
+    const parallels = (utils.isUndefined(buildDetails.parallels)) ? "-" : buildDetails.parallels
     specSummary.duration = totalDuration;
     specSummary.parallels = parallels;
   } else {
