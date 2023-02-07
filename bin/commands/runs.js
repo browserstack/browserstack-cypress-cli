@@ -159,12 +159,13 @@ module.exports = function run(args, rawArgs) {
           // Archive the spec files
           logger.debug("Started archiving test suite");
           markBlockStart('zip.archive');
-          return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude, md5data).then(function (data) {
+          return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude, md5data).then(async function (data) {
             logger.debug("Completed archiving test suite");
             markBlockEnd('zip.archive');
 
             let test_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.fileName));
             let npm_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.packageFileName));
+            let node_modules_size = await utils.fetchFolderSize(path.join(process.cwd(), "node_modules"))            
             
             //Package diff
             let isPackageDiff = false;
@@ -275,6 +276,7 @@ module.exports = function run(args, rawArgs) {
                   build_id: data.build_id,
                   test_zip_size: test_zip_size,
                   npm_zip_size: npm_zip_size,
+                  node_modules_size: node_modules_size,
                   test_suite_zip_upload: md5data.zipUrlPresent ? 0 : 1,
                   package_zip_upload: md5data.packageUrlPresent ? 0 : 1
                 };
