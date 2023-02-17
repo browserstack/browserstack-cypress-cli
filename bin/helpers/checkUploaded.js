@@ -86,20 +86,7 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
       zipUrlPresent: false,
       packageUrlPresent: false,
     };
-    const runSettings = bsConfig.run_settings;
-    if (runSettings.npm_dependencies !== undefined && 
-      Object.keys(runSettings.npm_dependencies).length !== 0 &&
-      typeof runSettings.npm_dependencies === 'object') {
-      if (!("cypress" in runSettings.npm_dependencies)) {
-        logger.warn("Missing cypress not found in npm_dependencies");
-        if ("cypress_version" in runSettings && !runSettings.cypress_version.toString().match(Constants.LATEST_VERSION_SYNTAX_REGEX)) {
-          runSettings.npm_dependencies.cypress = runSettings.cypress_version;
-        } else {
-          runSettings.npm_dependencies.cypress = "latest";
-        }
-        logger.warn(`Adding cypress version ${runSettings.npm_dependencies.cypress} in npm_dependencies`);
-      }
-    }
+    utils.setCypressNpmDependency(bsConfig);
     if (args["force-upload"]) {
       logger.debug("force-upload set to true. Uploading tests and npm packages.");
       return resolve(obj);
