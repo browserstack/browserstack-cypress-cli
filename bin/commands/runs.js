@@ -24,6 +24,7 @@ const { getStackTraceUrl } = require('../helpers/sync/syncSpecsLogs');
 
 module.exports = function run(args, rawArgs) {
 
+  markBlockStart('preBuild');
   // set debug mode (--cli-debug)
   utils.setDebugMode(args);
 
@@ -185,6 +186,8 @@ module.exports = function run(args, rawArgs) {
               logger.debug("Started build creation");
               markBlockStart('createBuild');
               return build.createBuild(bsConfig, zip).then(function (data) {
+                markBlockEnd('preBuild');
+                markBlockStart('buildProcessing');
                 logger.debug("Completed build creation");
                 markBlockEnd('createBuild');
                 markBlockEnd('total');
@@ -216,6 +219,8 @@ module.exports = function run(args, rawArgs) {
                 if (args.sync) {
                   logger.debug("Started polling build status from BrowserStack");
                   syncRunner.pollBuildStatus(bsConfig, data, rawArgs, buildReportData).then(async (exitCode) => {
+                    markBlockEnd('buildProcessing');
+                    markBlockStart('postBuild');
                     logger.debug("Completed polling of build status");
 
                     // stop the Local instance
@@ -234,6 +239,7 @@ module.exports = function run(args, rawArgs) {
                       // Generate custom report!
                       reportGenerator(bsConfig, data.build_id, args, rawArgs, buildReportData, function(){
                         utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
+                        markBlockEnd('postBuild');
                         utils.handleSyncExit(exitCode, data.dashboard_url);
                       });
                     } else {

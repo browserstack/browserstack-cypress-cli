@@ -328,6 +328,27 @@ exports.setCypressTestSuiteType = (bsConfig) => {
   logger.debug(`Setting cypress test suite type as ${bsConfig.run_settings.cypressTestSuiteType}`);
 }
 
+exports.setCypressNpmDependency = (bsConfig) => {
+  const runSettings = bsConfig.run_settings;
+  if (runSettings.npm_dependencies !== undefined && 
+    Object.keys(runSettings.npm_dependencies).length !== 0 &&
+    typeof runSettings.npm_dependencies === 'object') {
+    if (!("cypress" in runSettings.npm_dependencies)) {
+      logger.warn("Missing cypress not found in npm_dependencies");        
+      if("cypress_version" in runSettings){
+        if(runSettings.cypress_version.toString().match(Constants.LATEST_VERSION_SYNTAX_REGEX)){
+          runSettings.npm_dependencies.cypress = `^${runSettings.cypress_version.toString().split(".")[0]}`
+        } else {
+          runSettings.npm_dependencies.cypress = runSettings.cypress_version;
+        }
+      } else if (runSettings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE)  {
+        runSettings.npm_dependencies.cypress = "latest";
+      }
+      logger.warn(`Adding cypress version ${runSettings.npm_dependencies.cypress} in npm_dependencies`);
+    }
+  }
+}
+
 exports.verifyGeolocationOption = () => {
   let glOptionsSet = (this.searchForOption('-gl') || this.searchForOption('--gl'));
   let geoHyphenLocationOptionsSet = (this.searchForOption('-geo-location') || this.searchForOption('--geo-location'));
