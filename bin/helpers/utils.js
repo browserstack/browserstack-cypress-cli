@@ -333,7 +333,7 @@ exports.setCypressNpmDependency = (bsConfig) => {
   if (runSettings.npm_dependencies !== undefined && 
     Object.keys(runSettings.npm_dependencies).length !== 0 &&
     typeof runSettings.npm_dependencies === 'object') {
-    if (!("cypress" in runSettings.npm_dependencies) && Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
+    if (!("cypress" in runSettings.npm_dependencies) && runSettings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
       logger.warn("Missing cypress not found in npm_dependencies");        
       if("cypress_version" in runSettings){
         runSettings.npm_dependencies.cypress = `^${runSettings.cypress_version.toString().split(".")[0]}`;
