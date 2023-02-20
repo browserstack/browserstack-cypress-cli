@@ -3582,7 +3582,7 @@ describe('utils', () => {
         },        
       };
       utils.setCypressNpmDependency(bsConfig);
-      chai.assert.equal(bsConfig.run_settings.npm_dependencies.cypress, "10.0.0");
+      chai.assert.equal(bsConfig.run_settings.npm_dependencies.cypress, "^10");
     });
 
     it('should not set cypress for < 9 cypress version if cypress_version missing', () => {
