@@ -1025,6 +1025,14 @@ exports.getNetworkErrorMessage = (dashboard_url) => {
   return chalk.red(message)
 }
 
+exports.setNetworkLogs = (bsConfig) => {
+  if(bsConfig.run_settings.networkLogs == 'true' || bsConfig.run_settings.networkLogs == true) {
+    bsConfig.run_settings.networkLogs = 'true'
+  } else {
+    bsConfig.run_settings.networkLogs = 'false'
+  }
+}
+
 exports.versionChangedMessage = (preferredVersion, actualVersion, frameworkUpgradeMessage = '') => {
   let message = Constants.userMessages.CYPRESS_VERSION_CHANGED.replace("<preferredVersion>", preferredVersion);
   message = message.replace("<actualVersion>", actualVersion);
