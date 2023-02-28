@@ -141,9 +141,9 @@ module.exports = function run(args, rawArgs) {
 
       // warn if specFiles cross our limit
       utils.warnSpecLimit(bsConfig, args, specFiles, rawArgs, buildReportData);
-      process.exit() // TODO: remove once tested
       markBlockEnd('preArchiveSteps');
       logger.debug("Completed pre-archive steps");
+      process.exit() // TODO: remove once tested
       markBlockStart('zip');
       logger.debug("Checking if test suite zip and dependencies is already available on browserstack");
       markBlockStart('zip.checkAlreadyUploaded');
