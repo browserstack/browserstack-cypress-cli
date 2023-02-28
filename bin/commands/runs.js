@@ -130,7 +130,7 @@ module.exports = function run(args, rawArgs) {
       logger.debug("Started pre-archive steps");
       //get the number of spec files
       let specFiles = utils.getNumberOfSpecFiles(bsConfig, args, cypressConfigFile);
-
+      console.log(specFiles); // TODO: remove once tested
       bsConfig['run_settings']['video_config'] = utils.getVideoConfig(cypressConfigFile);
 
       // return the number of parallels user specified
@@ -141,6 +141,7 @@ module.exports = function run(args, rawArgs) {
 
       // warn if specFiles cross our limit
       utils.warnSpecLimit(bsConfig, args, specFiles, rawArgs, buildReportData);
+      process.exit() // TODO: remove once tested
       markBlockEnd('preArchiveSteps');
       logger.debug("Completed pre-archive steps");
       markBlockStart('zip');
