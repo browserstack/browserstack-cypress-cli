@@ -365,6 +365,7 @@ const packageInstallerOptions = {
 const specFileTypes = ["js", "ts", "feature", "jsx", "coffee", "cjsx"];
 
 const DEFAULT_CYPRESS_SPEC_PATH = "cypress/integration";
+const DEFAULT_CYPRESS_10_SPEC_PATH = "cypress/e2e";
 
 const SPEC_TOTAL_CHAR_LIMIT = 32243;
 const METADATA_CHAR_BUFFER_PER_SPEC = 175;
@@ -430,6 +431,7 @@ module.exports = Object.freeze({
   packageInstallerOptions,
   specFileTypes,
   DEFAULT_CYPRESS_SPEC_PATH,
+  DEFAULT_CYPRESS_10_SPEC_PATH,
   SPEC_TOTAL_CHAR_LIMIT,
   METADATA_CHAR_BUFFER_PER_SPEC,
   usageReportingConstants,

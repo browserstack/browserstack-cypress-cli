@@ -984,7 +984,11 @@ exports.getFilesToIgnore = (runSettings, excludeFiles, logging = true) => {
 }
 
 exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
-  let testFolderPath = cypressConfig.integrationFolder || Constants.DEFAULT_CYPRESS_SPEC_PATH;
+  let defaultSpecFolder = Constants.DEFAULT_CYPRESS_SPEC_PATH;
+  if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
+    defaultSpecFolder = Constants.DEFAULT_CYPRESS_10_SPEC_PATH;
+  }
+  let testFolderPath = cypressConfig.integrationFolder || defaultSpecFolder;
   let globSearchPattern = this.sanitizeSpecsPattern(bsConfig.run_settings.specs) || `${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`;
   let ignoreFiles = args.exclude || bsConfig.run_settings.exclude;
   let files = glob.sync(globSearchPattern, {cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles});
