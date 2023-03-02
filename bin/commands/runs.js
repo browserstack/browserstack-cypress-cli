@@ -143,7 +143,7 @@ module.exports = function run(args, rawArgs) {
       utils.warnSpecLimit(bsConfig, args, specFiles, rawArgs, buildReportData);
       markBlockEnd('preArchiveSteps');
       logger.debug("Completed pre-archive steps");
-      process.exit() // TODO: remove once tested
+      // process.exit() // TODO: remove once tested
       markBlockStart('zip');
       logger.debug("Checking if test suite zip and dependencies is already available on browserstack");
       markBlockStart('zip.checkAlreadyUploaded');
@@ -168,6 +168,7 @@ module.exports = function run(args, rawArgs) {
             let npm_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.packageFileName));
 
             // Uploaded zip file
+            process.exit();
             logger.debug("Started uploading the test suite zip");
             logger.debug("Started uploading the node_module zip");
             markBlockStart('zip.zipUpload');

@@ -199,12 +199,13 @@ const validate = (bsConfig, args) => {
     try {
       if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
         const completeCypressConfigFile = readCypressConfigFile(bsConfig)
-
-        // check if cypress config was exported using  export default
-        cypressConfigFile = !Utils.isUndefined(completeCypressConfigFile.default) ? completeCypressConfigFile.default : completeCypressConfigFile
-
-        console.log(cypressConfigFile); // TODO: remove console
-
+        console.log(completeCypressConfigFile)
+        if (!Utils.isUndefined(completeCypressConfigFile)) {
+          // check if cypress config was exported using  export default
+          cypressConfigFile = !Utils.isUndefined(completeCypressConfigFile.default) ? completeCypressConfigFile.default : completeCypressConfigFile
+          console.log('cypressConfigFile', completeCypressConfigFile); // TODO: remove console
+        }
+        
         // TODO: add validations for cypress_config_filename
       } else {
         let cypressJsonContent = fs.readFileSync(cypressConfigFilePath);

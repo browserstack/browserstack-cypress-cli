@@ -1,7 +1,9 @@
 "use strict";
 const path = require("path");
 const fs = require("fs");
-const execSync = require("child_process").execSync;
+// const execSync = require("child_process").execSync;
+const { spawn, execSync, spawnSync } = require('child_process');
+
 
 const logger = require('./logger').winstonLogger;
 
@@ -29,8 +31,11 @@ exports.readCypressConfigFile = (bsConfig) => {
         }
         logger.debug(`complete cypress config file path: ${cypress_conf_dir}`)
         // Perform actions
-        const cypress_config = require(cypress_conf_dir)
-        return cypress_config
+        console.log('NODE_PATH', process.env.NODE_PATH)
+        const result = spawnSync('NODE_PATH=/Users/prajwaldhawarikar/Developer/misc/cypress-test-suite/tmpBstackPackages/node_modules node /Users/prajwaldhawarikar/Developer/projects/temp/browserstack-cypress-cli/bin/helpers/requireModule.js')
+        console.log(result.stdout.toString());
+        // const cypress_config = require(cypress_conf_dir)
+        // return cypress_config
     } catch (error) {
         logger.error(`Error while reading cypress config: ${error.message}`)
         // TODO: handle this error properly

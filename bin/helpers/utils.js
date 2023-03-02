@@ -8,6 +8,7 @@ const { v4: uuidv4 } = require('uuid');
 const browserstack = require('browserstack-local');
 const crypto = require('crypto');
 const util = require('util');
+const { spawn, execSync, spawnSync } = require('child_process');
 
 const usageReporting = require("./usageReporting"),
   logger = require("./logger").winstonLogger,
@@ -985,15 +986,24 @@ exports.getFilesToIgnore = (runSettings, excludeFiles, logging = true) => {
 
 exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
   let defaultSpecFolder
+  let testFolderPath
   let globCypressConfigSpecPatterns = []
+  let globSearchPattern = this.sanitizeSpecsPattern(bsConfig.run_settings.specs);
+
   // TODO: implement excludePattern as well
   if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
     defaultSpecFolder = Constants.DEFAULT_CYPRESS_10_SPEC_PATH
-    if(!this.isUndefined(cypressConfig.e2e.specPattern)) {
-      globCypressConfigSpecPatterns = Array.isArray(cypressConfig.e2e.specPattern) ?
-        cypressConfig.e2e.specPattern : [cypressConfig.e2e.specPattern];
+    testFolderPath = defaultSpecFolder
+    if(!this.isUndefined(cypressConfig) && !this.isUndefined(cypressConfig.e2e)) {
+      if(!this.isUndefined(cypressConfig.e2e.specPattern)) {
+        globCypressConfigSpecPatterns = Array.isArray(cypressConfig.e2e.specPattern) ?
+          cypressConfig.e2e.specPattern : [cypressConfig.e2e.specPattern];
+      } else {
+        globCypressConfigSpecPatterns = [`${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`]
+      }
     } else {
-      globCypressConfigSpecPatterns = [`${defaultSpecFolder}/**/*.+(${Constants.specFileTypes.join("|")})`]
+      // if not able read cypress config, use bstack specs arg(existing logic which is not correct)
+      globCypressConfigSpecPatterns = globSearchPattern ? [globSearchPattern] : []
     }
   } else {
     defaultSpecFolder = Constants.DEFAULT_CYPRESS_SPEC_PATH
@@ -1027,7 +1037,6 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
   console.log('configSpecPattern', fileMatchedWithConfigSpecPattern)
   let files
 
-  let globSearchPattern = this.sanitizeSpecsPattern(bsConfig.run_settings.specs);
   if (globSearchPattern) {
     let fileMatchedWithBstackSpecPattern = glob.sync(globSearchPattern, {
       cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles 
@@ -1197,7 +1206,13 @@ exports.getCypressConfigFile = (bsConfig) => {
   if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
     if (bsConfig.run_settings.cypress_config_filename.endsWith("cypress.config.js")) {
       if (bsConfig.run_settings.cypress_config_file && bsConfig.run_settings.cypress_config_filename !== 'false') {
-        cypressConfigFile = require(path.resolve(bsConfig.run_settings.cypressConfigFilePath));
+        console.log('NODE_PATH', process.env.NODE_PATH)
+        process.env.NODE_PATH = '/Users/prajwaldhawarikar/Developer/misc/cypress-test-suite/tmpBstackPackages/node_modules'
+        console.log('NODE_PATH', process.env.NODE_PATH)
+        console.log(fs.existsSync(process.env.NODE_PATH))
+        // cypressConfigFile = require(path.resolve(bsConfig.run_settings.cypressConfigFilePath));
+        const result = spawnSync(`NODE_PATH=/Users/prajwaldhawarikar/Developer/misc/cypress-test-suite/tmpBstackPackages/node_modules node /Users/prajwaldhawarikar/Developer/projects/temp/browserstack-cypress-cli/bin/helpers/requireModule.js ${path.resolve(bsConfig.run_settings.cypressConfigFilePath)}`)
+        console.log(result.toString);
       } else if (bsConfig.run_settings.cypressProjectDir) {
         cypressConfigFile = require(path.join(bsConfig.run_settings.cypressProjectDir, bsConfig.run_settings.cypress_config_filename));
       }
