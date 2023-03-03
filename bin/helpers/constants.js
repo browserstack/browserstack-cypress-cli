@@ -43,8 +43,10 @@ const userMessages = {
     "There was some issue while checking if zip is already uploaded.",
   ZIP_DELETE_FAILED: "Could not delete tests.zip successfully.",
   ZIP_DELETED: "Deleted tests.zip successfully.",
-  NPM_INSTALL_AND_UPLOAD:
-    "Installing required dependencies and building the package to upload to BrowserStack",
+  NPM_INSTALL:
+  "Installing required dependencies",
+  NPM_UPLOAD:
+    "Building the package to upload to BrowserStack",
   NPM_DELETE_FAILED: "Could not delete the dependency packages.",
   NPM_DELETED: "Deleted dependency packages successfully.",
   API_DEPRECATED:
@@ -420,6 +422,8 @@ const CYPRESS_CONFIG_FILE_MAPPING = {
 
 const CYPRESS_CONFIG_FILE_NAMES = Object.keys(CYPRESS_CONFIG_FILE_MAPPING);
 
+const CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS = ['js', 'ts', 'cjs', 'mjs']
+
 module.exports = Object.freeze({
   syncCLI,
   userMessages,
@@ -450,5 +454,6 @@ module.exports = Object.freeze({
   CYPRESS_V9_AND_OLDER_TYPE,
   CYPRESS_V10_AND_ABOVE_TYPE,
   CYPRESS_CONFIG_FILE_MAPPING,
-  CYPRESS_CONFIG_FILE_NAMES
+  CYPRESS_CONFIG_FILE_NAMES,
+  CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS
 });

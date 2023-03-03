@@ -1,5 +1,6 @@
 const fs = require('fs'),
   path = require('path');
+const { readCypressConfigFile } = require('./readCypressConfigUtil');
 
 const logger = require("./logger").winstonLogger,
   Constants = require("./constants"),
@@ -194,34 +195,28 @@ const validate = (bsConfig, args) => {
     logger.debug(`Checking for cypress config file at ${cypressConfigFilePath}`);
     if (!fs.existsSync(cypressConfigFilePath) && bsConfig.run_settings.cypress_config_filename !== 'false') reject(Constants.validationMessages.INVALID_CYPRESS_CONFIG_FILE);
 
-    if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
-      logger.debug(`Validating ${bsConfig.run_settings.cypress_config_filename}`);
-      // TODO: add validations for cypress_config_filename
-    } else {
-      logger.debug("Validating cypress.json");
-      try {
-        if (bsConfig.run_settings.cypress_config_filename !== 'false') {
-          
-          if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
-            if (cypressConfigFilePath.endsWith("cypress.config.js")) {
-              cypressConfigFile = require(cypressConfigFilePath);
-            } else {
-              cypressConfigFile = {};
-            }
-          } else {
-            let cypressJsonContent = fs.readFileSync(cypressConfigFilePath);
-            cypressConfigFile = JSON.parse(cypressJsonContent);
-          }
-
-          // Cypress Json Base Url & Local true check
-          if (!Utils.isUndefined(cypressConfigFile.baseUrl) && cypressConfigFile.baseUrl.includes("localhost") && !Utils.getLocalFlag(bsConfig.connection_settings)) reject(Constants.validationMessages.LOCAL_NOT_SET.replace("<baseUrlValue>", cypressConfigFile.baseUrl));
-
-          // Detect if the user is not using the right directory structure, and throw an error
-          if (!Utils.isUndefined(cypressConfigFile.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,cypressConfigFile.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
+    logger.debug(`Validating ${bsConfig.run_settings.cypress_config_filename}`);
+    try {
+      if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
+        const completeCypressConfigFile = readCypressConfigFile(bsConfig)
+        if (!Utils.isUndefined(completeCypressConfigFile)) {
+          // check if cypress config was exported using export default
+          cypressConfigFile = !Utils.isUndefined(completeCypressConfigFile.default) ? completeCypressConfigFile.default : completeCypressConfigFile
         }
-      } catch(error){
-        reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
+
+        // TODO: add validations for cypress_config_filename
+      } else {
+        let cypressJsonContent = fs.readFileSync(cypressConfigFilePath);
+        cypressConfigFile = JSON.parse(cypressJsonContent);
       }
+
+      // Cypress Json Base Url & Local true check
+      if (!Utils.isUndefined(cypressConfigFile.baseUrl) && cypressConfigFile.baseUrl.includes("localhost") && !Utils.getLocalFlag(bsConfig.connection_settings)) reject(Constants.validationMessages.LOCAL_NOT_SET.replace("<baseUrlValue>", cypressConfigFile.baseUrl));
+
+      // Detect if the user is not using the right directory structure, and throw an error
+      if (!Utils.isUndefined(cypressConfigFile.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,cypressConfigFile.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
+    } catch(error){
+      reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
     }
 
     //check if home_directory is present or not in user run_settings

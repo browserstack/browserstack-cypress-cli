@@ -99,8 +99,7 @@ module.exports = function run(args, rawArgs) {
     // set the no-wrap
     utils.setNoWrap(bsConfig, args);
 
-    // set record feature caps
-    utils.setRecordCaps(bsConfig, args);
+    await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd});
 
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
@@ -139,6 +138,9 @@ module.exports = function run(args, rawArgs) {
 
       // accept the number of parallels
       utils.setParallels(bsConfig, args, specFiles.length);
+
+      // set record feature caps
+      utils.setRecordCaps(bsConfig, args, cypressConfigFile);
 
       // warn if specFiles cross our limit
       utils.warnSpecLimit(bsConfig, args, specFiles, rawArgs, buildReportData);

@@ -28,6 +28,7 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
     obj.startTime = Date.now();
 
     if (opts.urlPresent) {
+      opts.cleanupMethod();
       return resolve({ [opts.md5ReturnKey]: opts.url });
     }
     if (!opts.archivePresent) {

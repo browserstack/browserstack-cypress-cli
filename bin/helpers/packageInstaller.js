@@ -128,16 +128,13 @@ const packageArchiver = (packageDir, packageFile) => {
   })
 }
 
-const packageWrapper = (bsConfig, packageDir, packageFile, md5data, instrumentBlocks) => {
+const packageSetupAndInstaller = (bsConfig, packageDir, instrumentBlocks) => {
   return new Promise(function (resolve) {
     let obj = {
-      packageArchieveCreated: false
+      packagesInstalled: false
     };
-    if (md5data.packageUrlPresent || !utils.isTrueString(bsConfig.run_settings.cache_dependencies)) {
-      logger.debug("Skipping the caching of npm packages since BrowserStack has already cached your npm dependencies that have not changed since the last run.")
-      return resolve(obj);
-    }
-    logger.info(Constants.userMessages.NPM_INSTALL_AND_UPLOAD);
+
+    logger.info(Constants.userMessages.NPM_INSTALL);
     instrumentBlocks.markBlockStart("packageInstaller.folderSetup");
     logger.debug("Started setting up package folder");
     return setupPackageFolder(bsConfig.run_settings, packageDir).then((_result) => {
@@ -150,10 +147,30 @@ const packageWrapper = (bsConfig, packageDir, packageFile, md5data, instrumentBl
     }).then((_result) => {
       logger.debug("Completed installing dependencies");
       instrumentBlocks.markBlockEnd("packageInstaller.packageInstall");
-      instrumentBlocks.markBlockStart("packageInstaller.packageArchive");
-      logger.debug("Started archiving node_modules")
-      return packageArchiver(packageDir, packageFile);
-    }).then((_result) => {
+      Object.assign(obj, { packagesInstalled: true });
+      return resolve(obj);
+    }).catch((err) => {
+      logger.warn(`Error occured while installing npm dependencies. Dependencies will be installed in runtime. This will have a negative impact on performance. Reach out to browserstack.com/contact, if you persistantly face this issue.`);
+      obj.error = err.stack ? err.stack.toString().substring(0,100) : err.toString().substring(0,100);
+      return resolve(obj);
+    })
+  })
+}
+
+const packageWrapper = (bsConfig, packageDir, packageFile, md5data, instrumentBlocks) => {
+  return new Promise(function (resolve) {
+    let obj = {
+      packageArchieveCreated: false
+    };
+    if (md5data.packageUrlPresent || !utils.isTrueString(bsConfig.run_settings.cache_dependencies)) {
+      logger.debug("Skipping the caching of npm packages since BrowserStack has already cached your npm dependencies that have not changed since the last run.")
+      return resolve(obj);
+    }
+    logger.info(Constants.userMessages.NPM_UPLOAD);
+    instrumentBlocks.markBlockStart("packageInstaller.packageArchive");
+    logger.debug("Started archiving node_modules")
+    return packageArchiver(packageDir, packageFile)
+    .then((_result) => {
       logger.debug("Archiving of node_modules completed");
       instrumentBlocks.markBlockEnd("packageInstaller.packageArchive");
       Object.assign(obj, { packageArchieveCreated: true });
@@ -167,3 +184,4 @@ const packageWrapper = (bsConfig, packageDir, packageFile, md5data, instrumentBl
 }
 
 exports.packageWrapper = packageWrapper;
+exports.packageSetupAndInstaller = packageSetupAndInstaller;
