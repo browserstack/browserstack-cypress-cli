@@ -110,6 +110,8 @@ const userMessages = {
     "Value for the 'spec_timeout' key not in the 1-120 range. Going ahead with 30 mins as the default spec timeout. Read more about how to specify the option in https://browserstack.com/docs/automate/cypress/spec-timeout",
   SPEC_LIMIT_SUCCESS_MESSAGE:
     "Spec timeout specified as <x> minutes. If any of your specs exceed the specified time limit, it would be forcibly killed by BrowserStack",
+  NO_CONNECTION_WHILE_UPDATING_UPLOAD_PROGRESS_BAR:
+    "Unable to determine zip upload progress due to undefined/null connection request"
 };
 
 const validationMessages = {
