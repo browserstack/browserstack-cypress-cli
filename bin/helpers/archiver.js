@@ -1,4 +1,5 @@
 'use strict';
+const config = require('./config.js');
 const fs = require("fs"),
     path = require("path");
 
@@ -74,6 +75,14 @@ const archiveSpecs = (runSettings, filePath, excludeFiles, md5data) => {
     if (Object.keys(packageJSON).length > 0) {
       let packageJSONString = JSON.stringify(packageJSON, null, 4);
       archive.append(packageJSONString, {name: `${cypressAppendFilesZipLocation}browserstack-package.json`});
+    }
+
+    //Create copy of package.json
+    if(fs.existsSync('package.json')){
+      let originalPackageJson = JSON.parse(fs.readFileSync('package.json'));
+      let originalPackageJsonString = JSON.stringify(originalPackageJson, null, 4);
+      archive.append(originalPackageJsonString, {name: `${cypressAppendFilesZipLocation}userPackage.json`});
+      logger.debug(`Created copy of package.json in ${config.packageDirName} folder`)
     }
 
     // do not add cypress.json if arg provided is false
