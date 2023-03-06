@@ -197,24 +197,26 @@ const validate = (bsConfig, args) => {
 
     logger.debug(`Validating ${bsConfig.run_settings.cypress_config_filename}`);
     try {
-      if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
-        const completeCypressConfigFile = readCypressConfigFile(bsConfig)
-        if (!Utils.isUndefined(completeCypressConfigFile)) {
-          // check if cypress config was exported using export default
-          cypressConfigFile = !Utils.isUndefined(completeCypressConfigFile.default) ? completeCypressConfigFile.default : completeCypressConfigFile
+      if (bsConfig.run_settings.cypress_config_filename !== 'false') {
+        if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
+          const completeCypressConfigFile = readCypressConfigFile(bsConfig)
+          if (!Utils.isUndefined(completeCypressConfigFile)) {
+            // check if cypress config was exported using export default
+            cypressConfigFile = !Utils.isUndefined(completeCypressConfigFile.default) ? completeCypressConfigFile.default : completeCypressConfigFile
+          }
+
+          // TODO: add validations for cypress_config_filename
+        } else {
+          let cypressJsonContent = fs.readFileSync(cypressConfigFilePath);
+          cypressConfigFile = JSON.parse(cypressJsonContent);
         }
 
-        // TODO: add validations for cypress_config_filename
-      } else {
-        let cypressJsonContent = fs.readFileSync(cypressConfigFilePath);
-        cypressConfigFile = JSON.parse(cypressJsonContent);
+        // Cypress Json Base Url & Local true check
+        if (!Utils.isUndefined(cypressConfigFile.baseUrl) && cypressConfigFile.baseUrl.includes("localhost") && !Utils.getLocalFlag(bsConfig.connection_settings)) reject(Constants.validationMessages.LOCAL_NOT_SET.replace("<baseUrlValue>", cypressConfigFile.baseUrl));
+
+        // Detect if the user is not using the right directory structure, and throw an error
+        if (!Utils.isUndefined(cypressConfigFile.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,cypressConfigFile.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
       }
-
-      // Cypress Json Base Url & Local true check
-      if (!Utils.isUndefined(cypressConfigFile.baseUrl) && cypressConfigFile.baseUrl.includes("localhost") && !Utils.getLocalFlag(bsConfig.connection_settings)) reject(Constants.validationMessages.LOCAL_NOT_SET.replace("<baseUrlValue>", cypressConfigFile.baseUrl));
-
-      // Detect if the user is not using the right directory structure, and throw an error
-      if (!Utils.isUndefined(cypressConfigFile.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,cypressConfigFile.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
     } catch(error){
       reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
     }

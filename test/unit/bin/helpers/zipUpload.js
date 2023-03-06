@@ -94,7 +94,8 @@ describe("zipUpload", () => {
       let opts = {
         urlPresent: true,
         md5ReturnKey: 'returnKey',
-        url: 'bs://random_hash'
+        url: 'bs://random_hash',
+        cleanupMethod: sinon.stub().returns(null)
       }
       let obj = {
         bar1: null,

@@ -456,10 +456,8 @@ describe("packageInstaller", () => {
     });
 
     it("should reject with error if issue in any step", () => {
-      setupPackageFolderErrorStub = sandbox.stub().returns(Promise.reject({message: "test error", stack: "test error stack"}));
+      setupPackageArchiverErrorStub = sandbox.stub().returns(Promise.reject({message: "test error", stack: "test error stack"}));
       packageInstaller.__set__({
-        setupPackageFolder: setupPackageFolderErrorStub,
-        packageInstall:setupPackageInstallStub,
         packageArchiver: setupPackageArchiverStub
       });
       let packageWrapperrewire = packageInstaller.__get__('packageWrapper');

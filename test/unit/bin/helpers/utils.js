@@ -2257,7 +2257,7 @@ describe('utils', () => {
 
   describe('getNumberOfSpecFiles', () => {
     it('glob search pattern should be equal to bsConfig.run_settings.specs', () => {
-      let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
+      let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync').returns([]);
       let bsConfig = {
         run_settings: {
           specs: 'specs',
@@ -2277,7 +2277,7 @@ describe('utils', () => {
     });
 
     it('glob search pattern should be equal to default', () => {
-      let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync');
+      let getNumberOfSpecFilesStub = sinon.stub(glob, 'sync').returns([]);
       let bsConfig = {
         run_settings: {
           cypressProjectDir: 'cypressProjectDir',
@@ -3343,8 +3343,7 @@ describe('utils', () => {
         }
       }
       let args = {};
-      getCypressConfigFileStub.returns({ projectId: "ghi" })
-      expect(utils.setProjectId(bsConfig, args)).to.eq("abc")
+      expect(utils.setProjectId(bsConfig, args, { projectId: "ghi" })).to.eq("abc")
     });
 
     it("prioritizes projectId passed in cypress json when no args, env var and bsConfig is passed", () => {
@@ -3352,8 +3351,7 @@ describe('utils', () => {
         run_settings: {}
       }
       let args = {}
-      getCypressConfigFileStub.returns({ projectId: "ghi" })
-      expect(utils.setProjectId(bsConfig, args)).to.eq("ghi")
+      expect(utils.setProjectId(bsConfig, args, { projectId: "ghi" })).to.eq("ghi")
     });
 
     it("returns undefined when nothing is passed", () => {
@@ -3361,8 +3359,7 @@ describe('utils', () => {
         run_settings: {}
       }
       let args = {}
-      getCypressConfigFileStub.returns({})
-      expect(utils.setProjectId(bsConfig, args)).to.eq(undefined)
+      expect(utils.setProjectId(bsConfig, args, {})).to.eq(undefined)
     });
   });
 
