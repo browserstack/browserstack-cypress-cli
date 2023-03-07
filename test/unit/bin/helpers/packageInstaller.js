@@ -397,8 +397,69 @@ describe("packageInstaller", () => {
     });
   });
 
+  context("packageSetupAndInstaller", () => {
+    let setupPackageFolderStub, setupPackageFolderStubErrorStub, setupPackageInstallStub;
+    let packageDir = "/random/path";
+
+    const packageInstaller = rewire("../../../../bin/helpers/packageInstaller");
+    beforeEach(() => {
+      setupPackageFolderStub = sandbox.stub().returns(Promise.resolve("random"));
+      setupPackageInstallStub = sandbox.stub().returns(Promise.resolve("random"));
+    });
+
+
+    it("should resolve with package exist if all step are successful", () => {
+      packageInstaller.__set__({
+        setupPackageFolder: setupPackageFolderStub,
+        packageInstall: setupPackageInstallStub
+      });
+      let packageSetupAndInstallerrewire = packageInstaller.__get__('packageSetupAndInstaller');
+      let bsConfig = {
+        run_settings: {
+          cache_dependencies: true
+        }
+      };
+
+      let instrumentBlocks = {
+        markBlockStart: sinon.stub(),
+        markBlockEnd: sinon.stub()
+      }
+      return packageSetupAndInstallerrewire(bsConfig, packageDir, instrumentBlocks)
+        .then((data) => {
+          chai.assert.deepEqual(data, {packagesInstalled: true});
+        })
+        .catch((_error) => {
+          chai.assert.fail("Promise error");
+        });
+    });
+
+    it("should reject with error if issue in any step", () => {
+      setupPackageFolderStubErrorStub = sandbox.stub().returns(Promise.reject({message: "test error", stack: "test error stack"}));
+      packageInstaller.__set__({
+        setupPackageFolder: setupPackageFolderStubErrorStub
+      });
+      let packageSetupAndInstallerrewire = packageInstaller.__get__('packageSetupAndInstaller');
+      let bsConfig = {
+        run_settings: {
+          cache_dependencies: true
+        }
+      };
+      let instrumentBlocks = {
+        markBlockStart: sinon.stub(),
+        markBlockEnd: sinon.stub()
+      }
+      return packageSetupAndInstallerrewire(bsConfig, packageDir, instrumentBlocks)
+        .then((data) => {
+          chai.assert.deepEqual(data, { packagesInstalled: false, error: 'test error stack' });
+        })
+        .catch((_error) => {
+          chai.assert.fail("Promise error");
+        });
+    });
+  });
+
   context("packageWrapper", () => {
-    let setupPackageFolderStub, setupPackageFolderErrorStub, setupPackageInstallStub, setupPackageArchiverStub;
+    let setupPackageFolderStub, setupPackageArchiverErrorStub, setupPackageInstallStub, setupPackageArchiverStub;
     let packageDir = "/random/path";
     let packageFile = "/random/path/to/file";
     const packageInstaller = rewire("../../../../bin/helpers/packageInstaller");
@@ -431,8 +492,6 @@ describe("packageInstaller", () => {
 
     it("should resolve with package exist if all step are successful", () => {
       packageInstaller.__set__({
-        setupPackageFolder: setupPackageFolderStub,
-        packageInstall:setupPackageInstallStub,
         packageArchiver: setupPackageArchiverStub
       });
       let packageWrapperrewire = packageInstaller.__get__('packageWrapper');
@@ -458,7 +517,7 @@ describe("packageInstaller", () => {
     it("should reject with error if issue in any step", () => {
       setupPackageArchiverErrorStub = sandbox.stub().returns(Promise.reject({message: "test error", stack: "test error stack"}));
       packageInstaller.__set__({
-        packageArchiver: setupPackageArchiverStub
+        packageArchiver: setupPackageArchiverErrorStub
       });
       let packageWrapperrewire = packageInstaller.__get__('packageWrapper');
       let bsConfig = {
