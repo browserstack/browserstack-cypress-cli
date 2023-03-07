@@ -24,6 +24,7 @@ config.packageFileName = "bstackPackages.tar.gz";
 config.packageDirName = "tmpBstackPackages";
 config.retries = 5;
 config.networkErrorExitCode = 2;
+config.compiledConfigJsDirName = 'tmpBstackCompiledJs'
 config.configJsonFileName = 'tmpCypressConfig.json'
 
 module.exports = config;

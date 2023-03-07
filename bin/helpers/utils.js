@@ -999,7 +999,6 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
         globCypressConfigSpecPatterns = Array.isArray(cypressConfig.e2e.specPattern) ?
           cypressConfig.e2e.specPattern : [cypressConfig.e2e.specPattern];
       } else {
-        console.log('herer', [`${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`])
         globCypressConfigSpecPatterns = [`${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`]
       }
     } else {
@@ -1008,7 +1007,6 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
     }
   } else {
     defaultSpecFolder = Constants.DEFAULT_CYPRESS_SPEC_PATH
-    // console.log('cypressConfig.integrationFolder',  cypressConfig.integrationFolder)
     let testFolderPath = cypressConfig.integrationFolder && cypressConfig.integrationFolder !== '.' ?
       cypressConfig.integrationFolder : defaultSpecFolder;
     if(!this.isUndefined(cypressConfig.testFiles)) {
@@ -1017,16 +1015,15 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
           globCypressConfigSpecPatterns.push(`${testFolderPath}/${specPattern}`)
         });
       } else {
-        globCypressConfigSpecPatterns = [`${testFolderPath}/${specPattern}`]
+        globCypressConfigSpecPatterns = [`${testFolderPath}/${cypressConfig.testFiles}`]
       }
     } else {
       globCypressConfigSpecPatterns = [`${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`]
     }
   }
 
-  let ignoreFiles = args.exclude || bsConfig.run_settings.exclude;
-  // TODO: remove console logs
-  let fileMatchedWithConfigSpecPattern = [];
+  let ignoreFiles = args.exclude || bsConfig.run_settings.exclude
+  let fileMatchedWithConfigSpecPattern = []
   globCypressConfigSpecPatterns.forEach(specPattern => {
     fileMatchedWithConfigSpecPattern.push(
       ...glob.sync(specPattern, {
@@ -1034,20 +1031,20 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
       })
     );
   });
-  
-  console.log('configSpecPattern', fileMatchedWithConfigSpecPattern)
-  let files
+  fileMatchedWithConfigSpecPattern = fileMatchedWithConfigSpecPattern.map((file) => path.resolve(bsConfig.run_settings.cypressProjectDir, file))
 
+  let files
   if (globSearchPattern) {
     let fileMatchedWithBstackSpecPattern = glob.sync(globSearchPattern, {
       cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles 
     });
-    console.log('specArg', fileMatchedWithBstackSpecPattern);
+    fileMatchedWithBstackSpecPattern = fileMatchedWithBstackSpecPattern.map((file) => path.resolve(bsConfig.run_settings.cypressProjectDir, file))
+
     files = fileMatchedWithBstackSpecPattern.filter(file => fileMatchedWithConfigSpecPattern.includes(file))
   } else {
     files = fileMatchedWithConfigSpecPattern;
   }
-  console.log('files', files)
+
   logger.debug(`${files ? files.length : 0} spec files found`);
   return files;
 };

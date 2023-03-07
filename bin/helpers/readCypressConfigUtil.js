@@ -7,31 +7,83 @@ const config = require('./config');
 const constants = require("./constants");
 const logger = require('./logger').winstonLogger;
 
-const detectLanguage = (cypress_config_filename) => {
+exports.detectLanguage = (cypress_config_filename) => {
     const extension = cypress_config_filename.split('.').pop()
     return constants.CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS.includes(extension) ? extension : 'js'
 }
 
-exports.readCypressConfigFile = (bsConfig) => {
+exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_modules_path) => {
+    const cypress_config_filename = bsConfig.run_settings.cypress_config_filename
+    const working_dir = path.dirname(cypress_config_filepath);
+    const complied_js_dir = path.join(working_dir, config.compiledConfigJsDirName)
+    execSync(`rm -rf ${config.compiledConfigJsDirName}`, { cwd: working_dir })
+    execSync(`mkdir ${config.compiledConfigJsDirName}`, { cwd: working_dir })
+
+    let tsc_command = `NODE_PATH=${bstack_node_modules_path} ${bstack_node_modules_path}/typescript/bin/tsc --outDir ${complied_js_dir} --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false ${cypress_config_filepath}`
+    let tsc_output
+
     try {
-        const cypress_config_filepath = path.resolve(bsConfig.run_settings.cypressConfigFilePath)
+        logger.debug(`Running: ${tsc_command}`)
+        tsc_output = execSync(tsc_command, { cwd: working_dir })
+    } catch (err) {
+        // error while compiling ts files
+        logger.debug(err.message);
+        logger.debug(err.output.toString());
+        tsc_output = err.output // if there is an error, tsc adds output of complilation to err.output key
+    } finally {
+        logger.debug(`Saved compiled js output at: ${complied_js_dir}`);
+        logger.debug(`Finding compiled cypress config file in: ${complied_js_dir}`);
+
+        const lines = tsc_output.toString().split('\n');
+        let foundLine = null;
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].indexOf(`${path.parse(cypress_config_filename).name}.js`) > -1) {
+                foundLine = lines[i]
+                break;
+            }
+        }
+        if (foundLine === null) {
+            logger.error(`No compiled cypress config found. There might some error running ${tsc_command} command`)
+            return null
+        } else {
+            const compiled_cypress_config_filepath = foundLine.split('TSFILE: ').pop()
+            logger.debug(`Found compiled cypress config file: ${compiled_cypress_config_filepath}`);
+            return compiled_cypress_config_filepath
+        }
+    }
+}
+
+exports.loadJsFile =  (cypress_config_filepath, bstack_node_modules_path) => {
+    const require_module_helper_path = `${__dirname}/requireModule.js`
+    execSync(`NODE_PATH=${bstack_node_modules_path} node ${require_module_helper_path} ${cypress_config_filepath}`)
+    const cypress_config = JSON.parse(fs.readFileSync(config.configJsonFileName).toString())
+    if (fs.existsSync(config.configJsonFileName)) {
+        fs.unlinkSync(config.configJsonFileName)
+    }
+    return cypress_config
+}
+
+exports.readCypressConfigFile = (bsConfig) => {
+    const cypress_config_filepath = path.resolve(bsConfig.run_settings.cypressConfigFilePath)
+    try {
         const cypress_config_filename = bsConfig.run_settings.cypress_config_filename
         const bstack_node_modules_path = `${path.resolve(config.packageDirName)}/node_modules`
-        const conf_lang = detectLanguage(cypress_config_filename)
-        const require_module_helper_path = `${__dirname}/requireModule.js`
+        const conf_lang = this.detectLanguage(cypress_config_filename)
 
         logger.debug(`cypress config path: ${cypress_config_filepath}`);
 
         if (conf_lang == 'js' || conf_lang == 'cjs') {
-            execSync(`NODE_PATH=${bstack_node_modules_path} node ${require_module_helper_path} ${cypress_config_filepath}`)
-            const cypress_config = JSON.parse(fs.readFileSync(config.configJsonFileName).toString())
-            if (fs.existsSync(config.configJsonFileName)) {
-                fs.unlinkSync(config.configJsonFileName)
-            }
-            return cypress_config
+            return this.loadJsFile(cypress_config_filepath, bstack_node_modules_path)
+        } else if (conf_lang === 'ts') {
+            const compiled_cypress_config_filepath = this.convertTsConfig(bsConfig, cypress_config_filepath, bstack_node_modules_path)
+            return this.loadJsFile(compiled_cypress_config_filepath, bstack_node_modules_path)
         }
     } catch (error) {
         logger.error(`Error while reading cypress config: ${error.message}`)
+
         // TODO: Add instrumention if error occurred
+    } finally {
+        const working_dir = path.dirname(cypress_config_filepath);
+        execSync(`rm -rf ${config.compiledConfigJsDirName}`, { cwd: working_dir })
     }
 }
