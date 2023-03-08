@@ -1051,6 +1051,7 @@ exports.setNetworkLogs = (bsConfig) => {
   } else {
     bsConfig.run_settings.networkLogs = 'false'
   }
+  logger.debug(`Networks logs value: ${bsConfig.run_settings.networkLogs}`);
 }
 
 exports.versionChangedMessage = (preferredVersion, actualVersion, frameworkUpgradeMessage = '') => {
