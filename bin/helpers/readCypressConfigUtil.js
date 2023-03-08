@@ -5,6 +5,7 @@ const cp = require('child_process');
 
 const config = require('./config');
 const constants = require("./constants");
+const utils = require("./utils");
 const logger = require('./logger').winstonLogger;
 
 exports.detectLanguage = (cypress_config_filename) => {
@@ -78,9 +79,18 @@ exports.readCypressConfigFile = (bsConfig) => {
             return this.loadJsFile(compiled_cypress_config_filepath, bstack_node_modules_path)
         }
     } catch (error) {
-        logger.error(`Error while reading cypress config: ${error.message}`)
-
-        // TODO: Add instrumention if error occurred
+        const errorMessage = `Error while reading cypress config: ${error.message}`
+        const errorCode = 'cypress_config_file_read_failed'
+        logger.error(errorMessage)
+        utils.sendUsageReport(
+            bsConfig,
+            null,
+            errorMessage,
+            constants.messageTypes.WARNING,
+            errorCode,
+            null,
+            null
+        )
     } finally {
         const working_dir = path.dirname(cypress_config_filepath);
         cp.execSync(`rm -rf ${config.compiledConfigJsDirName}`, { cwd: working_dir })

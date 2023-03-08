@@ -8,7 +8,7 @@ const logger = require("../../../../bin/helpers/logger").winstonLogger;
 
 const cp = require("child_process");
 const fs = require("fs");
-const rewire = require("rewire");
+const utils = require("../../../../bin/helpers/utils");
 const  readCypressConfigUtil = require("../../../../bin/helpers/readCypressConfigUtil");
 
 logger.transports["console.info"].silent = true;
@@ -133,6 +133,28 @@ describe("readCypressConfigUtil", () => {
             const result =  readCypressConfigUtil.readCypressConfigFile(bsConfig);
 
             expect(result).to.eql({ e2e: {} });
+        });
+
+        it('should handle error if any error occurred', () => {
+            const bsConfig = {
+                run_settings: {
+                    cypressConfigFilePath: 'path/to/cypress.config.js',
+                    cypress_config_filename: 'cypress.config.js'
+                }
+            };
+            sandbox.stub(readCypressConfigUtil, 'loadJsFile').throws(new Error("Some error"));
+            const sendUsageReportStub = sandbox.stub(utils, 'sendUsageReport');
+            sandbox.stub(cp, 'execSync');
+
+            const result =  readCypressConfigUtil.readCypressConfigFile(bsConfig);
+
+            expect(result).to.eql(undefined);
+            sinon.assert.calledWithExactly(sendUsageReportStub, {
+                run_settings: {
+                    cypressConfigFilePath: 'path/to/cypress.config.js',
+                    cypress_config_filename: 'cypress.config.js'
+                }
+            }, null, 'Error while reading cypress config: Some error', 'warning','cypress_config_file_read_failed', null, null)
         });
     });
 });
