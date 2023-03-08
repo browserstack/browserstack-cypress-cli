@@ -808,7 +808,7 @@ describe("runs", () => {
   });
 
 
-  describe.only("handle createBuild success", () => {
+  describe("handle createBuild success", () => {
     var sandbox;
 
     beforeEach(() => {

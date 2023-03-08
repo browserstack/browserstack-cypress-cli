@@ -1,7 +1,7 @@
 "use strict";
 const path = require("path");
 const fs = require("fs");
-const { execSync } = require('child_process');
+const cp = require('child_process');
 
 const config = require('./config');
 const constants = require("./constants");
@@ -16,15 +16,14 @@ exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_module
     const cypress_config_filename = bsConfig.run_settings.cypress_config_filename
     const working_dir = path.dirname(cypress_config_filepath);
     const complied_js_dir = path.join(working_dir, config.compiledConfigJsDirName)
-    execSync(`rm -rf ${config.compiledConfigJsDirName}`, { cwd: working_dir })
-    execSync(`mkdir ${config.compiledConfigJsDirName}`, { cwd: working_dir })
+    cp.execSync(`rm -rf ${config.compiledConfigJsDirName}`, { cwd: working_dir })
+    cp.execSync(`mkdir ${config.compiledConfigJsDirName}`, { cwd: working_dir })
 
     let tsc_command = `NODE_PATH=${bstack_node_modules_path} ${bstack_node_modules_path}/typescript/bin/tsc --outDir ${complied_js_dir} --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false ${cypress_config_filepath}`
     let tsc_output
-
     try {
         logger.debug(`Running: ${tsc_command}`)
-        tsc_output = execSync(tsc_command, { cwd: working_dir })
+        tsc_output = cp.execSync(tsc_command, { cwd: working_dir })
     } catch (err) {
         // error while compiling ts files
         logger.debug(err.message);
@@ -55,7 +54,7 @@ exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_module
 
 exports.loadJsFile =  (cypress_config_filepath, bstack_node_modules_path) => {
     const require_module_helper_path = `${__dirname}/requireModule.js`
-    execSync(`NODE_PATH=${bstack_node_modules_path} node ${require_module_helper_path} ${cypress_config_filepath}`)
+    cp.execSync(`NODE_PATH=${bstack_node_modules_path} node ${require_module_helper_path} ${cypress_config_filepath}`)
     const cypress_config = JSON.parse(fs.readFileSync(config.configJsonFileName).toString())
     if (fs.existsSync(config.configJsonFileName)) {
         fs.unlinkSync(config.configJsonFileName)
@@ -84,6 +83,6 @@ exports.readCypressConfigFile = (bsConfig) => {
         // TODO: Add instrumention if error occurred
     } finally {
         const working_dir = path.dirname(cypress_config_filepath);
-        execSync(`rm -rf ${config.compiledConfigJsDirName}`, { cwd: working_dir })
+        cp.execSync(`rm -rf ${config.compiledConfigJsDirName}`, { cwd: working_dir })
     }
 }
