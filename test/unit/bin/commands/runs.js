@@ -124,6 +124,7 @@ describe("runs", () => {
       setRecordCapsStub = sandbox.stub().returns(undefined);
       setNodeVersionStub = sandbox.stub();
       setBuildTagsStub = sandbox.stub();
+      setNetworkLogsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -170,7 +171,8 @@ describe("runs", () => {
           setRecordCaps: setRecordCapsStub,
           setDebugMode: setDebugModeStub,
           setNodeVersion: setNodeVersionStub,
-          setBuildTags: setBuildTagsStub
+          setBuildTags: setBuildTagsStub,
+          setNetworkLogs: setNetworkLogsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub
@@ -221,6 +223,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnce(setNodeVersionStub);
           sinon.assert.calledOnce(setBuildTagsStub);
+          sinon.assert.calledOnce(setNetworkLogsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -284,6 +287,7 @@ describe("runs", () => {
       setRecordCapsStub = sandbox.stub().returns(undefined);
       setNodeVersionStub = sandbox.stub();
       setBuildTagsStub = sandbox.stub();
+      setNetworkLogsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -333,7 +337,8 @@ describe("runs", () => {
           setRecordCaps: setRecordCapsStub,
           setDebugMode: setDebugModeStub,
           setNodeVersion: setNodeVersionStub,
-          setBuildTags: setBuildTagsStub
+          setBuildTags: setBuildTagsStub,
+          setNetworkLogs: setNetworkLogsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -403,6 +408,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnce(setNodeVersionStub);
           sinon.assert.calledOnce(setBuildTagsStub);
+          sinon.assert.calledOnce(setNetworkLogsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -468,6 +474,7 @@ describe("runs", () => {
       setRecordCapsStub = sandbox.stub().returns(undefined);
       setNodeVersionStub = sandbox.stub();
       setBuildTagsStub = sandbox.stub();
+      setNetworkLogsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -518,7 +525,8 @@ describe("runs", () => {
           setRecordCaps: setRecordCapsStub,
           setDebugMode: setDebugModeStub,
           setNodeVersion: setNodeVersionStub,
-          setBuildTags: setBuildTagsStub
+          setBuildTags: setBuildTagsStub,
+          setNetworkLogs: setNetworkLogsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -590,6 +598,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnce(setNodeVersionStub);
           sinon.assert.calledOnce(setBuildTagsStub);
+          sinon.assert.calledOnce(setNetworkLogsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -660,6 +669,7 @@ describe("runs", () => {
       setRecordCapsStub = sandbox.stub().returns(undefined);
       setNodeVersionStub = sandbox.stub();
       setBuildTagsStub = sandbox.stub();
+      setNetworkLogsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -711,7 +721,8 @@ describe("runs", () => {
           setRecordCaps: setRecordCapsStub,
           setDebugMode: setDebugModeStub,
           setNodeVersion: setNodeVersionStub,
-          setBuildTags: setBuildTagsStub
+          setBuildTags: setBuildTagsStub,
+          setNetworkLogs: setNetworkLogsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -793,7 +804,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnce(setNodeVersionStub);
           sinon.assert.calledOnce(setBuildTagsStub);
-
+          sinon.assert.calledOnce(setNetworkLogsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -877,6 +888,7 @@ describe("runs", () => {
       setRecordCapsStub = sandbox.stub().returns(undefined);
       setNodeVersionStub = sandbox.stub();
       setBuildTagsStub = sandbox.stub();
+      setNetworkLogsStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -936,7 +948,8 @@ describe("runs", () => {
           setRecordCaps: setRecordCapsStub,
           setDebugMode: setDebugModeStub,
           setNodeVersion: setNodeVersionStub,
-          setBuildTags: setBuildTagsStub
+          setBuildTags: setBuildTagsStub,
+          setNetworkLogs: setNetworkLogsStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -1035,6 +1048,7 @@ describe("runs", () => {
           sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnce(setNodeVersionStub);
           sinon.assert.calledOnce(setBuildTagsStub);
+          sinon.assert.calledOnce(setNetworkLogsStub);
           sinon.assert.match(
             sendUsageReportStub.getCall(0).args,
             [
