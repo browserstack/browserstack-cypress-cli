@@ -3148,6 +3148,52 @@ describe('utils', () => {
     });
   });
 
+  describe('setNetworkLogs', () => {
+    it('should return true if networkLogs is passed as boolean true', () => {
+      let bsConfig = {
+        run_settings: { networkLogs: true }
+      };
+      let expectResult = {
+        run_settings: { networkLogs: 'true' }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return true if networkLogs is passed as string true', () => {
+      let bsConfig = {
+        run_settings: { networkLogs: "true" }
+      };
+      let expectResult = {
+        run_settings: { networkLogs: "true" }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return false if networkLogs is passed as any other non true value', () => {
+      let bsConfig = {
+        run_settings: { networkLogs: "abc" }
+      };
+      let expectResult = {
+        run_settings: { networkLogs: "false" }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return false if networkLogs is not passed', () => {
+      let bsConfig = {
+        run_settings: { }
+      };
+      let expectResult = {
+        run_settings: { networkLogs: "false" }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+  });
+
   describe('isSpecTimeoutArgPassed', () => {
     let searchForOptionStub;
     beforeEach(() => {
