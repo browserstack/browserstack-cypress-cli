@@ -2396,7 +2396,6 @@ describe('utils', () => {
       };
 
       const result =  utils.getNumberOfSpecFiles(bsConfig, {}, { e2e: {}});
-      console.log(result)
       expect(result.length).to.eql(1);
       expect(result[0].endsWith('cypress/e2e/foo_1.js')).to.eql(true);
       sinon.assert.calledTwice(globStub)
@@ -2519,7 +2518,6 @@ describe('utils', () => {
       };
 
       const result =  utils.getNumberOfSpecFiles(bsConfig, {}, null);
-      console.log(result)
       expect(result.length).to.eql(1);
       expect(result[0].endsWith('cypress/e2e/foo_1.js')).to.eql(true);
       sinon.assert.alwaysCalledWithExactly(globStub, 'cypress/e2e/foo*.js', {
@@ -2547,7 +2545,6 @@ describe('utils', () => {
       };
 
       const result =  utils.getNumberOfSpecFiles(bsConfig, {}, null);
-      console.log(result)
       expect(result.length).to.eql(3);
       expect(result[0].endsWith('cypress/e2e/foo_1.js')).to.eql(true);
       sinon.assert.calledWithExactly(globStub, `cypress/e2e/**/*.+(${constant.specFileTypes.join('|')})`, {
