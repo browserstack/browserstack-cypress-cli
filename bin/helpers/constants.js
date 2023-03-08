@@ -110,6 +110,8 @@ const userMessages = {
     "Value for the 'spec_timeout' key not in the 1-120 range. Going ahead with 30 mins as the default spec timeout. Read more about how to specify the option in https://browserstack.com/docs/automate/cypress/spec-timeout",
   SPEC_LIMIT_SUCCESS_MESSAGE:
     "Spec timeout specified as <x> minutes. If any of your specs exceed the specified time limit, it would be forcibly killed by BrowserStack",
+  NO_CONNECTION_WHILE_UPDATING_UPLOAD_PROGRESS_BAR:
+    "Unable to determine zip upload progress due to undefined/null connection request"
 };
 
 const validationMessages = {
@@ -120,7 +122,7 @@ const validationMessages = {
   EMPTY_RUN_SETTINGS: "Empty run settings",
   EMPTY_CYPRESS_PROJ_DIR:
     "cypress_proj_dir is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/sample-tutorial to learn more.",
-  EMPTY_CYPRESS_CONFIG_FILE: 
+  EMPTY_CYPRESS_CONFIG_FILE:
     "cypress_config_file is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/configuration-file to learn more.",
   VALIDATED: "browserstack.json file is validated",
   NOT_VALID: "browerstack.json is not valid",
@@ -129,9 +131,9 @@ const validationMessages = {
   INVALID_PARALLELS_CONFIGURATION:
     "Invalid value specified for parallels to use. Maximum parallels to use should be a number greater than 0.",
   INVALID_CYPRESS_CONFIG_FILE: "Invalid cypress_config_file",
-  CYPRESS_CONFIG_FILE_NOT_FOUND: 
+  CYPRESS_CONFIG_FILE_NOT_FOUND:
     "No cypress config file was found at <location> directory.",
-  MORE_THAN_ONE_CYPRESS_CONFIG_FILE_FOUND: 
+  MORE_THAN_ONE_CYPRESS_CONFIG_FILE_FOUND:
     "Cypress does not allow more than one cypress config file.",
   INVALID_CYPRESS_JSON: "cypress.json is not a valid json",
   INVALID_DEFAULT_AUTH_PARAMS:
@@ -309,16 +311,21 @@ const allowedFileTypes = [
   "mjpeg",
   "y4m",
   "tsx",
-  "pfx"
+  "pfx",
+  "cfr",
 ];
 
 const filesToIgnoreWhileUploading = [
   "**/node_modules/**",
   "node_modules/**",
   "package-lock.json",
+  "**/package-lock.json",
   "package.json",
+  "**/package.json",
   "browserstack-package.json",
+  "**/browserstack-package.json",
   "tests.zip",
+  "**/tests.zip",
   "cypress.json",
   "cypress.config.js",
   "cypress.config.ts",

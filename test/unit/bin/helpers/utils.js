@@ -23,6 +23,7 @@ const utils = require('../../../../bin/helpers/utils'),
   syncLogger = require('../../../../bin/helpers/logger').syncCliLogger,
   Contants = require('../../../../bin/helpers/constants');
 const browserstack = require('browserstack-local');
+const { CYPRESS_V10_AND_ABOVE_TYPE, CYPRESS_V9_AND_OLDER_TYPE } = require('../../../../bin/helpers/constants');
 chai.use(chaiAsPromised);
 logger.transports['console.info'].silent = true;
 
@@ -1042,6 +1043,13 @@ describe('utils', () => {
     });
   });
 
+  describe('getDirectorySize', () => {
+    it('should return size of directory', async() => {
+      expect(await utils.fetchFolderSize('/absolute/path')).to
+        .be.equal(0);
+    });
+  });
+
   describe('getLocalFlag', () => {
     it('should return false if connectionSettings is undefined', () => {
       expect(utils.getLocalFlag(undefined)).to.be.false;
@@ -1834,7 +1842,7 @@ describe('utils', () => {
   describe('setCypressTestSuiteType', () => {
 
     it('sets correct cypressTestSuiteType when cypress.json is the cypress config file ', () => {
-      bsConfig = {
+      let bsConfig = {
         run_settings: {
           cypressConfigFilePath: 'cypress.json',
         },
@@ -1846,7 +1854,7 @@ describe('utils', () => {
     });
 
     it('sets correct cypressTestSuiteType when cypress.config.js|.ts|.cjs|.mjs is the cypress config file ', () => {
-      bsConfig = {
+      let bsConfig = {
         run_settings: {
           cypressConfigFilePath: 'cypress.config.js',
         },
@@ -1880,7 +1888,7 @@ describe('utils', () => {
     });
 
     it('by default assumes that CYPRESS_V9_AND_OLDER_TYPE is the test suite type', () => {
-      bsConfig = {
+      let bsConfig = {
         run_settings: {},
       };
       utils.setCypressTestSuiteType(bsConfig);
@@ -3522,4 +3530,82 @@ describe('utils', () => {
       expect(utils.getMajorVersion('4.1')).to.be.eql('4');
     });
   });
+
+  describe('#setCypressNpmDependency', () => {
+    
+    it('should set cypress as latest for cypress 10 test suite if cypress_version missing', () => {
+      let bsConfig = {
+        run_settings: {
+          cypressConfigFilePath: 'cypress.json',
+          npm_dependencies: {
+            "dummy": "verison"
+          },
+          cypressTestSuiteType: CYPRESS_V10_AND_ABOVE_TYPE
+        },        
+      };
+      utils.setCypressNpmDependency(bsConfig);
+      chai.assert.equal(bsConfig.run_settings.npm_dependencies.cypress, "latest");
+    });
+
+    it('should set cypress as ^10 if cypress version added', () => {
+      let bsConfig = {
+        run_settings: {
+          cypress_version: "10.latest",
+          cypressConfigFilePath: 'cypress.json',
+          npm_dependencies: {
+            "dummy": "verison"
+          },
+          cypressTestSuiteType: CYPRESS_V10_AND_ABOVE_TYPE
+        },        
+      };
+      utils.setCypressNpmDependency(bsConfig);
+      chai.assert.equal(bsConfig.run_settings.npm_dependencies.cypress, "^10");
+    });
+
+    it('should set cypress as ^10 if cypress version added', () => {
+      let bsConfig = {
+        run_settings: {
+          cypress_version: "10.latest",
+          cypressConfigFilePath: 'cypress.json',
+          npm_dependencies: {
+            "dummy": "verison"
+          },
+          cypressTestSuiteType: CYPRESS_V10_AND_ABOVE_TYPE
+        },        
+      };
+      utils.setCypressNpmDependency(bsConfig);
+      chai.assert.equal(bsConfig.run_settings.npm_dependencies.cypress, "^10");
+    });
+
+    it('should set cypress as 10.0.0 if cypress version added', () => {
+      let bsConfig = {
+        run_settings: {
+          cypress_version: "10.0.0",
+          cypressConfigFilePath: 'cypress.json',
+          npm_dependencies: {
+            "dummy": "verison"
+          },
+          cypressTestSuiteType: CYPRESS_V10_AND_ABOVE_TYPE
+        },        
+      };
+      utils.setCypressNpmDependency(bsConfig);
+      chai.assert.equal(bsConfig.run_settings.npm_dependencies.cypress, "^10");
+    });
+
+    it('should not set cypress for < 9 cypress version if cypress_version missing', () => {
+      let bsConfig = {
+        run_settings: {
+          cypressConfigFilePath: 'cypress.json',
+          npm_dependencies: {
+            "dummy": "verison"
+          },
+          cypressTestSuiteType: CYPRESS_V9_AND_OLDER_TYPE
+        },        
+      };
+      utils.setCypressNpmDependency(bsConfig);
+      chai.assert.equal(bsConfig.run_settings.npm_dependencies.cypress, undefined);
+    });
+  });
+
+    
 });

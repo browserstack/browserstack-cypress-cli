@@ -8,6 +8,9 @@ const { v4: uuidv4 } = require('uuid');
 const browserstack = require('browserstack-local');
 const crypto = require('crypto');
 const util = require('util');
+const { promisify } = require('util');
+const readdir = promisify(fs.readdir);
+const stat = promisify(fs.stat);
 
 const usageReporting = require("./usageReporting"),
   logger = require("./logger").winstonLogger,
@@ -326,6 +329,23 @@ exports.setCypressTestSuiteType = (bsConfig) => {
   }
 
   logger.debug(`Setting cypress test suite type as ${bsConfig.run_settings.cypressTestSuiteType}`);
+}
+
+exports.setCypressNpmDependency = (bsConfig) => {
+  const runSettings = bsConfig.run_settings;
+  if (runSettings.npm_dependencies !== undefined && 
+    Object.keys(runSettings.npm_dependencies).length !== 0 &&
+    typeof runSettings.npm_dependencies === 'object') {
+    if (!("cypress" in runSettings.npm_dependencies) && runSettings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
+      logger.warn("Missing cypress not found in npm_dependencies");        
+      if("cypress_version" in runSettings){
+        runSettings.npm_dependencies.cypress = `^${runSettings.cypress_version.toString().split(".")[0]}`;
+      } else if (runSettings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE)  {
+        runSettings.npm_dependencies.cypress = "latest";
+      }
+      logger.warn(`Adding cypress version ${runSettings.npm_dependencies.cypress} in npm_dependencies`);
+    }
+  }
 }
 
 exports.verifyGeolocationOption = () => {
@@ -1282,6 +1302,34 @@ exports.fetchZipSize = (fileName) => {
     return stats.size; // in bytes
   }
   catch(err) {
+    return 0;
+  }
+}
+
+const getDirectorySize = async function(dir) {
+  try{
+    const subdirs = (await readdir(dir));
+    const files = await Promise.all(subdirs.map(async (subdir) => {
+      const res = path.resolve(dir, subdir);
+      const s = (await stat(res));
+      return s.isDirectory() ? getDirectorySize(res) : (s.size);
+    }));
+    return files.reduce((a, f) => a+f, 0);
+  }catch(e){
+    console.log(`Error ${e}`)
+    logger.debug('Failed to get file or directory.');
+    return 0;
+  }
+};
+
+exports.fetchFolderSize = async (dir) => {
+  try {
+    if(fs.existsSync(dir)){
+      return (await getDirectorySize(dir) / 1024 / 1024);
+    }
+    return 0;
+  } catch (error) {
+    logger.debug(`Failed to get directory size.`);
     return 0;
   }
 }
