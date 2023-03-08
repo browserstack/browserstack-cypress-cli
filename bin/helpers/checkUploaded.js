@@ -86,6 +86,7 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
       zipUrlPresent: false,
       packageUrlPresent: false,
     };
+    utils.setCypressNpmDependency(bsConfig);
     if (args["force-upload"]) {
       logger.debug("force-upload set to true. Uploading tests and npm packages.");
       return resolve(obj);
