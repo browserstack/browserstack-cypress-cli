@@ -287,7 +287,7 @@ const validate = (bsConfig, args) => {
         logger.warn(Constants.validationMessages.NODE_VERSION_PARSING_ERROR);
 
     if(!Utils.isUndefined(cypressConfigFile.port)) {
-      logger.warn(`The requested port number ${cypressConfigFile.port} is ignored. The default BrowserStack port will be used for this execution`);
+      logger.warn(Constants.userMessages.CYPRESS_PORT_WARNING.replace("<x>", cypressConfigFile.port));
     }
     resolve(cypressConfigFile);
   });

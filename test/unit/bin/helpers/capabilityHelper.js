@@ -1063,7 +1063,7 @@ describe("capabilityHelper.js", () => {
         await capabilityHelper
           .validate(bsConfig, { parallels: 2 })
 
-        sinon.assert.calledWith(loggerWarningSpy, `The requested port number 23455 is ignored. The default BrowserStack port will be used for this execution`);
+        sinon.assert.calledWith(loggerWarningSpy, Constants.userMessages.CYPRESS_PORT_WARNING.replace('<x>', 23455));
         fs.existsSync.restore();
         fs.readFileSync.restore();
       });

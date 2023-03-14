@@ -113,7 +113,9 @@ const userMessages = {
   SPEC_LIMIT_SUCCESS_MESSAGE:
     "Spec timeout specified as <x> minutes. If any of your specs exceed the specified time limit, it would be forcibly killed by BrowserStack",
   NO_CONNECTION_WHILE_UPDATING_UPLOAD_PROGRESS_BAR:
-    "Unable to determine zip upload progress due to undefined/null connection request"
+    "Unable to determine zip upload progress due to undefined/null connection request",
+  CYPRESS_PORT_WARNING:
+    "The requested port number <x> is ignored. The default BrowserStack port will be used for this execution"
 };
 
 const validationMessages = {
