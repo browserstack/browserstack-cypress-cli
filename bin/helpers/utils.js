@@ -990,6 +990,7 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
   let testFolderPath
   let globCypressConfigSpecPatterns = []
   let globSearchPattern = this.sanitizeSpecsPattern(bsConfig.run_settings.specs);
+  let ignoreFiles = args.exclude || bsConfig.run_settings.exclude
 
   if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
     defaultSpecFolder = Constants.DEFAULT_CYPRESS_10_SPEC_PATH
@@ -1002,8 +1003,21 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
         globCypressConfigSpecPatterns = [`${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`]
       }
     } else {
-      // if not able read cypress config, use bstack specs arg(existing logic, which is not correct)
+      // if not able read cypress config
+      // use bstack specs arg(existing logic, which is not correct) if bstack specs arg not provided check for cypress/e2e folder
       globCypressConfigSpecPatterns = globSearchPattern ? [globSearchPattern] : [`${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`]
+      const filesMatched = [];
+      globCypressConfigSpecPatterns.forEach(specPattern => {
+        filesMatched.push(
+          ...glob.sync(specPattern, {
+            cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles
+          })
+        );
+      });
+      if (!filesMatched.length) {
+        // if no files found under cypress/e2e check for cypress/integration
+        globCypressConfigSpecPatterns = [`${Constants.DEFAULT_CYPRESS_SPEC_PATH}/**/*.+(${Constants.specFileTypes.join("|")})`]
+      }
     }
   } else {
     defaultSpecFolder = Constants.DEFAULT_CYPRESS_SPEC_PATH
@@ -1022,7 +1036,6 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
     }
   }
 
-  let ignoreFiles = args.exclude || bsConfig.run_settings.exclude
   let fileMatchedWithConfigSpecPattern = []
   globCypressConfigSpecPatterns.forEach(specPattern => {
     fileMatchedWithConfigSpecPattern.push(
