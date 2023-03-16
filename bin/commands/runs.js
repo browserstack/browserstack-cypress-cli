@@ -128,8 +128,11 @@ module.exports = function run(args, rawArgs) {
       logger.debug("Completed configs validation");
       markBlockStart('preArchiveSteps');
       logger.debug("Started pre-archive steps");
+
       //get the number of spec files
+      markBlockStart('getNumberOfSpecFiles');
       let specFiles = utils.getNumberOfSpecFiles(bsConfig, args, cypressConfigFile);
+      markBlockEnd('getNumberOfSpecFiles');
 
       bsConfig['run_settings']['video_config'] = utils.getVideoConfig(cypressConfigFile);
 
