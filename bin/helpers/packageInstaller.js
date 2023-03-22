@@ -157,11 +157,15 @@ const packageSetupAndInstaller = (bsConfig, packageDir, instrumentBlocks) => {
   })
 }
 
-const packageWrapper = (bsConfig, packageDir, packageFile, md5data, instrumentBlocks) => {
+const packageWrapper = (bsConfig, packageDir, packageFile, md5data, instrumentBlocks, packagesInstalled) => {
   return new Promise(function (resolve) {
     let obj = {
       packageArchieveCreated: false
     };
+    if (!packagesInstalled) {
+      logger.debug("Skipping the caching of npm packages since package installed failed")
+      return resolve(obj);
+    }
     if (md5data.packageUrlPresent || !utils.isTrueString(bsConfig.run_settings.cache_dependencies)) {
       logger.debug("Skipping the caching of npm packages since BrowserStack has already cached your npm dependencies that have not changed since the last run.")
       return resolve(obj);
