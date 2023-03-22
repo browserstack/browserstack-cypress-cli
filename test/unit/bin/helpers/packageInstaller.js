@@ -505,7 +505,7 @@ describe("packageInstaller", () => {
         markBlockStart: sinon.stub(),
         markBlockEnd: sinon.stub()
       }
-      return packageWrapperrewire(bsConfig, packageDir, packageFile, md5data, instrumentBlocks)
+      return packageWrapperrewire(bsConfig, packageDir, packageFile, md5data, instrumentBlocks, true)
         .then((data) => {
           chai.assert.deepEqual(data, {packageArchieveCreated: true});
         })
@@ -530,9 +530,30 @@ describe("packageInstaller", () => {
         markBlockStart: sinon.stub(),
         markBlockEnd: sinon.stub()
       }
-      return packageWrapperrewire(bsConfig, packageDir, packageFile, md5data, instrumentBlocks)
+      return packageWrapperrewire(bsConfig, packageDir, packageFile, md5data, instrumentBlocks, true)
         .then((data) => {
           chai.assert.deepEqual(data, { packageArchieveCreated: false, error: 'test error stack' });
+        })
+        .catch((_error) => {
+          chai.assert.fail("Promise error");
+        });
+    });
+
+    it("should reject with if issue in package install failed", () => {
+      let packageWrapperrewire = packageInstaller.__get__('packageWrapper');
+      let bsConfig = {
+        run_settings: {
+          cache_dependencies: true
+        }
+      };
+      let md5data = {};
+      let instrumentBlocks = {
+        markBlockStart: sinon.stub(),
+        markBlockEnd: sinon.stub()
+      }
+      return packageWrapperrewire(bsConfig, packageDir, packageFile, md5data, instrumentBlocks, false)
+        .then((data) => {
+          chai.assert.deepEqual(data, { packageArchieveCreated: false });
         })
         .catch((_error) => {
           chai.assert.fail("Promise error");

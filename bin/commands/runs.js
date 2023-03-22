@@ -99,7 +99,7 @@ module.exports = function run(args, rawArgs) {
     // set the no-wrap
     utils.setNoWrap(bsConfig, args);
 
-    await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd});
+    const { packagesInstalled } = await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd});
 
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
@@ -155,7 +155,7 @@ module.exports = function run(args, rawArgs) {
 
         logger.debug("Started caching npm dependencies.");
         markBlockStart('zip.packageInstaller');
-        return packageInstaller.packageWrapper(bsConfig, config.packageDirName, config.packageFileName, md5data, {markBlockStart, markBlockEnd}).then(function (packageData) {
+        return packageInstaller.packageWrapper(bsConfig, config.packageDirName, config.packageFileName, md5data, {markBlockStart, markBlockEnd}, packagesInstalled).then(function (packageData) {
           logger.debug("Completed caching npm dependencies.")
           markBlockEnd('zip.packageInstaller');
 
