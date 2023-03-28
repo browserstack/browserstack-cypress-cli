@@ -84,9 +84,6 @@ module.exports = function run(args, rawArgs) {
     //accept the local from env variable if provided
     utils.setLocal(bsConfig, args);
 
-    //set network logs
-    utils.setNetworkLogs(bsConfig);
-
     // set Local Mode (on-demand/ always-on)
     utils.setLocalMode(bsConfig, args);
 
