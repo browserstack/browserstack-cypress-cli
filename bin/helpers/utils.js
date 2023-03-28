@@ -405,7 +405,7 @@ exports.setRecordKeyFlag = (bsConfig, args) => {
   return bsConfig.run_settings["record-key"];
 }
 
-exports.setProjectId = (bsConfig, args) => {
+exports.setProjectId = (bsConfig, args, cypressConfigFile) => {
   if(!this.isUndefined(args["projectId"])) {
     return args["projectId"];
   } else if(!this.isUndefined(process.env.CYPRESS_PROJECT_ID)) {
@@ -413,17 +413,16 @@ exports.setProjectId = (bsConfig, args) => {
   } else if(!this.isUndefined(bsConfig.run_settings["projectId"])) {
     return bsConfig.run_settings["projectId"]; 
   } else {
-    let cypressConfigFile = this.getCypressConfigFile(bsConfig);
     if (!this.isUndefined(cypressConfigFile) && !this.isUndefined(cypressConfigFile["projectId"])) {  
       return cypressConfigFile["projectId"]; 
     }
   }
 }
 
-exports.setRecordCaps = (bsConfig, args) => {
+exports.setRecordCaps = (bsConfig, args, cypressConfigFile) => {
   bsConfig.run_settings["record"] = this.setRecordFlag(bsConfig, args);
   bsConfig.run_settings["record-key"] = this.setRecordKeyFlag(bsConfig, args);
-  bsConfig.run_settings["projectId"] = this.setProjectId(bsConfig, args);
+  bsConfig.run_settings["projectId"] = this.setProjectId(bsConfig, args, cypressConfigFile);
 }
 
 exports.verifyNodeVersionOption = () => {
@@ -987,11 +986,66 @@ exports.getFilesToIgnore = (runSettings, excludeFiles, logging = true) => {
 }
 
 exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
-  let testFolderPath = cypressConfig.integrationFolder || Constants.DEFAULT_CYPRESS_SPEC_PATH;
-  let globSearchPattern = this.sanitizeSpecsPattern(bsConfig.run_settings.specs) || `${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`;
-  let ignoreFiles = args.exclude || bsConfig.run_settings.exclude;
-  let files = glob.sync(globSearchPattern, {cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles});
-  logger.debug(`${files ? files.length : 0} spec files found at ${testFolderPath}`);
+  let defaultSpecFolder
+  let testFolderPath
+  let globCypressConfigSpecPatterns = []
+  let globSearchPattern = this.sanitizeSpecsPattern(bsConfig.run_settings.specs);
+
+  if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
+    defaultSpecFolder = Constants.DEFAULT_CYPRESS_10_SPEC_PATH
+    testFolderPath = defaultSpecFolder
+    if(!this.isUndefined(cypressConfig) && !this.isUndefined(cypressConfig.e2e)) {
+      if(!this.isUndefined(cypressConfig.e2e.specPattern)) {
+        globCypressConfigSpecPatterns = Array.isArray(cypressConfig.e2e.specPattern) ?
+          cypressConfig.e2e.specPattern : [cypressConfig.e2e.specPattern];
+      } else {
+        globCypressConfigSpecPatterns = [`${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`]
+      }
+    } else {
+      // if not able read cypress config, use bstack specs arg(existing logic, which is not correct)
+      globCypressConfigSpecPatterns = globSearchPattern ? [globSearchPattern] : [`${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`]
+    }
+  } else {
+    defaultSpecFolder = Constants.DEFAULT_CYPRESS_SPEC_PATH
+    let testFolderPath = cypressConfig.integrationFolder && cypressConfig.integrationFolder !== '.' ?
+      cypressConfig.integrationFolder : defaultSpecFolder;
+    if(!this.isUndefined(cypressConfig.testFiles)) {
+      if (Array.isArray(cypressConfig.testFiles)) {
+        cypressConfig.testFiles.forEach(specPattern => {
+          globCypressConfigSpecPatterns.push(`${testFolderPath}/${specPattern}`)
+        });
+      } else {
+        globCypressConfigSpecPatterns = [`${testFolderPath}/${cypressConfig.testFiles}`]
+      }
+    } else {
+      globCypressConfigSpecPatterns = [`${testFolderPath}/**/*.+(${Constants.specFileTypes.join("|")})`]
+    }
+  }
+
+  let ignoreFiles = args.exclude || bsConfig.run_settings.exclude
+  let fileMatchedWithConfigSpecPattern = []
+  globCypressConfigSpecPatterns.forEach(specPattern => {
+    fileMatchedWithConfigSpecPattern.push(
+      ...glob.sync(specPattern, {
+        cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles
+      })
+    );
+  });
+  fileMatchedWithConfigSpecPattern = fileMatchedWithConfigSpecPattern.map((file) => path.resolve(bsConfig.run_settings.cypressProjectDir, file))
+
+  let files
+  if (globSearchPattern) {
+    let fileMatchedWithBstackSpecPattern = glob.sync(globSearchPattern, {
+      cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles 
+    });
+    fileMatchedWithBstackSpecPattern = fileMatchedWithBstackSpecPattern.map((file) => path.resolve(bsConfig.run_settings.cypressProjectDir, file))
+
+    files = fileMatchedWithBstackSpecPattern.filter(file => fileMatchedWithConfigSpecPattern.includes(file))
+  } else {
+    files = fileMatchedWithConfigSpecPattern;
+  }
+
+  logger.debug(`${files ? files.length : 0} spec files found`);
   return files;
 };
 

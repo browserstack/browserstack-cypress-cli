@@ -99,8 +99,7 @@ module.exports = function run(args, rawArgs) {
     // set the no-wrap
     utils.setNoWrap(bsConfig, args);
 
-    // set record feature caps
-    utils.setRecordCaps(bsConfig, args);
+    const { packagesInstalled } = await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd});
 
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
@@ -140,6 +139,9 @@ module.exports = function run(args, rawArgs) {
       // accept the number of parallels
       utils.setParallels(bsConfig, args, specFiles.length);
 
+      // set record feature caps
+      utils.setRecordCaps(bsConfig, args, cypressConfigFile);
+
       // warn if specFiles cross our limit
       utils.warnSpecLimit(bsConfig, args, specFiles, rawArgs, buildReportData);
       markBlockEnd('preArchiveSteps');
@@ -153,7 +155,7 @@ module.exports = function run(args, rawArgs) {
 
         logger.debug("Started caching npm dependencies.");
         markBlockStart('zip.packageInstaller');
-        return packageInstaller.packageWrapper(bsConfig, config.packageDirName, config.packageFileName, md5data, {markBlockStart, markBlockEnd}).then(function (packageData) {
+        return packageInstaller.packageWrapper(bsConfig, config.packageDirName, config.packageFileName, md5data, {markBlockStart, markBlockEnd}, packagesInstalled).then(function (packageData) {
           logger.debug("Completed caching npm dependencies.")
           markBlockEnd('zip.packageInstaller');
 

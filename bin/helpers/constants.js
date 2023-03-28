@@ -43,8 +43,10 @@ const userMessages = {
     "There was some issue while checking if zip is already uploaded.",
   ZIP_DELETE_FAILED: "Could not delete tests.zip successfully.",
   ZIP_DELETED: "Deleted tests.zip successfully.",
-  NPM_INSTALL_AND_UPLOAD:
-    "Installing required dependencies and building the package to upload to BrowserStack",
+  NPM_INSTALL:
+  "Installing required dependencies",
+  NPM_UPLOAD:
+    "Building the package to upload to BrowserStack",
   NPM_DELETE_FAILED: "Could not delete the dependency packages.",
   NPM_DELETED: "Deleted dependency packages successfully.",
   API_DEPRECATED:
@@ -111,7 +113,9 @@ const userMessages = {
   SPEC_LIMIT_SUCCESS_MESSAGE:
     "Spec timeout specified as <x> minutes. If any of your specs exceed the specified time limit, it would be forcibly killed by BrowserStack",
   NO_CONNECTION_WHILE_UPDATING_UPLOAD_PROGRESS_BAR:
-    "Unable to determine zip upload progress due to undefined/null connection request"
+    "Unable to determine zip upload progress due to undefined/null connection request",
+  CYPRESS_PORT_WARNING:
+    "The requested port number <x> is ignored. The default BrowserStack port will be used for this execution"
 };
 
 const validationMessages = {
@@ -367,6 +371,7 @@ const packageInstallerOptions = {
 const specFileTypes = ["js", "ts", "feature", "jsx", "coffee", "cjsx"];
 
 const DEFAULT_CYPRESS_SPEC_PATH = "cypress/integration";
+const DEFAULT_CYPRESS_10_SPEC_PATH = "cypress/e2e";
 
 const SPEC_TOTAL_CHAR_LIMIT = 32243;
 const METADATA_CHAR_BUFFER_PER_SPEC = 175;
@@ -419,6 +424,8 @@ const CYPRESS_CONFIG_FILE_MAPPING = {
 
 const CYPRESS_CONFIG_FILE_NAMES = Object.keys(CYPRESS_CONFIG_FILE_MAPPING);
 
+const CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS = ['js', 'ts', 'cjs', 'mjs']
+
 module.exports = Object.freeze({
   syncCLI,
   userMessages,
@@ -432,6 +439,7 @@ module.exports = Object.freeze({
   packageInstallerOptions,
   specFileTypes,
   DEFAULT_CYPRESS_SPEC_PATH,
+  DEFAULT_CYPRESS_10_SPEC_PATH,
   SPEC_TOTAL_CHAR_LIMIT,
   METADATA_CHAR_BUFFER_PER_SPEC,
   usageReportingConstants,
@@ -448,5 +456,6 @@ module.exports = Object.freeze({
   CYPRESS_V9_AND_OLDER_TYPE,
   CYPRESS_V10_AND_ABOVE_TYPE,
   CYPRESS_CONFIG_FILE_MAPPING,
-  CYPRESS_CONFIG_FILE_NAMES
+  CYPRESS_CONFIG_FILE_NAMES,
+  CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS
 });
