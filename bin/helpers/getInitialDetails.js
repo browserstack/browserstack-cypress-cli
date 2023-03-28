@@ -33,6 +33,9 @@ exports.getInitialDetails = (bsConfig, args, rawArgs) => {
           utils.sendUsageReport(bsConfig, args, responseData["error"], Constants.messageTypes.ERROR, 'get_initial_details_failed', null, rawArgs);
           resolve({});
         } else {
+          if (!utils.isUndefined(responseData.grr) && responseData.grr.enabled && !utils.isUndefined(responseData.grr.urls)) {
+            config.uploadUrl = responseData.grr.urls.upload_url;
+          }
           resolve(responseData);
         }
       }
