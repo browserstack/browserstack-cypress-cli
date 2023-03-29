@@ -218,7 +218,6 @@ describe("runs", () => {
           sinon.assert.calledOnce(setGeolocationStub);
           sinon.assert.calledOnce(setSpecTimeoutStub);
           sinon.assert.calledOnce(getInitialDetailsStub);
-          sinon.assert.calledOnce(setRecordCapsStub);
           sinon.assert.calledOnce(setNodeVersionStub);
           sinon.assert.calledOnce(setBuildTagsStub);
           sinon.assert.calledOnceWithExactly(
