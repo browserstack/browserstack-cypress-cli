@@ -286,6 +286,9 @@ const validate = (bsConfig, args) => {
     if (!Utils.isUndefined(bsConfig.run_settings.nodeVersion) && typeof(bsConfig.run_settings.nodeVersion) === 'string' && !bsConfig.run_settings.nodeVersion.match(/^(\d+\.)?(\d+\.)?(\*|\d+)$/))
         logger.warn(Constants.validationMessages.NODE_VERSION_PARSING_ERROR);
 
+    if(!Utils.isUndefined(cypressConfigFile.port)) {
+      logger.warn(Constants.userMessages.CYPRESS_PORT_WARNING.replace("<x>", cypressConfigFile.port));
+    }
     resolve(cypressConfigFile);
   });
 }

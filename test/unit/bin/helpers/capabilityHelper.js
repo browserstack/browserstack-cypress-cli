@@ -962,11 +962,20 @@ describe("capabilityHelper.js", () => {
           run_settings: {
             cypress_proj_dir: "random path",
             cypressConfigFilePath: "random path",
-            cypressProjectDir: "random path"
+            cypressProjectDir: "random path",
+            cypress_config_filename: "cypress.json",
+            spec_timeout: 10,
+            cypressTestSuiteType: Constants.CYPRESS_V9_AND_OLDER_TYPE
           },
           connection_settings: {local: false}
         };
+        loggerWarningSpy = sinon.stub(logger, 'warn');
       });
+
+      afterEach(function() {
+        loggerWarningSpy.restore();
+      });
+
       it("validate cypress json is present", () => {
         //Stub for cypress json validation
         sinon.stub(fs, 'existsSync').returns(false);
@@ -1044,6 +1053,19 @@ describe("capabilityHelper.js", () => {
             fs.existsSync.restore();
             fs.readFileSync.restore();
           });
+      });
+
+      it("should warn if port is passed in cypress config file", async () => {
+        //Stub for cypress json validation
+        sinon.stub(fs, 'existsSync').returns(true);
+        sinon.stub(fs, 'readFileSync').returns('{ "port": 23455}');
+
+        await capabilityHelper
+          .validate(bsConfig, { parallels: 2 })
+
+        sinon.assert.calledWith(loggerWarningSpy, Constants.userMessages.CYPRESS_PORT_WARNING.replace('<x>', 23455));
+        fs.existsSync.restore();
+        fs.readFileSync.restore();
       });
 
       context("cypress config file set to false", () => {
