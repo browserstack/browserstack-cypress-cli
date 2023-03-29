@@ -2502,12 +2502,6 @@ describe('utils', () => {
       let globStub = sinon.stub(glob, 'sync')
       globStub.withArgs('cypress/e2e/foo*.js')
         .returns(['cypress/e2e/foo_1.js']);
-      // globStub.withArgs(`cypress/e2e/**/*.+(${constant.specFileTypes.join('|')})`)
-      //   .returns([
-      //     'cypress/e2e/foo_1.js',
-      //     'cypress/e2e/foo_2.js',
-      //     'cypress/e2e/bar_1.js'
-      //   ]);
       let bsConfig = {
         run_settings: {
           cypressTestSuiteType: 'CYPRESS_V10_AND_ABOVE_TYPE',
@@ -2528,7 +2522,7 @@ describe('utils', () => {
       glob.sync.restore();
     });
 
-    it('should return under default folder if cypress v >= 10 and error while reading config file', () => {
+    it('should return files under default e2e folder if cypress v >= 10 and error while reading config file', () => {
       let globStub = sinon.stub(glob, 'sync')
       globStub.withArgs(`cypress/e2e/**/*.+(${constant.specFileTypes.join('|')})`)
         .returns([
@@ -2547,6 +2541,37 @@ describe('utils', () => {
       const result =  utils.getNumberOfSpecFiles(bsConfig, {}, null);
       expect(result.length).to.eql(3);
       expect(result[0].endsWith('cypress/e2e/foo_1.js')).to.eql(true);
+      sinon.assert.calledWithExactly(globStub, `cypress/e2e/**/*.+(${constant.specFileTypes.join('|')})`, {
+        cwd: 'cypressProjectDir',
+        matchBase: true,
+        ignore: 'exclude',
+      })
+      glob.sync.restore();
+    });
+
+    it('should return files under integration folder if cypress v >= 10, no spec arg in bstack.json and error while reading config file and no files under cypress/e2e', () => {
+      let globStub = sinon.stub(glob, 'sync')
+      globStub.withArgs(`cypress/e2e/**/*.+(${constant.specFileTypes.join('|')})`)
+        .returns([]);
+      globStub.withArgs(`cypress/integration/**/*.+(${constant.specFileTypes.join('|')})`)
+        .returns([
+          'cypress/integration/foo_1.js',
+          'cypress/integration/foo_2.js',
+          'cypress/integration/bar_1.js'
+        ]);
+      let bsConfig = {
+        run_settings: {
+          cypressTestSuiteType: 'CYPRESS_V10_AND_ABOVE_TYPE',
+          cypressProjectDir: 'cypressProjectDir',
+          exclude: 'exclude',
+        },
+      };
+
+      const result =  utils.getNumberOfSpecFiles(bsConfig, {}, null);
+      expect(result.length).to.eql(3);
+      expect(result[0].endsWith('cypress/integration/foo_1.js')).to.eql(true);
+      expect(result[1].endsWith('cypress/integration/foo_2.js')).to.eql(true);
+      expect(result[2].endsWith('cypress/integration/bar_1.js')).to.eql(true);
       sinon.assert.calledWithExactly(globStub, `cypress/e2e/**/*.+(${constant.specFileTypes.join('|')})`, {
         cwd: 'cypressProjectDir',
         matchBase: true,
