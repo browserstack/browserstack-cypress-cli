@@ -69,7 +69,7 @@ module.exports = function run(args, rawArgs) {
     // set cypress geo location
     utils.setGeolocation(bsConfig, args);
 
-    // set spec timeout 
+    // set spec timeout
     utils.setSpecTimeout(bsConfig, args);
 
     // accept the specs list from command line if provided
@@ -414,8 +414,8 @@ module.exports = function run(args, rawArgs) {
       updateCheckInterval: 1000 * 60 * 60 * 24 * 7,
     });
 
-    // Checks for update on first run. 
-    // Set lastUpdateCheck to 0 to spawn the check update process as notifier sets this to Date.now() for preventing 
+    // Checks for update on first run.
+    // Set lastUpdateCheck to 0 to spawn the check update process as notifier sets this to Date.now() for preventing
     // the check untill one interval period. It runs once.
     if (!notifier.disabled && Date.now() - notifier.config.get('lastUpdateCheck') < 50) {
       notifier.config.set('lastUpdateCheck', 0);
