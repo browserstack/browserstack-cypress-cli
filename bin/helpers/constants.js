@@ -317,6 +317,7 @@ const allowedFileTypes = [
   "tsx",
   "pfx",
   "cfr",
+  "ico"
 ];
 
 const filesToIgnoreWhileUploading = [
