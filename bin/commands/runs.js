@@ -69,7 +69,7 @@ module.exports = function run(args, rawArgs) {
     // set cypress geo location
     utils.setGeolocation(bsConfig, args);
 
-    // set spec timeout 
+    // set spec timeout
     utils.setSpecTimeout(bsConfig, args);
 
     // accept the specs list from command line if provided
@@ -83,6 +83,9 @@ module.exports = function run(args, rawArgs) {
 
     //accept the local from env variable if provided
     utils.setLocal(bsConfig, args);
+
+    //set network logs
+    utils.setNetworkLogs(bsConfig);
 
     // set Local Mode (on-demand/ always-on)
     utils.setLocalMode(bsConfig, args);
@@ -99,8 +102,7 @@ module.exports = function run(args, rawArgs) {
     // set the no-wrap
     utils.setNoWrap(bsConfig, args);
 
-    // set record feature caps
-    utils.setRecordCaps(bsConfig, args);
+    const { packagesInstalled } = await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd});
 
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
@@ -129,8 +131,11 @@ module.exports = function run(args, rawArgs) {
       logger.debug("Completed configs validation");
       markBlockStart('preArchiveSteps');
       logger.debug("Started pre-archive steps");
+
       //get the number of spec files
+      markBlockStart('getNumberOfSpecFiles');
       let specFiles = utils.getNumberOfSpecFiles(bsConfig, args, cypressConfigFile);
+      markBlockEnd('getNumberOfSpecFiles');
 
       bsConfig['run_settings']['video_config'] = utils.getVideoConfig(cypressConfigFile);
 
@@ -139,6 +144,9 @@ module.exports = function run(args, rawArgs) {
 
       // accept the number of parallels
       utils.setParallels(bsConfig, args, specFiles.length);
+
+      // set record feature caps
+      utils.setRecordCaps(bsConfig, args, cypressConfigFile);
 
       // warn if specFiles cross our limit
       utils.warnSpecLimit(bsConfig, args, specFiles, rawArgs, buildReportData);
@@ -153,7 +161,7 @@ module.exports = function run(args, rawArgs) {
 
         logger.debug("Started caching npm dependencies.");
         markBlockStart('zip.packageInstaller');
-        return packageInstaller.packageWrapper(bsConfig, config.packageDirName, config.packageFileName, md5data, {markBlockStart, markBlockEnd}).then(function (packageData) {
+        return packageInstaller.packageWrapper(bsConfig, config.packageDirName, config.packageFileName, md5data, {markBlockStart, markBlockEnd}, packagesInstalled).then(function (packageData) {
           logger.debug("Completed caching npm dependencies.")
           markBlockEnd('zip.packageInstaller');
 
@@ -409,8 +417,8 @@ module.exports = function run(args, rawArgs) {
       updateCheckInterval: 1000 * 60 * 60 * 24 * 7,
     });
 
-    // Checks for update on first run. 
-    // Set lastUpdateCheck to 0 to spawn the check update process as notifier sets this to Date.now() for preventing 
+    // Checks for update on first run.
+    // Set lastUpdateCheck to 0 to spawn the check update process as notifier sets this to Date.now() for preventing
     // the check untill one interval period. It runs once.
     if (!notifier.disabled && Date.now() - notifier.config.get('lastUpdateCheck') < 50) {
       notifier.config.set('lastUpdateCheck', 0);
