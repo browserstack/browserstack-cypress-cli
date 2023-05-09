@@ -2,6 +2,7 @@
 const chai = require("chai"),
   expect = chai.expect,
   sinon = require("sinon"),
+  path = require('path'),
   EventEmitter = require('events');
 
 const logger = require("../../../../bin/helpers/logger").winstonLogger;
@@ -44,11 +45,12 @@ describe("readCypressConfigUtil", () => {
             const readFileSyncStub = sandbox.stub(fs, 'readFileSync').returns('{"e2e": {}}');
             const existsSyncStub = sandbox.stub(fs, 'existsSync').returns(true);
             const unlinkSyncSyncStub = sandbox.stub(fs, 'unlinkSync');
+            const requireModulePath = path.join(__dirname, '../../../../', 'bin', 'helpers', 'requireModule.js');
             
             const result =  readCypressConfigUtil.loadJsFile('path/to/cypress.config.ts', 'path/to/tmpBstackPackages');
             
             expect(result).to.eql({ e2e: {} });
-            sinon.assert.calledOnceWithExactly(loadCommandStub, `NODE_PATH="path/to/tmpBstackPackages" node "/Users/prajwaldhawarikar/Developer/projects/temp/browserstack-cypress-cli/bin/helpers/requireModule.js" "path/to/cypress.config.ts"`);
+            sinon.assert.calledOnceWithExactly(loadCommandStub, `NODE_PATH="path/to/tmpBstackPackages" node "${requireModulePath}" "path/to/cypress.config.ts"`);
             sinon.assert.calledOnce(readFileSyncStub);
             sinon.assert.calledOnce(unlinkSyncSyncStub);
             sinon.assert.calledOnce(existsSyncStub);
@@ -60,11 +62,12 @@ describe("readCypressConfigUtil", () => {
             const readFileSyncStub = sandbox.stub(fs, 'readFileSync').returns('{"e2e": {}}');
             const existsSyncStub = sandbox.stub(fs, 'existsSync').returns(true);
             const unlinkSyncSyncStub = sandbox.stub(fs, 'unlinkSync');
+            const requireModulePath = path.join(__dirname, '../../../../', 'bin', 'helpers', 'requireModule.js');
             
             const result =  readCypressConfigUtil.loadJsFile('path/to/cypress.config.ts', 'path/to/tmpBstackPackages');
             
             expect(result).to.eql({ e2e: {} });
-            sinon.assert.calledOnceWithExactly(loadCommandStub, `set NODE_PATH=path/to/tmpBstackPackages&& node "/Users/prajwaldhawarikar/Developer/projects/temp/browserstack-cypress-cli/bin/helpers/requireModule.js" "path/to/cypress.config.ts"`);
+            sinon.assert.calledOnceWithExactly(loadCommandStub, `set NODE_PATH=path/to/tmpBstackPackages&& node "${requireModulePath}" "path/to/cypress.config.ts"`);
             sinon.assert.calledOnce(readFileSyncStub);
             sinon.assert.calledOnce(unlinkSyncSyncStub);
             sinon.assert.calledOnce(existsSyncStub);
