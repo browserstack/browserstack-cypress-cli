@@ -2,6 +2,7 @@
 const chai = require("chai"),
   expect = chai.expect,
   sinon = require("sinon"),
+  path = require('path'),
   EventEmitter = require('events');
 
 const logger = require("../../../../bin/helpers/logger").winstonLogger;
@@ -40,14 +41,33 @@ describe("readCypressConfigUtil", () => {
 
     describe('loadJsFile', () => {
         it('should load js file', () => {
-            sandbox.stub(cp, "execSync").returns("random string");
+            const loadCommandStub = sandbox.stub(cp, "execSync").returns("random string");
             const readFileSyncStub = sandbox.stub(fs, 'readFileSync').returns('{"e2e": {}}');
             const existsSyncStub = sandbox.stub(fs, 'existsSync').returns(true);
             const unlinkSyncSyncStub = sandbox.stub(fs, 'unlinkSync');
+            const requireModulePath = path.join(__dirname, '../../../../', 'bin', 'helpers', 'requireModule.js');
             
             const result =  readCypressConfigUtil.loadJsFile('path/to/cypress.config.ts', 'path/to/tmpBstackPackages');
             
             expect(result).to.eql({ e2e: {} });
+            sinon.assert.calledOnceWithExactly(loadCommandStub, `NODE_PATH="path/to/tmpBstackPackages" node "${requireModulePath}" "path/to/cypress.config.ts"`);
+            sinon.assert.calledOnce(readFileSyncStub);
+            sinon.assert.calledOnce(unlinkSyncSyncStub);
+            sinon.assert.calledOnce(existsSyncStub);
+        });
+
+        it('should load js file for win', () => {
+            sinon.stub(process, 'platform').value('win32');
+            const loadCommandStub = sandbox.stub(cp, "execSync").returns("random string");
+            const readFileSyncStub = sandbox.stub(fs, 'readFileSync').returns('{"e2e": {}}');
+            const existsSyncStub = sandbox.stub(fs, 'existsSync').returns(true);
+            const unlinkSyncSyncStub = sandbox.stub(fs, 'unlinkSync');
+            const requireModulePath = path.join(__dirname, '../../../../', 'bin', 'helpers', 'requireModule.js');
+            
+            const result =  readCypressConfigUtil.loadJsFile('path/to/cypress.config.ts', 'path/to/tmpBstackPackages');
+            
+            expect(result).to.eql({ e2e: {} });
+            sinon.assert.calledOnceWithExactly(loadCommandStub, `set NODE_PATH=path/to/tmpBstackPackages&& node "${requireModulePath}" "path/to/cypress.config.ts"`);
             sinon.assert.calledOnce(readFileSyncStub);
             sinon.assert.calledOnce(unlinkSyncSyncStub);
             sinon.assert.calledOnce(existsSyncStub);
@@ -62,11 +82,28 @@ describe("readCypressConfigUtil", () => {
                     cypress_config_filename: 'cypress.config.ts'
                 }
             };
-            sandbox.stub(cp, "execSync").returns("TSFILE: path/to/compiled/cypress.config.js");
+            const compileTsStub = sandbox.stub(cp, "execSync").returns("TSFILE: path/to/compiled/cypress.config.js");
             
             const result =  readCypressConfigUtil.convertTsConfig(bsConfig, 'path/to/cypress.config.ts', 'path/to/tmpBstackPackages');
             
             expect(result).to.eql('path/to/compiled/cypress.config.js');
+            sinon.assert.calledOnceWithExactly(compileTsStub, `NODE_PATH=path/to/tmpBstackPackages node "path/to/tmpBstackPackages/typescript/bin/tsc" --outDir "path/to/tmpBstackCompiledJs" --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false "path/to/cypress.config.ts"`, { cwd: 'path/to' });
+        });
+
+        it('should compile cypress.config.ts to cypress.config.js for win', () => {
+            sinon.stub(process, 'platform').value('win32');
+            const bsConfig = {
+                run_settings: {
+                    cypressConfigFilePath: 'path/to/cypress.config.ts',
+                    cypress_config_filename: 'cypress.config.ts'
+                }
+            };
+            const compileTsStub = sandbox.stub(cp, "execSync").returns("TSFILE: path/to/compiled/cypress.config.js");
+            
+            const result =  readCypressConfigUtil.convertTsConfig(bsConfig, 'path/to/cypress.config.ts', 'path/to/tmpBstackPackages');
+            
+            expect(result).to.eql('path/to/compiled/cypress.config.js');
+            sinon.assert.calledOnceWithExactly(compileTsStub, `set NODE_PATH=path/to/tmpBstackPackages&& node "path/to/tmpBstackPackages/typescript/bin/tsc" --outDir "path/to/tmpBstackCompiledJs" --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false "path/to/cypress.config.ts"`, { cwd: 'path/to' });
         });
 
         it('should return null if compilation fails', () => {
@@ -92,7 +129,7 @@ describe("readCypressConfigUtil", () => {
             };
             const execSyncStub = sandbox.stub(cp, "execSync")
             execSyncStub
-                .withArgs(`NODE_PATH=path/to/tmpBstackPackages path/to/tmpBstackPackages/typescript/bin/tsc --outDir path/to/tmpBstackCompiledJs --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false path/to/cypress.config.ts`, { cwd: 'path/to' })
+                .withArgs(`NODE_PATH=path/to/tmpBstackPackages node "path/to/tmpBstackPackages/typescript/bin/tsc" --outDir "path/to/tmpBstackCompiledJs" --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false "path/to/cypress.config.ts"`, { cwd: 'path/to' })
                 .throws({
                     output: Buffer.from("Error: Some Error \n TSFILE: path/to/compiled/cypress.config.js")
                 });
