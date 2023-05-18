@@ -24,6 +24,7 @@ const utils = require('../../../../bin/helpers/utils'),
   Contants = require('../../../../bin/helpers/constants');
 const browserstack = require('browserstack-local');
 const { CYPRESS_V10_AND_ABOVE_TYPE, CYPRESS_V9_AND_OLDER_TYPE } = require('../../../../bin/helpers/constants');
+const { winstonLogger, syncCliLogger } = require('../../../../bin/helpers/logger');
 chai.use(chaiAsPromised);
 logger.transports['console.info'].silent = true;
 
@@ -3708,6 +3709,106 @@ describe('utils', () => {
       expect(bsConfig.run_settings.spec_timeout).to.eq(null);
     });
   });
+
+  describe("setTimezone", () => {
+    let isTimezoneArgPassed;
+    let processStub;
+    let loggerStub;
+    let syncCliLoggerStub;
+    beforeEach(() => {
+      isTimezoneArgPassed = sinon.stub(utils, 'isTimezoneArgPassed');
+      processStub = sinon.stub(process, 'exit');
+      loggerStub = sinon.stub(winstonLogger, 'error');
+      syncCliLoggerStub = sinon.stub(syncCliLogger, 'info');
+    });
+
+    afterEach(() => {
+      isTimezoneArgPassed.restore();
+      processStub.restore();
+      loggerStub.restore();
+      syncCliLoggerStub.restore();
+    });
+    it('sets timezone value passed in args', () => {
+      let bsConfig = {
+        run_settings: {
+          timezone: "London"
+        }
+      }
+      let args = {
+        timezone: "New_York"
+      };
+      isTimezoneArgPassed.returns(true);
+      utils.setTimezone(bsConfig, args);
+      expect(bsConfig.run_settings.timezone).to.eq("New_York");
+    });
+
+    it('sets timezone to null if no value passed in args', () => {
+      let bsConfig = {
+        run_settings: {
+          timezone: "abc"
+        }
+      }
+      let args = {};
+      isTimezoneArgPassed.returns(true);
+      utils.setTimezone(bsConfig, args);
+      expect(bsConfig.run_settings.timezone).to.eq(undefined);
+    });
+
+    it('sets timezone to null if invalid value passed in args', () => {
+      let bsConfig = {
+        run_settings: {
+          timezone: "abc"
+        }
+      }
+      let args = {
+        timezone: "xyz"
+      };
+      isTimezoneArgPassed.returns(true);
+      utils.setTimezone(bsConfig, args);
+      expect(bsConfig.run_settings.timezone).to.eq(undefined);
+      sinon.assert.calledOnceWithExactly(loggerStub, "Invalid timezone = xyz");
+      sinon.assert.calledOnce(syncCliLoggerStub);
+      sinon.assert.calledOnceWithExactly(processStub, 1);
+    });
+
+    it('sets timezone to null if invalid value passed in bsConfig', () => {
+      let bsConfig = {
+        run_settings: {
+          timezone: "abc"
+        }
+      }
+      let args = {};
+      isTimezoneArgPassed.returns(false);
+      utils.setTimezone(bsConfig, args);
+      expect(bsConfig.run_settings.timezone).to.eq(undefined);
+      sinon.assert.calledOnceWithExactly(loggerStub, "Invalid timezone = abc");
+      sinon.assert.calledOnce(syncCliLoggerStub);
+      sinon.assert.calledOnceWithExactly(processStub, 1);
+    });
+
+    it('sets timezone to value in bsConfig and not in args', () => {
+      let bsConfig = {
+        run_settings: {
+          timezone: "London"
+        }
+      }
+      let args = {};
+      isTimezoneArgPassed.returns(false);
+      utils.setTimezone(bsConfig, args);
+      expect(bsConfig.run_settings.timezone).to.eq("London");
+    });
+
+    it('sets timezone to null if no value passed in args or bsConfig', () => {
+      let bsConfig = {
+        run_settings: {}
+      }
+      let args = {};
+      isTimezoneArgPassed.returns(false);
+      utils.setTimezone(bsConfig, args);
+      expect(bsConfig.run_settings.timezone).to.eq(undefined);
+    });
+  });
+
 
   describe('#isInteger', () => {
     it('returns true if positive integer', () => {

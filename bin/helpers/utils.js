@@ -11,6 +11,7 @@ const util = require('util');
 const { promisify } = require('util');
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
+const TIMEZONE = require("../helpers/timezone.json");
 
 const usageReporting = require("./usageReporting"),
   logger = require("./logger").winstonLogger,
@@ -387,6 +388,42 @@ exports.setSpecTimeout = (bsConfig, args) => {
   }
   bsConfig.run_settings.spec_timeout = specTimeout;
   logger.debug(`Setting spec timeout = ${specTimeout}`);
+}
+
+exports.isTimezoneArgPassed = () => {
+  return this.searchForOption('--timezone'); 
+}
+
+exports.isValidTimezone = (timezone) => {
+  if(!this.isUndefined(timezone) && !this.isUndefined(TIMEZONE[timezone])) {
+    return true;
+  }
+  return false;
+}
+
+exports.setTimezone = (bsConfig, args) => {
+  let timezone = undefined;
+  if(this.isTimezoneArgPassed()) {
+    if(!this.isUndefined(args.timezone)) { 
+      if(this.isValidTimezone(args.timezone)){
+        timezone = args.timezone; 
+      } else {
+        logger.error(`Invalid timezone = ${args.timezone}`);
+        syncCliLogger.info(Constants.userMessages.INVALID_TIMEZONE);
+        process.exit(1);
+      }
+    }
+  } else if (!this.isUndefined(bsConfig.run_settings.timezone)) {
+    if(this.isValidTimezone(bsConfig.run_settings.timezone)){
+      timezone = bsConfig.run_settings.timezone; 
+    } else {
+      logger.error(`Invalid timezone = ${bsConfig.run_settings.timezone}`);
+      syncCliLogger.info(Constants.userMessages.INVALID_TIMEZONE);
+      process.exit(1);
+    }
+  }
+  bsConfig.run_settings.timezone = timezone;
+  logger.debug(`Setting timezone = ${timezone}`);
 }
 
 exports.setRecordFlag = (bsConfig, args) => {
