@@ -409,7 +409,7 @@ exports.setTimezone = (bsConfig, args) => {
         timezone = args.timezone; 
       } else {
         logger.error(`Invalid timezone = ${args.timezone}`);
-        syncCliLogger.info(Constants.userMessages.INVALID_TIMEZONE);
+        syncCliLogger.info(chalk.red(Constants.userMessages.INVALID_TIMEZONE));
         process.exit(1);
       }
     }
@@ -418,7 +418,7 @@ exports.setTimezone = (bsConfig, args) => {
       timezone = bsConfig.run_settings.timezone; 
     } else {
       logger.error(`Invalid timezone = ${bsConfig.run_settings.timezone}`);
-      syncCliLogger.info(Constants.userMessages.INVALID_TIMEZONE);
+      syncCliLogger.info(chalk.red(Constants.userMessages.INVALID_TIMEZONE));
       process.exit(1);
     }
   }
