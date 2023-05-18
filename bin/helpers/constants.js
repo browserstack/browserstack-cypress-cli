@@ -86,7 +86,7 @@ const userMessages = {
   LOCAL_START_FAILED: "Local Testing setup failed.",
   LOCAL_STOP_FAILED: "Local Binary stop failed.",
   INVALID_TIMEZONE:
-    'The timezone specified is invalid. Refer to our documentation page (doc link) for the supported time zones.',
+    'The timezone specified is invalid. Refer to our documentation page https://www.browserstack.com/docs/automate/cypress/configure-timezones for the supported time zones.',
   INVALID_LOCAL_MODE_WARNING:
     'Invalid value specified for local_mode. local_mode: ("always-on" | "on-demand"). For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference',
   LOCAL_BINARY_ALREADY_RUNNING:
