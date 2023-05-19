@@ -320,7 +320,8 @@ const allowedFileTypes = [
   "pfx",
   "cfr",
   "ico",
-  "html"
+  "html",
+  "pem"
 ];
 
 const filesToIgnoreWhileUploading = [
