@@ -17,10 +17,20 @@ exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_module
     const cypress_config_filename = bsConfig.run_settings.cypress_config_filename
     const working_dir = path.dirname(cypress_config_filepath);
     const complied_js_dir = path.join(working_dir, config.compiledConfigJsDirName)
-    cp.execSync(`rm -rf ${config.compiledConfigJsDirName}`, { cwd: working_dir })
-    cp.execSync(`mkdir ${config.compiledConfigJsDirName}`, { cwd: working_dir })
+    if (fs.existsSync(complied_js_dir)) {
+        fs.rmdirSync(complied_js_dir, { recursive: true })
+    }
+    fs.mkdirSync(complied_js_dir, { recursive: true })
 
-    let tsc_command = `NODE_PATH=${bstack_node_modules_path} ${bstack_node_modules_path}/typescript/bin/tsc --outDir ${complied_js_dir} --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false ${cypress_config_filepath}`
+    const typescript_path = path.join(bstack_node_modules_path, 'typescript', 'bin', 'tsc')
+
+    let tsc_command = `NODE_PATH=${bstack_node_modules_path} node "${typescript_path}" --outDir "${complied_js_dir}" --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false "${cypress_config_filepath}"`
+
+    if (/^win/.test(process.platform)) {
+        tsc_command = `set NODE_PATH=${bstack_node_modules_path}&& node "${typescript_path}" --outDir "${complied_js_dir}" --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false "${cypress_config_filepath}"`
+    }
+
+    
     let tsc_output
     try {
         logger.debug(`Running: ${tsc_command}`)
@@ -54,8 +64,13 @@ exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_module
 }
 
 exports.loadJsFile =  (cypress_config_filepath, bstack_node_modules_path) => {
-    const require_module_helper_path = `${__dirname}/requireModule.js`
-    cp.execSync(`NODE_PATH=${bstack_node_modules_path} node ${require_module_helper_path} ${cypress_config_filepath}`)
+    const require_module_helper_path = path.join(__dirname, 'requireModule.js')
+    let load_command = `NODE_PATH="${bstack_node_modules_path}" node "${require_module_helper_path}" "${cypress_config_filepath}"`
+    if (/^win/.test(process.platform)) {
+        load_command = `set NODE_PATH=${bstack_node_modules_path}&& node "${require_module_helper_path}" "${cypress_config_filepath}"`
+    }
+    logger.debug(`Running: ${load_command}`)
+    cp.execSync(load_command)
     const cypress_config = JSON.parse(fs.readFileSync(config.configJsonFileName).toString())
     if (fs.existsSync(config.configJsonFileName)) {
         fs.unlinkSync(config.configJsonFileName)
@@ -67,7 +82,7 @@ exports.readCypressConfigFile = (bsConfig) => {
     const cypress_config_filepath = path.resolve(bsConfig.run_settings.cypressConfigFilePath)
     try {
         const cypress_config_filename = bsConfig.run_settings.cypress_config_filename
-        const bstack_node_modules_path = `${path.resolve(config.packageDirName)}/node_modules`
+        const bstack_node_modules_path = path.join(path.resolve(config.packageDirName), 'node_modules')
         const conf_lang = this.detectLanguage(cypress_config_filename)
 
         logger.debug(`cypress config path: ${cypress_config_filepath}`);
@@ -92,7 +107,10 @@ exports.readCypressConfigFile = (bsConfig) => {
             null
         )
     } finally {
-        const working_dir = path.dirname(cypress_config_filepath);
-        cp.execSync(`rm -rf ${config.compiledConfigJsDirName}`, { cwd: working_dir })
+        const working_dir = path.dirname(cypress_config_filepath)
+        const complied_js_dir = path.join(working_dir, config.compiledConfigJsDirName)
+        if (fs.existsSync(complied_js_dir)) {
+            fs.rmdirSync(complied_js_dir, { recursive: true })
+        }
     }
 }

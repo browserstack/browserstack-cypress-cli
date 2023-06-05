@@ -102,6 +102,9 @@ module.exports = function run(args, rawArgs) {
     // set the no-wrap
     utils.setNoWrap(bsConfig, args);
 
+    // add cypress dependency if missing
+    utils.setCypressNpmDependency(bsConfig);
+
     const { packagesInstalled } = await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd});
 
     // set build tag caps
