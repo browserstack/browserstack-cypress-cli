@@ -256,8 +256,8 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs, buildR
           logger.error('Downloading the build artifacts failed.');
         }
         utils.sendUsageReport(bsConfig, args, err, messageType, errorCode, buildReportData, rawArgs);
-        logger.error(`Error: Request failed with status code ${resp.statusCode}`)
-        logger.error(utils.formatRequest(err, resp, body));
+        logger.error(`Error: Request failed with status code ${err.response.status}`)
+        logger.error(utils.formatRequest(err.response.statusText, err.response, err.response.data));
         process.exitCode = Constants.ERROR_EXIT_CODE;
       }
       resolve();

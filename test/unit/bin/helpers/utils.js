@@ -3292,7 +3292,7 @@ describe('utils', () => {
       axiosStub.restore();
     });
 
-    it('message thrown if statusCode != 200', async () => {
+    it('message thrown if status != 200', async () => {
       let non_200_status_response = {
         status: 400
       }
@@ -3307,7 +3307,7 @@ describe('utils', () => {
       axiosStub.restore();
     });
 
-    it('message thrown if statusCode != 200 and user unauthorized', async () => {
+    it('message thrown if status != 200 and user unauthorized', async () => {
       let body_with_message = {
         ...body,
         "message": "Unauthorized",
@@ -3330,7 +3330,7 @@ describe('utils', () => {
       axiosStub.restore();
     });
 
-    it('message thrown if statusCode != 200 and build is present', async () => {
+    it('message thrown if status != 200 and build is present', async () => {
       let non_200_status_response = {
         status: 402,
         data: body

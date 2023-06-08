@@ -159,7 +159,7 @@ describe("checkUploaded", () => {
     it("resolves with zipUrlPresent false as not found in db", () => {
       let axiosStub = sandbox
         .stub(axios, "post")
-        .resolves({ statusCode: 404 , data: {"message":"zip_url for md5sum random_md5sum not found."}});
+        .resolves({ status: 404 , data: {"message":"zip_url for md5sum random_md5sum not found."}});
 
       const checkUploaded = rewire("../../../../bin/helpers/checkUploaded");
       checkUploaded.__set__({
@@ -183,7 +183,7 @@ describe("checkUploaded", () => {
     it("resolves with zipUrlPresent and packageUrlPresent false if force-upload enabled and cache_dependencies disabled", () => {
       let axiosStub = sandbox
         .stub(axios, "post")
-        .resolves({ statusCode: 404 , data: '{"message":"zip_url for md5sum random_md5sum not found."}'});
+        .resolves({ status: 404 , data: '{"message":"zip_url for md5sum random_md5sum not found."}'});
 
       const checkUploaded = rewire("../../../../bin/helpers/checkUploaded");
       checkUploaded.__set__({
@@ -231,7 +231,7 @@ describe("checkUploaded", () => {
     it("resolves with zipUrlPresent false and packageUrlPresent false if diabled from rails", () => {
       let axiosStub = sandbox
         .stub(axios, "post")
-        .resolves( { statusCode: 200 , data: {"disableNpmSuiteCache": true, "disableTestSuiteCache": true }});
+        .resolves( { status: 200 , data: {"disableNpmSuiteCache": true, "disableTestSuiteCache": true }});
 
       const checkUploaded = rewire("../../../../bin/helpers/checkUploaded");
       checkUploaded.__set__({

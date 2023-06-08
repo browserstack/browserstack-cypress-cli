@@ -34,7 +34,7 @@ describe('#getInitialDetails', () => {
   it('sends usage report if error occurred in getInitialDetails call', () => {
     let error_message = "error occurred";
     axiosStub.resolves(error_message);
-    formatRequestStub.returns({err: error_message, statusCode: null, body: null})
+    formatRequestStub.returns({err: error_message, status: null, body: null})
     sendUsageReportStub.calledOnceWithExactly(bsConfig, args, error_message, messageType, errorCode, null, rawArgs);
     getInitialDetails(bsConfig, args, rawArgs).then((result) => {
       expect(result).to.eq({});
