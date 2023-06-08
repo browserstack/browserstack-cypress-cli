@@ -68,7 +68,7 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
         },
         headers: options.headers,
         onUploadProgress: (progressEvent) => {
-          let percent = progressEvent.loaded * 100.0 / progressEvent.total;
+          let percent = parseInt(Math.floor((progressEvent.loaded * 100) / progressEvent.total));
           obj.bar1.update(percent, {
             speed: ((progressEvent.loaded / (Date.now() - obj.startTime)) / 125).toFixed(2) //kbits per sec
           });
