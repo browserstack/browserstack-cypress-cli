@@ -144,14 +144,12 @@ let whileProcess = async (whilstCallback) => {
     switch (response.status) {
       case 202: // get data here and print it
         n = 2
-        console.log("BODY", response.data)
         showSpecsStatus(response.data, 202);
         return setTimeout(whilstCallback, timeout * n, null);
       case 204: // No data available, wait for some time and ask again
         n = 1
         return setTimeout(whilstCallback, timeout * n, null);
       case 200: // Build is completed.
-        console.log("HEREEE")
         whileLoop = false;
         endTime = Date.now();
         showSpecsStatus(response.data, 200);

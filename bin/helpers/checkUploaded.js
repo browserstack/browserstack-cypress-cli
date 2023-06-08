@@ -126,7 +126,7 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
         const response = await axios.post(options.url, options.body, {
           auth: {
             username: options.auth.user,
-            username: options.auth.password
+            password: options.auth.password
           },
           headers: options.headers
         })

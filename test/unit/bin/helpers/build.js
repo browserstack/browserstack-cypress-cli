@@ -107,7 +107,6 @@ describe("build", () => {
           chai.assert.equal(data, "random message");
         })
         .catch((error) => {
-          console.log(error)
           chai.assert.isNotOk(error, "Promise error");
         });
     });

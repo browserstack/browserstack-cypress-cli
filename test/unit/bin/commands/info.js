@@ -193,7 +193,6 @@ describe("buildInfo", () => {
           sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, {}, rawArgs);
         })
         .catch((error) => {
-          console.log(error)
           chai.assert.isNotOk(error, "Promise error");
         });
     });
@@ -242,7 +241,6 @@ describe("buildInfo", () => {
           sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, {}, rawArgs);
         })
         .catch((error) => {
-          console.log(error)
           chai.assert.isNotOk(error, "Promise error");
         });
     });
