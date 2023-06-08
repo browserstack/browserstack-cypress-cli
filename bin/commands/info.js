@@ -1,6 +1,5 @@
 'use strict';
-const request = require('request');
-
+const axios = require('axios').default;
 const config = require("../helpers/config"),
   logger = require("../helpers/logger").winstonLogger,
   Constants = require("../helpers/constants"),
@@ -19,7 +18,7 @@ module.exports = function info(args, rawArgs) {
     // accept the access key from command line if provided
     utils.setAccessKey(bsConfig, args);
 
-    getInitialDetails(bsConfig, args, rawArgs).then((buildReportData) => {
+    getInitialDetails(bsConfig, args, rawArgs).then(async (buildReportData) => {
 
       utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
@@ -38,53 +37,43 @@ module.exports = function info(args, rawArgs) {
           'User-Agent': utils.getUserAgent(),
         },
       };
-      request.get(options, function (err, resp, body) {
-        let message = null;
-        let messageType = null;
-        let errorCode = null;
+      let message = null;
+      let messageType = null;
+      let errorCode = null;
   
-        if (err) {
-          message = Constants.userMessages.BUILD_INFO_FAILED;
-          messageType = Constants.messageTypes.ERROR;
-          errorCode = 'api_failed_build_info';
-  
-          logger.info(message);
-          logger.error(utils.formatRequest(err, resp, body));
-        } else {
-          let build = null;
+      try {
+        const response = await axios.get(options.url, {
+          auth: {
+            username: bsConfig.auth.username,
+            password: bsConfig.auth.access_key
+          },
+          headers: options.headers
+        });
+        let build = null;
           try {
-            build = JSON.parse(body);
+            build = response.data;
           } catch (error) {
             build = null;
           }
-  
-          if (resp.statusCode == 299) {
+          if (response.status == 299) {
             messageType = Constants.messageTypes.INFO;
             errorCode = 'api_deprecated';
-  
-            if (build) {
-              message = build.message;
-              logger.info(message);
-            } else {
-              message = Constants.userMessages.API_DEPRECATED;
-              logger.info(message);
-            }
-            logger.info(utils.formatRequest(err, resp, body));
-          } else if (resp.statusCode != 200) {
+            message = build ? build.message : Constants.userMessages.API_DEPRECATED;
+            logger.info(utils.formatRequest(response.statusText, response, response.data));
+          } else if (response.status != 200) {
+            message = Constants.userMessages.BUILD_INFO_FAILED;
             messageType = Constants.messageTypes.ERROR;
             errorCode = 'api_failed_build_info';
-  
             if (build) {
               message = `${
                 Constants.userMessages.BUILD_INFO_FAILED
               } with error: \n${JSON.stringify(build, null, 2)}`;
-              logger.error(message);
               if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
             } else {
               message = Constants.userMessages.BUILD_INFO_FAILED;
-              logger.error(message);
             }
-            logger.error(utils.formatRequest(err, resp, body));
+            logger.error(message);
+            logger.error(utils.formatRequest(response.statusText, response, response.data));
           } else {
             messageType = Constants.messageTypes.SUCCESS;
             message = `Build info for build id: \n ${JSON.stringify(
@@ -92,11 +81,16 @@ module.exports = function info(args, rawArgs) {
               null,
               2
             )}`;
-            logger.info(message);
           }
-        }
-        utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
-      });
+        logger.info(message);
+      } catch (error) {
+        message = Constants.userMessages.BUILD_INFO_FAILED;
+        messageType = Constants.messageTypes.ERROR;
+        errorCode = 'api_failed_build_info';
+        logger.info(message);
+        logger.error(utils.formatRequest(error.response.statusText, error.response, error.response.data));
+      }      
+      utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
     }).catch((err) => {
       logger.warn(err);
     });
