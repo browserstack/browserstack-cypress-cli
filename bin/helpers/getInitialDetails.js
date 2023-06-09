@@ -39,8 +39,10 @@ exports.getInitialDetails = (bsConfig, args, rawArgs) => {
         resolve(responseData);
       }
     } catch (error) {
-      logger.warn(utils.formatRequest(error.response.statusText, error.response, error.response.data));
-      utils.sendUsageReport(bsConfig, args, error.response, Constants.messageTypes.ERROR, 'get_initial_details_failed', null, rawArgs);
+      if(error.response) {
+        logger.warn(utils.formatRequest(error.response.statusText, error.response, error.response.data));
+        utils.sendUsageReport(bsConfig, args, error.response, Constants.messageTypes.ERROR, 'get_initial_details_failed', null, rawArgs);
+      }
       resolve({});
     }
   });

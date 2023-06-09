@@ -70,12 +70,12 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
         onUploadProgress: (progressEvent) => {
           let percent = parseInt(Math.floor((progressEvent.loaded * 100) / progressEvent.total));
           obj.bar1.update(percent, {
-            speed: ((progressEvent.loaded / (Date.now() - obj.startTime)) / 125).toFixed(2) //kbits per sec
+            speed: ((progressEvent.bytes / (Date.now() - obj.startTime)) / 125).toFixed(2) //kbits per sec
           });
-        }
+        },
       });
       responseData = response.data;
-      purgeUploadBar(obj);
+      purgeUploadBar(obj)
       logger.info(`${opts.messages.uploadingSuccess} (${responseData[opts.md5ReturnKey]})`);
       opts.cleanupMethod();
       responseData["time"] = Date.now() - obj.startTime;
@@ -84,34 +84,34 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
       let responseData = null;
       if(error.response){
         responseData = error.response.data;
-      }
-      if (error.response.status === 401) {
-        if (responseData && responseData.error) {
-          responseData.time = Date.now() - obj.startTime;
-          return reject({message: responseData.error, stacktrace: utils.formatRequest(responseData.error, error.response, responseData)});
-        } else {
-          return reject({message: Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS, stacktrace: utils.formatRequest(error.response.statusText, error.response, responseData)});
-        } 
-      }
-      if (!opts.propogateError){
-        purgeUploadBar(obj);
-        if (error.response.status === 413) {
-          return resolve({warn: Constants.userMessages.NODE_MODULES_LIMIT_EXCEEDED.replace("%SIZE%", (size / 1000000).toFixed(2))});
+        if (error.response.status === 401) {
+          if (responseData && responseData.error) {
+            responseData.time = Date.now() - obj.startTime;
+            return reject({message: responseData.error, stacktrace: utils.formatRequest(responseData.error, error.response, responseData)});
+          } else {
+            return reject({message: Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS, stacktrace: utils.formatRequest(error.response.statusText, error.response, responseData)});
+          } 
         }
-        return resolve({})
-      }
-      if(responseData && responseData["error"]){
-        responseData["time"] = Date.now() - obj.startTime;
-        reject({message: responseData["error"], stacktrace: utils.formatRequest(error.response.statusText, error.response, responseData)});
-      } else {
-        if (error.response.status === 413) {
-          reject({message: Constants.userMessages.ZIP_UPLOAD_LIMIT_EXCEEDED, stacktrace: utils.formatRequest(error.response.statusText, error.response, responseData)});
-        } else {
-          reject({message: Constants.userMessages.ZIP_UPLOADER_NOT_REACHABLE, stacktrace: utils.formatRequest(error.response.statusText, error.response, responseData)});
+        if (!opts.propogateError){
+          purgeUploadBar(obj);
+          if (error.response.status === 413) {
+            return resolve({warn: Constants.userMessages.NODE_MODULES_LIMIT_EXCEEDED.replace("%SIZE%", (size / 1000000).toFixed(2))});
+          }
+          return resolve({})
         }
-      }
-      if(error.response){
+        if(responseData && responseData["error"]){
+          responseData["time"] = Date.now() - obj.startTime;
+          reject({message: responseData["error"], stacktrace: utils.formatRequest(error.response.statusText, error.response, responseData)});
+        } else {
+          if (error.response.status === 413) {
+            reject({message: Constants.userMessages.ZIP_UPLOAD_LIMIT_EXCEEDED, stacktrace: utils.formatRequest(error.response.statusText, error.response, responseData)});
+          } else {
+            reject({message: Constants.userMessages.ZIP_UPLOADER_NOT_REACHABLE, stacktrace: utils.formatRequest(error.response.statusText, error.response, responseData)});
+          }
+        }
         reject({message: error.response, stacktrace: utils.formatRequest(error.response.statusText, error.response, error.response.data)});
+      } else {
+        reject({})
       }
     }
   });
