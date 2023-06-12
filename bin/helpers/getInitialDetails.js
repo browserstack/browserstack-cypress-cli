@@ -39,9 +39,9 @@ exports.getInitialDetails = (bsConfig, args, rawArgs) => {
         resolve(responseData);
       }
     } catch (error) {
-      if(error.response) {
-        logger.warn(utils.formatRequest(error.response.statusText, error.response, error.response.data));
-        utils.sendUsageReport(bsConfig, args, error.response, Constants.messageTypes.ERROR, 'get_initial_details_failed', null, rawArgs);
+      if(error.response && error.response.status !== 200) {
+        logger.warn(`Warn: Get Initial Details Request failed with status code ${error.response.status}`);
+        utils.sendUsageReport(bsConfig, args, error.response.data["error"], Constants.messageTypes.ERROR, 'get_initial_details_failed', null, rawArgs);
       }
       resolve({});
     }
