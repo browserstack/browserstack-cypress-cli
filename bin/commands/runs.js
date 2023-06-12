@@ -23,6 +23,12 @@ const archiver = require("../helpers/archiver"),
   packageDiff = require('../helpers/package-diff');
 const { getStackTraceUrl } = require('../helpers/sync/syncSpecsLogs');
 
+const { 
+  launchTestSession, 
+  setTestObservabilityFlags, 
+  runCypressTestsLocally 
+} = require('../testObservability/helper/helper');
+
 module.exports = function run(args, rawArgs) {
 
   markBlockStart('preBuild');
@@ -45,6 +51,12 @@ module.exports = function run(args, rawArgs) {
     logger.debug('Completed browserstack.json validation');
     markBlockStart('setConfig');
     logger.debug('Started setting the configs');
+
+    /* 
+      Set testObservability & browserstackAutomation flags
+    */
+    const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
+
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
     utils.setDefaults(bsConfig, args);
@@ -55,76 +67,93 @@ module.exports = function run(args, rawArgs) {
     // accept the access key from command line or env variable if provided
     utils.setAccessKey(bsConfig, args);
 
-    let buildReportData = await getInitialDetails(bsConfig, args, rawArgs);
+    let buildReportData = !isBrowserstackInfra ? null : await getInitialDetails(bsConfig, args, rawArgs);
 
     // accept the build name from command line if provided
     utils.setBuildName(bsConfig, args);
 
-    // set cypress config filename
-    utils.setCypressConfigFilename(bsConfig, args);
+    if(isBrowserstackInfra) {
+      // set cypress config filename
+      utils.setCypressConfigFilename(bsConfig, args);
 
-    // set cypress test suite type
-    utils.setCypressTestSuiteType(bsConfig);
+      // set cypress test suite type
+      utils.setCypressTestSuiteType(bsConfig);
 
-    // set cypress geo location
-    utils.setGeolocation(bsConfig, args);
+      // set cypress geo location
+      utils.setGeolocation(bsConfig, args);
 
-    // set spec timeout
-    utils.setSpecTimeout(bsConfig, args);
-
+      // set spec timeout
+      utils.setSpecTimeout(bsConfig, args);
+    }
+    
     // accept the specs list from command line if provided
     utils.setUserSpecs(bsConfig, args);
 
     // accept the env list from command line and set it
     utils.setTestEnvs(bsConfig, args);
 
+    // set build tag caps
+    utils.setBuildTags(bsConfig, args);
+
+    /* 
+      Send build start to Observability
+    */
+    if(isTestObservabilitySession) await launchTestSession(bsConfig);
+    
     // accept the system env list from bsconf and set it
     utils.setSystemEnvs(bsConfig);
 
-    //accept the local from env variable if provided
-    utils.setLocal(bsConfig, args);
+    if(isBrowserstackInfra) {
+      //accept the local from env variable if provided
+      utils.setLocal(bsConfig, args);
 
-    //set network logs
-    utils.setNetworkLogs(bsConfig);
+      //set network logs
+      utils.setNetworkLogs(bsConfig);
 
-    // set Local Mode (on-demand/ always-on)
-    utils.setLocalMode(bsConfig, args);
+      // set Local Mode (on-demand/ always-on)
+      utils.setLocalMode(bsConfig, args);
 
-    //accept the local identifier from env variable if provided
-    utils.setLocalIdentifier(bsConfig, args);
+      //accept the local identifier from env variable if provided
+      utils.setLocalIdentifier(bsConfig, args);
 
-    // set Local Config File
-    utils.setLocalConfigFile(bsConfig, args);
+      // set Local Config File
+      utils.setLocalConfigFile(bsConfig, args);
 
-    // run test in headed mode
-    utils.setHeaded(bsConfig, args);
+      // run test in headed mode
+      utils.setHeaded(bsConfig, args);
 
-    // set the no-wrap
-    utils.setNoWrap(bsConfig, args);
+      // set the no-wrap
+      utils.setNoWrap(bsConfig, args);
 
-    // add cypress dependency if missing
-    utils.setCypressNpmDependency(bsConfig);
+      // add cypress dependency if missing
+      utils.setCypressNpmDependency(bsConfig);
+    }
 
-    const { packagesInstalled } = await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd});
+    const { packagesInstalled } = !isBrowserstackInfra ? false : await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd});
 
-    // set build tag caps
-    utils.setBuildTags(bsConfig, args);
-    // set node version
-    utils.setNodeVersion(bsConfig, args);
+    if(isBrowserstackInfra) {
+      // set node version
+      utils.setNodeVersion(bsConfig, args);
 
-    //set browsers
-    await utils.setBrowsers(bsConfig, args);
+      //set browsers
+      await utils.setBrowsers(bsConfig, args);
 
-    //set config (--config)
-    utils.setConfig(bsConfig, args);
+      //set config (--config)
+      utils.setConfig(bsConfig, args);
 
-    // set sync/async mode (--async/--sync)
-    utils.setCLIMode(bsConfig, args);
+      // set sync/async mode (--async/--sync)
+      utils.setCLIMode(bsConfig, args);
 
-    // set other cypress configs e.g. reporter and reporter-options
-    utils.setOtherConfigs(bsConfig, args);
+      // set other cypress configs e.g. reporter and reporter-options
+      utils.setOtherConfigs(bsConfig, args);
+    }
+
     markBlockEnd('setConfig');
     logger.debug("Completed setting the configs");
+
+    if(!isBrowserstackInfra) {
+      return runCypressTestsLocally(bsConfig, args, rawArgs);
+    }
 
     // Validate browserstack.json values and parallels specified via arguments
     markBlockStart('validateConfig');

@@ -1,0 +1,934 @@
+const fs = require('fs');
+const path = require('path');
+const http = require('http');
+const https = require('https');
+const request = require('request');
+var gitLastCommit = require('git-last-commit');
+const { v4: uuidv4 } = require('uuid');
+const { performance } = require('perf_hooks'); 
+const os = require('os');
+const { promisify } = require('util');
+const getRepoInfo = require('git-repo-info');
+const gitconfig = require('gitconfiglocal');
+const { spawn, execSync } = require('child_process');
+const glob = require('glob');
+const platformDetect = require('platform-detect');
+
+const pGitconfig = promisify(gitconfig);
+
+const logger = require("../../helpers/logger").winstonLogger;
+
+const utils = require('../../helpers/utils');
+
+// Getting global packages path
+const GLOBAL_MODULE_PATH = execSync('npm root -g').toString().trim();
+
+const { name, version } = require('../../../package.json');
+
+const CHUNK_SIZE = 5000
+
+const { consoleHolder, API_URL, BATCH_SIZE } = require('./constants');
+exports.pending_test_uploads = {
+  count: 0
+};
+
+exports.debug = (text) => {
+  if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
+    consoleHolder.log(`\n[${(new Date()).toISOString()}][ OBSERVABILITY ] ${text}\n`)
+  }
+}
+
+const httpKeepAliveAgent = new http.Agent({
+  keepAlive: true,
+  timeout: 60000,
+  maxSockets: 2,
+  maxTotalSockets: 2
+});
+
+const httpsKeepAliveAgent = new https.Agent({
+  keepAlive: true,
+  timeout: 60000,
+  maxSockets: 2,
+  maxTotalSockets: 2
+});
+
+const httpScreenshotsKeepAliveAgent = new http.Agent({
+  keepAlive: true,
+  timeout: 60000,
+  maxSockets: 2,
+  maxTotalSockets: 2
+});
+
+const httpsScreenshotsKeepAliveAgent = new https.Agent({
+  keepAlive: true,
+  timeout: 60000,
+  maxSockets: 2,
+  maxTotalSockets: 2
+});
+
+exports.printBuildLink = async () => {
+  try {
+    await this.stopBuildUpstream();
+    try {
+      if(process.env.BS_TESTOPS_BUILD_HASHED_ID 
+        && process.env.BS_TESTOPS_BUILD_HASHED_ID != "null" 
+        && process.env.BS_TESTOPS_BUILD_HASHED_ID != "undefined") {
+          console.log();
+          logger.info(`Visit https://observability.browserstack.com/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID} to view build report, insights, and many more debugging information all at one place!\n`);
+      }
+    } catch(err) {
+      logger.error(`[${(new Date()).toISOString()}][ OBSERVABILITY ] Build Not Found`);
+    }
+  } catch(err) {
+    logger.error(`[${(new Date()).toISOString()}][ OBSERVABILITY ] Error while stopping build : ${err}`);
+  }
+}
+
+const nodeRequest = (type, url, data, config) => {
+  return new Promise(async (resolve, reject) => {
+    const options = {...config,...{
+      method: type,
+      url: `${API_URL}/${url}`,
+      body: data,
+      json: config.headers['Content-Type'] === 'application/json',
+      agent: API_URL.includes('https') ? httpsKeepAliveAgent : httpKeepAliveAgent
+    }};
+
+    if(url === exports.requestQueueHandler.screenshotEventUrl) {
+      options.agent = API_URL.includes('https') ? httpsScreenshotsKeepAliveAgent : httpScreenshotsKeepAliveAgent;
+    }
+
+    request(options, function callback(error, response, body) {
+      if(error) {
+        reject(error);
+      } else if(response.statusCode != 200) {
+        reject(response && response.body ? response.body : `Received response from BrowserStack Server with status : ${response.statusCode}`);
+      } else {
+        try {
+          if(typeof(body) !== 'object') body = JSON.parse(body);
+        } catch(e) {
+          reject('Not a JSON response from BrowserStack Server');
+        }
+        resolve({
+          data: body
+        });
+      }
+    });
+  });
+}
+
+exports.failureData = (errors,tag) => {
+  if(!errors) return [];
+  try {
+    if(tag === 'test') {
+      return errors.map((failure) => {
+        let {stack, ...expanded} = failure
+        let expandedArray = Object.keys(expanded).map((key) => {
+          return `${key}: ${expanded[key]}`
+        })
+        return { backtrace: stack.split(/\r?\n/), expanded: expandedArray }
+      })
+    } else if(tag === 'err') {
+      let failureArr = [], failureChildArr = [];
+      Object.keys(errors).forEach((key) => {
+        try {
+          failureChildArr.push(`${key}: ${errors[key]}`);
+        } catch(e) {
+          exports.debug(`Exception in populating test failure data with error : ${e.message} : ${e.backtrace}`);
+        }
+      })
+      failureArr.push({ backtrace: errors.stack.split(/\r?\n/), expanded: failureChildArr });
+      return failureArr;
+    } else {
+      return [];
+    }
+  } catch(e) {
+    exports.debug(`Exception in populating test failure data with error : ${e.message} : ${e.backtrace}`);
+  }
+  return [];
+}
+
+exports.getTestEnv = () => {
+  return {
+    "ci": "generic",
+    "key": uuidv4(),
+    "version": version,
+    "collector": `js-${name}`,
+  }
+}
+
+// exports.extractValuesWithRegexKeyMatch = (obj) => {
+//   let values = [];
+//   let customTagRegex = new RegExp("^CUSTOM_TAG_\\d+$", 'i');
+//   Object.keys(obj)
+//     .filter(key => customTagRegex.test(key))
+//     .forEach(key => values.push(obj[key]));
+//   return values;
+// }
+
+// exports.getCustomTags = (config) => {
+//   let tags = [];
+
+//   let tag = config.customTag || process.env.CUSTOM_TAG;
+//   if (tag) {
+//     tags.push(tag);
+//   }
+
+//   tags.push(...this.extractValuesWithRegexKeyMatch(process.env));
+//   tags.push(...this.extractValuesWithRegexKeyMatch(config));
+
+//   return tags;
+// }
+
+exports.getFileSeparatorData = () => {
+  const fileSeparatorRegex = /^win/.test(process.platform) ? "\\\\" : "/";
+  const fileSeparator = /^win/.test(process.platform) ? "\\" : "/";
+  return {
+    fileSeparator,
+    fileSeparatorRegex
+  };
+}
+
+exports.findGitConfig = (filePath) => {
+  const { fileSeparator, fileSeparatorRegex } = exports.getFileSeparatorData();
+  if(filePath == null || filePath == '' || filePath == fileSeparator) {
+    return null;
+  }
+  try {
+    fs.statSync(filePath + fileSeparator + '.git' + fileSeparator + 'config');
+    return filePath;
+  } catch(e) {
+    let parentFilePath = filePath.split(fileSeparatorRegex);
+    parentFilePath.pop();
+    return exports.findGitConfig(parentFilePath.join(fileSeparator));
+  }
+}
+
+const getGitMetaData = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      var info = getRepoInfo();
+      if(!info.commonGitDir) {
+        exports.debug(`Unable to find a Git directory`);
+        resolve({});
+      }
+      if(!info.author && exports.findGitConfig(process.cwd())) {
+        /* commit objects are packed */
+        gitLastCommit.getLastCommit(async (err, commit) => {
+          info["author"] = info["author"] || `${commit["author"]["name"].replace(/[“]+/g, '')} <${commit["author"]["email"].replace(/[“]+/g, '')}>`;
+          info["authorDate"] = info["authorDate"] || commit["authoredOn"];
+          info["committer"] = info["committer"] || `${commit["committer"]["name"].replace(/[“]+/g, '')} <${commit["committer"]["email"].replace(/[“]+/g, '')}>`;
+          info["committerDate"] = info["committerDate"] || commit["committedOn"]
+          info["commitMessage"] = info["commitMessage"] || commit["subject"];
+
+          const { remote } = await pGitconfig(info.commonGitDir);
+          const remotes = Object.keys(remote).map(remoteName =>  ({name: remoteName, url: remote[remoteName]['url']}));
+          resolve({
+            "name": "git",
+            "sha": info["sha"],
+            "short_sha": info["abbreviatedSha"],
+            "branch": info["branch"],
+            "tag": info["tag"],
+            "committer": info["committer"],
+            "committer_date": info["committerDate"],
+            "author": info["author"],
+            "author_date": info["authorDate"],
+            "commit_message": info["commitMessage"],
+            "root": info["root"],
+            "common_git_dir": info["commonGitDir"],
+            "worktree_git_dir": info["worktreeGitDir"],
+            "last_tag": info["lastTag"],
+            "commits_since_last_tag": info["commitsSinceLastTag"],
+            "remotes": remotes
+          });
+        }, {dst: exports.findGitConfig(process.cwd())});
+      } else {
+        const { remote } = await pGitconfig(info.commonGitDir);
+        const remotes = Object.keys(remote).map(remoteName =>  ({name: remoteName, url: remote[remoteName]['url']}));
+        resolve({
+          "name": "git",
+          "sha": info["sha"],
+          "short_sha": info["abbreviatedSha"],
+          "branch": info["branch"],
+          "tag": info["tag"],
+          "committer": info["committer"],
+          "committer_date": info["committerDate"],
+          "author": info["author"],
+          "author_date": info["authorDate"],
+          "commit_message": info["commitMessage"],
+          "root": info["root"],
+          "common_git_dir": info["commonGitDir"],
+          "worktree_git_dir": info["worktreeGitDir"],
+          "last_tag": info["lastTag"],
+          "commits_since_last_tag": info["commitsSinceLastTag"],
+          "remotes": remotes
+        });
+      }
+    } catch(err) {
+      exports.debug(`Exception in populating Git metadata with error : ${err}`);
+      resolve({});
+    }
+  })
+}
+
+const getCiInfo = () => {
+  var env = process.env;
+  // Jenkins
+  if ((typeof env.JENKINS_URL === "string" && env.JENKINS_URL.length > 0) || (typeof env.JENKINS_HOME === "string" && env.JENKINS_HOME.length > 0)) {
+    return {
+      name: "Jenkins",
+      build_url: env.BUILD_URL,
+      job_name: env.JOB_NAME,
+      build_number: env.BUILD_NUMBER
+    }
+  }
+  // CircleCI
+  if (env.CI === "true" && env.CIRCLECI === "true") {
+    return {
+      name: "CircleCI",
+      build_url: env.CIRCLE_BUILD_URL,
+      job_name: env.CIRCLE_JOB,
+      build_number: env.CIRCLE_BUILD_NUM
+    }
+  }
+  // Travis CI
+  if (env.CI === "true" && env.TRAVIS === "true") {
+    return {
+      name: "Travis CI",
+      build_url: env.TRAVIS_BUILD_WEB_URL,
+      job_name: env.TRAVIS_JOB_NAME,
+      build_number: env.TRAVIS_BUILD_NUMBER
+    }
+  }
+  // Codeship
+  if (env.CI === "true" && env.CI_NAME === "codeship") {
+    return {
+      name: "Codeship",
+      build_url: null,
+      job_name: null,
+      build_number: null
+    }
+  }
+  // Bitbucket
+  if (env.BITBUCKET_BRANCH && env.BITBUCKET_COMMIT) {
+    return {
+      name: "Bitbucket",
+      build_url: env.BITBUCKET_GIT_HTTP_ORIGIN,
+      job_name: null,
+      build_number: env.BITBUCKET_BUILD_NUMBER
+    }
+  }
+  // Drone
+  if (env.CI === "true" && env.DRONE === "true") {
+    return {
+      name: "Drone",
+      build_url: env.DRONE_BUILD_LINK,
+      job_name: null,
+      build_number: env.DRONE_BUILD_NUMBER
+    }
+  }
+  // Semaphore
+  if (env.CI === "true" && env.SEMAPHORE === "true") {
+    return {
+      name: "Semaphore",
+      build_url: env.SEMAPHORE_ORGANIZATION_URL,
+      job_name: env.SEMAPHORE_JOB_NAME,
+      build_number: env.SEMAPHORE_JOB_ID
+    }
+  }
+  // GitLab
+  if (env.CI === "true" && env.GITLAB_CI === "true") {
+    return {
+      name: "GitLab",
+      build_url: env.CI_JOB_URL,
+      job_name: env.CI_JOB_NAME,
+      build_number: env.CI_JOB_ID
+    }
+  }
+  // Buildkite
+  if (env.CI === "true" && env.BUILDKITE === "true") {
+    return {
+      name: "Buildkite",
+      build_url: env.BUILDKITE_BUILD_URL,
+      job_name: env.BUILDKITE_LABEL || env.BUILDKITE_PIPELINE_NAME,
+      build_number: env.BUILDKITE_BUILD_NUMBER
+    }
+  }
+  // Visual Studio Team Services
+  if (env.TF_BUILD === "True") {
+    return {
+      name: "Visual Studio Team Services",
+      build_url: `${env.SYSTEM_TEAMFOUNDATIONSERVERURI}${env.SYSTEM_TEAMPROJECTID}`,
+      job_name: env.SYSTEM_DEFINITIONID,
+      build_number: env.BUILD_BUILDID
+    }
+  }
+  // if no matches, return null
+  return null;
+}
+
+let packages = {};
+
+exports.getPackageVersion = (package_) => {
+  if(packages[package_]) return packages[package_];
+  return packages[package_] = this.requireModule(`${package_}/package.json`).version;
+}
+
+exports.getAgentVersion = () => {
+  let _path = path.join(__dirname, '../../../package.json');
+  if(fs.existsSync(_path))
+    return require(_path).version;
+}
+
+const setEnvironmentVariablesForRemoteReporter = (BS_TESTOPS_JWT, BS_TESTOPS_BUILD_HASHED_ID, BS_TESTOPS_ALLOW_SCREENSHOTS, OBSERVABILITY_LAUNCH_SDK_VERSION) => {
+  process.env.BS_TESTOPS_JWT = BS_TESTOPS_JWT;
+  process.env.BS_TESTOPS_BUILD_HASHED_ID = BS_TESTOPS_BUILD_HASHED_ID;
+  process.env.BS_TESTOPS_ALLOW_SCREENSHOTS = BS_TESTOPS_ALLOW_SCREENSHOTS;
+  process.env.OBSERVABILITY_LAUNCH_SDK_VERSION = OBSERVABILITY_LAUNCH_SDK_VERSION;
+}
+
+const getCypressCommandEventListener = () => {
+  return (
+    `require('browserstack-cypress-cli/bin/testObservability/cypress/cypressEventListeners');`
+  );
+}
+
+const setEventListeners = () => {
+  glob(process.cwd() + '/cypress/support/*.js', {}, (err, files) => {
+    if(err) return exports.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
+    files.forEach(file => {
+      if(!file.includes('commands.js')) {
+        const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
+        let newFileContent =  defaultFileContent + 
+                              '\n' +
+                              getCypressCommandEventListener() +
+                              '\n'
+        fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
+      }
+    });
+  });
+}
+
+const getBuildDetails = (bsConfig) => {
+  const isTestObservabilityOptionsPresent = !utils.isUndefined(bsConfig["testObservabilityOptions"]);
+  let buildName = '',
+      projectName = '',
+      buildDescription = '',
+      buildIdentifier = null,
+      buildTags = [];
+  
+  /* Pick from environment variables */
+  buildName = process.env.BROWSERSTACK_BUILD_NAME || buildName;
+  projectName = process.env.BROWSERSTACK_PROJECT_NAME || projectName;
+  
+  /* Pick from testObservabilityOptions */
+  if(isTestObservabilityOptionsPresent) {
+    buildName = buildName || bsConfig["testObservabilityOptions"]["buildName"];
+    projectName = projectName || bsConfig["testObservabilityOptions"]["projectName"];
+    buildTags = [...buildTags, ...bsConfig["testObservabilityOptions"]["buildTag"]];
+    buildIdentifier = buildIdentifier || bsConfig["testObservabilityOptions"]["buildIdentifier"];
+    buildDescription = buildDescription || bsConfig["testObservabilityOptions"]["buildDescription"];
+  }
+
+  /* Pick from run settings */
+  buildName = buildName || bsConfig["run_settings"]["build_name"];
+  projectName = projectName || bsConfig["run_settings"]["project_name"];
+  buildTags = [...buildTags, bsConfig["run_settings"]["build_tag"]];
+
+  buildName = buildName || path.basename(path.resolve(process.cwd()));
+
+  return {
+    buildName,
+    projectName,
+    buildIdentifier,
+    buildDescription,
+    buildTags
+  };
+}
+
+exports.launchTestSession = async (user_config) => {
+  // const obsUserName = user_config["auth"]["username"];
+  // const obsAccessKey = user_config["auth"]["access_key"];
+  
+  const obsUserName = process.env.OBS_USERNAME || user_config["auth"]["username"];
+  const obsAccessKey = process.env.OBS_ACCESS_KEY || user_config["auth"]["access_key"];
+  const BSTestOpsToken = `${obsUserName || ''}:${obsAccessKey || ''}`;
+  if(BSTestOpsToken === '') {
+    exports.debug('EXCEPTION IN BUILD START EVENT : Missing authentication token');
+    process.env.BS_TESTOPS_BUILD_COMPLETED = false;
+    return [null, null];
+  } else {
+    try {
+      const {
+        buildName,
+        projectName,
+        buildIdentifier,
+        buildDescription,
+        buildTags
+      } = getBuildDetails(user_config);
+      const data = {
+        'format': 'json',
+        'project_name': projectName,
+        'name': buildName,
+        'build_identifier': buildIdentifier,
+        'description': buildDescription,
+        'start_time': (new Date()).toISOString(),
+        'tags': buildTags,
+        'host_info': {
+          hostname: os.hostname(),
+          platform: os.platform(),
+          type: os.type(),
+          version: os.version(),
+          arch: os.arch()
+        },
+        'ci_info': getCiInfo(),
+        'failed_tests_rerun': process.env.BROWSERSTACK_RERUN || false,
+        'version_control': await getGitMetaData(),
+        'observability_version': {
+          frameworkName: "Cypress",
+          frameworkVersion: exports.getPackageVersion('cypress'),
+          sdkVersion: exports.getAgentVersion()
+        }
+      };
+      const config = {
+        auth: {
+          username: obsUserName,
+          password: obsAccessKey
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-BSTACK-TESTOPS': 'true'
+        }
+      };
+
+      const response = await nodeRequest('POST','api/v1/builds',data,config);
+      exports.debug('Build creation successfull!');
+      process.env.BS_TESTOPS_BUILD_COMPLETED = true;
+      setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
+      setEventListeners();
+      // return [response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots];
+    } catch(error) {
+      if (error.response) {
+        exports.debug(`EXCEPTION IN BUILD START EVENT : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`);
+      } else {
+        exports.debug(`EXCEPTION IN BUILD START EVENT : ${error.message || error}`);
+      }
+      process.env.BS_TESTOPS_BUILD_COMPLETED = false;
+      setEnvironmentVariablesForRemoteReporter(null, null, null);
+      // return [null, null, null];
+    }
+  }
+}
+
+exports.getHookDetails = (hookTitle) => {
+  if(!hookTitle || typeof(hookTitle) != 'string') return [null, null];
+  if(hookTitle.indexOf('hook:') !== -1) {
+    const hook_details = hookTitle.split('hook:');
+    return [hook_details[0].slice(0,-1).split('"')[1], hook_details[1].substring(1)];
+  } else if(hookTitle.indexOf('hook') !== -1) {
+    const hook_details = hookTitle.split('hook');
+    return [hook_details[0].slice(0,-1).split('"')[1], hookTitle];
+  } else {
+    return [null, null];
+  }
+}
+
+exports.getHooksForTest = (test) => {
+  if(!test || !test.parent) return [];
+  const hooksArr = [];
+  ['_beforeAll','_afterAll','_beforeEach','_afterEach'].forEach(hookType => {
+    let hooks = test.parent[hookType] || []
+    hooks.forEach(testHook => {
+      if(testHook.hookAnalyticsId) hooksArr.push(testHook.hookAnalyticsId);
+    })
+  });
+  return [...hooksArr,...exports.getHooksForTest(test.parent)];
+}
+
+exports.mapTestHooks = (test) => {
+  if(!test || !test.parent) return;
+  ['_beforeAll','_afterAll','_beforeEach','_afterEach'].forEach(hookType => {
+    let hooks = test.parent[hookType] || []
+    hooks.forEach(testHook => {
+      if(!testHook.hookAnalyticsId) {
+        testHook.hookAnalyticsId = uuidv4();
+      } else if(testHook.markedStatus && hookType == '_afterEach') {
+        testHook.hookAnalyticsId = uuidv4();
+        delete testHook.markedStatus;
+      }
+    })
+  });
+  exports.mapTestHooks(test.parent);
+}
+
+exports.batchAndPostEvents = async (eventUrl, kind, data) => {
+  const config = {
+    headers: {
+      'Authorization': `Bearer ${process.env.BS_TESTOPS_JWT}`,
+      'Content-Type': 'application/json',
+      'X-BSTACK-TESTOPS': 'true'
+    }
+  };
+
+  try {
+    const response = await nodeRequest('POST',eventUrl,data,config);
+    if(response.data.error) {
+      throw({message: response.data.error});
+    } else {
+      exports.debug(`${kind} event successfull!`)
+      exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - data.length);
+    }
+  } catch(error) {
+    if (error.response) {
+      exports.debug(`EXCEPTION IN ${kind} REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`);
+    } else {
+      exports.debug(`EXCEPTION IN ${kind} REQUEST TO TEST OBSERVABILITY : ${error.message || error}`);
+    }
+    exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - data.length);
+  }
+}
+
+const RequestQueueHandler = require('./requestQueueHandler');
+exports.requestQueueHandler = new RequestQueueHandler();
+
+exports.uploadEventData = async (eventData, run=0) => {
+  const log_tag = {
+    ['TestRunStarted']: 'Test_Start_Upload',
+    ['TestRunFinished']: 'Test_End_Upload',
+    ['TestRunSkipped']: 'Test_Skipped_Upload',
+    ['LogCreated']: 'Log_Upload',
+    ['HookRunStarted']: 'Hook_Start_Upload',
+    ['HookRunFinished']: 'Hook_End_Upload',
+    ['CBTSessionCreated']: 'CBT_Upload',
+    ['BuildUpdate']: 'Build_Update'
+  }[eventData.event_type];
+
+  if(run === 0 && process.env.BS_TESTOPS_JWT != "null") exports.pending_test_uploads.count += 1;
+  
+  if (process.env.BS_TESTOPS_BUILD_COMPLETED === "true") {
+    if(process.env.BS_TESTOPS_JWT == "null") {
+      exports.debug(`EXCEPTION IN ${log_tag} REQUEST TO TEST OBSERVABILITY : missing authentication token`);
+      exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count-1);
+      return {
+        status: 'error',
+        message: 'Token/buildID is undefined, build creation might have failed'
+      };
+    } else {
+      let data = eventData, event_api_url = 'api/v1/event';
+      
+      exports.requestQueueHandler.start();
+      const { shouldProceed, proceedWithData, proceedWithUrl } = exports.requestQueueHandler.add(eventData);
+      if(!shouldProceed) {
+        return;
+      } else if(proceedWithData) {
+        data = proceedWithData;
+        event_api_url = proceedWithUrl;
+      }
+
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${process.env.BS_TESTOPS_JWT}`,
+          'Content-Type': 'application/json',
+          'X-BSTACK-TESTOPS': 'true'
+        }
+      };
+  
+      try {
+        const response = await nodeRequest('POST',event_api_url,data,config);
+        if(response.data.error) {
+          throw({message: response.data.error});
+        } else {
+          exports.debug(`${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'}[${run}] event successfull!`)
+          exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - (event_api_url === 'api/v1/event' ? 1 : data.length));
+          return {
+            status: 'success',
+            message: ''
+          };
+        }
+      } catch(error) {
+        if (error.response) {
+          exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`);
+        } else {
+          exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO TEST OBSERVABILITY : ${error.message || error}`);
+        }
+        exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - (event_api_url === 'api/v1/event' ? 1 : data.length));
+        return {
+          status: 'error',
+          message: error.message || (error.response ? `${error.response.status}:${error.response.statusText}` : error)
+        };
+      }
+    }
+  } else if (run >= 5) {
+    exports.debug(`EXCEPTION IN ${log_tag} REQUEST TO TEST OBSERVABILITY : Build Start is not completed and ${log_tag} retry runs exceeded`);
+    if(process.env.BS_TESTOPS_JWT != "null") exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count-1);
+    return {
+      status: 'error',
+      message: 'Retry runs exceeded'
+    };
+  } else if(process.env.BS_TESTOPS_BUILD_COMPLETED !== "false") {
+    setTimeout(function(){ exports.uploadEventData(eventData, run+1) }, 1000);
+  }
+}
+
+exports.setTestObservabilityFlags = (bsConfig) => {
+  /* testObservability */
+  let isTestObservabilitySession = true;
+  if(bsConfig["testObservability"]) isTestObservabilitySession = ( bsConfig["testObservability"] == true );
+  if(process.env.BROWSERSTACK_TEST_OBSERVABILITY) isTestObservabilitySession = ( process.env.BROWSERSTACK_TEST_OBSERVABILITY == "true" );
+  if(process.argv.includes('--disable-test-observability')) isTestObservabilitySession = false;
+
+  /* browserstackAutomation */
+  let isBrowserstackInfra = true;
+  if(bsConfig["browserstackAutomation"]) isBrowserstackInfra = ( bsConfig["browserstackAutomation"] == true );
+  if(process.env.BROWSERSTACK_AUTOMATION) isBrowserstackInfra = ( process.env.BROWSERSTACK_AUTOMATION == "true" );
+  if(process.argv.includes('--disable-browserstack-automation')) isBrowserstackInfra = false;
+
+  process.env.BROWSERSTACK_TEST_OBSERVABILITY = isTestObservabilitySession;
+  process.env.BROWSERSTACK_AUTOMATION = isBrowserstackInfra;
+
+  return [isTestObservabilitySession, isBrowserstackInfra];
+}
+
+exports.isTestObservabilitySession = () => {
+  return ( process.env.BROWSERSTACK_TEST_OBSERVABILITY == "true" );
+}
+
+exports.isBrowserstackInfra = () => {
+  return ( process.env.BROWSERSTACK_AUTOMATION == "true" );
+}
+
+exports.shouldReRunObservabilityTests = () => {
+  return (process.env.BROWSERSTACK_RERUN_TESTS && process.env.BROWSERSTACK_RERUN_TESTS !== "null") ? true : false
+}
+
+exports.stopBuildUpstream = async (buildStartWaitRun = 0, testUploadWaitRun = 0, forceStop = false) => {
+  if(process.env.BS_TESTOPS_BUILD_COMPLETED !== "false" && !forceStop && exports.pending_test_uploads.count && testUploadWaitRun < 5) {
+    exports.debug(`stopBuildUpstream event : retry count ${testUploadWaitRun+1} due to pending event uploads ${exports.pending_test_uploads.count}`);
+    setTimeout(function(){ exports.stopBuildUpstream(buildStartWaitRun, testUploadWaitRun+1,false) }, 5000);
+  } else {
+    if (process.env.BS_TESTOPS_BUILD_COMPLETED === "true") {
+      if(process.env.BS_TESTOPS_JWT == "null" || process.env.BS_TESTOPS_BUILD_HASHED_ID == "null") {
+        exports.debug('EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : Missing authentication token');
+        return {
+          status: 'error',
+          message: 'Token/buildID is undefined, build creation might have failed'
+        };
+      } else {
+        const data = {
+          'stop_time': (new Date()).toISOString()
+        };
+        const config = {
+          headers: {
+            'Authorization': `Bearer ${process.env.BS_TESTOPS_JWT}`,
+            'Content-Type': 'application/json',
+            'X-BSTACK-TESTOPS': 'true'
+          }
+        };
+    
+        try {
+          const response = await nodeRequest('PUT',`api/v1/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}/stop`,data,config);
+          if(response.data.error) {
+            throw({message: response.data.error});
+          } else {
+            exports.debug(`stopBuildUpstream buildStartWaitRun[${buildStartWaitRun}] testUploadWaitRun[${testUploadWaitRun}] event successfull!`)
+            return {
+              status: 'success',
+              message: ''
+            };
+          }
+        } catch(error) {
+          if (error.response) {
+            exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`);
+          } else {
+            exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : ${error.message || error}`);
+          }
+          return {
+            status: 'error',
+            message: error.message || error.response ? `${error.response.status}:${error.response.statusText}` : error
+          };
+        }
+      }
+    } else if(process.env.BS_TESTOPS_BUILD_COMPLETED !== "false") {
+      /* forceStop = true since we won't wait for pendingUploads trigerred post stop flow */
+      setTimeout(function(){ exports.stopBuildUpstream(buildStartWaitRun+1,testUploadWaitRun,true) }, 1000);
+    }
+  }
+}
+
+// exports.getUpstreamConfig = () => {
+//   return bsSetupHelper.readConfig(bsSetupHelper.getConfigPath());
+// }
+
+exports.getPlatformVersion = (isBstack) => {
+  if(isBstack) {
+    try {
+      return global.__platform__.split(',')[1].trim();
+    } catch (e) {
+      return null;
+    }
+  }
+  return null;
+}
+
+exports.isUndefined = value => (value === undefined || value === null);
+
+exports.parseFileNames = (string) => {
+  if (exports.isUndefined(string)) {
+    return undefined;
+  } else {
+    try {
+      return string.trim().split(",");
+    } catch (err) {
+      // file object is empty or non parseable. run all files in this case
+      // nothing to do in this block. caught the error just that runner doesn't raise the exception and exit
+      return undefined;
+    }
+  }
+}
+
+exports.getHookSkippedTests = (suite) => {
+  const subSuitesSkippedTests = suite.suites.reduce((acc, subSuite) => {
+    const subSuiteSkippedTests = exports.getHookSkippedTests(subSuite);
+    if (subSuiteSkippedTests) {
+      acc = acc.concat(subSuiteSkippedTests);
+    }
+    return acc;
+  }, []);
+  const tests = suite.tests.filter(test => {
+    const isSkippedTest = test.type != 'hook' && 
+                            !test.markedStatus && 
+                            test.state != 'passed' &&
+                            test.state != 'failed' &&
+                            !test.pending
+    return isSkippedTest;
+  });
+  return tests.concat(subSuitesSkippedTests);
+}
+
+const getPlatformName = () => {
+  if (platformDetect.windows) return 'Windows'
+  if (platformDetect.macos) return 'OS X'
+  if (platformDetect.android) return 'Android'
+  if (platformDetect.ios) return 'IOS'
+  if (platformDetect.linux) return 'Linux'
+  if (platformDetect.tizen) return 'Tizen'
+  if (platformDetect.chromeos) return 'Chrome OS'
+  return 'Unknown'
+}
+
+const getMacOSVersion = () => {
+  return execSync("awk '/SOFTWARE LICENSE AGREEMENT FOR macOS/' '/System/Library/CoreServices/Setup Assistant.app/Contents/Resources/en.lproj/OSXSoftwareLicense.rtf' | awk -F 'macOS ' '{print $NF}' | awk '{print substr($0, 0, length($0)-1)}'").toString().trim()
+}
+
+exports.getOSDetailsFromSystem = async () => {
+  let platformName = getPlatformName();
+  let platformVersion = os.release().toString();
+
+  switch (platformName) {
+    case 'OS X':
+      platformVersion = getMacOSVersion();
+      break;
+    case 'Windows':
+      try {
+        const windowsRelease = (await import('windows-release')).default;
+        platformVersion = windowsRelease();
+      } catch (e) {
+      }
+      break
+    case 'Linux':
+      try {
+        const details = await getLinuxDetails();
+        if (details.dist) platformName = details.dist;
+        if (details.release) platformVersion = details.release.toString();
+      } catch (e) {
+      }
+      break;
+    default:
+      break;
+  }
+
+  return {
+    os: platformName,
+    os_version: platformVersion
+  };
+}
+
+// exports.getOSDetailsFromSystem = (product) => {
+//   var opsys = os.platform();
+//   if (opsys == "darwin") {
+//       opsys = "MacOS";
+//   } else if (opsys == "win32" || opsys == "win64") {
+//       opsys = "Windows";
+//   } else if (opsys == "linux") {
+//       opsys = product === "automate" ? "MacOS" : "Linux";
+//   }
+
+//   return {
+//     os: opsys,
+//     os_version: os.version()
+//   }
+// }
+
+exports.requireModule = (module) => {
+  logger.debug(`Getting ${module} from ${process.cwd()}`);
+  let local_path = "";
+  if(process.env["browserStackCwd"]){
+   local_path = path.join(process.env["browserStackCwd"], 'node_modules', module);
+  } else {
+    local_path = path.join(process.cwd(), 'node_modules', module);
+  }
+  if(!fs.existsSync(local_path)) {
+    logger.debug(`${module} doesn\'t exist at ${process.cwd()}`);
+    logger.debug(`Getting ${module} from ${GLOBAL_MODULE_PATH}`);
+
+    let global_path;
+    if(['jest-runner', 'jest-runtime'].includes(module))
+      global_path = path.join(GLOBAL_MODULE_PATH, 'jest', 'node_modules', module);
+    else
+      global_path = path.join(GLOBAL_MODULE_PATH, module);
+    if(!fs.existsSync(global_path)) {
+      throw new Error(`${module} doesn't exist.`);
+    }
+    return require(global_path);
+  }
+  return require(local_path);
+}
+
+exports.runCypressTestsLocally = (bsConfig, args, rawArgs) => {
+  logger.info(`\n >>> LOCAL CMD : npx cypress run ${rawArgs.slice(1)} --reporter 'browserstack-cypress-cli/bin/testObservability/reporter' \n`);
+  // const index = rawArgs.findIndex((arg) => (arg === '--reporter' || arg === '-r'));
+  
+  const cypressProcess = spawn(
+    'npx',
+    ['cypress', 'run', ...rawArgs.slice(1), '--reporter', 'browserstack-cypress-cli/bin/testObservability/reporter'],
+    { stdio: 'inherit', cwd: process.cwd(), env: process.env }
+  );
+
+  cypressProcess.on('close', async (code) => {
+    logger.info(`Cypress process exited with code ${code}`);
+    await this.printBuildLink();
+  });
+
+  cypressProcess.on('error', (err) => {
+    logger.info(`Cypress process error ${err}`);
+  })
+}
+
+class PathHelper {
+  constructor(config, prefix) {
+    this.config = config
+    this.prefix = prefix
+  }
+
+  relativeTestFilePath(testFilePath) {
+    // Based upon https://github.com/facebook/jest/blob/49393d01cdda7dfe75718aa1a6586210fa197c72/packages/jest-reporters/src/relativePath.ts#L11
+    const dir = this.config.cwd || this.config.rootDir
+    return path.relative(dir, testFilePath)
+  }
+
+  prefixTestPath(testFilePath) {
+    const relativePath = this.relativeTestFilePath(testFilePath)
+    return this.prefix ? path.join(this.prefix, relativePath) : relativePath
+  }
+}
+exports.PathHelper = PathHelper;

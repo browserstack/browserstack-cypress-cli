@@ -20,7 +20,8 @@ const usageReporting = require("./usageReporting"),
   fileHelpers = require("./fileHelpers"),
   config = require("../helpers/config"),
   pkg = require('../../package.json'),
-  transports = require('./logger').transports;
+  transports = require('./logger').transports,
+  { findGitConfig, printBuildLink, isTestObservabilitySession, isBrowserstackInfra } = require('../testObservability/helper/helper');
 
 const request = require('request');
 
@@ -225,7 +226,7 @@ exports.setDefaults = (bsConfig, args) => {
   }
 
   // setting cache_dependencies to true if not present
-  if (this.isUndefined(bsConfig.run_settings.cache_dependencies)) {
+  if (bsConfig.run_settings && this.isUndefined(bsConfig.run_settings.cache_dependencies)) {
     bsConfig.run_settings.cache_dependencies = true;
   }
 
@@ -530,6 +531,17 @@ exports.setSystemEnvs = (bsConfig) => {
     matchingKeys.forEach((envVar) => {
       envKeys[envVar] = process.env[envVar];
     });
+  }
+
+  ["BROWSERSTACK_TEST_OBSERVABILITY", "BROWSERSTACK_AUTOMATION", "BS_TESTOPS_BUILD_COMPLETED", "BS_TESTOPS_JWT", "BS_TESTOPS_BUILD_HASHED_ID", "BS_TESTOPS_ALLOW_SCREENSHOTS", "OBSERVABILITY_LAUNCH_SDK_VERSION", "BROWSERSTACK_OBSERVABILITY_DEBUG"].forEach(key => {
+    envKeys[key] = process.env[key];
+  });
+
+  let gitConfigPath = findGitConfig(process.cwd());
+  if(!isBrowserstackInfra()) process.env.OBSERVABILITY_GIT_CONFIG_PATH_LOCAL = gitConfigPath;
+  if(gitConfigPath) {
+    const relativePathFromGitConfig = path.relative(gitConfigPath, process.cwd());
+    envKeys["OBSERVABILITY_GIT_CONFIG_PATH"] = relativePathFromGitConfig ? relativePathFromGitConfig : 'DEFAULT';
   }
 
   if (Object.keys(envKeys).length === 0) {
@@ -1202,6 +1214,13 @@ exports.setConfig = (bsConfig, args) => {
 
 // blindly send other passed configs with run_settings and handle at backend
 exports.setOtherConfigs = (bsConfig, args) => {
+  /* Change to when Observability is enabled */
+  if(isTestObservabilitySession()) {
+    bsConfig["run_settings"]["reporter"] = "browserstack-cypress-cli/bin/testObservability/reporter";
+    return;
+  }
+
+  /* Non Observability use-case */
   if (!this.isUndefined(args.reporter)) {
     bsConfig["run_settings"]["reporter"] = args.reporter;
     logger.debug(`reporter set to ${args.reporter}`);
@@ -1361,6 +1380,7 @@ async function processExitHandler(exitData){
   logger.warn(Constants.userMessages.PROCESS_KILL_MESSAGE);
   await this.stopBrowserStackBuild(exitData.bsConfig, exitData.args, exitData.buildId, null, exitData.buildReportData);
   await this.stopLocalBinary(exitData.bsConfig, exitData.bsLocalInstance, exitData.args, null, exitData.buildReportData);
+  await printBuildLink();
   process.exit(0);
 }
 
