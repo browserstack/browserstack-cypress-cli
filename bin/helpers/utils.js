@@ -21,7 +21,7 @@ const usageReporting = require("./usageReporting"),
   config = require("../helpers/config"),
   pkg = require('../../package.json'),
   transports = require('./logger').transports,
-  { findGitConfig, printBuildLink, isTestObservabilitySession, isBrowserstackInfra } = require('../testObservability/helper/helper');
+  { findGitConfig, printBuildLink, isTestObservabilitySession, isBrowserstackInfra, shouldReRunObservabilityTests } = require('../testObservability/helper/helper');
 
 const request = require('request');
 
@@ -460,6 +460,11 @@ exports.setNodeVersion = (bsConfig, args) => {
 // specs can be passed via command line args as a string
 // command line args takes precedence over config
 exports.setUserSpecs = (bsConfig, args) => {
+  if(isBrowserstackInfra() && isTestObservabilitySession() && shouldReRunObservabilityTests()) {
+    bsConfig.run_settings.specs = process.env.BROWSERSTACK_RERUN_TESTS;
+    return;
+  }
+  
   let bsConfigSpecs = bsConfig.run_settings.specs;
 
   if (!this.isUndefined(args.specs)) {

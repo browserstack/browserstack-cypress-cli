@@ -4,14 +4,13 @@ const util = require('util');
 const fs = require('fs');
 const path = require('path');
 const { requireModule } = require('../helper/helper');
-const Base = requireModule('mocha/lib/reporters/base.js'),
-      utils = requireModule('mocha/lib/utils.js');
+const Base = requireModule('mocha/lib/reporters/base.js', true),
+      utils = requireModule('mocha/lib/utils.js', true);
 const color = Base.color;
-const Mocha = requireModule('mocha');
+const Mocha = requireModule('mocha', true);
 // const Runnable = requireModule('mocha/lib/runnable');
-const Runnable = require('mocha/lib/runnable'); // need to handle as this isn't present in older mocha versions
+const Runnable = require('mocha/lib/runnable', true); // need to handle as this isn't present in older mocha versions
 const { v4: uuidv4 } = require('uuid');
-// const bsSetupHelper = require('../../../helpers/helper');
 
 const { IPC_EVENTS } = require('../helper/constants');
 const { startIPCServer } = require('../plugin/ipcServer');
@@ -82,7 +81,6 @@ class MyReporter {
     this._testResults = [];
     this._testEnv = getTestEnv();
     this._paths = new PathHelper({ cwd: process.cwd() }, this._testEnv.location_prefix);
-    // this._upstreamConfig = options.reporterOption.bsConfig;
     this.currentTestSteps = [];
     this.platformDetailsMap = {};
     this.runStatusMarkedHash = {};
@@ -119,6 +117,7 @@ class MyReporter {
             delete this.runStatusMarkedHash[hook.hookAnalyticsId];
             hook.hookAnalyticsId = uuidv4();
           }
+          hook.hook_started_at = (new Date()).toISOString();
           hook.started_at = (new Date()).toISOString();
           this.current_hook = hook;
           await this.sendTestRunEvent(hook,undefined,false,"HookRunStarted");
@@ -348,7 +347,6 @@ class MyReporter {
     );
   }
 
-  // test observability methods
   testStarted = async (test) => {
     try {
       const lastTest = this.current_test;
@@ -356,6 +354,7 @@ class MyReporter {
       test.retryOf = null;
       test.testAnalyticsId = uuidv4();
       test.started_at = (new Date()).toISOString();
+      test.test_started_at = test.started_at;
       if(test._currentRetry > 0 && lastTest && lastTest.title == test.title) {
         /* Sending async to current test start to avoid current test end call getting fired before its start call */
         test.retryOf = lastTest.testAnalyticsId
@@ -419,7 +418,7 @@ class MyReporter {
         'result': eventType === "TestRunSkipped" ? 'skipped' : ( eventType === "TestRunStarted" ? 'pending' : this.analyticsResult(test.state)),
         'failure_reason': failureReason,
         'duration_in_ms': test.duration || (eventType.match(/Finished/) || eventType.match(/Skipped/) ? Date.now() - (new Date(test.started_at)).getTime() : null),
-        'started_at': test.started_at,
+        'started_at': ( (eventType.match(/TestRun/) ? test.test_started_at : test.hook_started_at) || test.started_at ) || (new Date()).toISOString(),
         'finished_at': eventType.match(/Finished/) || eventType.match(/Skipped/) ? (new Date()).toISOString() : null,
         'failure': failureData(...failureArgs),
         'failure_type': !failureReason ? null : failureReason.match(/AssertionError/) ? 'AssertionError' : 'UnhandledError',
@@ -429,7 +428,7 @@ class MyReporter {
         }
       };
 
-      const { os, os_version } = await getOSDetailsFromSystem();
+      const { os, os_version } = await getOSDetailsFromSystem(process.env.observability_product);
       if(process.env.observability_integration) {
         testData = {...testData, integrations: {
           [process.env.observability_integration || 'local_grid' ]: {
@@ -463,18 +462,22 @@ class MyReporter {
         testData['started_at'] = testData['finished_at'];
       }
 
-      if(eventType.match(/HookRun/)) {
-        [testData.hook_type, testData.name] = getHookDetails(test.fullTitle() || test.originalTitle || test.title);
-        if(eventType === "HookRunFinished") {
-          if(testData.result === 'pending') testData.result = 'passed';
-          if(testData.hook_type == 'before each' && testData.result === 'failed' && ( !this.runStatusMarkedHash[test.ctx.currentTest.testAnalyticsId] )) {
-            if(test.ctx.currentTest.testAnalyticsId) this.runStatusMarkedHash[test.ctx.currentTest.testAnalyticsId] = true;
-            test.ctx.currentTest.state = STATE_FAILED;
-            await this.sendTestRunEvent(test.ctx.currentTest,undefined,true);
+      try {
+        if(eventType.match(/HookRun/)) {
+          [testData.hook_type, testData.name] = getHookDetails(test.fullTitle() || test.originalTitle || test.title);
+          if(eventType === "HookRunFinished") {
+            if(testData.result === 'pending') testData.result = 'passed';
+            if(testData.hook_type == 'before each' && testData.result === 'failed' && ( !this.runStatusMarkedHash[test.ctx.currentTest.testAnalyticsId] )) {
+              if(test.ctx.currentTest.testAnalyticsId) this.runStatusMarkedHash[test.ctx.currentTest.testAnalyticsId] = true;
+              test.ctx.currentTest.state = STATE_FAILED;
+              await this.sendTestRunEvent(test.ctx.currentTest,undefined,true);
+            }
           }
+        } else if(eventType.match(/TestRun/)) {
+          mapTestHooks(test);
         }
-      } else if(eventType.match(/TestRun/)) {
-        mapTestHooks(test);
+      } catch(e) {
+        debug(`Exception in processing hook data for event ${eventType} with error : ${e}`);
       }
 
       const failure_data = testData['failure'][0];
@@ -505,7 +508,7 @@ class MyReporter {
         const buildUpdateData = {
           event_type: 'BuildUpdate',
           'misc': {
-            observabilityVersion: {
+            observability_version: {
               frameworkName: "Cypress",
               sdkVersion: process.env.OBSERVABILITY_LAUNCH_SDK_VERSION,
               frameworkVersion: ( process.env.observability_framework_version || this.currentCypressVersion )

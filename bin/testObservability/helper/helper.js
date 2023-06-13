@@ -107,7 +107,9 @@ const nodeRequest = (type, url, data, config) => {
         try {
           if(typeof(body) !== 'object') body = JSON.parse(body);
         } catch(e) {
-          reject('Not a JSON response from BrowserStack Server');
+          if(!url.includes('/stop')) {
+            reject('Not a JSON response from BrowserStack Server');
+          }
         }
         resolve({
           data: body
@@ -156,29 +158,6 @@ exports.getTestEnv = () => {
     "collector": `js-${name}`,
   }
 }
-
-// exports.extractValuesWithRegexKeyMatch = (obj) => {
-//   let values = [];
-//   let customTagRegex = new RegExp("^CUSTOM_TAG_\\d+$", 'i');
-//   Object.keys(obj)
-//     .filter(key => customTagRegex.test(key))
-//     .forEach(key => values.push(obj[key]));
-//   return values;
-// }
-
-// exports.getCustomTags = (config) => {
-//   let tags = [];
-
-//   let tag = config.customTag || process.env.CUSTOM_TAG;
-//   if (tag) {
-//     tags.push(tag);
-//   }
-
-//   tags.push(...this.extractValuesWithRegexKeyMatch(process.env));
-//   tags.push(...this.extractValuesWithRegexKeyMatch(config));
-
-//   return tags;
-// }
 
 exports.getFileSeparatorData = () => {
   const fileSeparatorRegex = /^win/.test(process.platform) ? "\\\\" : "/";
@@ -414,7 +393,6 @@ const getBuildDetails = (bsConfig) => {
   let buildName = '',
       projectName = '',
       buildDescription = '',
-      buildIdentifier = null,
       buildTags = [];
   
   /* Pick from environment variables */
@@ -426,7 +404,6 @@ const getBuildDetails = (bsConfig) => {
     buildName = buildName || bsConfig["testObservabilityOptions"]["buildName"];
     projectName = projectName || bsConfig["testObservabilityOptions"]["projectName"];
     buildTags = [...buildTags, ...bsConfig["testObservabilityOptions"]["buildTag"]];
-    buildIdentifier = buildIdentifier || bsConfig["testObservabilityOptions"]["buildIdentifier"];
     buildDescription = buildDescription || bsConfig["testObservabilityOptions"]["buildDescription"];
   }
 
@@ -440,18 +417,28 @@ const getBuildDetails = (bsConfig) => {
   return {
     buildName,
     projectName,
-    buildIdentifier,
     buildDescription,
     buildTags
   };
 }
 
+const setBrowserstackCypressCliDependency = (bsConfig) => {
+  const runSettings = bsConfig.run_settings;
+  if (runSettings.npm_dependencies !== undefined && 
+    Object.keys(runSettings.npm_dependencies).length !== 0 &&
+    typeof runSettings.npm_dependencies === 'object') {
+    if (!("browserstack-cypress-cli" in runSettings.npm_dependencies)) {
+      logger.warn("Missing browserstack-cypress-cli not found in npm_dependencies");        
+      runSettings.npm_dependencies['browserstack-cypress-cli'] = "latest";
+      logger.warn(`Adding browserstack-cypress-cli in npm_dependencies`);
+    }
+  }
+}
+
 exports.launchTestSession = async (user_config) => {
-  // const obsUserName = user_config["auth"]["username"];
-  // const obsAccessKey = user_config["auth"]["access_key"];
+  const obsUserName = user_config["auth"]["username"];
+  const obsAccessKey = user_config["auth"]["access_key"];
   
-  const obsUserName = process.env.OBS_USERNAME || user_config["auth"]["username"];
-  const obsAccessKey = process.env.OBS_ACCESS_KEY || user_config["auth"]["access_key"];
   const BSTestOpsToken = `${obsUserName || ''}:${obsAccessKey || ''}`;
   if(BSTestOpsToken === '') {
     exports.debug('EXCEPTION IN BUILD START EVENT : Missing authentication token');
@@ -462,7 +449,6 @@ exports.launchTestSession = async (user_config) => {
       const {
         buildName,
         projectName,
-        buildIdentifier,
         buildDescription,
         buildTags
       } = getBuildDetails(user_config);
@@ -470,7 +456,6 @@ exports.launchTestSession = async (user_config) => {
         'format': 'json',
         'project_name': projectName,
         'name': buildName,
-        'build_identifier': buildIdentifier,
         'description': buildDescription,
         'start_time': (new Date()).toISOString(),
         'tags': buildTags,
@@ -482,6 +467,7 @@ exports.launchTestSession = async (user_config) => {
           arch: os.arch()
         },
         'ci_info': getCiInfo(),
+        'build_run_identifier': process.env.BROWSERSTACK_BUILD_RUN_IDENTIFIER,
         'failed_tests_rerun': process.env.BROWSERSTACK_RERUN || false,
         'version_control': await getGitMetaData(),
         'observability_version': {
@@ -506,7 +492,7 @@ exports.launchTestSession = async (user_config) => {
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;
       setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
       setEventListeners();
-      // return [response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots];
+      if(this.isBrowserstackInfra()) setBrowserstackCypressCliDependency(user_config);
     } catch(error) {
       if (error.response) {
         exports.debug(`EXCEPTION IN BUILD START EVENT : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`);
@@ -515,7 +501,6 @@ exports.launchTestSession = async (user_config) => {
       }
       process.env.BS_TESTOPS_BUILD_COMPLETED = false;
       setEnvironmentVariablesForRemoteReporter(null, null, null);
-      // return [null, null, null];
     }
   }
 }
@@ -727,7 +712,7 @@ exports.stopBuildUpstream = async (buildStartWaitRun = 0, testUploadWaitRun = 0,
     
         try {
           const response = await nodeRequest('PUT',`api/v1/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}/stop`,data,config);
-          if(response.data.error) {
+          if(response.data && response.data.error) {
             throw({message: response.data.error});
           } else {
             exports.debug(`stopBuildUpstream buildStartWaitRun[${buildStartWaitRun}] testUploadWaitRun[${testUploadWaitRun}] event successfull!`)
@@ -754,10 +739,6 @@ exports.stopBuildUpstream = async (buildStartWaitRun = 0, testUploadWaitRun = 0,
     }
   }
 }
-
-// exports.getUpstreamConfig = () => {
-//   return bsSetupHelper.readConfig(bsSetupHelper.getConfigPath());
-// }
 
 exports.getPlatformVersion = (isBstack) => {
   if(isBstack) {
@@ -820,7 +801,7 @@ const getMacOSVersion = () => {
   return execSync("awk '/SOFTWARE LICENSE AGREEMENT FOR macOS/' '/System/Library/CoreServices/Setup Assistant.app/Contents/Resources/en.lproj/OSXSoftwareLicense.rtf' | awk -F 'macOS ' '{print $NF}' | awk '{print substr($0, 0, length($0)-1)}'").toString().trim()
 }
 
-exports.getOSDetailsFromSystem = async () => {
+exports.getOSDetailsFromSystem = async (product) => {
   let platformName = getPlatformName();
   let platformVersion = os.release().toString();
 
@@ -848,32 +829,18 @@ exports.getOSDetailsFromSystem = async () => {
   }
 
   return {
-    os: platformName,
+    os: product == 'automate' && platformName == 'Linux' ? 'OS X' : platformName,
     os_version: platformVersion
   };
 }
 
-// exports.getOSDetailsFromSystem = (product) => {
-//   var opsys = os.platform();
-//   if (opsys == "darwin") {
-//       opsys = "MacOS";
-//   } else if (opsys == "win32" || opsys == "win64") {
-//       opsys = "Windows";
-//   } else if (opsys == "linux") {
-//       opsys = product === "automate" ? "MacOS" : "Linux";
-//   }
-
-//   return {
-//     os: opsys,
-//     os_version: os.version()
-//   }
-// }
-
-exports.requireModule = (module) => {
+exports.requireModule = (module, internal = false) => {
   logger.debug(`Getting ${module} from ${process.cwd()}`);
   let local_path = "";
   if(process.env["browserStackCwd"]){
    local_path = path.join(process.env["browserStackCwd"], 'node_modules', module);
+  } else if(internal) {
+    local_path = path.join(process.cwd(), 'node_modules', 'browserstack-cypress-cli', 'node_modules', module);
   } else {
     local_path = path.join(process.cwd(), 'node_modules', module);
   }
@@ -894,24 +861,40 @@ exports.requireModule = (module) => {
   return require(local_path);
 }
 
+const getReRunSpecs = (rawArgs) => {
+  if (this.isTestObservabilitySession() && this.shouldReRunObservabilityTests()) {
+    let startIdx = -1, numEle = 0;
+    for(let idx=0; idx<rawArgs.length; idx++) {
+      if(rawArgs[idx] == '--spec') {
+        startIdx = idx;
+      } else if(rawArgs[idx].includes('--') && startIdx != -1) {
+        break;
+      } else if(startIdx != -1) {
+        numEle++;
+      }
+    }
+    if(startIdx != -1) rawArgs.splice(startIdx, numEle + 1);
+    return [...rawArgs, '--spec', process.env.BROWSERSTACK_RERUN_TESTS];
+  } else {
+    return rawArgs;
+  }
+}
+
 exports.runCypressTestsLocally = (bsConfig, args, rawArgs) => {
-  logger.info(`\n >>> LOCAL CMD : npx cypress run ${rawArgs.slice(1)} --reporter 'browserstack-cypress-cli/bin/testObservability/reporter' \n`);
-  // const index = rawArgs.findIndex((arg) => (arg === '--reporter' || arg === '-r'));
-  
+  logger.info(`Running npx cypress run ${getReRunSpecs(rawArgs.slice(1)).join(' ')} --reporter 'browserstack-cypress-cli/bin/testObservability/reporter'`);
   const cypressProcess = spawn(
     'npx',
-    ['cypress', 'run', ...rawArgs.slice(1), '--reporter', 'browserstack-cypress-cli/bin/testObservability/reporter'],
+    ['cypress', 'run', ...getReRunSpecs(rawArgs.slice(1)), '--reporter', 'browserstack-cypress-cli/bin/testObservability/reporter'],
     { stdio: 'inherit', cwd: process.cwd(), env: process.env }
   );
-
   cypressProcess.on('close', async (code) => {
     logger.info(`Cypress process exited with code ${code}`);
     await this.printBuildLink();
   });
 
   cypressProcess.on('error', (err) => {
-    logger.info(`Cypress process error ${err}`);
-  })
+    logger.info(`Cypress process encountered an error ${err}`);
+  });
 }
 
 class PathHelper {

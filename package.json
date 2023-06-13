@@ -23,6 +23,7 @@
     "git-repo-info": "^2.1.1",
     "gitconfiglocal": "^2.1.0",
     "glob": "^7.2.0",
+    "mocha": "^10.2.0",
     "mkdirp": "1.0.4",
     "node-ipc": "9.1.1",
     "platform-detect": "^3.0.1",
