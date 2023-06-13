@@ -1219,8 +1219,7 @@ exports.setConfig = (bsConfig, args) => {
 
 // blindly send other passed configs with run_settings and handle at backend
 exports.setOtherConfigs = (bsConfig, args) => {
-  /* Change to when Observability is enabled */
-  if(isTestObservabilitySession()) {
+  if(isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
     bsConfig["run_settings"]["reporter"] = "browserstack-cypress-cli/bin/testObservability/reporter";
     return;
   }

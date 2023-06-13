@@ -5,7 +5,6 @@ const https = require('https');
 const request = require('request');
 var gitLastCommit = require('git-last-commit');
 const { v4: uuidv4 } = require('uuid');
-const { performance } = require('perf_hooks'); 
 const os = require('os');
 const { promisify } = require('util');
 const getRepoInfo = require('git-repo-info');
@@ -25,9 +24,7 @@ const GLOBAL_MODULE_PATH = execSync('npm root -g').toString().trim();
 
 const { name, version } = require('../../../package.json');
 
-const CHUNK_SIZE = 5000
-
-const { consoleHolder, API_URL, BATCH_SIZE } = require('./constants');
+const { consoleHolder, API_URL } = require('./constants');
 exports.pending_test_uploads = {
   count: 0
 };
@@ -38,14 +35,16 @@ exports.debug = (text) => {
   }
 }
 
-const httpKeepAliveAgent = new http.Agent({
+const supportFileContentMap = {};
+
+exports.httpKeepAliveAgent = new http.Agent({
   keepAlive: true,
   timeout: 60000,
   maxSockets: 2,
   maxTotalSockets: 2
 });
 
-const httpsKeepAliveAgent = new https.Agent({
+exports.httpsKeepAliveAgent = new https.Agent({
   keepAlive: true,
   timeout: 60000,
   maxSockets: 2,
@@ -66,8 +65,20 @@ const httpsScreenshotsKeepAliveAgent = new https.Agent({
   maxTotalSockets: 2
 });
 
+const supportFileCleanup = () => {
+  Object.keys(supportFileContentMap).forEach(file => {
+    try {
+      fs.writeFileSync(file, supportFileContentMap[file], {encoding: 'utf-8'});
+    } catch(e) {
+      exports.debug(`Error while replacing file content for ${file} with it's original content with error : ${e}`);
+    }
+  });
+}
+
 exports.printBuildLink = async () => {
+  if(!this.isTestObservabilitySession()) return;
   try {
+    supportFileCleanup();
     await this.stopBuildUpstream();
     try {
       if(process.env.BS_TESTOPS_BUILD_HASHED_ID 
@@ -77,10 +88,10 @@ exports.printBuildLink = async () => {
           logger.info(`Visit https://observability.browserstack.com/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID} to view build report, insights, and many more debugging information all at one place!\n`);
       }
     } catch(err) {
-      logger.error(`[${(new Date()).toISOString()}][ OBSERVABILITY ] Build Not Found`);
+      exports.debug('Build Not Found');
     }
   } catch(err) {
-    logger.error(`[${(new Date()).toISOString()}][ OBSERVABILITY ] Error while stopping build : ${err}`);
+    exports.debug(`Error while stopping build with error : ${err}`);
   }
 }
 
@@ -91,7 +102,7 @@ const nodeRequest = (type, url, data, config) => {
       url: `${API_URL}/${url}`,
       body: data,
       json: config.headers['Content-Type'] === 'application/json',
-      agent: API_URL.includes('https') ? httpsKeepAliveAgent : httpKeepAliveAgent
+      agent: API_URL.includes('https') ? this.httpsKeepAliveAgent : this.httpKeepAliveAgent
     }};
 
     if(url === exports.requestQueueHandler.screenshotEventUrl) {
@@ -373,19 +384,25 @@ const getCypressCommandEventListener = () => {
 }
 
 const setEventListeners = () => {
-  glob(process.cwd() + '/cypress/support/*.js', {}, (err, files) => {
-    if(err) return exports.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
-    files.forEach(file => {
-      if(!file.includes('commands.js')) {
-        const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
-        let newFileContent =  defaultFileContent + 
-                              '\n' +
-                              getCypressCommandEventListener() +
-                              '\n'
-        fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
-      }
+  try {
+    glob(process.cwd() + '/cypress/support/*.js', {}, (err, files) => {
+      if(err) return exports.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
+      try {
+        files.forEach(file => {
+          if(!file.includes('commands.js')) {
+            const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
+    
+            let newFileContent =  defaultFileContent + 
+                                  '\n' +
+                                  getCypressCommandEventListener() +
+                                  '\n'
+            fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
+            supportFileContentMap[file] = defaultFileContent;
+          }
+        });
+      } catch(e) {}
     });
-  });
+  } catch(e) {}
 }
 
 const getBuildDetails = (bsConfig) => {
@@ -499,6 +516,25 @@ exports.launchTestSession = async (user_config) => {
       } else {
         exports.debug(`EXCEPTION IN BUILD START EVENT : ${error.message || error}`);
       }
+
+      if(error.response) {
+        const errorMessageJson = error.response.body ? JSON.parse(error.response.body.toString()) : null
+        const errorMessage = errorMessageJson ? errorMessageJson.message : null, errorType = errorMessageJson ? errorMessageJson.errorType : null
+        switch (errorType) {
+          case 'ERROR_INVALID_CREDENTIALS':
+            logger.error(errorMessage);
+            break;
+          case 'ERROR_ACCESS_DENIED':
+            logger.info(errorMessage);
+            break;
+          case 'ERROR_SDK_DEPRECATED':
+            logger.error(errorMessage);
+            break;
+          default:
+            logger.error(errorMessage);
+        }
+      }
+
       process.env.BS_TESTOPS_BUILD_COMPLETED = false;
       setEnvironmentVariablesForRemoteReporter(null, null, null);
     }
@@ -740,33 +776,6 @@ exports.stopBuildUpstream = async (buildStartWaitRun = 0, testUploadWaitRun = 0,
   }
 }
 
-exports.getPlatformVersion = (isBstack) => {
-  if(isBstack) {
-    try {
-      return global.__platform__.split(',')[1].trim();
-    } catch (e) {
-      return null;
-    }
-  }
-  return null;
-}
-
-exports.isUndefined = value => (value === undefined || value === null);
-
-exports.parseFileNames = (string) => {
-  if (exports.isUndefined(string)) {
-    return undefined;
-  } else {
-    try {
-      return string.trim().split(",");
-    } catch (err) {
-      // file object is empty or non parseable. run all files in this case
-      // nothing to do in this block. caught the error just that runner doesn't raise the exception and exit
-      return undefined;
-    }
-  }
-}
-
 exports.getHookSkippedTests = (suite) => {
   const subSuitesSkippedTests = suite.suites.reduce((acc, subSuite) => {
     const subSuiteSkippedTests = exports.getHookSkippedTests(subSuite);
@@ -880,21 +889,31 @@ const getReRunSpecs = (rawArgs) => {
   }
 }
 
-exports.runCypressTestsLocally = (bsConfig, args, rawArgs) => {
-  logger.info(`Running npx cypress run ${getReRunSpecs(rawArgs.slice(1)).join(' ')} --reporter 'browserstack-cypress-cli/bin/testObservability/reporter'`);
-  const cypressProcess = spawn(
-    'npx',
-    ['cypress', 'run', ...getReRunSpecs(rawArgs.slice(1)), '--reporter', 'browserstack-cypress-cli/bin/testObservability/reporter'],
-    { stdio: 'inherit', cwd: process.cwd(), env: process.env }
-  );
-  cypressProcess.on('close', async (code) => {
-    logger.info(`Cypress process exited with code ${code}`);
-    await this.printBuildLink();
-  });
+const getLocalSessionReporter = () => {
+  if(this.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
+    return ['--reporter', 'browserstack-cypress-cli/bin/testObservability/reporter'];
+  } else {
+    return [];
+  }
+}
 
-  cypressProcess.on('error', (err) => {
-    logger.info(`Cypress process encountered an error ${err}`);
-  });
+exports.runCypressTestsLocally = (bsConfig, args, rawArgs) => {
+  try {
+    logger.info(`Running npx cypress run ${getReRunSpecs(rawArgs.slice(1)).join(' ')} ${getLocalSessionReporter().join(' ')}`);
+    const cypressProcess = spawn(
+      'npx',
+      ['cypress', 'run', ...getReRunSpecs(rawArgs.slice(1)), ...getLocalSessionReporter()],
+      { stdio: 'inherit', cwd: process.cwd(), env: process.env }
+    );
+    cypressProcess.on('close', async (code) => {
+      logger.info(`Cypress process exited with code ${code}`);
+      await this.printBuildLink();
+    });
+
+    cypressProcess.on('error', (err) => {
+      logger.info(`Cypress process encountered an error ${err}`);
+    });
+  } catch(e) {}
 }
 
 class PathHelper {

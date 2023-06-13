@@ -47,14 +47,10 @@ const {
   failureData,
   PathHelper,
   getTestEnv,
-  getUpstreamConfig,
-  launchTestSession,
-  stopBuildUpstream,
   getHookDetails,
   getHooksForTest,
   mapTestHooks,
   debug,
-  isTestObservabilitySession,
   isBrowserstackInfra,
   requestQueueHandler,
   getHookSkippedTests,
@@ -68,17 +64,8 @@ const { consoleHolder } = require('../helper/constants');
 // this reporter outputs test results, indenting two spaces per suite
 class MyReporter {
   constructor(runner, options) {
-    this.type = 'spec';
     this.testObservability = true;
     Base.call(this, runner, options);
-    this._indents = 0;
-    this.failCount = 0;
-    this.results = [];
-    this.finalResults = [];
-    this.suiteCount = 0;
-
-    this._buildCreated = false;
-    this._testResults = [];
     this._testEnv = getTestEnv();
     this._paths = new PathHelper({ cwd: process.cwd() }, this._testEnv.location_prefix);
     this.currentTestSteps = [];
@@ -86,27 +73,11 @@ class MyReporter {
     this.runStatusMarkedHash = {};
     this.registerListeners();
 
-    if(this.type == 'doc') {
-      this.docHtml = "";
-      this.__indents = 2;
-    }
-
     runner
       .once(EVENT_RUN_BEGIN, async () => {
-        Base.consoleLog();
       })
 
       .on(EVENT_SUITE_BEGIN, (suite) => {
-        if(suite.root) return;
-        if(this.type == 'spec'){
-          this.increaseIndent();
-          Base.consoleLog(this.indent() + color('green', '%s ') + color('light', '%s - %s'), 'RUNNING', suite.title, global.__platform__);
-        } else if(this.type == 'doc') {
-          this.docAppend(`${this.indent()}<section class="suite">`);
-          ++this.__indents;
-          this.docAppend(`${this.indent()}<h1>${utils.escape(`${suite.title} - ${global.__platform__}`)}</h1>`);
-          this.docAppend(`${this.indent()}<dl>`);
-        }
       })
 
       .on(EVENT_HOOK_BEGIN, async (hook) => {
@@ -140,70 +111,9 @@ class MyReporter {
       })
 
       .on(EVENT_SUITE_END, (suite) => {
-        if(suite.root) return;
-        if(this.type == 'spec') {
-          Base.consoleLog();
-          Base.consoleLog(this.indent() + color('bright yellow', '%s ') + color('light', '%s - %s'), 'COMPLETED', suite.title, global.__platform__);
-          this.results.forEach((test) => {
-            if(test.state === 'passed') {
-              var fmt;
-              if (test.speed === 'fast') {
-                fmt =
-                this.indent() +
-                color('checkmark', '  ' + Base.symbols.ok) +
-                color('pass', ' %s');
-                Base.consoleLog(fmt, test.title);
-              } else {
-                fmt =
-                this.indent() +
-                color('checkmark', '  ' + Base.symbols.ok) +
-                color('pass', ' %s') +
-                color(test.speed, ' (%dms)');
-                Base.consoleLog(fmt, test.title, test.duration);
-              }
-            } else {
-              Base.consoleLog(this.indent() + color('fail', '  %d) %s'), ++this.failCount, test.title);
-            }
-          })
-          this.decreaseIndent();
-        } else if(this.type == 'doc') {
-          this.docAppend(`${this.indent()}</dl>`);
-          --this.__indents;
-          this.docAppend(`${this.indent()}</section>`);
-          --this.__indents;
-        }
-        this.finalResults.push(...this.results);
-        this.results = [];
       })
 
       .on(EVENT_TEST_PASS, async (test) => {
-        // Test#fullTitle() returns the suite name(s)
-        // prepended to the test title
-        this.results.push({
-          speed: test.speed,
-          suite: test.parent.title,
-          title: test.title,
-          fullTitle: test.fullTitle(),
-          duration: test.duration,
-          state: test.state,
-          err: {},
-          currentRetry: test.currentRetry(),
-          titlePathV: test.titlePath()
-        });
-
-        if(this.type == 'dot') {
-          if (test.speed === 'slow') {
-            process.stdout.write(Base.color('bright yellow', Base.symbols.dot));
-          } else {
-            process.stdout.write(Base.color(test.speed, Base.symbols.dot));
-          }
-        } else if(this.type == 'doc') {
-          this.docAppend(`${this.indent()}  <dt>${utils.escape(test.title)}</dt>`);
-          this.docAppend(`${this.indent()}  <dt>${utils.escape(test.file)}</dt>`);
-          var code = utils.escape(utils.clean(test.body));
-          this.docAppend(`${this.indent()}  <dd><pre><code>${code}</code></pre></dd>`);
-        }
-
         if(this.testObservability == true) {
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
@@ -213,28 +123,6 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_FAIL, async (test, err) => {
-        this.results.push({
-          title: test.title,
-          suite: test.parent.title,
-          state: test.state,
-          // fix: worker unable to deserialize error object
-          err: {message: util.inspect(err)},
-          fullTitle: test.fullTitle(),
-          speed: test.speed,
-          currentRetry: test.currentRetry(),
-          titlePathV: test.titlePath()
-        });
-
-        if(this.type == 'dot') {
-          process.stdout.write(Base.color('fail', Base.symbols.bang));
-        } else if(this.type == 'doc') {
-          this.docAppend(`${this.indent()}  <dt class="error">${utils.escape(test.title)}</dt>`);
-          this.docAppend(`${this.indent()}  <dt class="error">${utils.escape(test.file)}</dt>`);
-          var code = utils.escape(utils.clean(test.body));
-          this.docAppend(`${this.indent()}  <dd class="error"><pre><code>${code}</code></pre></dd>`);
-          this.docAppend(`${this.indent()}  <dd class="error">${utils.escape(test.err)}</dd>`);
-        }
-
         if(this.testObservability == true) {
           if((test.testAnalyticsId && !this.runStatusMarkedHash[test.testAnalyticsId]) || (test.hookAnalyticsId && !this.runStatusMarkedHash[test.hookAnalyticsId])) {
             if(test.testAnalyticsId) {
@@ -249,20 +137,6 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_PENDING, async (test) => {
-        this.results.push({
-          title: test.title,
-          suite: test.parent.title,
-          state: test.state,
-          err: {},
-          fullTitle: test.fullTitle(),
-          speed: test.speed,
-          currentRetry: test.currentRetry(),
-          titlePathV: test.titlePath()
-        });
-        if(this.type == 'dot') {
-          process.stdout.write(Base.color('pending', Base.symbols.comma));
-        }
-
         if(this.testObservability == true) {
           if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
@@ -301,33 +175,7 @@ class MyReporter {
         }
         
         await requestQueueHandler.shutdown();
-
-        if(this.type == 'doc')
-          Base.consoleLog(this.docHtml);
       });
-  }
-
-  indent() {
-    return Array(this._indents).join('  ');
-  }
-
-  increaseIndent() {
-    this._indents++;
-  }
-
-  decreaseIndent() {
-    this._indents--;
-  }
-
-  docAppend(str) {
-    this.docHtml += str;
-  }
-
-  done(failureCount, fn) {
-    fn({
-      failureCount,
-      results: this.finalResults
-    });
   }
 
   registerListeners() {
@@ -487,7 +335,6 @@ class MyReporter {
       }
 
       if(["TestRunFinished","TestRunSkipped"].includes(eventType)) {
-        this._testResults.push(testData);
         testData.hooks = getHooksForTest(test);
       }
 

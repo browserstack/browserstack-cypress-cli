@@ -112,6 +112,8 @@ Cypress.Commands.add('trace', (message, file) => {
     level: 'trace',
     message,
     file,
+  }).then((res) => {
+  }).catch((err) => {
   });
 });
 
@@ -120,6 +122,8 @@ Cypress.Commands.add('logDebug', (message, file) => {
     level: 'debug',
     message,
     file,
+  }).then((res) => {
+  }).catch((err) => {
   });
 });
 
@@ -128,6 +132,8 @@ Cypress.Commands.add('info', (message, file) => {
     level: 'info',
     message,
     file,
+  }).then((res) => {
+  }).catch((err) => {
   });
 });
 
@@ -136,6 +142,8 @@ Cypress.Commands.add('warn', (message, file) => {
     level: 'warn',
     message,
     file,
+  }).then((res) => {
+  }).catch((err) => {
   });
 });
 
@@ -144,6 +152,8 @@ Cypress.Commands.add('error', (message, file) => {
     level: 'error',
     message,
     file,
+  }).then((res) => {
+  }).catch((err) => {
   });
 });
 
@@ -152,5 +162,7 @@ Cypress.Commands.add('fatal', (message, file) => {
     level: 'fatal',
     message,
     file,
+  }).then((res) => {
+  }).catch((err) => {
   });
 });
