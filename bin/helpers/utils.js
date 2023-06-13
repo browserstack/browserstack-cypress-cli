@@ -404,7 +404,7 @@ exports.isValidTimezone = (timezone) => {
 exports.setTimezone = (bsConfig, args) => {
   let timezone = undefined;
   if(this.isTimezoneArgPassed()) {
-    if(!this.isUndefined(args.timezone)) { 
+    if(this.isNotUndefined(args.timezone)) { 
       if(this.isValidTimezone(args.timezone)){
         timezone = args.timezone; 
       } else {
@@ -413,7 +413,7 @@ exports.setTimezone = (bsConfig, args) => {
         process.exit(1);
       }
     }
-  } else if (!this.isUndefined(bsConfig.run_settings.timezone)) {
+  } else if (this.isNotUndefined(bsConfig.run_settings.timezone)) {
     if(this.isValidTimezone(bsConfig.run_settings.timezone)){
       timezone = bsConfig.run_settings.timezone; 
     } else {
@@ -590,6 +590,8 @@ exports.fixCommaSeparatedString = (string) => {
 }
 
 exports.isUndefined = value => (value === undefined || value === null);
+
+exports.isNotUndefined = value => !this.isUndefined(value);
 
 exports.isPositiveInteger = (str) => {
   if (typeof str !== 'string') {

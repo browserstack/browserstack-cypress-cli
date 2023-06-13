@@ -192,6 +192,20 @@ describe('utils', () => {
     });
   });
 
+  describe('isNotUndefined', () => {
+    it('should return false for a undefined value', () => {
+      expect(utils.isNotUndefined(undefined)).to.be.equal(false);
+      expect(utils.isNotUndefined(null)).to.be.equal(false);
+    });
+
+    it('should return true for a defined value', () => {
+      expect(utils.isNotUndefined(1.234)).to.be.equal(true);
+      expect(utils.isNotUndefined('1.234')).to.be.equal(true);
+      expect(utils.isNotUndefined(100)).to.be.equal(true);
+      expect(utils.isNotUndefined(-1)).to.be.equal(true);
+    });
+  });
+
   describe('setParallels', () => {
     var sandbox;
     beforeEach(() => {
