@@ -56,7 +56,7 @@ const createBuild = (bsConfig, zip) => {
       } catch (error) {
         if(error.response) {
           logger.error(utils.formatRequest(error.response.statusText, error.response, error.response.data));
-          reject(`${Constants.userMessages.BUILD_FAILED} Error : ${error.response.data.message}`);
+          reject(`${Constants.userMessages.BUILD_FAILED} Error: ${error.response.data.message}`);
         }
       }
     }).catch(function(err){

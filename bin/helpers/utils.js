@@ -1338,10 +1338,14 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs, buildRe
         logger.info(message);
       }
     } catch(err) {
-      message = Constants.userMessages.BUILD_STOP_FAILED;
-      messageType = Constants.messageTypes.ERROR;
-      errorCode = 'api_failed_build_stop';
-      logger.info(message);
+      if(err.response) {
+        message = `${
+          Constants.userMessages.BUILD_STOP_FAILED
+        } with error: ${error.response.data.message}`;
+        messageType = Constants.messageTypes.ERROR;
+        errorCode = 'api_failed_build_stop';
+        logger.error(message);
+      }
     } finally {
         that.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
     }
