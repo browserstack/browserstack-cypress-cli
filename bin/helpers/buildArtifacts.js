@@ -213,7 +213,10 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs, buildR
     let messageType = null;
     let errorCode = null;
     let buildDetails = null;
-    const config = {};
+    options.config = {
+      auth: options.auth,
+      headers: options.headers
+    }
     if(process.env.HTTP_PROXY){
       options.config.proxy = false;
       options.config.httpAgent = new HttpsProxyAgent(process.env.HTTP_PROXY);
@@ -222,7 +225,7 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs, buildR
       options.config.httpAgent = new HttpsProxyAgent(process.env.HTTPS_PROXY);
     }
     try {
-      const response = await axios.get(options.url, config);
+      const response = await axios.get(options.url, options.config);
       try {
         buildDetails = response.data;
         if(response.status != 200) {
