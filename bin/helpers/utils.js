@@ -399,7 +399,7 @@ exports.isValidTimezone = (timezone) => {
 
 exports.setTimezone = (bsConfig, args) => {
   let timezone = args.timezone || bsConfig.run_settings.timezone;
-  if(this.isUndefined(timezone) && !this.isValidTimezone(timezone)){
+  if(this.isUndefined(timezone) || !this.isValidTimezone(timezone)){
     logger.error(`Invalid timezone = ${timezone}`);
     syncCliLogger.info(chalk.red(Constants.userMessages.INVALID_TIMEZONE));
     process.exit(1);
