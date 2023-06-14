@@ -399,16 +399,13 @@ exports.isValidTimezone = (timezone) => {
 
 exports.setTimezone = (bsConfig, args) => {
   let timezone = args.timezone || bsConfig.run_settings.timezone;
-  let newTimezone;
-  if(this.isNotUndefined(timezone) && this.isValidTimezone(timezone)){
-    newTimezone = timezone; 
-  } else {
+  if(this.isUndefined(timezone) && !this.isValidTimezone(timezone)){
     logger.error(`Invalid timezone = ${timezone}`);
     syncCliLogger.info(chalk.red(Constants.userMessages.INVALID_TIMEZONE));
     process.exit(1);
   }
-  bsConfig.run_settings.timezone = newTimezone;
-  logger.debug(`Setting timezone = ${newTimezone}`);
+  bsConfig.run_settings.timezone = timezone;
+  logger.debug(`Setting timezone = ${timezone}`);
 }
 
 exports.setRecordFlag = (bsConfig, args) => {
