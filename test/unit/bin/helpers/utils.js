@@ -3725,19 +3725,16 @@ describe('utils', () => {
   });
 
   describe("setTimezone", () => {
-    let isTimezoneArgPassed;
     let processStub;
     let loggerStub;
     let syncCliLoggerStub;
     beforeEach(() => {
-      isTimezoneArgPassed = sinon.stub(utils, 'isTimezoneArgPassed');
       processStub = sinon.stub(process, 'exit');
       loggerStub = sinon.stub(winstonLogger, 'error');
       syncCliLoggerStub = sinon.stub(syncCliLogger, 'info');
     });
 
     afterEach(() => {
-      isTimezoneArgPassed.restore();
       processStub.restore();
       loggerStub.restore();
       syncCliLoggerStub.restore();
@@ -3751,7 +3748,6 @@ describe('utils', () => {
       let args = {
         timezone: "New_York"
       };
-      isTimezoneArgPassed.returns(true);
       utils.setTimezone(bsConfig, args);
       expect(bsConfig.run_settings.timezone).to.eq("New_York");
     });
@@ -3763,7 +3759,6 @@ describe('utils', () => {
         }
       }
       let args = {};
-      isTimezoneArgPassed.returns(true);
       utils.setTimezone(bsConfig, args);
       expect(bsConfig.run_settings.timezone).to.eq(undefined);
     });
@@ -3777,7 +3772,6 @@ describe('utils', () => {
       let args = {
         timezone: "xyz"
       };
-      isTimezoneArgPassed.returns(true);
       utils.setTimezone(bsConfig, args);
       expect(bsConfig.run_settings.timezone).to.eq(undefined);
       sinon.assert.calledOnceWithExactly(loggerStub, "Invalid timezone = xyz");
@@ -3792,7 +3786,6 @@ describe('utils', () => {
         }
       }
       let args = {};
-      isTimezoneArgPassed.returns(false);
       utils.setTimezone(bsConfig, args);
       expect(bsConfig.run_settings.timezone).to.eq(undefined);
       sinon.assert.calledOnceWithExactly(loggerStub, "Invalid timezone = abc");
@@ -3807,7 +3800,6 @@ describe('utils', () => {
         }
       }
       let args = {};
-      isTimezoneArgPassed.returns(false);
       utils.setTimezone(bsConfig, args);
       expect(bsConfig.run_settings.timezone).to.eq("London");
     });
@@ -3817,7 +3809,6 @@ describe('utils', () => {
         run_settings: {}
       }
       let args = {};
-      isTimezoneArgPassed.returns(false);
       utils.setTimezone(bsConfig, args);
       expect(bsConfig.run_settings.timezone).to.eq(undefined);
     });

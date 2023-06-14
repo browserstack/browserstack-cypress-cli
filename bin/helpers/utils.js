@@ -390,10 +390,6 @@ exports.setSpecTimeout = (bsConfig, args) => {
   logger.debug(`Setting spec timeout = ${specTimeout}`);
 }
 
-exports.isTimezoneArgPassed = () => {
-  return this.searchForOption('--timezone'); 
-}
-
 exports.isValidTimezone = (timezone) => {
   if(!this.isUndefined(timezone) && !this.isUndefined(TIMEZONE[timezone])) {
     return true;
@@ -402,28 +398,17 @@ exports.isValidTimezone = (timezone) => {
 }
 
 exports.setTimezone = (bsConfig, args) => {
-  let timezone = undefined;
-  if(this.isTimezoneArgPassed()) {
-    if(this.isNotUndefined(args.timezone)) { 
-      if(this.isValidTimezone(args.timezone)){
-        timezone = args.timezone; 
-      } else {
-        logger.error(`Invalid timezone = ${args.timezone}`);
-        syncCliLogger.info(chalk.red(Constants.userMessages.INVALID_TIMEZONE));
-        process.exit(1);
-      }
-    }
-  } else if (this.isNotUndefined(bsConfig.run_settings.timezone)) {
-    if(this.isValidTimezone(bsConfig.run_settings.timezone)){
-      timezone = bsConfig.run_settings.timezone; 
-    } else {
-      logger.error(`Invalid timezone = ${bsConfig.run_settings.timezone}`);
-      syncCliLogger.info(chalk.red(Constants.userMessages.INVALID_TIMEZONE));
-      process.exit(1);
-    }
+  let timezone = args.timezone || bsConfig.run_settings.timezone;
+  let newTimezone;
+  if(this.isNotUndefined(timezone) && this.isValidTimezone(timezone)){
+    newTimezone = timezone; 
+  } else {
+    logger.error(`Invalid timezone = ${timezone}`);
+    syncCliLogger.info(chalk.red(Constants.userMessages.INVALID_TIMEZONE));
+    process.exit(1);
   }
-  bsConfig.run_settings.timezone = timezone;
-  logger.debug(`Setting timezone = ${timezone}`);
+  bsConfig.run_settings.timezone = newTimezone;
+  logger.debug(`Setting timezone = ${newTimezone}`);
 }
 
 exports.setRecordFlag = (bsConfig, args) => {
