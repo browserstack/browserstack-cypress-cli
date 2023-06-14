@@ -1305,55 +1305,49 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs, buildRe
       auth: options.auth,
       headers: options.headers
     });
-    try {
-      build = response.data;
-      if (response.status == 299) {
-        messageType = Constants.messageTypes.INFO;
-        errorCode = 'api_deprecated';
-  
-        if (build) {
-          message = build.message;
-          logger.info(message);
-        } else {
-          message = Constants.userMessages.API_DEPRECATED;
-          logger.info(message);
-        }
-      } else if (response.status !== 200) {
-        messageType = Constants.messageTypes.ERROR;
-        errorCode = 'api_failed_build_stop';
-  
-        if (build) {
-          message = `${
-            Constants.userMessages.BUILD_STOP_FAILED
-          } with error: \n${JSON.stringify(build, null, 2)}`;
-          logger.error(message);
-          if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
-        } else {
-          message = Constants.userMessages.BUILD_STOP_FAILED;
-          logger.error(message);
-        }
+    
+    build = response.data;
+    if (response.status == 299) {
+      messageType = Constants.messageTypes.INFO;
+      errorCode = 'api_deprecated';
+
+      if (build) {
+        message = build.message;
+        logger.info(message);
       } else {
-        messageType = Constants.messageTypes.SUCCESS;
-        message = `${JSON.stringify(build, null, 2)}`;
+        message = Constants.userMessages.API_DEPRECATED;
         logger.info(message);
       }
-    } catch(err) {
-      if(err.response) {
+    } else if (response.status !== 200) {
+      messageType = Constants.messageTypes.ERROR;
+      errorCode = 'api_failed_build_stop';
+
+      if (build) {
         message = `${
           Constants.userMessages.BUILD_STOP_FAILED
-        } with error: ${error.response.data.message}`;
-        messageType = Constants.messageTypes.ERROR;
-        errorCode = 'api_failed_build_stop';
+        } with error: \n${JSON.stringify(build, null, 2)}`;
+        logger.error(message);
+        if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
+      } else {
+        message = Constants.userMessages.BUILD_STOP_FAILED;
         logger.error(message);
       }
-    } finally {
-        that.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
+    } else {
+      messageType = Constants.messageTypes.SUCCESS;
+      message = `${JSON.stringify(build, null, 2)}`;
+      logger.info(message);
     }
-  } catch (error) {
-    message = Constants.userMessages.BUILD_STOP_FAILED;
-    messageType = Constants.messageTypes.ERROR;
-    errorCode = 'api_failed_build_stop';
-    logger.info(message);
+  } catch(err) {
+    if(err.response) {
+      message = `${
+        Constants.userMessages.BUILD_STOP_FAILED
+      } with error: ${err.response.data.message}`;
+      messageType = Constants.messageTypes.ERROR;
+      errorCode = 'api_failed_build_stop';
+      logger.error(message);
+    }
+  } finally {
+      that.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
   }
 }
 
