@@ -390,12 +390,7 @@ exports.setSpecTimeout = (bsConfig, args) => {
   logger.debug(`Setting spec timeout = ${specTimeout}`);
 }
 
-exports.isValidTimezone = (timezone) => {
-  if(!this.isUndefined(timezone) && !this.isUndefined(TIMEZONE[timezone])) {
-    return true;
-  }
-  return false;
-}
+exports.isValidTimezone = (timezone) => !this.isUndefined(timezone) && !this.isUndefined(TIMEZONE[timezone])
 
 exports.setTimezone = (bsConfig, args) => {
   let timezone = args.timezone || bsConfig.run_settings.timezone;
