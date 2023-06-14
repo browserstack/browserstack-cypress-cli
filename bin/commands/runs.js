@@ -72,10 +72,10 @@ module.exports = function run(args, rawArgs) {
     // accept the build name from command line if provided
     utils.setBuildName(bsConfig, args);
 
+    // set cypress config filename
+    utils.setCypressConfigFilename(bsConfig, args);
+    
     if(isBrowserstackInfra) {
-      // set cypress config filename
-      utils.setCypressConfigFilename(bsConfig, args);
-
       // set cypress test suite type
       utils.setCypressTestSuiteType(bsConfig);
 
@@ -98,7 +98,7 @@ module.exports = function run(args, rawArgs) {
     /* 
       Send build start to Observability
     */
-    if(isTestObservabilitySession) await launchTestSession(bsConfig);
+    if(isTestObservabilitySession) await launchTestSession(bsConfig, bsConfigPath);
     
     // accept the system env list from bsconf and set it
     utils.setSystemEnvs(bsConfig);

@@ -56,7 +56,8 @@ const {
   getHookSkippedTests,
   getOSDetailsFromSystem,
   findGitConfig,
-  getFileSeparatorData
+  getFileSeparatorData,
+  setCrashReportingConfigFromReporter
 } = require('../helper/helper');
 
 const { consoleHolder } = require('../helper/constants');
@@ -72,6 +73,7 @@ class MyReporter {
     this.platformDetailsMap = {};
     this.runStatusMarkedHash = {};
     this.registerListeners();
+    setCrashReportingConfigFromReporter(null, process.env.OBS_CRASH_REPORTING_BS_CONFIG_PATH, process.env.OBS_CRASH_REPORTING_CYPRESS_CONFIG_PATH);
 
     runner
       .once(EVENT_RUN_BEGIN, async () => {
@@ -171,7 +173,7 @@ class MyReporter {
             }
           }
         } catch(err) {
-          debug(`Exception in populating test data for hook skipped test with error : ${err}`);
+          debug(`Exception in populating test data for hook skipped test with error : ${err}`, true, err);
         }
         
         await requestQueueHandler.shutdown();
@@ -213,7 +215,7 @@ class MyReporter {
         await this.sendTestRunEvent(test, undefined, false, "TestRunStarted");
       }
     } catch(err) {
-      debug(`Exception in populating test data for test start with error : ${err}`);
+      debug(`Exception in populating test data for test start with error : ${err}`, true, err);
     }
   }
 
@@ -325,7 +327,7 @@ class MyReporter {
           mapTestHooks(test);
         }
       } catch(e) {
-        debug(`Exception in processing hook data for event ${eventType} with error : ${e}`);
+        debug(`Exception in processing hook data for event ${eventType} with error : ${e}`, true, e);
       }
 
       const failure_data = testData['failure'][0];
@@ -365,7 +367,7 @@ class MyReporter {
         await uploadEventData(buildUpdateData);
       }
     } catch(error) {
-      debug(`Exception in populating test data for event ${eventType} with error : ${error}`);
+      debug(`Exception in populating test data for event ${eventType} with error : ${error}`, true, error);
     }
   }
 
@@ -382,7 +384,7 @@ class MyReporter {
         });
       }
     } catch(error) {
-      debug(`Exception in uploading log data to Observability with error : ${error}`);
+      debug(`Exception in uploading log data to Observability with error : ${error}`, true, error);
     }
   }
 

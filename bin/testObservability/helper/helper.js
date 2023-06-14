@@ -16,8 +16,8 @@ const platformDetect = require('platform-detect');
 const pGitconfig = promisify(gitconfig);
 
 const logger = require("../../helpers/logger").winstonLogger;
-
 const utils = require('../../helpers/utils');
+const CrashReporter = require('../crashReporter');
 
 // Getting global packages path
 const GLOBAL_MODULE_PATH = execSync('npm root -g').toString().trim();
@@ -29,9 +29,12 @@ exports.pending_test_uploads = {
   count: 0
 };
 
-exports.debug = (text) => {
+exports.debug = (text, shouldReport = false, throwable = null) => {
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
-    consoleHolder.log(`\n[${(new Date()).toISOString()}][ OBSERVABILITY ] ${text}\n`)
+    logger.info(`[ OBSERVABILITY ] ${text}`);
+  }
+  if(shouldReport) {
+    CrashReporter.getInstance().uploadCrashReport(text, throwable ? throwable && throwable.stack : null);
   }
 }
 
@@ -70,7 +73,7 @@ const supportFileCleanup = () => {
     try {
       fs.writeFileSync(file, supportFileContentMap[file], {encoding: 'utf-8'});
     } catch(e) {
-      exports.debug(`Error while replacing file content for ${file} with it's original content with error : ${e}`);
+      exports.debug(`Error while replacing file content for ${file} with it's original content with error : ${e}`, true, e);
     }
   });
 }
@@ -91,7 +94,7 @@ exports.printBuildLink = async () => {
       exports.debug('Build Not Found');
     }
   } catch(err) {
-    exports.debug(`Error while stopping build with error : ${err}`);
+    exports.debug(`Error while stopping build with error : ${err}`, true, err);
   }
 }
 
@@ -147,7 +150,7 @@ exports.failureData = (errors,tag) => {
         try {
           failureChildArr.push(`${key}: ${errors[key]}`);
         } catch(e) {
-          exports.debug(`Exception in populating test failure data with error : ${e.message} : ${e.backtrace}`);
+          exports.debug(`Exception in populating test failure data with error : ${e.message} : ${e.backtrace}`, true, e);
         }
       })
       failureArr.push({ backtrace: errors.stack.split(/\r?\n/), expanded: failureChildArr });
@@ -156,7 +159,7 @@ exports.failureData = (errors,tag) => {
       return [];
     }
   } catch(e) {
-    exports.debug(`Exception in populating test failure data with error : ${e.message} : ${e.backtrace}`);
+    exports.debug(`Exception in populating test failure data with error : ${e.message} : ${e.backtrace}`, true, e);
   }
   return [];
 }
@@ -255,7 +258,7 @@ const getGitMetaData = () => {
         });
       }
     } catch(err) {
-      exports.debug(`Exception in populating Git metadata with error : ${err}`);
+      exports.debug(`Exception in populating Git metadata with error : ${err}`, true, err);
       resolve({});
     }
   })
@@ -387,8 +390,8 @@ const setEventListeners = () => {
   try {
     glob(process.cwd() + '/cypress/support/*.js', {}, (err, files) => {
       if(err) return exports.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
-      try {
-        files.forEach(file => {
+      files.forEach(file => {
+        try {
           if(!file.includes('commands.js')) {
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
     
@@ -399,10 +402,14 @@ const setEventListeners = () => {
             fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
             supportFileContentMap[file] = defaultFileContent;
           }
-        });
-      } catch(e) {}
+        } catch(e) {
+          exports.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
+        }
+      });
     });
-  } catch(e) {}
+  } catch(e) {
+    exports.debug(`Unable to parse support files to set event listeners with error ${e}`, true, e);
+  }
 }
 
 const getBuildDetails = (bsConfig) => {
@@ -452,13 +459,55 @@ const setBrowserstackCypressCliDependency = (bsConfig) => {
   }
 }
 
-exports.launchTestSession = async (user_config) => {
+const getCypressConfigFileContent = (bsConfig, cypressConfigPath) => {
+  const cypressConfigFile = require(path.resolve(bsConfig ? bsConfig.run_settings.cypressConfigFilePath : cypressConfigPath));
+  if(bsConfig) process.env.OBS_CRASH_REPORTING_CYPRESS_CONFIG_PATH = bsConfig.run_settings.cypressConfigFilePath;
+  return cypressConfigFile;
+}
+
+exports.setCrashReportingConfigFromReporter = (credentialsStr, bsConfigPath, cypressConfigPath) => {
+  try {
+    const browserstackConfigFile = utils.readBsConfigJSON(bsConfigPath);
+    const cypressConfigFile = getCypressConfigFileContent(null, cypressConfigPath);
+
+    if(!credentialsStr) {
+      credentialsStr = JSON.stringify({
+        username: process.env.OBS_CRASH_REPORTING_USERNAME,
+        password: process.env.OBS_CRASH_REPORTING_ACCESS_KEY
+      });
+    }
+    CrashReporter.getInstance().setConfigDetails(credentialsStr, browserstackConfigFile, cypressConfigFile);
+  } catch(e) {
+    exports.debug(`Encountered an error when trying to set Crash Reporting Config from reporter ${e}`);
+  }
+}
+
+const setCrashReportingConfig = (bsConfig, bsConfigPath) => {
+  try {
+    const browserstackConfigFile = utils.readBsConfigJSON(bsConfigPath);
+    const cypressConfigFile = getCypressConfigFileContent(bsConfig, null);
+    const credentialsStr = JSON.stringify({
+      username: bsConfig["auth"]["username"],
+      password: bsConfig["auth"]["access_key"]
+    });
+    CrashReporter.getInstance().setConfigDetails(credentialsStr, browserstackConfigFile, cypressConfigFile);
+    process.env.OBS_CRASH_REPORTING_USERNAME = bsConfig["auth"]["username"];
+    process.env.OBS_CRASH_REPORTING_ACCESS_KEY = bsConfig["auth"]["access_key"];
+    process.env.OBS_CRASH_REPORTING_BS_CONFIG_PATH = bsConfigPath ? path.relative(process.cwd(), bsConfigPath) : null;
+  } catch(e) {
+    exports.debug(`Encountered an error when trying to set Crash Reporting Config ${e}`);
+  }
+}
+
+exports.launchTestSession = async (user_config, bsConfigPath) => {
+  setCrashReportingConfig(user_config, bsConfigPath);
+  
   const obsUserName = user_config["auth"]["username"];
   const obsAccessKey = user_config["auth"]["access_key"];
   
   const BSTestOpsToken = `${obsUserName || ''}:${obsAccessKey || ''}`;
   if(BSTestOpsToken === '') {
-    exports.debug('EXCEPTION IN BUILD START EVENT : Missing authentication token');
+    exports.debug('EXCEPTION IN BUILD START EVENT : Missing authentication token', true, null);
     process.env.BS_TESTOPS_BUILD_COMPLETED = false;
     return [null, null];
   } else {
@@ -512,9 +561,9 @@ exports.launchTestSession = async (user_config) => {
       if(this.isBrowserstackInfra()) setBrowserstackCypressCliDependency(user_config);
     } catch(error) {
       if (error.response) {
-        exports.debug(`EXCEPTION IN BUILD START EVENT : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`);
+        exports.debug(`EXCEPTION IN BUILD START EVENT : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
       } else {
-        exports.debug(`EXCEPTION IN BUILD START EVENT : ${error.message || error}`);
+        exports.debug(`EXCEPTION IN BUILD START EVENT : ${error.message || error}`, true, error);
       }
 
       if(error.response) {
@@ -601,9 +650,9 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
     }
   } catch(error) {
     if (error.response) {
-      exports.debug(`EXCEPTION IN ${kind} REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`);
+      exports.debug(`EXCEPTION IN ${kind} REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
     } else {
-      exports.debug(`EXCEPTION IN ${kind} REQUEST TO TEST OBSERVABILITY : ${error.message || error}`);
+      exports.debug(`EXCEPTION IN ${kind} REQUEST TO TEST OBSERVABILITY : ${error.message || error}`, true, error);
     }
     exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - data.length);
   }
@@ -668,9 +717,9 @@ exports.uploadEventData = async (eventData, run=0) => {
         }
       } catch(error) {
         if (error.response) {
-          exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`);
+          exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
         } else {
-          exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO TEST OBSERVABILITY : ${error.message || error}`);
+          exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO TEST OBSERVABILITY : ${error.message || error}`, true, error);
         }
         exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - (event_api_url === 'api/v1/event' ? 1 : data.length));
         return {
@@ -759,9 +808,9 @@ exports.stopBuildUpstream = async (buildStartWaitRun = 0, testUploadWaitRun = 0,
           }
         } catch(error) {
           if (error.response) {
-            exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`);
+            exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
           } else {
-            exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : ${error.message || error}`);
+            exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : ${error.message || error}`, true, error);
           }
           return {
             status: 'error',
@@ -913,7 +962,9 @@ exports.runCypressTestsLocally = (bsConfig, args, rawArgs) => {
     cypressProcess.on('error', (err) => {
       logger.info(`Cypress process encountered an error ${err}`);
     });
-  } catch(e) {}
+  } catch(e) {
+    exports.debug(`Encountered an error when trying to spawn a Cypress test locally ${e}`, true, e);
+  }
 }
 
 class PathHelper {

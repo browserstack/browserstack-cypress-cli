@@ -21,7 +21,8 @@ const usageReporting = require("./usageReporting"),
   config = require("../helpers/config"),
   pkg = require('../../package.json'),
   transports = require('./logger').transports,
-  { findGitConfig, printBuildLink, isTestObservabilitySession, isBrowserstackInfra, shouldReRunObservabilityTests } = require('../testObservability/helper/helper');
+  { findGitConfig, printBuildLink, isTestObservabilitySession, isBrowserstackInfra, shouldReRunObservabilityTests } = require('../testObservability/helper/helper'),
+  { OBSERVABILITY_ENV_VARS } = require('../testObservability/helper/constants');
 
 const request = require('request');
 
@@ -538,16 +539,18 @@ exports.setSystemEnvs = (bsConfig) => {
     });
   }
 
-  ["BROWSERSTACK_TEST_OBSERVABILITY", "BROWSERSTACK_AUTOMATION", "BS_TESTOPS_BUILD_COMPLETED", "BS_TESTOPS_JWT", "BS_TESTOPS_BUILD_HASHED_ID", "BS_TESTOPS_ALLOW_SCREENSHOTS", "OBSERVABILITY_LAUNCH_SDK_VERSION", "BROWSERSTACK_OBSERVABILITY_DEBUG"].forEach(key => {
-    envKeys[key] = process.env[key];
-  });
-
-  let gitConfigPath = findGitConfig(process.cwd());
-  if(!isBrowserstackInfra()) process.env.OBSERVABILITY_GIT_CONFIG_PATH_LOCAL = gitConfigPath;
-  if(gitConfigPath) {
-    const relativePathFromGitConfig = path.relative(gitConfigPath, process.cwd());
-    envKeys["OBSERVABILITY_GIT_CONFIG_PATH"] = relativePathFromGitConfig ? relativePathFromGitConfig : 'DEFAULT';
-  }
+  try {
+    OBSERVABILITY_ENV_VARS.forEach(key => {
+      envKeys[key] = process.env[key];
+    });
+  
+    let gitConfigPath = findGitConfig(process.cwd());
+    if(!isBrowserstackInfra()) process.env.OBSERVABILITY_GIT_CONFIG_PATH_LOCAL = gitConfigPath;
+    if(gitConfigPath) {
+      const relativePathFromGitConfig = path.relative(gitConfigPath, process.cwd());
+      envKeys["OBSERVABILITY_GIT_CONFIG_PATH"] = relativePathFromGitConfig ? relativePathFromGitConfig : 'DEFAULT';
+    }
+  } catch(e){}
 
   if (Object.keys(envKeys).length === 0) {
     bsConfig.run_settings.system_env_vars = null;
