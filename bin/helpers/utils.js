@@ -390,17 +390,20 @@ exports.setSpecTimeout = (bsConfig, args) => {
   logger.debug(`Setting spec timeout = ${specTimeout}`);
 }
 
-exports.isValidTimezone = (timezone) => !this.isUndefined(timezone) && !this.isUndefined(TIMEZONE[timezone])
+exports.isValidTimezone = (timezone) => this.isNotUndefined(timezone) && this.isNotUndefined(TIMEZONE[timezone])
 
 exports.setTimezone = (bsConfig, args) => {
   let timezone = args.timezone || bsConfig.run_settings.timezone;
-  if(this.isUndefined(timezone) || !this.isValidTimezone(timezone)){
+  let newTimezone;
+  if(this.isValidTimezone(timezone)){
+    newTimezone = timezone; 
+  } else {
     logger.error(`Invalid timezone = ${timezone}`);
     syncCliLogger.info(chalk.red(Constants.userMessages.INVALID_TIMEZONE));
     process.exit(1);
   }
-  bsConfig.run_settings.timezone = timezone;
-  logger.debug(`Setting timezone = ${timezone}`);
+  bsConfig.run_settings.timezone = newTimezone;
+  logger.debug(`Setting timezone = ${newTimezone}`);
 }
 
 exports.setRecordFlag = (bsConfig, args) => {
