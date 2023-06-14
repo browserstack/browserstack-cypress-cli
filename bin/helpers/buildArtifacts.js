@@ -224,8 +224,9 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs, buildR
       options.config.proxy = false;
       options.config.httpAgent = new HttpsProxyAgent(process.env.HTTPS_PROXY);
     }
+    let response;
     try {
-      const response = await axios.get(options.url, options.config);
+      response = await axios.get(options.url, options.config);
       buildDetails = response.data;
       if(response.status != 200) {
         logger.error('Downloading the build artifacts failed.');
@@ -264,7 +265,18 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs, buildR
         logger.error(`Error: Request failed with status code ${err.status}`)
         logger.error(utils.formatRequest(err.status, err.response, err.response.data));
       } else {
-        logger.info(err);
+        messageType = Constants.messageTypes.ERROR;
+        errorCode = 'api_failed_build_artifacts';
+        if (BUILD_ARTIFACTS_FAIL_COUNT > 0) {
+          messageType = Constants.messageTypes.ERROR;
+          message = Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_FAILED.replace('<build-id>', buildId).replace('<machine-count>', BUILD_ARTIFACTS_FAIL_COUNT);
+          logger.error(message);
+        } else {
+          logger.error('Downloading the build artifacts failed.');
+        }
+        utils.sendUsageReport(bsConfig, args, err, messageType, errorCode, buildReportData, rawArgs);
+        logger.error(`Error: Request failed with status code ${response.status}`)
+        logger.error(utils.formatRequest(err, response, response.data));
       }
       process.exitCode = Constants.ERROR_EXIT_CODE;
     }
