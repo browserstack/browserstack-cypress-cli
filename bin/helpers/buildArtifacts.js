@@ -184,9 +184,11 @@ const sendUpdatesToBstack = async (bsConfig, buildId, args, options, rawArgs, bu
       }
       resolve();
     } catch (error) {
-      utils.sendUsageReport(bsConfig, args, error.response, Constants.messageTypes.ERROR, 'api_failed_build_artifacts_status_update', buildReportData, rawArgs);
-      logger.error(utils.formatRequest(error.response.statusText, error.response, error.response.data));
-      reject(errror.response);
+      if(error.response) {
+        utils.sendUsageReport(bsConfig, args, error.response, Constants.messageTypes.ERROR, 'api_failed_build_artifacts_status_update', buildReportData, rawArgs);
+        logger.error(utils.formatRequest(error.response.statusText, error.response, error.response.data));
+        reject(errror.response.data.message);
+      }
     }
   });
 }

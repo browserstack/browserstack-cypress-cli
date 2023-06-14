@@ -54,9 +54,10 @@ const createBuild = (bsConfig, zip) => {
         }
         resolve(build);
       } catch (error) {
-        if(error.response)
+        if(error.response) {
           logger.error(utils.formatRequest(error.response.statusText, error.response, error.response.data));
-        reject(error);
+          reject(error.response.data.message);
+        }
       }
     }).catch(function(err){
       reject(err);

@@ -947,7 +947,9 @@ exports.checkLocalBinaryRunning = (bsConfig, localIdentifier) => {
         });
         resolve(response.data)
       } catch (error) {
-        reject(error);
+        if(error.response) {
+          reject(error.response.data.message);
+        }
       }
   });
 };
