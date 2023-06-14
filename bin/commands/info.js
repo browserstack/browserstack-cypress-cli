@@ -84,7 +84,9 @@ module.exports = function info(args, rawArgs) {
           }
         logger.info(message);
       } catch (error) {
-        message = Constants.userMessages.BUILD_INFO_FAILED;
+        message = `${
+          Constants.userMessages.BUILD_INFO_FAILED
+        } with error: \n${error.response.data.message}`;
         messageType = Constants.messageTypes.ERROR;
         errorCode = 'api_failed_build_info';
         logger.info(message);
