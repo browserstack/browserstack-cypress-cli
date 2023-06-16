@@ -395,12 +395,14 @@ exports.isValidTimezone = (timezone) => this.isNotUndefined(timezone) && this.is
 exports.setTimezone = (bsConfig, args) => {
   let timezone = args.timezone || bsConfig.run_settings.timezone;
   let newTimezone;
-  if(this.isValidTimezone(timezone)){
-    newTimezone = timezone; 
-  } else {
-    logger.error(`Invalid timezone = ${timezone}`);
-    syncCliLogger.info(chalk.red(Constants.userMessages.INVALID_TIMEZONE));
-    process.exit(1);
+  if(this.isNotUndefined(timezone)) {
+    if(this.isValidTimezone(timezone)){
+      newTimezone = timezone; 
+    } else {
+      logger.error(`Invalid timezone = ${timezone}`);
+      syncCliLogger.info(chalk.red(Constants.userMessages.INVALID_TIMEZONE));
+      process.exit(1);
+    }
   }
   bsConfig.run_settings.timezone = newTimezone;
   logger.debug(`Setting timezone = ${newTimezone}`);
