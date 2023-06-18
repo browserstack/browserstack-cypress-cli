@@ -26,3 +26,5 @@ exports.OBSERVABILITY_ENV_VARS = [
   "OBS_CRASH_REPORTING_BS_CONFIG_PATH",
   "OBS_CRASH_REPORTING_CYPRESS_CONFIG_PATH"
 ];
+
+exports.TEST_OBSERVABILITY_REPORTER = 'browserstack-cypress-cli/bin/testObservability/reporter';

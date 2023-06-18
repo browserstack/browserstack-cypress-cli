@@ -22,7 +22,7 @@ const usageReporting = require("./usageReporting"),
   pkg = require('../../package.json'),
   transports = require('./logger').transports,
   { findGitConfig, printBuildLink, isTestObservabilitySession, isBrowserstackInfra, shouldReRunObservabilityTests } = require('../testObservability/helper/helper'),
-  { OBSERVABILITY_ENV_VARS } = require('../testObservability/helper/constants');
+  { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER } = require('../testObservability/helper/constants');
 
 const request = require('request');
 
@@ -1223,7 +1223,7 @@ exports.setConfig = (bsConfig, args) => {
 // blindly send other passed configs with run_settings and handle at backend
 exports.setOtherConfigs = (bsConfig, args) => {
   if(isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
-    bsConfig["run_settings"]["reporter"] = "browserstack-cypress-cli/bin/testObservability/reporter";
+    bsConfig["run_settings"]["reporter"] = TEST_OBSERVABILITY_REPORTER;
     return;
   }
 

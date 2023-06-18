@@ -178,7 +178,7 @@ class MyReporter {
         } catch(err) {
           debug(`Exception in populating test data for hook skipped test with error : ${err}`, true, err);
         }
-        
+
         await requestQueueHandler.shutdown();
       });
   }
@@ -224,6 +224,30 @@ class MyReporter {
     }
   }
 
+  uploadTestSteps = async (test_run_uuid = null, hook_run_uuid = null, shouldClearCurrentSteps = true, cypressSteps = null) => {
+    const currentTestSteps = cypressSteps ? cypressSteps : JSON.parse(JSON.stringify(this.currentTestSteps));
+    /* TODO - Send as test logs */
+    const allStepsAsLogs = [];
+    currentTestSteps.forEach(step => {
+      const currentStepAsLog = {
+        test_run_uuid,
+        hook_run_uuid,
+        timestamp: step.started_at,
+        level: step.result,
+        message: step.text,
+        kind: 'TEST_LOG',
+        http_response: {}
+      };
+      allStepsAsLogs.push(currentStepAsLog);
+    });
+    if(currentTestSteps.length) consoleHolder.log(`\n SENDING BELOW STEPS FOR Test = ${test_run_uuid} OR Hook = ${hook_run_uuid} \n ${JSON.stringify(currentTestSteps, 0, 3)} \n`);
+    await uploadEventData({
+      event_type: 'LogCreated',
+      logs: allStepsAsLogs
+    });
+    if(shouldClearCurrentSteps) this.currentTestSteps = [];
+  }
+
   sendTestRunEvent = async (test, err = undefined, customFinished=false, eventType = "TestRunFinished") => {
     try {
       if(test.body && test.body.match(/browserstack internal helper hook/)) return;
@@ -258,16 +282,6 @@ class MyReporter {
       
       const { fileSeparator, fileSeparatorRegex } = getFileSeparatorData();
       
-      if(eventType == 'TestRunStarted') {
-        this.currentTestSteps = [];
-        this.currentTestCucumberSteps = [];
-      }
-      
-      if(eventType.match(/HookRun/)) {
-        consoleHolder.log(`\n >>> HOOKOBJ : ${test.title} : ${test.state} : ${test.isPassed()} ${test.isFailed()} ${test.isPending()} \n`);
-      } else if(eventType.match(/TestRun/)) {
-        consoleHolder.log(`\n SENDTESTRUNEVENT : ${eventType} ${test.testAnalyticsId} || ${test.hookAnalyticsId} ${test.title} ${test.state} \n`);
-      }
       let testData = {
         'framework': 'Cypress',
         'uuid': (eventType.includes("Test") ? test.testAnalyticsId : test.hookAnalyticsId) || uuidv4(),
@@ -294,6 +308,8 @@ class MyReporter {
           steps: JSON.parse(JSON.stringify(this.currentTestCucumberSteps))
         }
       };
+
+      this.currentTestCucumberSteps = [];
 
       const { os, os_version } = await getOSDetailsFromSystem(process.env.observability_product);
       if(process.env.observability_integration) {
@@ -374,13 +390,25 @@ class MyReporter {
       }
       
       if(eventType == 'HookRunFinished' && testData['hook_type'] == 'BEFORE_ALL') {
+        uploadData.cypressSteps = JSON.parse(JSON.stringify(this.currentTestSteps));
         this.beforeHooks.push(uploadData);
+        this.currentTestSteps = [];
       } else {
         await uploadEventData(uploadData);
+
+        if(eventType == 'HookRunFinished') {
+          await this.uploadTestSteps(null, testData['uuid']);
+        } else if(eventType == 'TestRunFinished') {
+          await this.uploadTestSteps(testData['uuid']);
+        }
+
         if(eventType.match(/TestRun/)) {
           this.beforeHooks.forEach(async(hookUploadObj) => {
+            const currentTestSteps = hookUploadObj.cypressSteps;
+            delete hookUploadObj.cypressSteps;
             hookUploadObj['hook_run']['test_run_id'] = test.testAnalyticsId;
             await uploadEventData(hookUploadObj);
+            await this.uploadTestSteps(null, hookUploadObj['hook_run']['uuid'], false, currentTestSteps);
           });
           this.beforeHooks = [];
         }

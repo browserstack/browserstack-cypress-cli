@@ -24,7 +24,7 @@ const GLOBAL_MODULE_PATH = execSync('npm root -g').toString().trim();
 const { name, version } = require('../../../package.json');
 
 const { CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS } = require('../../helpers/constants');
-const { consoleHolder, API_URL } = require('./constants');
+const { consoleHolder, API_URL, TEST_OBSERVABILITY_REPORTER } = require('./constants');
 exports.pending_test_uploads = {
   count: 0
 };
@@ -777,56 +777,48 @@ exports.shouldReRunObservabilityTests = () => {
   return (process.env.BROWSERSTACK_RERUN_TESTS && process.env.BROWSERSTACK_RERUN_TESTS !== "null") ? true : false
 }
 
-exports.stopBuildUpstream = async (buildStartWaitRun = 0, testUploadWaitRun = 0, forceStop = false) => {
-  if(process.env.BS_TESTOPS_BUILD_COMPLETED !== "false" && !forceStop && exports.pending_test_uploads.count && testUploadWaitRun < 5) {
-    exports.debug(`stopBuildUpstream event : retry count ${testUploadWaitRun+1} due to pending event uploads ${exports.pending_test_uploads.count}`);
-    setTimeout(function(){ exports.stopBuildUpstream(buildStartWaitRun, testUploadWaitRun+1,false) }, 5000);
-  } else {
-    if (process.env.BS_TESTOPS_BUILD_COMPLETED === "true") {
-      if(process.env.BS_TESTOPS_JWT == "null" || process.env.BS_TESTOPS_BUILD_HASHED_ID == "null") {
-        exports.debug('EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : Missing authentication token');
-        return {
-          status: 'error',
-          message: 'Token/buildID is undefined, build creation might have failed'
-        };
-      } else {
-        const data = {
-          'stop_time': (new Date()).toISOString()
-        };
-        const config = {
-          headers: {
-            'Authorization': `Bearer ${process.env.BS_TESTOPS_JWT}`,
-            'Content-Type': 'application/json',
-            'X-BSTACK-TESTOPS': 'true'
-          }
-        };
-    
-        try {
-          const response = await nodeRequest('PUT',`api/v1/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}/stop`,data,config);
-          if(response.data && response.data.error) {
-            throw({message: response.data.error});
-          } else {
-            exports.debug(`stopBuildUpstream buildStartWaitRun[${buildStartWaitRun}] testUploadWaitRun[${testUploadWaitRun}] event successfull!`)
-            return {
-              status: 'success',
-              message: ''
-            };
-          }
-        } catch(error) {
-          if (error.response) {
-            exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
-          } else {
-            exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : ${error.message || error}`, true, error);
-          }
+exports.stopBuildUpstream = async () => {
+  if (process.env.BS_TESTOPS_BUILD_COMPLETED === "true") {
+    if(process.env.BS_TESTOPS_JWT == "null" || process.env.BS_TESTOPS_BUILD_HASHED_ID == "null") {
+      exports.debug('EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : Missing authentication token');
+      return {
+        status: 'error',
+        message: 'Token/buildID is undefined, build creation might have failed'
+      };
+    } else {
+      const data = {
+        'stop_time': (new Date()).toISOString()
+      };
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${process.env.BS_TESTOPS_JWT}`,
+          'Content-Type': 'application/json',
+          'X-BSTACK-TESTOPS': 'true'
+        }
+      };
+  
+      try {
+        const response = await nodeRequest('PUT',`api/v1/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}/stop`,data,config);
+        if(response.data && response.data.error) {
+          throw({message: response.data.error});
+        } else {
+          exports.debug(`stopBuildUpstream event successfull!`)
           return {
-            status: 'error',
-            message: error.message || error.response ? `${error.response.status}:${error.response.statusText}` : error
+            status: 'success',
+            message: ''
           };
         }
+      } catch(error) {
+        if (error.response) {
+          exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
+        } else {
+          exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : ${error.message || error}`, true, error);
+        }
+        return {
+          status: 'error',
+          message: error.message || error.response ? `${error.response.status}:${error.response.statusText}` : error
+        };
       }
-    } else if(process.env.BS_TESTOPS_BUILD_COMPLETED !== "false") {
-      /* forceStop = true since we won't wait for pendingUploads trigerred post stop flow */
-      setTimeout(function(){ exports.stopBuildUpstream(buildStartWaitRun+1,testUploadWaitRun,true) }, 1000);
     }
   }
 }
@@ -942,7 +934,7 @@ const getReRunSpecs = (rawArgs) => {
 
 const getLocalSessionReporter = () => {
   if(this.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
-    return ['--reporter', 'browserstack-cypress-cli/bin/testObservability/reporter'];
+    return ['--reporter', TEST_OBSERVABILITY_REPORTER];
   } else {
     return [];
   }
