@@ -179,6 +179,7 @@ class MyReporter {
           debug(`Exception in populating test data for hook skipped test with error : ${err}`, true, err);
         }
 
+        await this.uploadTestSteps();
         await requestQueueHandler.shutdown();
       });
   }
@@ -224,14 +225,14 @@ class MyReporter {
     }
   }
 
-  uploadTestSteps = async (test_run_uuid = null, hook_run_uuid = null, shouldClearCurrentSteps = true, cypressSteps = null) => {
+  uploadTestSteps = async (shouldClearCurrentSteps = true, cypressSteps = null) => {
     const currentTestSteps = cypressSteps ? cypressSteps : JSON.parse(JSON.stringify(this.currentTestSteps));
     /* TODO - Send as test logs */
     const allStepsAsLogs = [];
     currentTestSteps.forEach(step => {
       const currentStepAsLog = {
-        test_run_uuid,
-        hook_run_uuid,
+        test_run_uuid : step.test_run_uuid,
+        hook_run_uuid : step.hook_run_uuid,
         timestamp: step.started_at,
         level: step.result,
         message: step.text,
@@ -240,7 +241,6 @@ class MyReporter {
       };
       allStepsAsLogs.push(currentStepAsLog);
     });
-    if(currentTestSteps.length) consoleHolder.log(`\n SENDING BELOW STEPS FOR Test = ${test_run_uuid} OR Hook = ${hook_run_uuid} \n ${JSON.stringify(currentTestSteps, 0, 3)} \n`);
     await uploadEventData({
       event_type: 'LogCreated',
       logs: allStepsAsLogs
@@ -396,10 +396,8 @@ class MyReporter {
       } else {
         await uploadEventData(uploadData);
 
-        if(eventType == 'HookRunFinished') {
-          await this.uploadTestSteps(null, testData['uuid']);
-        } else if(eventType == 'TestRunFinished') {
-          await this.uploadTestSteps(testData['uuid']);
+        if(eventType.match(/Finished/)) {
+          await this.uploadTestSteps();
         }
 
         if(eventType.match(/TestRun/)) {
@@ -408,7 +406,7 @@ class MyReporter {
             delete hookUploadObj.cypressSteps;
             hookUploadObj['hook_run']['test_run_id'] = test.testAnalyticsId;
             await uploadEventData(hookUploadObj);
-            await this.uploadTestSteps(null, hookUploadObj['hook_run']['uuid'], false, currentTestSteps);
+            await this.uploadTestSteps(false, currentTestSteps);
           });
           this.beforeHooks = [];
         }
@@ -544,16 +542,20 @@ class MyReporter {
         return;
       }
       
+      const currentStepObj = {
+        id: command.attributes.id,
+        text: 'cy.' + command.attributes.name + '(' + this.getFormattedArgs(command.attributes.args) + ')',
+        started_at: new Date().toISOString(),
+        finished_at: null,
+        duration: null,
+        result: 'pending',
+        test_run_uuid: this.current_test?.testAnalyticsId && !this.runStatusMarkedHash[this.current_test.testAnalyticsId] ? this.current_test.testAnalyticsId : null,
+        hook_run_uuid : this.current_hook?.hookAnalyticsId && !this.runStatusMarkedHash[this.current_hook.hookAnalyticsId] ? this.current_hook.hookAnalyticsId : null
+      };
+      if(currentStepObj.hook_run_uuid && currentStepObj.test_run_uuid) delete currentStepObj.test_run_uuid;
       this.currentTestSteps = [
         ...this.currentTestSteps,
-        {
-          id: command.attributes.id,
-          text: 'cy.' + command.attributes.name + '(' + this.getFormattedArgs(command.attributes.args) + ')',
-          started_at: new Date().toISOString(),
-          finished_at: null,
-          duration: null,
-          result: 'pending'
-        }
+        currentStepObj
       ];
     } else if(type == 'COMMAND_END') {
       let stepUpdated = false;
@@ -571,16 +573,20 @@ class MyReporter {
 
       if(!stepUpdated) {
         /* COMMAND_END reported before COMMAND_START */
+        const currentStepObj = {
+          id: command.attributes.id,
+          text: 'cy.' + command.attributes.name + '(' + this.getFormattedArgs(command.attributes.args) + ')',
+          started_at: new Date().toISOString(),
+          finished_at: new Date().toISOString(),
+          duration: 0,
+          result: command.state,
+          test_run_uuid: this.current_test?.testAnalyticsId && !this.runStatusMarkedHash[this.current_test.testAnalyticsId] ? this.current_test.testAnalyticsId : null,
+          hook_run_uuid : this.current_hook?.hookAnalyticsId && !this.runStatusMarkedHash[this.current_hook.hookAnalyticsId] ? this.current_hook.hookAnalyticsId : null
+        };
+        if(currentStepObj.hook_run_uuid && currentStepObj.test_run_uuid) delete currentStepObj.test_run_uuid;
         this.currentTestSteps = [
           ...this.currentTestSteps,
-          {
-            id: command.attributes.id,
-            text: 'cy.' + command.attributes.name + '(' + this.getFormattedArgs(command.attributes.args) + ')',
-            started_at: new Date().toISOString(),
-            finished_at: new Date().toISOString(),
-            duration: 0,
-            result: command.state
-          }
+          currentStepObj
         ];
       }
     } else if(type == 'COMMAND_RETRY') {
