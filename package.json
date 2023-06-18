@@ -26,7 +26,6 @@
     "mocha": "^10.2.0",
     "mkdirp": "1.0.4",
     "node-ipc": "9.1.1",
-    "platform-detect": "^3.0.1",
     "request": "2.88.2",
     "requestretry": "7.1.0",
     "table": "5.4.6",

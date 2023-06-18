@@ -11,7 +11,6 @@ const getRepoInfo = require('git-repo-info');
 const gitconfig = require('gitconfiglocal');
 const { spawn, execSync } = require('child_process');
 const glob = require('glob');
-const platformDetect = require('platform-detect');
 
 const pGitconfig = promisify(gitconfig);
 
@@ -24,6 +23,7 @@ const GLOBAL_MODULE_PATH = execSync('npm root -g').toString().trim();
 
 const { name, version } = require('../../../package.json');
 
+const { CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS } = require('../../helpers/constants');
 const { consoleHolder, API_URL } = require('./constants');
 exports.pending_test_uploads = {
   count: 0
@@ -382,7 +382,7 @@ const setEnvironmentVariablesForRemoteReporter = (BS_TESTOPS_JWT, BS_TESTOPS_BUI
 
 const getCypressCommandEventListener = () => {
   return (
-    `require('browserstack-cypress-cli/bin/testObservability/cypress/cypressEventListeners');`
+    `require('browserstack-cypress-cli/bin/testObservability/cypress');`
   );
 }
 
@@ -427,7 +427,7 @@ const getBuildDetails = (bsConfig) => {
   if(isTestObservabilityOptionsPresent) {
     buildName = buildName || bsConfig["testObservabilityOptions"]["buildName"];
     projectName = projectName || bsConfig["testObservabilityOptions"]["projectName"];
-    buildTags = [...buildTags, ...bsConfig["testObservabilityOptions"]["buildTag"]];
+    if(!utils.isUndefined(bsConfig["testObservabilityOptions"]["buildTag"])) buildTags = [...buildTags, ...bsConfig["testObservabilityOptions"]["buildTag"]];
     buildDescription = buildDescription || bsConfig["testObservabilityOptions"]["buildDescription"];
   }
 
@@ -460,8 +460,8 @@ const setBrowserstackCypressCliDependency = (bsConfig) => {
 }
 
 const getCypressConfigFileContent = (bsConfig, cypressConfigPath) => {
-  const cypressConfigFile = require(path.resolve(bsConfig ? bsConfig.run_settings.cypressConfigFilePath : cypressConfigPath));
-  if(bsConfig) process.env.OBS_CRASH_REPORTING_CYPRESS_CONFIG_PATH = bsConfig.run_settings.cypressConfigFilePath;
+  const cypressConfigFile = require(path.resolve(bsConfig ? bsConfig.run_settings.cypress_config_file : cypressConfigPath));
+  if(bsConfig) process.env.OBS_CRASH_REPORTING_CYPRESS_CONFIG_PATH = bsConfig.run_settings.cypress_config_file;
   return cypressConfigFile;
 }
 
@@ -560,27 +560,26 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
       setEventListeners();
       if(this.isBrowserstackInfra()) setBrowserstackCypressCliDependency(user_config);
     } catch(error) {
-      if (error.response) {
-        exports.debug(`EXCEPTION IN BUILD START EVENT : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
+      if(!error.errorType) {
+        if (error.response) {
+          exports.debug(`EXCEPTION IN BUILD START EVENT : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
+        } else {
+          exports.debug(`EXCEPTION IN BUILD START EVENT : ${error.message || error}`, true, error);
+        }
       } else {
-        exports.debug(`EXCEPTION IN BUILD START EVENT : ${error.message || error}`, true, error);
-      }
-
-      if(error.response) {
-        const errorMessageJson = error.response.body ? JSON.parse(error.response.body.toString()) : null
-        const errorMessage = errorMessageJson ? errorMessageJson.message : null, errorType = errorMessageJson ? errorMessageJson.errorType : null
+        const { errorType, message } = error;
         switch (errorType) {
           case 'ERROR_INVALID_CREDENTIALS':
-            logger.error(errorMessage);
+            logger.error(message);
             break;
           case 'ERROR_ACCESS_DENIED':
-            logger.info(errorMessage);
+            logger.info(message);
             break;
           case 'ERROR_SDK_DEPRECATED':
-            logger.error(errorMessage);
+            logger.error(message);
             break;
           default:
-            logger.error(errorMessage);
+            logger.error(message);
         }
       }
 
@@ -626,6 +625,7 @@ exports.mapTestHooks = (test) => {
         testHook.hookAnalyticsId = uuidv4();
         delete testHook.markedStatus;
       }
+      testHook['test_run_id'] = testHook['test_run_id'] || test.testAnalyticsId;
     })
   });
   exports.mapTestHooks(test.parent);
@@ -740,17 +740,23 @@ exports.uploadEventData = async (eventData, run=0) => {
   }
 }
 
+exports.isTestObservabilitySupportedCypressVersion = (cypress_config_filename) => {
+  const extension = cypress_config_filename.split('.').pop();
+  return CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS.includes(extension);
+}
+
 exports.setTestObservabilityFlags = (bsConfig) => {
   /* testObservability */
   let isTestObservabilitySession = true;
-  if(bsConfig["testObservability"]) isTestObservabilitySession = ( bsConfig["testObservability"] == true );
-  if(process.env.BROWSERSTACK_TEST_OBSERVABILITY) isTestObservabilitySession = ( process.env.BROWSERSTACK_TEST_OBSERVABILITY == "true" );
+  if(!utils.isUndefined(bsConfig["testObservability"])) isTestObservabilitySession = ( bsConfig["testObservability"] == true );
+  if(!utils.isUndefined(process.env.BROWSERSTACK_TEST_OBSERVABILITY)) isTestObservabilitySession = ( process.env.BROWSERSTACK_TEST_OBSERVABILITY == "true" );
   if(process.argv.includes('--disable-test-observability')) isTestObservabilitySession = false;
+  isTestObservabilitySession = isTestObservabilitySession && this.isTestObservabilitySupportedCypressVersion(bsConfig.run_settings.cypress_config_file);
 
   /* browserstackAutomation */
   let isBrowserstackInfra = true;
-  if(bsConfig["browserstackAutomation"]) isBrowserstackInfra = ( bsConfig["browserstackAutomation"] == true );
-  if(process.env.BROWSERSTACK_AUTOMATION) isBrowserstackInfra = ( process.env.BROWSERSTACK_AUTOMATION == "true" );
+  if(!utils.isUndefined(bsConfig["browserstackAutomation"])) isBrowserstackInfra = ( bsConfig["browserstackAutomation"] == true );
+  if(!utils.isUndefined(process.env.BROWSERSTACK_AUTOMATION)) isBrowserstackInfra = ( process.env.BROWSERSTACK_AUTOMATION == "true" );
   if(process.argv.includes('--disable-browserstack-automation')) isBrowserstackInfra = false;
 
   process.env.BROWSERSTACK_TEST_OBSERVABILITY = isTestObservabilitySession;
@@ -845,13 +851,9 @@ exports.getHookSkippedTests = (suite) => {
 }
 
 const getPlatformName = () => {
-  if (platformDetect.windows) return 'Windows'
-  if (platformDetect.macos) return 'OS X'
-  if (platformDetect.android) return 'Android'
-  if (platformDetect.ios) return 'IOS'
-  if (platformDetect.linux) return 'Linux'
-  if (platformDetect.tizen) return 'Tizen'
-  if (platformDetect.chromeos) return 'Chrome OS'
+  if (process.platform === 'win32') return 'Windows'
+  if (process.platform === 'darwin') return 'OS X'
+  if (process.platform === "linux") return 'Linux'
   return 'Unknown'
 }
 
@@ -946,8 +948,19 @@ const getLocalSessionReporter = () => {
   }
 }
 
+const cleanupTestObservabilityFlags = (rawArgs) => {
+  const newRawArgs = [];
+  for(let idx=0; idx<rawArgs.length; idx++) {
+    if(!['--disable-browserstack-automation', '--disable-test-observability'].includes(rawArgs[idx])) {
+      newRawArgs.push(rawArgs[idx]);
+    }
+  }
+  return newRawArgs;
+}
+
 exports.runCypressTestsLocally = (bsConfig, args, rawArgs) => {
   try {
+    rawArgs = cleanupTestObservabilityFlags(rawArgs);
     logger.info(`Running npx cypress run ${getReRunSpecs(rawArgs.slice(1)).join(' ')} ${getLocalSessionReporter().join(' ')}`);
     const cypressProcess = spawn(
       'npx',

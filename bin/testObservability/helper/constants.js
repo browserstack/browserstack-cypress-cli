@@ -8,6 +8,7 @@ exports.IPC_EVENTS = {
   CONFIG: 'testObservability:cypressConfig',
   SCREENSHOT: 'testObservability:cypressScreenshot',
   COMMAND: 'testObservability:cypressCommand',
+  CUCUMBER: 'testObservability:cypressCucumberStep',
   PLATFORM_DETAILS: 'testObservability:cypressPlatformDetails'
 };
 

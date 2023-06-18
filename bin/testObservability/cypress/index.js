@@ -1,3 +1,14 @@
+/* Event listeners + custom commands for Cypress */
+
+/* Used to detect Gherkin steps */
+Cypress.on('log:added', (log) => {
+  cy.now('task', 'test_observability_step', {
+    log
+  }, {log: false}).then((res) => {
+  }).catch((err) => {
+  });
+});
+
 Cypress.on('command:start', (command) => {
   if(
     command?.attributes?.name == 'log' || 
@@ -21,7 +32,7 @@ Cypress.on('command:start', (command) => {
       },
       state: 'pending'
     }
-  }).then((res) => {
+  }, {log: false}).then((res) => {
   }).catch((err) => {
   });
 
@@ -31,7 +42,7 @@ Cypress.on('command:start', (command) => {
     browser: Cypress.browser,
     platform: Cypress.platform,
     cypressVersion: Cypress.version
-  }).then((res) => {
+  }, {log: false}).then((res) => {
   }).catch((err) => {
   });
 });
@@ -57,7 +68,7 @@ Cypress.on('command:retry', (command) => {
         isDefaultAssertionErr: command?.error?.isDefaultAssertionErr
       }
     }
-  }).then((res) => {
+  }, {log: false}).then((res) => {
   }).catch((err) => {
   });
 });
@@ -84,7 +95,7 @@ Cypress.on('command:end', (command) => {
       },
       'state': command.state
     }
-  }).then((res) => {
+  }, {log: false}).then((res) => {
   }).catch((err) => {
   });
 });
@@ -101,7 +112,7 @@ Cypress.Commands.overwrite('log', (originalFn, ...args) => {
   cy.now('task', 'test_observability_log', {
     'level': 'info',
     message,
-  }).then((res) => {
+  }, {log: false}).then((res) => {
   }).catch((err) => {
   });
   originalFn(...args);

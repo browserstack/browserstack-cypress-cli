@@ -70,8 +70,11 @@ class MyReporter {
     this._testEnv = getTestEnv();
     this._paths = new PathHelper({ cwd: process.cwd() }, this._testEnv.location_prefix);
     this.currentTestSteps = [];
+    this.currentTestCucumberSteps = [];
+    this.beforeHooks = [];
     this.platformDetailsMap = {};
     this.runStatusMarkedHash = {};
+    this.haveSentBuildUpdate = false;
     this.registerListeners();
     setCrashReportingConfigFromReporter(null, process.env.OBS_CRASH_REPORTING_BS_CONFIG_PATH, process.env.OBS_CRASH_REPORTING_CYPRESS_CONFIG_PATH);
 
@@ -187,6 +190,7 @@ class MyReporter {
         server.on(IPC_EVENTS.LOG, this.cypressLogListener.bind(this));
         server.on(IPC_EVENTS.SCREENSHOT, this.cypressScreenshotListener.bind(this));
         server.on(IPC_EVENTS.COMMAND, this.cypressCommandListener.bind(this));
+        server.on(IPC_EVENTS.CUCUMBER, this.cypressCucumberStepListener.bind(this));
         server.on(IPC_EVENTS.PLATFORM_DETAILS, this.cypressPlatformDetailsListener.bind(this));
       },
       (server) => {
@@ -214,6 +218,7 @@ class MyReporter {
       } else {
         await this.sendTestRunEvent(test, undefined, false, "TestRunStarted");
       }
+      this.lastTest = lastTest;
     } catch(err) {
       debug(`Exception in populating test data for test start with error : ${err}`, true, err);
     }
@@ -223,7 +228,7 @@ class MyReporter {
     try {
       if(test.body && test.body.match(/browserstack internal helper hook/)) return;
       let failureArgs = [];
-      if(test.state === STATE_FAILED) {
+      if(test.state === STATE_FAILED || eventType.match(/HookRun/)) {
         if(test.err !== undefined) {
           failureArgs = test.err.multiple ? [test.err.multiple, 'test'] : [test.err, 'err'];
         } else if(err !== undefined) {
@@ -234,6 +239,12 @@ class MyReporter {
       }
 
       const failureReason = test.err !== undefined ? test.err.toString() : err !== undefined ? err.toString() : undefined;
+      if(eventType == 'TestRunFinished' && failureReason && this.currentTestCucumberSteps.length) {
+        this.currentTestCucumberSteps[this.currentTestCucumberSteps.length - 1] = {
+          ...this.currentTestCucumberSteps[this.currentTestCucumberSteps.length - 1],
+          result: 'failed'
+        }
+      }
 
       let rootParentFile;
       try {
@@ -249,11 +260,17 @@ class MyReporter {
       
       if(eventType == 'TestRunStarted') {
         this.currentTestSteps = [];
+        this.currentTestCucumberSteps = [];
       }
       
+      if(eventType.match(/HookRun/)) {
+        consoleHolder.log(`\n >>> HOOKOBJ : ${test.title} : ${test.state} : ${test.isPassed()} ${test.isFailed()} ${test.isPending()} \n`);
+      } else if(eventType.match(/TestRun/)) {
+        consoleHolder.log(`\n SENDTESTRUNEVENT : ${eventType} ${test.testAnalyticsId} || ${test.hookAnalyticsId} ${test.title} ${test.state} \n`);
+      }
       let testData = {
         'framework': 'Cypress',
-        'uuid': eventType.includes("Test") ? test.testAnalyticsId : test.hookAnalyticsId,
+        'uuid': (eventType.includes("Test") ? test.testAnalyticsId : test.hookAnalyticsId) || uuidv4(),
         'name': test.title,
         'body': {
           'lang': 'javascript',
@@ -265,16 +282,16 @@ class MyReporter {
         'file_name': prefixedTestPath.replaceAll("\\", "/"),
         'vc_filepath': !isBrowserstackInfra() ? ( gitConfigPath ? path.relative(gitConfigPath, rootParentFile) : null ) : ( gitConfigPath ? ((gitConfigPath == 'DEFAULT' ? '' : gitConfigPath) + fileSeparator + rootParentFile).replaceAll("\\", "/") : null ),
         'location': prefixedTestPath.replaceAll("\\", "/"),
-        'result': eventType === "TestRunSkipped" ? 'skipped' : ( eventType === "TestRunStarted" ? 'pending' : this.analyticsResult(test.state)),
+        'result': eventType === "TestRunSkipped" ? 'skipped' : ( eventType === "TestRunStarted" ? 'pending' : this.analyticsResult(test, eventType, err) ),
         'failure_reason': failureReason,
         'duration_in_ms': test.duration || (eventType.match(/Finished/) || eventType.match(/Skipped/) ? Date.now() - (new Date(test.started_at)).getTime() : null),
-        'started_at': ( (eventType.match(/TestRun/) ? test.test_started_at : test.hook_started_at) || test.started_at ) || (new Date()).toISOString(),
+        'started_at': ( eventType.match(/Started/) ? (new Date()).toISOString() : ( ( (eventType.match(/TestRun/) ? test.test_started_at : test.hook_started_at) || test.started_at ) || (new Date()).toISOString() ) ),
         'finished_at': eventType.match(/Finished/) || eventType.match(/Skipped/) ? (new Date()).toISOString() : null,
         'failure': failureData(...failureArgs),
         'failure_type': !failureReason ? null : failureReason.match(/AssertionError/) ? 'AssertionError' : 'UnhandledError',
         'retry_of': test.retryOf,
         'meta': {
-          steps: JSON.parse(JSON.stringify(this.currentTestSteps))
+          steps: JSON.parse(JSON.stringify(this.currentTestCucumberSteps))
         }
       };
 
@@ -323,6 +340,11 @@ class MyReporter {
               await this.sendTestRunEvent(test.ctx.currentTest,undefined,true);
             }
           }
+          if(testData.hook_type.includes('each')) {
+            testData['test_run_id'] = testData['test_run_id'] || test.testAnalyticsId;
+          } else if(testData.hook_type.includes('after')) {
+            testData['test_run_id'] = this.lastTest ? this.lastTest.testAnalyticsId : testData['test_run_id'];
+          }
         } else if(eventType.match(/TestRun/)) {
           mapTestHooks(test);
         }
@@ -351,9 +373,21 @@ class MyReporter {
         uploadData['test_run'] = testData;
       }
       
-      await uploadEventData(uploadData);
+      if(eventType == 'HookRunFinished' && testData['hook_type'] == 'BEFORE_ALL') {
+        this.beforeHooks.push(uploadData);
+      } else {
+        await uploadEventData(uploadData);
+        if(eventType.match(/TestRun/)) {
+          this.beforeHooks.forEach(async(hookUploadObj) => {
+            hookUploadObj['hook_run']['test_run_id'] = test.testAnalyticsId;
+            await uploadEventData(hookUploadObj);
+          });
+          this.beforeHooks = [];
+        }
+      }
 
-      if(process.env.observability_framework_version || this.currentCypressVersion) {
+      if(!this.haveSentBuildUpdate && (process.env.observability_framework_version || this.currentCypressVersion)) {
+        this.shouldSendBuildUpdate = true;
         const buildUpdateData = {
           event_type: 'BuildUpdate',
           'misc': {
@@ -389,6 +423,37 @@ class MyReporter {
   }
 
   cypressConfigListener = async (config) => {
+  }
+
+  cypressCucumberStepListener = async ({log}) => {
+    if(log.name == 'step' && log.consoleProps && log.consoleProps.step && log.consoleProps.step.keyword) {
+      this.currentTestCucumberSteps = [
+        ...this.currentTestCucumberSteps,
+        {
+          id: log.chainerId,
+          keyword: log.consoleProps.step.keyword,
+          text: log.consoleProps.step.text,
+          started_at: new Date().toISOString(),
+          finished_at: new Date().toISOString(),
+          duration: undefined,
+          result: 'passed'
+        }
+      ];
+    } else if(log.name == 'then' && log.type == 'child' && log.chainerId) {
+      this.currentTestCucumberSteps.forEach((gherkinStep, idx) => {
+        if(gherkinStep.id == log.chainerId) {
+          this.currentTestCucumberSteps[idx] = {
+            ...gherkinStep,
+            finished_at: new Date().toISOString(),
+            duration: Date.now() - (new Date(gherkinStep.started_at)).getTime(),
+            result: log.state,
+            failure: log.err?.stack || log.err?.message,
+            failure_reason: log.err?.stack || log.err?.message,
+            failure_type: log.err?.name ||  'UnhandledError'
+          }
+        }
+      })
+    }
   }
 
   cypressLogListener = async ({level, message, file}) => {
@@ -534,12 +599,22 @@ class MyReporter {
     }
   }
 
-  analyticsResult(state) {
-    return {
-      [STATE_PASSED]: 'passed',
-      [STATE_PENDING]: 'pending',
-      [STATE_FAILED]: 'failed',
-    }[state]
+  analyticsResult(test, eventType, err) {
+    if(eventType.match(/HookRun/)) {
+      if(test.isFailed() || test.err || err) {
+        return 'failed';
+      } else if(eventType == 'HookRunFinished') {
+        return 'passed';
+      } else {
+        return 'pending';
+      }
+    } else {
+      return {
+        [STATE_PASSED]: 'passed',
+        [STATE_PENDING]: 'pending',
+        [STATE_FAILED]: 'failed',
+      }[test.state]
+    }
   }
 
   scope(test) {
