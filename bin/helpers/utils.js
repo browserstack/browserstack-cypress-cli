@@ -11,6 +11,7 @@ const util = require('util');
 const { promisify } = require('util');
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
+const TIMEZONE = require("../helpers/timezone.json");
 
 const usageReporting = require("./usageReporting"),
   logger = require("./logger").winstonLogger,
@@ -391,6 +392,24 @@ exports.setSpecTimeout = (bsConfig, args) => {
   logger.debug(`Setting spec timeout = ${specTimeout}`);
 }
 
+exports.isValidTimezone = (timezone) => this.isNotUndefined(timezone) && this.isNotUndefined(TIMEZONE[timezone])
+
+exports.setTimezone = (bsConfig, args) => {
+  let timezone = args.timezone || bsConfig.run_settings.timezone;
+  let newTimezone;
+  if(this.isNotUndefined(timezone)) {
+    if(this.isValidTimezone(timezone)){
+      newTimezone = timezone; 
+    } else {
+      logger.error(`Invalid timezone = ${timezone}`);
+      syncCliLogger.info(chalk.red(Constants.userMessages.INVALID_TIMEZONE));
+      process.exit(1);
+    }
+  }
+  bsConfig.run_settings.timezone = newTimezone;
+  logger.debug(`Setting timezone = ${newTimezone}`);
+}
+
 exports.setRecordFlag = (bsConfig, args) => {
   if(!this.isUndefined(args["record"])) {
     return true;
@@ -573,6 +592,8 @@ exports.fixCommaSeparatedString = (string) => {
 }
 
 exports.isUndefined = value => (value === undefined || value === null);
+
+exports.isNotUndefined = value => !this.isUndefined(value);
 
 exports.isPositiveInteger = (str) => {
   if (typeof str !== 'string') {
