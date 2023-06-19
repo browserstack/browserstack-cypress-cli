@@ -234,9 +234,13 @@ class MyReporter {
         test_run_uuid : step.test_run_uuid,
         hook_run_uuid : step.hook_run_uuid,
         timestamp: step.started_at,
+        duration: step.duration,
         level: step.result,
         message: step.text,
-        kind: 'TEST_LOG',
+        failure: step.failure,
+        failure_reason: step.failure_reason,
+        failure_type: step.failure_type,
+        kind: 'TEST_STEP',
         http_response: {}
       };
       allStepsAsLogs.push(currentStepAsLog);

@@ -748,15 +748,15 @@ exports.isTestObservabilitySupportedCypressVersion = (cypress_config_filename) =
 exports.setTestObservabilityFlags = (bsConfig) => {
   /* testObservability */
   let isTestObservabilitySession = true;
-  if(!utils.isUndefined(bsConfig["testObservability"])) isTestObservabilitySession = ( bsConfig["testObservability"] == true );
-  if(!utils.isUndefined(process.env.BROWSERSTACK_TEST_OBSERVABILITY)) isTestObservabilitySession = ( process.env.BROWSERSTACK_TEST_OBSERVABILITY == "true" );
+  if(!utils.isUndefined(bsConfig["testObservability"])) isTestObservabilitySession = ( bsConfig["testObservability"] == true || bsConfig["testObservability"] == 1 );
+  if(!utils.isUndefined(process.env.BROWSERSTACK_TEST_OBSERVABILITY)) isTestObservabilitySession = ( process.env.BROWSERSTACK_TEST_OBSERVABILITY == "true" || process.env.BROWSERSTACK_TEST_OBSERVABILITY == "1" );
   if(process.argv.includes('--disable-test-observability')) isTestObservabilitySession = false;
   isTestObservabilitySession = isTestObservabilitySession && this.isTestObservabilitySupportedCypressVersion(bsConfig.run_settings.cypress_config_file);
 
   /* browserstackAutomation */
   let isBrowserstackInfra = true;
-  if(!utils.isUndefined(bsConfig["browserstackAutomation"])) isBrowserstackInfra = ( bsConfig["browserstackAutomation"] == true );
-  if(!utils.isUndefined(process.env.BROWSERSTACK_AUTOMATION)) isBrowserstackInfra = ( process.env.BROWSERSTACK_AUTOMATION == "true" );
+  if(!utils.isUndefined(bsConfig["browserstackAutomation"])) isBrowserstackInfra = ( bsConfig["browserstackAutomation"] == true || bsConfig["browserstackAutomation"] == 1 );
+  if(!utils.isUndefined(process.env.BROWSERSTACK_AUTOMATION)) isBrowserstackInfra = ( process.env.BROWSERSTACK_AUTOMATION == "true" || process.env.BROWSERSTACK_AUTOMATION == "1" );
   if(process.argv.includes('--disable-browserstack-automation')) isBrowserstackInfra = false;
 
   process.env.BROWSERSTACK_TEST_OBSERVABILITY = isTestObservabilitySession;
