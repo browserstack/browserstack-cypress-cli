@@ -465,7 +465,7 @@ class MyReporter {
           text: log.consoleProps.step.text,
           started_at: new Date().toISOString(),
           finished_at: new Date().toISOString(),
-          duration: undefined,
+          duration: 0,
           result: 'passed'
         }
       ];
