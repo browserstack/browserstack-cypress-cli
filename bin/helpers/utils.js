@@ -1143,7 +1143,11 @@ exports.handleSyncExit = (exitCode, dashboard_url) => {
     syncCliLogger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
     syncCliLogger.info(dashboard_url);
   }
-  process.exit(exitCode);
+  if(isTestObservabilitySession()) {
+    printBuildLink(true, exitCode);
+  } else {
+    process.exit(exitCode);
+  }
 }
 
 exports.getNetworkErrorMessage = (dashboard_url) => {
@@ -1408,7 +1412,7 @@ async function processExitHandler(exitData){
   logger.warn(Constants.userMessages.PROCESS_KILL_MESSAGE);
   await this.stopBrowserStackBuild(exitData.bsConfig, exitData.args, exitData.buildId, null, exitData.buildReportData);
   await this.stopLocalBinary(exitData.bsConfig, exitData.bsLocalInstance, exitData.args, null, exitData.buildReportData);
-  await printBuildLink();
+  await printBuildLink(true);
   process.exit(0);
 }
 

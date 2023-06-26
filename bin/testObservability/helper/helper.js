@@ -78,11 +78,13 @@ const supportFileCleanup = () => {
   });
 }
 
-exports.printBuildLink = async () => {
+exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
   if(!this.isTestObservabilitySession()) return;
   try {
-    supportFileCleanup();
-    await this.stopBuildUpstream();
+    if(shouldStopSession) {
+      supportFileCleanup();
+      await this.stopBuildUpstream();
+    }
     try {
       if(process.env.BS_TESTOPS_BUILD_HASHED_ID 
         && process.env.BS_TESTOPS_BUILD_HASHED_ID != "null" 
@@ -96,6 +98,7 @@ exports.printBuildLink = async () => {
   } catch(err) {
     exports.debug(`Error while stopping build with error : ${err}`, true, err);
   }
+  if(exitCode) process.exit(exitCode);
 }
 
 const nodeRequest = (type, url, data, config) => {
@@ -748,16 +751,28 @@ exports.isTestObservabilitySupportedCypressVersion = (cypress_config_filename) =
 exports.setTestObservabilityFlags = (bsConfig) => {
   /* testObservability */
   let isTestObservabilitySession = true;
-  if(!utils.isUndefined(bsConfig["testObservability"])) isTestObservabilitySession = ( bsConfig["testObservability"] == true || bsConfig["testObservability"] == 1 );
-  if(!utils.isUndefined(process.env.BROWSERSTACK_TEST_OBSERVABILITY)) isTestObservabilitySession = ( process.env.BROWSERSTACK_TEST_OBSERVABILITY == "true" || process.env.BROWSERSTACK_TEST_OBSERVABILITY == "1" );
-  if(process.argv.includes('--disable-test-observability')) isTestObservabilitySession = false;
-  isTestObservabilitySession = isTestObservabilitySession && this.isTestObservabilitySupportedCypressVersion(bsConfig.run_settings.cypress_config_file);
+  try {
+    if(!utils.isUndefined(bsConfig["testObservability"])) isTestObservabilitySession = ( bsConfig["testObservability"] == true || bsConfig["testObservability"] == 1 );
+    if(!utils.isUndefined(process.env.BROWSERSTACK_TEST_OBSERVABILITY)) isTestObservabilitySession = ( process.env.BROWSERSTACK_TEST_OBSERVABILITY == "true" || process.env.BROWSERSTACK_TEST_OBSERVABILITY == "1" );
+    if(process.argv.includes('--disable-test-observability')) isTestObservabilitySession = false;
+    isTestObservabilitySession = isTestObservabilitySession && this.isTestObservabilitySupportedCypressVersion(bsConfig.run_settings.cypress_config_file);
+  } catch(e) {
+    isTestObservabilitySession = false;
+    exports.debug(`EXCEPTION while parsing testObservability capability with error ${e}`);
+  }
+  
 
   /* browserstackAutomation */
   let isBrowserstackInfra = true;
-  if(!utils.isUndefined(bsConfig["browserstackAutomation"])) isBrowserstackInfra = ( bsConfig["browserstackAutomation"] == true || bsConfig["browserstackAutomation"] == 1 );
-  if(!utils.isUndefined(process.env.BROWSERSTACK_AUTOMATION)) isBrowserstackInfra = ( process.env.BROWSERSTACK_AUTOMATION == "true" || process.env.BROWSERSTACK_AUTOMATION == "1" );
-  if(process.argv.includes('--disable-browserstack-automation')) isBrowserstackInfra = false;
+  try {
+    if(!utils.isUndefined(bsConfig["browserstackAutomation"])) isBrowserstackInfra = ( bsConfig["browserstackAutomation"] == true || bsConfig["browserstackAutomation"] == 1 );
+    if(!utils.isUndefined(process.env.BROWSERSTACK_AUTOMATION)) isBrowserstackInfra = ( process.env.BROWSERSTACK_AUTOMATION == "true" || process.env.BROWSERSTACK_AUTOMATION == "1" );
+    if(process.argv.includes('--disable-browserstack-automation')) isBrowserstackInfra = false;
+  } catch(e) {
+    isBrowserstackInfra = true;
+    exports.debug(`EXCEPTION while parsing browserstackAutomation capability with error ${e}`);
+  }
+  
 
   process.env.BROWSERSTACK_TEST_OBSERVABILITY = isTestObservabilitySession;
   process.env.BROWSERSTACK_AUTOMATION = isBrowserstackInfra;
@@ -961,7 +976,7 @@ exports.runCypressTestsLocally = (bsConfig, args, rawArgs) => {
     );
     cypressProcess.on('close', async (code) => {
       logger.info(`Cypress process exited with code ${code}`);
-      await this.printBuildLink();
+      await this.printBuildLink(true);
     });
 
     cypressProcess.on('error', (err) => {

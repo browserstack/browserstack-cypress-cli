@@ -10,16 +10,9 @@ Cypress.on('log:added', (log) => {
 });
 
 Cypress.on('command:start', (command) => {
-  if(
-    command?.attributes?.name == 'log' || 
-    (command?.attributes?.name == 'task' && 
-      (
-        command?.attributes?.args?.includes('test_observability_command') ||
-        command?.attributes?.args?.includes('test_observability_log')
-      )
-    )
-  ) {
-      return;
+  if(!command || !command.attributes) return;
+  if(command.attributes.name == 'log' || (command.attributes.name == 'task' && (command.attributes.args.includes('test_observability_command') || command.attributes.args.includes('test_observability_log')))) {
+    return;
   }
   /* Send command details */
   cy.now('task', 'test_observability_command', {
@@ -48,24 +41,17 @@ Cypress.on('command:start', (command) => {
 });
 
 Cypress.on('command:retry', (command) => {
-  if(
-    command?.attributes?.name == 'log' || 
-    (command?.attributes?.name == 'task' && 
-      (
-        command?.attributes?.args?.includes('test_observability_command') ||
-        command?.attributes?.args?.includes('test_observability_log')
-      )
-    )
-  ) {
-      return;
+  if(!command || !command.attributes) return;
+  if(command.attributes.name == 'log' || (command.attributes.name == 'task' && (command.attributes.args.includes('test_observability_command') || command.attributes.args.includes('test_observability_log')))) {
+    return;
   }
   cy.now('task', 'test_observability_command', {
     type: 'COMMAND_RETRY',
     command: {
       _log: command._log,
       error: {
-        message: command?.error?.message,
-        isDefaultAssertionErr: command?.error?.isDefaultAssertionErr
+        message: command && command.error ? command.error.message : null,
+        isDefaultAssertionErr: command && command.error ? command.error.isDefaultAssertionErr : null
       }
     }
   }, {log: false}).then((res) => {
@@ -74,16 +60,9 @@ Cypress.on('command:retry', (command) => {
 });
 
 Cypress.on('command:end', (command) => {
-  if(
-    command?.attributes?.name == 'log' || 
-    (command?.attributes?.name == 'task' && 
-      (
-        command?.attributes?.args?.includes('test_observability_command') ||
-        command?.attributes?.args?.includes('test_observability_log')
-      )
-    )
-  ) {
-      return;
+  if(!command || !command.attributes) return;
+  if(command.attributes.name == 'log' || (command.attributes.name == 'task' && (command.attributes.args.includes('test_observability_command') || command.attributes.args.includes('test_observability_log')))) {
+    return;
   }
   cy.now('task', 'test_observability_command', {
     'type': 'COMMAND_END',

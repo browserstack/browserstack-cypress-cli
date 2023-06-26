@@ -26,7 +26,8 @@ const { getStackTraceUrl } = require('../helpers/sync/syncSpecsLogs');
 const { 
   launchTestSession, 
   setTestObservabilityFlags, 
-  runCypressTestsLocally 
+  runCypressTestsLocally, 
+  printBuildLink
 } = require('../testObservability/helper/helper');
 
 module.exports = function run(args, rawArgs) {
@@ -316,7 +317,10 @@ module.exports = function run(args, rawArgs) {
 
                 logger.info(message);
                 logger.info(dashboardLink);
-                if(!args.sync) logger.info(Constants.userMessages.EXIT_SYNC_CLI_MESSAGE.replace("<build-id>",data.build_id));
+                if(!args.sync) {
+                  logger.info(Constants.userMessages.EXIT_SYNC_CLI_MESSAGE.replace("<build-id>",data.build_id));
+                  printBuildLink(false);
+                }
                 let dataToSend = {
                   time_components: getTimeComponents(),
                   unique_id: utils.generateUniqueHash(),
