@@ -5,8 +5,7 @@ const config = require("../helpers/config"),
   logger = require("../helpers/logger").winstonLogger,
   Constants = require("../helpers/constants"),
   utils = require("../helpers/utils"),
-  getInitialDetails = require('../helpers/getInitialDetails').getInitialDetails,
-  { printBuildLink } = require('../testObservability/helper/helper');
+  getInitialDetails = require('../helpers/getInitialDetails').getInitialDetails;
 
 module.exports = function stop(args, rawArgs) {
   let bsConfigPath = utils.getConfigPath(args.cf);
@@ -30,8 +29,6 @@ module.exports = function stop(args, rawArgs) {
     let buildId = args._[1];
 
     await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs, buildReportData);
-
-    await printBuildLink();
 
   }).catch(function (err) {
     logger.error(err);
