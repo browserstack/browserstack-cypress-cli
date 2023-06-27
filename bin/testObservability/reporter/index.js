@@ -303,7 +303,7 @@ class MyReporter {
         'result': eventType === "TestRunSkipped" ? 'skipped' : ( eventType === "TestRunStarted" ? 'pending' : this.analyticsResult(test, eventType, err) ),
         'failure_reason': failureReason,
         'duration_in_ms': test.duration || (eventType.match(/Finished/) || eventType.match(/Skipped/) ? Date.now() - (new Date(test.started_at)).getTime() : null),
-        'started_at': ( eventType.match(/Started/) ? (new Date()).toISOString() : ( ( (eventType.match(/TestRun/) ? test.test_started_at : test.hook_started_at) || test.started_at ) || (new Date()).toISOString() ) ),
+        'started_at': ( ( (eventType.match(/TestRun/) ? test.test_started_at : test.hook_started_at) || test.started_at ) || (new Date()).toISOString() ),
         'finished_at': eventType.match(/Finished/) || eventType.match(/Skipped/) ? (new Date()).toISOString() : null,
         'failure': failureData(...failureArgs),
         'failure_type': !failureReason ? null : failureReason.match(/AssertionError/) ? 'AssertionError' : 'UnhandledError',
@@ -386,6 +386,8 @@ class MyReporter {
         event_type: eventType === "TestRunSkipped" ? "TestRunFinished" : eventType,
       }
 
+      if(eventType.match(/Finished/)) delete testData.started_at;
+      
       if(eventType.match(/HookRun/)) {
         testData['hook_type'] = HOOK_TYPES_MAP[testData['hook_type']];
         uploadData['hook_run'] = testData;
