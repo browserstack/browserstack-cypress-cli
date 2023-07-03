@@ -758,7 +758,7 @@ exports.setTestObservabilityFlags = (bsConfig) => {
     isTestObservabilitySession = isTestObservabilitySession && this.isTestObservabilitySupportedCypressVersion(bsConfig.run_settings.cypress_config_file);
   } catch(e) {
     isTestObservabilitySession = false;
-    exports.debug(`EXCEPTION while parsing testObservability capability with error ${e}`);
+    exports.debug(`EXCEPTION while parsing testObservability capability with error ${e}`, true, e);
   }
   
 
@@ -770,7 +770,7 @@ exports.setTestObservabilityFlags = (bsConfig) => {
     if(process.argv.includes('--disable-browserstack-automation')) isBrowserstackInfra = false;
   } catch(e) {
     isBrowserstackInfra = true;
-    exports.debug(`EXCEPTION while parsing browserstackAutomation capability with error ${e}`);
+    exports.debug(`EXCEPTION while parsing browserstackAutomation capability with error ${e}`, true, e);
   }
   
 
