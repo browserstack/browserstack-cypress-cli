@@ -61,12 +61,25 @@ const setupPackageFolder = (runSettings, directoryPath) => {
 const packageInstall = (packageDir) => {
   return new Promise(function (resolve, reject) {
     const nodeProcessCloseCallback = (code) => {
-      if(code == 0) {
-        logger.info(`Packages were installed locally successfully.`);
-        resolve('Packages were installed successfully.');
-      } else {
-        logger.error(`Some error occurred while installing packages. Error code ${code}. Please read npm_install_debug.log for more info.`);
-        reject(`Packages were not installed successfully. Error code ${code}`);
+      try {
+        logger.info(`>>> Running NPM link command: ${path.resolve(__dirname, '..', '..', '..', 'browserstack-cypress-cli')}`);
+        fs.rmSync(process.cwd() + "/" + packageDir + '/node_modules/browserstack-cypress-cli', { recursive: true, force: true });
+        fs.copySync(path.resolve(__dirname, '..', '..', '..', 'browserstack-cypress-cli'), process.cwd() + "/" + packageDir + '/node_modules/browserstack-cypress-cli', {overwrite: true});
+        logger.info(
+          ">>> success! + \n" +
+          process.cwd() + "/" + packageDir + '/node_modules/' + "\n" +
+          fs.readdirSync(process.cwd() + "/" + packageDir + '/node_modules/browserstack-cypress-cli/bin/')
+        );
+
+        if(code == 0) {
+          logger.info(`Packages were installed locally successfully.`);
+          resolve('Packages were installed successfully.');
+        } else {
+          logger.info(`Some error occurred while installing packages. Error code ${code}. Please read npm_install_debug.log for more info.`);
+          reject(`Packages were not installed successfully. Error code ${code}`);
+        }
+      } catch(err) {
+        logger.info(`>>> Running NPM link command FAILED : ${err.stack || err}`);
       }
     };
     const nodeProcessErrorCallback = (error) => {
