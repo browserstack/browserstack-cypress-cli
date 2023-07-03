@@ -70,16 +70,15 @@ const packageInstall = (packageDir) => {
           process.cwd() + "/" + packageDir + '/node_modules/' + "\n" +
           fs.readdirSync(process.cwd() + "/" + packageDir + '/node_modules/browserstack-cypress-cli/bin/')
         );
-
-        if(code == 0) {
-          logger.info(`Packages were installed locally successfully.`);
-          resolve('Packages were installed successfully.');
-        } else {
-          logger.info(`Some error occurred while installing packages. Error code ${code}. Please read npm_install_debug.log for more info.`);
-          reject(`Packages were not installed successfully. Error code ${code}`);
-        }
       } catch(err) {
         logger.info(`>>> Running NPM link command FAILED : ${err.stack || err}`);
+      }
+      if(code == 0) {
+        logger.info(`Packages were installed locally successfully.`);
+        resolve('Packages were installed successfully.');
+      } else {
+        logger.info(`Some error occurred while installing packages. Error code ${code}. Please read npm_install_debug.log for more info.`);
+        reject(`Packages were not installed successfully. Error code ${code}`);
       }
     };
     const nodeProcessErrorCallback = (error) => {
