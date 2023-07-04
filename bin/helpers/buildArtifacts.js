@@ -3,8 +3,6 @@
 const fs = require('fs'),
       path = require('path');
 
-const unzipper = require('unzipper');
-
 const logger = require('./logger').winstonLogger,
       utils = require("./utils"),
       Constants = require("./constants"),
