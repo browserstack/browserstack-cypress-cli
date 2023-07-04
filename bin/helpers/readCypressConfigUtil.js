@@ -47,7 +47,8 @@ const convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_modules_
             scriptOutput += data.toString();
         };
 
-        const nodeProcess = cp.spawn(`node`, [`${typescript_path}`, `--outDir`, `${complied_js_dir}`, `--listEmittedFiles`, `true`, `--allowSyntheticDefaultImports`, `--module`, `commonjs`, `--declaration`, `false`, `${cypress_config_filepath}`], { cwd: working_dir, env: {...process.env, NODE_PATH: `${bstack_node_modules_path}`} });
+        const MAX_OLD_SPACE_SIZE_IN_MB = 4096;
+        const nodeProcess = cp.spawn(`node`, [typescript_path, `--outDir`, complied_js_dir, `--listEmittedFiles`, `true`, `--allowSyntheticDefaultImports`, `--module`, `commonjs`, `--declaration`, `false`, cypress_config_filepath], { cwd: working_dir, env: {...process.env, NODE_PATH: bstack_node_modules_path, NODE_OPTIONS: MAX_OLD_SPACE_SIZE_IN_MB} });
 
         nodeProcess.on('close', nodeProcessCloseCallback);
         nodeProcess.stderr.setEncoding('utf-8');
