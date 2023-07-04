@@ -23,11 +23,12 @@ exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_module
     fs.mkdirSync(complied_js_dir, { recursive: true })
 
     const typescript_path = path.join(bstack_node_modules_path, 'typescript', 'bin', 'tsc')
-
-    let tsc_command = `NODE_PATH=${bstack_node_modules_path} node "${typescript_path}" --outDir "${complied_js_dir}" --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false "${cypress_config_filepath}"`
+    logger.debug('Reading cypress config file with execSync and node options');
+    const MAX_OLD_SPACE_SIZE_IN_MB = 4096;
+    let tsc_command = `export NODE_PATH="${bstack_node_modules_path}"; export NODE_OPTIONS=--max_old_space_size=${MAX_OLD_SPACE_SIZE_IN_MB}; node "${typescript_path}" --outDir "${complied_js_dir}" --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false "${cypress_config_filepath}"`
 
     if (/^win/.test(process.platform)) {
-        tsc_command = `set NODE_PATH=${bstack_node_modules_path}&& node "${typescript_path}" --outDir "${complied_js_dir}" --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false "${cypress_config_filepath}"`
+        tsc_command = `set NODE_PATH="${bstack_node_modules_path}" && set NODE_OPTIONS=--max_old_space_size=${MAX_OLD_SPACE_SIZE_IN_MB} && node "${typescript_path}" --outDir "${complied_js_dir}" --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false "${cypress_config_filepath}"`
     }
 
     
@@ -109,8 +110,8 @@ exports.readCypressConfigFile = (bsConfig) => {
     } finally {
         const working_dir = path.dirname(cypress_config_filepath)
         const complied_js_dir = path.join(working_dir, config.compiledConfigJsDirName)
-        if (fs.existsSync(complied_js_dir)) {
-            fs.rmdirSync(complied_js_dir, { recursive: true })
-        }
+        // if (fs.existsSync(complied_js_dir)) {
+        //     fs.rmdirSync(complied_js_dir, { recursive: true })
+        // }
     }
 }
