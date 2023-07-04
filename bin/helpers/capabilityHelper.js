@@ -151,7 +151,7 @@ const addCypressZipStartLocation = (runSettings) => {
 }
 
 const validate = (bsConfig, args) => {
-  return new Promise(function (resolve, reject) {
+  return new Promise(async function (resolve, reject) {
     logger.info(Constants.userMessages.VALIDATING_CONFIG);
     if (!bsConfig) reject(Constants.validationMessages.EMPTY_BROWSERSTACK_JSON);
 
@@ -199,7 +199,7 @@ const validate = (bsConfig, args) => {
     try {
       if (bsConfig.run_settings.cypress_config_filename !== 'false') {
         if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
-          const completeCypressConfigFile = readCypressConfigFile(bsConfig)
+          const completeCypressConfigFile = await readCypressConfigFile(bsConfig)
           if (!Utils.isUndefined(completeCypressConfigFile)) {
             // check if cypress config was exported using export default
             cypressConfigFile = !Utils.isUndefined(completeCypressConfigFile.default) ? completeCypressConfigFile.default : completeCypressConfigFile

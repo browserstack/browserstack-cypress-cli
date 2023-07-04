@@ -7,39 +7,73 @@ const config = require('./config');
 const constants = require("./constants");
 const utils = require("./utils");
 const logger = require('./logger').winstonLogger;
+const util = require('util');
+const { stderr } = require("process");
 
 exports.detectLanguage = (cypress_config_filename) => {
     const extension = cypress_config_filename.split('.').pop()
     return constants.CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS.includes(extension) ? extension : 'js'
 }
 
-exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_modules_path) => {
+const convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_modules_path) => {
+    return new Promise(function (resolve, reject) {
+
+        const working_dir = path.dirname(cypress_config_filepath);
+        const complied_js_dir = path.join(working_dir, config.compiledConfigJsDirName)
+        if (fs.existsSync(complied_js_dir)) {
+            fs.rmSync(complied_js_dir, { recursive: true })
+        }
+        fs.mkdirSync(complied_js_dir, { recursive: true })
+
+        const typescript_path = path.join(bstack_node_modules_path, 'typescript', 'bin', 'tsc')
+        logger.debug('Reading cypress config file with spawn and no node options');
+
+        let scriptOutput = "";
+        const nodeProcessCloseCallback = (code) => {
+            if(code == 0) {
+                logger.info(`Cypress Config File was successfully transpiled.`);
+                resolve(scriptOutput);
+            } else {
+                logger.error(`Some error occurred while transpiling cypress config file. Error code ${code}.`);
+                reject(`Some error occurred while transpiling cypress config file. Error code ${code}.`);
+            }
+        };
+        const nodeProcessErrorCallback = (error) => {
+            logger.error(`Some error occurred while transpiling cypress config file : %j`, error);
+            reject(`Some error occurred while transpiling cypress config file. Error Description ${util.format('%j', error)}`);
+        };
+        const nodeProcessDataCallback = (data) => {
+            logger.debug('STDOUT of tsc compilation: ' + data);
+            scriptOutput += data.toString();
+        };
+
+        const nodeProcess = cp.spawn(`node`, [`${typescript_path}`, `--outDir`, `${complied_js_dir}`, `--listEmittedFiles`, `true`, `--allowSyntheticDefaultImports`, `--module`, `commonjs`, `--declaration`, `false`, `${cypress_config_filepath}`], { cwd: working_dir, env: {...process.env, NODE_PATH: `${bstack_node_modules_path}`} });
+
+        nodeProcess.on('close', nodeProcessCloseCallback);
+        nodeProcess.stderr.setEncoding('utf-8');
+        nodeProcess.stderr.on('data', nodeProcessErrorCallback);
+        nodeProcess.stdout.setEncoding('utf-8');
+        nodeProcess.stdout.on('data', nodeProcessDataCallback);
+    });
+}
+
+const getTranspiledCypressConfigPath = async (bsConfig, cypress_config_filepath, bstack_node_modules_path) => {
+
     const cypress_config_filename = bsConfig.run_settings.cypress_config_filename
     const working_dir = path.dirname(cypress_config_filepath);
     const complied_js_dir = path.join(working_dir, config.compiledConfigJsDirName)
     if (fs.existsSync(complied_js_dir)) {
-        fs.rmdirSync(complied_js_dir, { recursive: true })
+        fs.rmSync(complied_js_dir, { recursive: true })
     }
     fs.mkdirSync(complied_js_dir, { recursive: true })
 
-    const typescript_path = path.join(bstack_node_modules_path, 'typescript', 'bin', 'tsc')
-
-    let tsc_command = `NODE_PATH=${bstack_node_modules_path} node "${typescript_path}" --outDir "${complied_js_dir}" --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false "${cypress_config_filepath}"`
-
-    if (/^win/.test(process.platform)) {
-        tsc_command = `set NODE_PATH=${bstack_node_modules_path}&& node "${typescript_path}" --outDir "${complied_js_dir}" --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false "${cypress_config_filepath}"`
-    }
-
-    
-    let tsc_output
+    let tsc_output;
     try {
-        logger.debug(`Running: ${tsc_command}`)
-        tsc_output = cp.execSync(tsc_command, { cwd: working_dir })
+        tsc_output = await convertTsConfig(bsConfig, cypress_config_filepath, bstack_node_modules_path);
     } catch (err) {
         // error while compiling ts files
-        logger.debug(err.message);
-        logger.debug(err.output.toString());
-        tsc_output = err.output // if there is an error, tsc adds output of complilation to err.output key
+        logger.debug(util.inspect(err));
+        tsc_output = util.inspect(err)
     } finally {
         logger.debug(`Saved compiled js output at: ${complied_js_dir}`);
         logger.debug(`Finding compiled cypress config file in: ${complied_js_dir}`);
@@ -78,7 +112,7 @@ exports.loadJsFile =  (cypress_config_filepath, bstack_node_modules_path) => {
     return cypress_config
 }
 
-exports.readCypressConfigFile = (bsConfig) => {
+exports.readCypressConfigFile = async (bsConfig) => {
     const cypress_config_filepath = path.resolve(bsConfig.run_settings.cypressConfigFilePath)
     try {
         const cypress_config_filename = bsConfig.run_settings.cypress_config_filename
@@ -90,7 +124,7 @@ exports.readCypressConfigFile = (bsConfig) => {
         if (conf_lang == 'js' || conf_lang == 'cjs') {
             return this.loadJsFile(cypress_config_filepath, bstack_node_modules_path)
         } else if (conf_lang === 'ts') {
-            const compiled_cypress_config_filepath = this.convertTsConfig(bsConfig, cypress_config_filepath, bstack_node_modules_path)
+            const compiled_cypress_config_filepath = await getTranspiledCypressConfigPath(bsConfig, cypress_config_filepath, bstack_node_modules_path)
             return this.loadJsFile(compiled_cypress_config_filepath, bstack_node_modules_path)
         }
     } catch (error) {
@@ -110,7 +144,7 @@ exports.readCypressConfigFile = (bsConfig) => {
         const working_dir = path.dirname(cypress_config_filepath)
         const complied_js_dir = path.join(working_dir, config.compiledConfigJsDirName)
         if (fs.existsSync(complied_js_dir)) {
-            fs.rmdirSync(complied_js_dir, { recursive: true })
+            fs.rmSync(complied_js_dir, { recursive: true })
         }
     }
 }
