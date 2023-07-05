@@ -386,7 +386,7 @@ class MyReporter {
         event_type: eventType === "TestRunSkipped" ? "TestRunFinished" : eventType,
       }
 
-      if(eventType.match(/Finished/)) delete testData.started_at;
+      if(eventType == "HookRunFinished") delete testData.started_at;
       
       if(eventType.match(/HookRun/)) {
         testData['hook_type'] = HOOK_TYPES_MAP[testData['hook_type']];

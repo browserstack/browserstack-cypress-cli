@@ -437,7 +437,7 @@ const getBuildDetails = (bsConfig) => {
   /* Pick from run settings */
   buildName = buildName || bsConfig["run_settings"]["build_name"];
   projectName = projectName || bsConfig["run_settings"]["project_name"];
-  buildTags = [...buildTags, bsConfig["run_settings"]["build_tag"]];
+  if(!utils.isUndefined(bsConfig["run_settings"]["build_tag"])) buildTags = [...buildTags, bsConfig["run_settings"]["build_tag"]];
 
   buildName = buildName || path.basename(path.resolve(process.cwd()));
 
