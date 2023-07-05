@@ -23,7 +23,7 @@ const usageReporting = require("./usageReporting"),
   pkg = require('../../package.json'),
   transports = require('./logger').transports;
 
-const request = require('request');
+const { default: axios } = require("axios");
 
 exports.validateBstackJson = (bsConfigPath) => {
   return new Promise(function (resolve, reject) {
@@ -955,14 +955,23 @@ exports.checkLocalBinaryRunning = (bsConfig, localIdentifier) => {
     },
     body: JSON.stringify({ localIdentifier: localIdentifier}),
   };
-  return new Promise ( function(resolve, reject) {
-      request.post(options, function (err, resp, body) {
-        if(err){
-          reject(err);
+  return new Promise (async function(resolve, reject) {
+      try {
+        const response = await axios.post(options.url, {
+          localIdentifier: localIdentifier
+        }, {
+          auth: {
+            username: options.auth.user,
+            password: options.auth.password
+          },
+          headers: options.headers
+        });
+        resolve(response.data)
+      } catch (error) {
+        if(error.response) {
+          reject(error.response.data.message);
         }
-        let response = JSON.parse(body);
-        resolve(response);
-    });
+      }
   });
 };
 
@@ -1275,7 +1284,7 @@ exports.setCLIMode = (bsConfig, args) => {
 exports.formatRequest = (err, resp, body) => {
   return {
     err,
-    status: resp ? resp.statusCode : null,
+    status: resp ? resp.status : null,
     body: body ? util.format('%j', body) : null
   }
 }
@@ -1295,73 +1304,72 @@ exports.setDebugMode = (args) => {
 
 exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs, buildReportData = null) => {
   let that = this;
-  return new Promise(function (resolve, reject) {
-    let url = config.buildStopUrl + buildId;
-    let options = {
-      url: url,
-      auth: {
-        username: bsConfig["auth"]["username"],
-        password: bsConfig["auth"]["access_key"],
-      },
-      headers: {
-        'User-Agent': that.getUserAgent(),
-      },
-    };
-    let message = null;
-    let messageType = null;
-    let errorCode = null;
-    let build = null;
-    request.post(options, function(err, resp, data) {
-      if(err) {
-        message = Constants.userMessages.BUILD_STOP_FAILED;
-        messageType = Constants.messageTypes.ERROR;
-        errorCode = 'api_failed_build_stop';
+  
+  let url = config.buildStopUrl + buildId;
+  let options = {
+    url: url,
+    auth: {
+      username: bsConfig["auth"]["username"],
+      password: bsConfig["auth"]["access_key"],
+    },
+    headers: {
+      'User-Agent': that.getUserAgent(),
+    },
+  };
+  let message = null;
+  let messageType = null;
+  let errorCode = null;
+  let build = null;
+  
+  try {
+    const response = await axios.post(options.url, {}, {
+      auth: options.auth,
+      headers: options.headers
+    });
+    
+    build = response.data;
+    if (response.status == 299) {
+      messageType = Constants.messageTypes.INFO;
+      errorCode = 'api_deprecated';
+
+      if (build) {
+        message = build.message;
         logger.info(message);
       } else {
-        try {
-          build = JSON.parse(data);
-          if (resp.statusCode == 299) {
-            messageType = Constants.messageTypes.INFO;
-            errorCode = 'api_deprecated';
-      
-            if (build) {
-              message = build.message;
-              logger.info(message);
-            } else {
-              message = Constants.userMessages.API_DEPRECATED;
-              logger.info(message);
-            }
-          } else if (resp.statusCode != 200) {
-            messageType = Constants.messageTypes.ERROR;
-            errorCode = 'api_failed_build_stop';
-      
-            if (build) {
-              message = `${
-                Constants.userMessages.BUILD_STOP_FAILED
-              } with error: \n${JSON.stringify(build, null, 2)}`;
-              logger.error(message);
-              if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
-            } else {
-              message = Constants.userMessages.BUILD_STOP_FAILED;
-              logger.error(message);
-            }
-          } else {
-            messageType = Constants.messageTypes.SUCCESS;
-            message = `${JSON.stringify(build, null, 2)}`;
-            logger.info(message);
-          }
-        } catch(err) {
-          message = Constants.userMessages.BUILD_STOP_FAILED;
-          messageType = Constants.messageTypes.ERROR;
-          errorCode = 'api_failed_build_stop';
-          logger.info(message);
-        } finally {
-            that.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
-        }
+        message = Constants.userMessages.API_DEPRECATED;
+        logger.info(message);
       }
-      resolve();
-    });
-  });
+    } else if (response.status !== 200) {
+      messageType = Constants.messageTypes.ERROR;
+      errorCode = 'api_failed_build_stop';
+
+      if (build) {
+        message = `${
+          Constants.userMessages.BUILD_STOP_FAILED
+        } with error: \n${JSON.stringify(build, null, 2)}`;
+        logger.error(message);
+        if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
+      } else {
+        message = Constants.userMessages.BUILD_STOP_FAILED;
+        logger.error(message);
+      }
+    } else {
+      messageType = Constants.messageTypes.SUCCESS;
+      message = `${JSON.stringify(build, null, 2)}`;
+      logger.info(message);
+    }
+  } catch(err) {
+    if(err.response) {
+      message = `${
+        Constants.userMessages.BUILD_STOP_FAILED
+      } with error: ${err.response.data.message}`;
+      messageType = Constants.messageTypes.ERROR;
+      errorCode = 'api_failed_build_stop';
+      logger.error(message);
+    }
+  } finally {
+      that.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
+  }
 }
 
 exports.setProcessHooks = (buildId, bsConfig, bsLocal, args, buildReportData) => {

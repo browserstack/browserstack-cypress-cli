@@ -1,5 +1,4 @@
 'use strict';
-const request = require('request');
 
 const config = require("../helpers/config"),
   logger = require("../helpers/logger").winstonLogger,
