@@ -4,12 +4,12 @@ const util = require('util');
 const fs = require('fs');
 const path = require('path');
 const { requireModule } = require('../helper/helper');
-const Base = requireModule('mocha/lib/reporters/base.js', true),
-      utils = requireModule('mocha/lib/utils.js', true);
+const Base = requireModule('mocha/lib/reporters/base.js'),
+      utils = requireModule('mocha/lib/utils.js');
 const color = Base.color;
-const Mocha = requireModule('mocha', true);
+const Mocha = requireModule('mocha');
 // const Runnable = requireModule('mocha/lib/runnable');
-const Runnable = require('mocha/lib/runnable', true); // need to handle as this isn't present in older mocha versions
+const Runnable = require('mocha/lib/runnable'); // need to handle as this isn't present in older mocha versions
 const { v4: uuidv4 } = require('uuid');
 
 const { IPC_EVENTS } = require('../helper/constants');

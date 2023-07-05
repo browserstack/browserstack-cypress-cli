@@ -377,19 +377,22 @@ const getCypressCommandEventListener = () => {
 
 const setEventListeners = () => {
   try {
+    const cypressCommandEventListener = getCypressCommandEventListener();
     glob(process.cwd() + '/cypress/support/*.js', {}, (err, files) => {
       if(err) return exports.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
       files.forEach(file => {
         try {
           if(!file.includes('commands.js')) {
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
-    
-            let newFileContent =  defaultFileContent + 
+            
+            if(!defaultFileContent.includes(cypressCommandEventListener)) {
+              let newFileContent =  defaultFileContent + 
                                   '\n' +
-                                  getCypressCommandEventListener() +
+                                  cypressCommandEventListener +
                                   '\n'
-            fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
-            supportFileContentMap[file] = defaultFileContent;
+              fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
+              supportFileContentMap[file] = defaultFileContent;
+            }
           }
         } catch(e) {
           exports.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
