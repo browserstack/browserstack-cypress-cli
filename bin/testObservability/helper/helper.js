@@ -40,21 +40,7 @@ exports.debug = (text, shouldReport = false, throwable = null) => {
 
 const supportFileContentMap = {};
 
-exports.httpKeepAliveAgent = new http.Agent({
-  keepAlive: true,
-  timeout: 60000,
-  maxSockets: 2,
-  maxTotalSockets: 2
-});
-
 exports.httpsKeepAliveAgent = new https.Agent({
-  keepAlive: true,
-  timeout: 60000,
-  maxSockets: 2,
-  maxTotalSockets: 2
-});
-
-const httpScreenshotsKeepAliveAgent = new http.Agent({
   keepAlive: true,
   timeout: 60000,
   maxSockets: 2,
@@ -108,11 +94,11 @@ const nodeRequest = (type, url, data, config) => {
       url: `${API_URL}/${url}`,
       body: data,
       json: config.headers['Content-Type'] === 'application/json',
-      agent: API_URL.includes('https') ? this.httpsKeepAliveAgent : this.httpKeepAliveAgent
+      agent: this.httpsKeepAliveAgent
     }};
 
     if(url === exports.requestQueueHandler.screenshotEventUrl) {
-      options.agent = API_URL.includes('https') ? httpsScreenshotsKeepAliveAgent : httpScreenshotsKeepAliveAgent;
+      options.agent = httpsScreenshotsKeepAliveAgent;
     }
 
     request(options, function callback(error, response, body) {

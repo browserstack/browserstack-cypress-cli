@@ -9,13 +9,6 @@ const logger = require("../../helpers/logger").winstonLogger;
 const { API_URL, consoleHolder } = require('../helper/constants');
 
 /* Below global methods are added here to remove cyclic dependency with helper.js, refactor later */
-const httpKeepAliveAgent = new http.Agent({
-  keepAlive: true,
-  timeout: 60000,
-  maxSockets: 2,
-  maxTotalSockets: 2
-});
-
 const httpsKeepAliveAgent = new https.Agent({
   keepAlive: true,
   timeout: 60000,
@@ -125,7 +118,7 @@ class CrashReporter {
         url: `${API_URL}/api/v1/analytics`,
         body: data,
         json: true,
-        agent: API_URL.includes('https') ? httpsKeepAliveAgent : httpKeepAliveAgent
+        agent: httpsKeepAliveAgent
       };
   
       request(options, function callback(error, response, body) {
