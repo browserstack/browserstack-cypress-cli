@@ -740,7 +740,7 @@ exports.isTestObservabilitySupportedCypressVersion = (cypress_config_filename) =
 
 exports.setTestObservabilityFlags = (bsConfig) => {
   /* testObservability */
-  let isTestObservabilitySession = true;
+  let isTestObservabilitySession = false;
   try {
     if(!utils.isUndefined(bsConfig["testObservability"])) isTestObservabilitySession = ( bsConfig["testObservability"] == true || bsConfig["testObservability"] == 1 );
     if(!utils.isUndefined(process.env.BROWSERSTACK_TEST_OBSERVABILITY)) isTestObservabilitySession = ( process.env.BROWSERSTACK_TEST_OBSERVABILITY == "true" || process.env.BROWSERSTACK_TEST_OBSERVABILITY == "1" );
