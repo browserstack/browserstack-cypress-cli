@@ -8,7 +8,7 @@
   utils = require('./utils'),
   { get_version } = require('./usageReporting'),
   process = require('process'),
-  { spawn } = require('child_process'),
+  { spawn, execSync } = require('child_process'),
   util = require('util');
 
 let nodeProcess;
@@ -80,6 +80,13 @@ const packageInstall = (packageDir) => {
     const npm_major_version = utils.getMajorVersion(npm_version);
     logger.debug(`Fetched npm version: ${npm_version} and its major version: ${npm_major_version}`);
 
+    try {
+      logger.info(`Running npm pack command : ${path.resolve(__dirname, '..', '..', '..', 'browserstack-cypress-cli')}`);
+      execSync(`${/^win/.test(process.platform) ? 'npm.cmd' : 'npm'} pack`, {cwd: path.resolve(__dirname, '..', '..', '..', 'browserstack-cypress-cli')}, function(err, stdout, stderr) {});
+    } catch(e) {
+      logger.info(`Error running npm pack command`);
+    }
+    
     // add --legacy-peer-deps flag while installing dependencies for npm v7+
     // For more info please read "Peer Dependencies" section here -> https://github.blog/2021-02-02-npm-7-is-now-generally-available/
     if (parseInt(npm_major_version) >= 7) {
