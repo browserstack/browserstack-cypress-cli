@@ -7,7 +7,7 @@ const chai = require("chai"),
 const fs = require('fs'),
       path = require('path'),
       request = require('request'),
-      unzipper = require('unzipper');
+      decompress = require('decompress');
       Constants = require("../../../../bin/helpers/constants"),
       logger = require("../../../../bin/helpers/logger").winstonLogger,
       testObjects = require("../../support/fixtures/testObjects"),
@@ -238,6 +238,40 @@ describe("calls API to generate report", () => {
     sinon.assert.calledOnce(requestStub);
     sinon.assert.calledOnce(getUserAgentStub);
     sendUsageReportStub.calledOnceWithExactly(bsConfig, args, message, messageType, errorCode, {}, rawArgs);
+  });
+});
+
+describe("unzipFile", () => {
+  var sandbox;
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+    sinon.restore();
+  });
+
+  it("calls unzip and resolves with success message", () => {
+    let pathStub = sinon.stub(path, 'join');
+    pathStub.calledOnceWith('abc','efg.txt');
+    let decompressStub = sandbox.stub().returns(Promise.resolve("Unzipped the json and html successfully."));
+    let rewireReporterHTML = rewire('../../../../bin/helpers/reporterHTML');
+    rewireReporterHTML.__set__('decompress', decompressStub);
+    let unzipFile = rewireReporterHTML.__get__('unzipFile')
+    unzipFile('abc', 'efg');
+  });
+
+  it("calls unzip and rejects with error message on failure", () => {
+    let pathStub = sinon.stub(path, 'join');
+    pathStub.calledOnceWith('abc','efg.txt');
+    let processStub = sinon.stub(process, 'exit');
+    processStub.returns(Constants.ERROR_EXIT_CODE)
+    let decompressStub = sandbox.stub().returns(Promise.reject("Error"));
+    let rewireReporterHTML = rewire('../../../../bin/helpers/reporterHTML');
+    rewireReporterHTML.__set__('decompress', decompressStub);
+    let unzipFile = rewireReporterHTML.__get__('unzipFile')
+    unzipFile('abc', 'efg');
   });
 });
 
