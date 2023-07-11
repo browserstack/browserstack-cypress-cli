@@ -753,7 +753,6 @@ exports.setTestObservabilityFlags = (bsConfig) => {
     exports.debug(`EXCEPTION while parsing testObservability capability with error ${e}`, true, e);
   }
   
-
   /* browserstackAutomation */
   let isBrowserstackInfra = true;
   try {
@@ -765,6 +764,7 @@ exports.setTestObservabilityFlags = (bsConfig) => {
     exports.debug(`EXCEPTION while parsing browserstackAutomation capability with error ${e}`, true, e);
   }
   
+  if(isTestObservabilitySession) logger.warn("testObservability is set to true. Other test reporters you are using will be automatically disabled. Learn more at browserstack.com/docs/test-observability/overview/what-is-test-observability");
 
   process.env.BROWSERSTACK_TEST_OBSERVABILITY = isTestObservabilitySession;
   process.env.BROWSERSTACK_AUTOMATION = isBrowserstackInfra;
