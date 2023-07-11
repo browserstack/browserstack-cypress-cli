@@ -741,6 +741,9 @@ exports.setTestObservabilityFlags = (bsConfig) => {
   /* testObservability */
   let isTestObservabilitySession = false;
   try {
+    /* set default again but under try catch in case of wrong config */
+    isTestObservabilitySession = utils.nonEmptyArray(bsConfig.run_settings.downloads) ? false : true;
+
     if(!utils.isUndefined(bsConfig["testObservability"])) isTestObservabilitySession = ( bsConfig["testObservability"] == true || bsConfig["testObservability"] == 1 );
     if(!utils.isUndefined(process.env.BROWSERSTACK_TEST_OBSERVABILITY)) isTestObservabilitySession = ( process.env.BROWSERSTACK_TEST_OBSERVABILITY == "true" || process.env.BROWSERSTACK_TEST_OBSERVABILITY == "1" );
     if(process.argv.includes('--disable-test-observability')) isTestObservabilitySession = false;
