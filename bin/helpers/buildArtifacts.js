@@ -3,14 +3,13 @@
 const fs = require('fs'),
       path = require('path');
 
-const unzipper = require('unzipper');
-
 const logger = require('./logger').winstonLogger,
       utils = require("./utils"),
       Constants = require("./constants"),
       config = require("./config");
 
 const request = require('request');
+const decompress = require('decompress');
 
 
 let BUILD_ARTIFACTS_TOTAL_COUNT = 0;
@@ -127,10 +126,13 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
 
 const unzipFile = async (filePath, fileName) => {
   return new Promise( async (resolve, reject) => {
-    await unzipper.Open.file(path.join(filePath, fileName))
-      .then(d => d.extract({path: filePath, concurrency: 5}))
-      .catch((err) => reject(err));
-    resolve();
+    await decompress(path.join(filePath, fileName), filePath)
+    .then((files) => {
+      resolve();
+    })
+    .catch((error) => {
+      reject(error);
+    });
   });
 }
 

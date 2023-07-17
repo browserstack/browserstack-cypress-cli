@@ -1,6 +1,6 @@
 {
   "name": "browserstack-cypress-cli",
-  "version": "1.23.1",
+  "version": "1.24.3",
   "description": "BrowserStack Cypress CLI for Cypress integration with BrowserStack's remote devices.",
   "main": "index.js",
   "scripts": {
@@ -19,16 +19,22 @@
     "cli-progress": "3.10.0",
     "fs-extra": "8.1.0",
     "getmac": "5.20.0",
-    "glob": "7.2.0",
+    "git-last-commit": "^1.0.1",
+    "git-repo-info": "^2.1.1",
+    "gitconfiglocal": "^2.1.0",
+    "glob": "^7.2.0",
+    "mocha": "^10.2.0",
     "mkdirp": "1.0.4",
+    "node-ipc": "9.1.1",
     "request": "2.88.2",
     "requestretry": "7.1.0",
     "table": "5.4.6",
-    "unzipper": "0.10.11",
     "update-notifier": "5.1.0",
     "uuid": "8.3.2",
+    "windows-release": "^5.1.0",
     "winston": "2.4.4",
-    "yargs": "14.2.3"
+    "yargs": "14.2.3",
+    "decompress": "4.2.1"
   },
   "repository": {
     "type": "git",
