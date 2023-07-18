@@ -183,7 +183,7 @@ const validate = (bsConfig, args) => {
 
     if( Utils.searchForOption('--async') && ( !Utils.isUndefined(args.async) && bsConfig["connection_settings"]["local"])) reject(Constants.validationMessages.INVALID_LOCAL_ASYNC_ARGS);
     
-    if (bsConfig.run_settings.userProvidedGeolocation && !bsConfig.run_settings.geolocation.match(/^[A-Z]{2}$/g)) reject(Constants.validationMessages.INVALID_GEO_LOCATION);
+    if (bsConfig.run_settings.userProvidedGeolocation && !bsConfig.run_settings.geolocation.match(/^[A-Z]{2}(-[A-Z0-9]{2,3})?$/g)) reject(Constants.validationMessages.INVALID_GEO_LOCATION);
 
     if (bsConfig["connection_settings"]["local"] && bsConfig.run_settings.userProvidedGeolocation) reject(Constants.validationMessages.NOT_ALLOWED_GEO_LOCATION_AND_LOCAL_MODE);
     
