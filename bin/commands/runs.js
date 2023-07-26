@@ -129,6 +129,9 @@ module.exports = function run(args, rawArgs) {
       // set the no-wrap
       utils.setNoWrap(bsConfig, args);
 
+      // set the interactive debugging capability
+      utils.setInteractiveCapability(bsConfig);
+
       // add cypress dependency if missing
       utils.setCypressNpmDependency(bsConfig);
     }

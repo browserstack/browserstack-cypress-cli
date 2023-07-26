@@ -1000,6 +1000,18 @@ exports.setHeaded = (bsConfig, args) => {
   logger.debug(`headless mode set to ${bsConfig.run_settings.headless}`);
 };
 
+exports.setInteractiveCapability = (bsConfig) => {
+  let interactiveDegugging = true;
+  if(bsConfig.interactive_debugging != undefined) {
+    interactiveDegugging = bsConfig.interactive_debugging;
+  }
+  if(bsConfig.interactiveDegugging != undefined) {
+    interactiveDegugging = bsConfig.interactiveDegugging;
+  }
+  console.log(`roshan1: the interactiveDegugging ${interactiveDegugging} ::`);
+  bsConfig.interactiveDegugging = interactiveDegugging;
+}
+
 exports.setNoWrap = (_bsConfig, args) => {
   if (args.noWrap === true || this.searchForOption('--no-wrap')) {
     process.env.SYNC_NO_WRAP = true;
