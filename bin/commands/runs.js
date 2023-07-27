@@ -129,9 +129,6 @@ module.exports = function run(args, rawArgs) {
       // set the no-wrap
       utils.setNoWrap(bsConfig, args);
 
-      // set the interactive debugging capability
-      utils.setInteractiveCapability(bsConfig);
-
       // add cypress dependency if missing
       utils.setCypressNpmDependency(bsConfig);
     }
@@ -186,6 +183,9 @@ module.exports = function run(args, rawArgs) {
 
       // set record feature caps
       utils.setRecordCaps(bsConfig, args, cypressConfigFile);
+
+      // set the interactive debugging capability
+      utils.setInteractiveCapability(bsConfig);
 
       // warn if specFiles cross our limit
       utils.warnSpecLimit(bsConfig, args, specFiles, rawArgs, buildReportData);

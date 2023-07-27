@@ -1012,8 +1012,8 @@ exports.setInteractiveCapability = (bsConfig) => {
   let interactiveDebuggingTemp = "true";
   let interactive_debugging = bsConfig.run_settings.interactive_debugging;
   let interactiveDebugging = bsConfig.run_settings.interactiveDebugging;
-  if(!isNonBooleanValue(interactive_debugging)) interactiveDebuggingTemp = interactive_debugging;
-  else if(!isNonBooleanValue(interactiveDebugging)) interactiveDebuggingTemp = interactiveDebugging;
+  if(this.isNotUndefined(interactive_debugging) && !this.isNonBooleanValue(interactive_debugging)) interactiveDebuggingTemp = interactive_debugging;
+  else if(this.isNotUndefined(interactiveDebugging) && !this.isNonBooleanValue(interactiveDebugging)) interactiveDebuggingTemp = interactiveDebugging;
   logger.debug(`Setting interactiveDebugging flag to ${interactiveDebuggingTemp}`);
   bsConfig.run_settings.interactiveDebugging = interactiveDebuggingTemp;
 }
