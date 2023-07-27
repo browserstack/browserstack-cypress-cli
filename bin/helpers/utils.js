@@ -1000,16 +1000,22 @@ exports.setHeaded = (bsConfig, args) => {
   logger.debug(`headless mode set to ${bsConfig.run_settings.headless}`);
 };
 
+exports.isConflictingBooleanValues = (value1, value2) => {
+  return (value1.toString() == "true" && value2.toString() == "false") || (value1.toString() == "false" && value2.toString() == "true")
+};
+
+exports.isNonBooleanValue = (value) => {
+  return value.toString() != "true" && value.toString() != "false";
+};
+
 exports.setInteractiveCapability = (bsConfig) => {
-  let interactiveDegugging = true;
-  if(bsConfig.interactive_debugging != undefined) {
-    interactiveDegugging = bsConfig.interactive_debugging;
-  }
-  if(bsConfig.interactiveDegugging != undefined) {
-    interactiveDegugging = bsConfig.interactiveDegugging;
-  }
-  console.log(`roshan1: the interactiveDegugging ${interactiveDegugging} ::`);
-  bsConfig.interactiveDegugging = interactiveDegugging;
+  let interactiveDebuggingTemp = "true";
+  let interactive_debugging = bsConfig.run_settings.interactive_debugging;
+  let interactiveDebugging = bsConfig.run_settings.interactiveDebugging;
+  if(!isNonBooleanValue(interactive_debugging)) interactiveDebuggingTemp = interactive_debugging;
+  else if(!isNonBooleanValue(interactiveDebugging)) interactiveDebuggingTemp = interactiveDebugging;
+  logger.debug(`Setting interactiveDebugging flag to ${interactiveDebuggingTemp}`);
+  bsConfig.run_settings.interactiveDebugging = interactiveDebuggingTemp;
 }
 
 exports.setNoWrap = (_bsConfig, args) => {
