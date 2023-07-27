@@ -1257,7 +1257,6 @@ describe("capabilityHelper.js", () => {
           },
           connection_settings: {}
         }
-        // sinon.assert.calledWith(loggerWarningSpy, 'You have passed an invalid value to the interactive_debugging capability. Proceeding with the default value (True).');
         return capabilityHelper
           .validate(bsConfig, {})
           .then(function (data) {
@@ -1284,7 +1283,6 @@ describe("capabilityHelper.js", () => {
           },
           connection_settings: {}
         }
-        // sinon.assert.calledWith(loggerWarningSpy, 'You have passed an invalid value to the interactive_debugging capability. Proceeding with the default value (True).');
         return capabilityHelper
           .validate(bsConfig, {})
           .then(function (data) {
@@ -1312,7 +1310,6 @@ describe("capabilityHelper.js", () => {
           },
           connection_settings: {}
         }
-        // sinon.assert.calledWith(loggerWarningSpy, 'You have passed an invalid value to the interactive_debugging capability. Proceeding with the default value (True).');
         return capabilityHelper
           .validate(bsConfig, {})
           .then(function (data) {
