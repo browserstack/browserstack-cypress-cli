@@ -3938,6 +3938,83 @@ describe('utils', () => {
     });
   });
 
+  describe('#setInteractiveCapability' , () => {
+    it('should set true if interactive caps is not passed', () => {
+      let bsConfig = {
+        run_settings: {}
+      }
+      let expectedResult = {
+        run_settings: {
+          interactiveDebugging: "true"
+        }
+      }
+      utils.setInteractiveCapability(bsConfig);
+      expect(bsConfig).to.be.eql(expectedResult);
+    });
+
+    it('should set true if interactiveDebugging caps passed is true', () => {
+      let bsConfig = {
+        run_settings: {
+          interactiveDebugging: true
+        }
+      }
+      let expectedResult = {
+        run_settings: {
+          interactiveDebugging: true
+        }
+      }
+      utils.setInteractiveCapability(bsConfig);
+      expect(bsConfig).to.be.eql(expectedResult);
+    });
+
+    it('should set true if interactive_debugging caps passed is true', () => {
+      let bsConfig = {
+        run_settings: {
+          interactive_debugging: true
+        }
+      }
+      let expectedResult = {
+        run_settings: {
+          interactive_debugging: true,
+          interactiveDebugging: true
+        }
+      }
+      utils.setInteractiveCapability(bsConfig);
+      expect(bsConfig).to.be.eql(expectedResult);
+    });
+
+    it('should set true if interactive_debugging caps passed is false', () => {
+      let bsConfig = {
+        run_settings: {
+          interactive_debugging: false
+        }
+      }
+      let expectedResult = {
+        run_settings: {
+          interactive_debugging: false,
+          interactiveDebugging: false
+        }
+      }
+      utils.setInteractiveCapability(bsConfig);
+      expect(bsConfig).to.be.eql(expectedResult);
+    });
+
+    it('should set true if interactiveDebugging caps passed is false', () => {
+      let bsConfig = {
+        run_settings: {
+          interactiveDebugging: false
+        }
+      }
+      let expectedResult = {
+        run_settings: {
+          interactiveDebugging: false
+        }
+      }
+      utils.setInteractiveCapability(bsConfig);
+      expect(bsConfig).to.be.eql(expectedResult);
+    });
+  });
+
   describe('#setCypressNpmDependency', () => {
     
     it('should set cypress as latest for cypress 10 test suite if cypress_version missing', () => {
