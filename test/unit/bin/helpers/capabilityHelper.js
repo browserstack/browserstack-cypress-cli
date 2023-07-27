@@ -1229,6 +1229,98 @@ describe("capabilityHelper.js", () => {
       });
     });
 
+    describe("validate interactive caps debugging", () => {
+      let loggerWarningSpy;
+      beforeEach(() => {
+        loggerWarningSpy = sinon.stub(logger, 'warn').returns('You have passed an invalid value to the interactive_debugging capability. Proceeding with the default value (True).');
+      });
+
+      afterEach(function() {
+        loggerWarningSpy.restore();
+      });
+      it("show the warning if interactive_debugging passed is a non boolean value", () => {
+        let bsConfig = {
+          auth: {},
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            cypress_proj_dir: "random path",
+            cypressConfigFilePath: "random path",
+            cypressProjectDir: "random path",
+            cypress_config_filename: "false",
+            interactive_debugging: "abc"
+          },
+          connection_settings: {}
+        }
+        // sinon.assert.calledWith(loggerWarningSpy, 'You have passed an invalid value to the interactive_debugging capability. Proceeding with the default value (True).');
+        return capabilityHelper
+          .validate(bsConfig, {})
+          .then(function (data) {
+            sinon.assert.calledWith(loggerWarningSpy, 'You have passed an invalid value to the interactive_debugging capability. Proceeding with the default value (True).');
+          });
+      });
+
+      it("show the warning if interactiveDebugging passed is a non boolean value", () => {
+        let bsConfig = {
+          auth: {},
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            cypress_proj_dir: "random path",
+            cypressConfigFilePath: "random path",
+            cypressProjectDir: "random path",
+            cypress_config_filename: "false",
+            interactiveDebugging: "abc"
+          },
+          connection_settings: {}
+        }
+        // sinon.assert.calledWith(loggerWarningSpy, 'You have passed an invalid value to the interactive_debugging capability. Proceeding with the default value (True).');
+        return capabilityHelper
+          .validate(bsConfig, {})
+          .then(function (data) {
+            sinon.assert.calledWith(loggerWarningSpy, 'You have passed an invalid value to the interactive_debugging capability. Proceeding with the default value (True).');
+          });
+      });
+
+      it("show the warning if both the interactive caps are non boolean", () => {
+        let bsConfig = {
+          auth: {},
+          browsers: [
+            {
+              browser: "chrome",
+              os: "Windows 10",
+              versions: ["78", "77"],
+            },
+          ],
+          run_settings: {
+            cypress_proj_dir: "random path",
+            cypressConfigFilePath: "random path",
+            cypressProjectDir: "random path",
+            cypress_config_filename: "false",
+            interactiveDebugging: "def",
+            interactive_debugging: "abc"
+          },
+          connection_settings: {}
+        }
+        // sinon.assert.calledWith(loggerWarningSpy, 'You have passed an invalid value to the interactive_debugging capability. Proceeding with the default value (True).');
+        return capabilityHelper
+          .validate(bsConfig, {})
+          .then(function (data) {
+            sinon.assert.calledWith(loggerWarningSpy, 'You have passed an invalid value to the interactive_debugging capability. Proceeding with the default value (True).');
+          });
+      });
+    });
+
     describe("validate home directory", () => {
       beforeEach(() => {
         bsConfig = {

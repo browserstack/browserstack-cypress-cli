@@ -3938,6 +3938,50 @@ describe('utils', () => {
     });
   });
 
+  describe('#isNonBooleanValue' , () => {
+    it('return true if value passed in empty string', () => {
+      expect(utils.isNonBooleanValue('')).to.be.eql(true);
+    });
+
+    it('return true if value passed is abc(non boolean)', () => {
+      expect(utils.isNonBooleanValue("abc")).to.be.eql(true);
+    });
+
+    it('return false if value passed is false(boolean)', () => {
+      expect(utils.isNonBooleanValue("false")).to.be.eql(false);
+    });
+
+    it('return false if value passed is true(boolean)', () => {
+      expect(utils.isNonBooleanValue(true)).to.be.eql(false);
+    });
+  });
+
+  describe('#isConflictingBooleanValues' , () => {
+    it('return false if value passed is true and true', () => {
+      expect(utils.isConflictingBooleanValues(true, true)).to.be.eql(false);
+    });
+
+    it('return false if value passed is false and "false"', () => {
+      expect(utils.isConflictingBooleanValues(false, "false")).to.be.eql(false);
+    });
+
+    it('return true if value passed is "true" and "false"', () => {
+      expect(utils.isConflictingBooleanValues("true", "false")).to.be.eql(true);
+    });
+
+    it('return true if value passed is true and "false"', () => {
+      expect(utils.isConflictingBooleanValues(true, "false")).to.be.eql(true);
+    });
+
+    it('return false if value passed is false and "true"', () => {
+      expect(utils.isConflictingBooleanValues(false, "true")).to.be.eql(true);
+    });
+
+    it('return false if value passed is false and "false"', () => {
+      expect(utils.isConflictingBooleanValues(false, "false")).to.be.eql(false);
+    });
+  });
+
   describe('#setInteractiveCapability' , () => {
     it('should set true if interactive caps is not passed', () => {
       let bsConfig = {
