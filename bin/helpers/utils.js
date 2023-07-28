@@ -1001,11 +1001,11 @@ exports.setHeaded = (bsConfig, args) => {
 };
 
 exports.isConflictingBooleanValues = (value1, value2) => {
-  return (value1.toString() == "true" && value2.toString() == "false") || (value1.toString() == "false" && value2.toString() == "true")
+  return (value1.toString() === "true" && value2.toString() === "false") || (value1.toString() === "false" && value2.toString() === "true")
 };
 
 exports.isNonBooleanValue = (value) => {
-  return value.toString() != "true" && value.toString() != "false";
+  return value.toString() !== "true" && value.toString() !== "false";
 };
 
 exports.setInteractiveCapability = (bsConfig) => {
