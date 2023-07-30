@@ -351,9 +351,43 @@ const getCiInfo = () => {
 
 let packages = {};
 
-exports.getPackageVersion = (package_) => {
+exports.getPackageVersion = (package_, bsConfig = null) => {
   if(packages[package_]) return packages[package_];
-  return packages[package_] = this.requireModule(`${package_}/package.json`).version;
+  let packageVersion;
+  /* Try to find version from module path */
+  try {
+    packages[package_] = this.requireModule(`${package_}/package.json`).version;
+    logger.info(`Getting ${package_} package version from module path = ${packages[package_]}`);
+    packageVersion = packages[package_];
+  } catch(e) {
+    exports.debug(`Unable to find package ${package_} at module path with error ${e}`);
+  }
+
+  /* Read package version from npm_dependencies in browserstack.json file if present */
+  if(utils.isUndefined(packageVersion) && bsConfig && (process.env.BROWSERSTACK_AUTOMATION == "true" || process.env.BROWSERSTACK_AUTOMATION == "1")) {
+    const runSettings = bsConfig.run_settings;
+    if (runSettings && runSettings.npm_dependencies !== undefined && 
+      Object.keys(runSettings.npm_dependencies).length !== 0 &&
+      typeof runSettings.npm_dependencies === 'object') {
+      if (package_ in runSettings.npm_dependencies) {
+        packages[package_] = runSettings.npm_dependencies[package_];
+        logger.info(`Getting ${package_} package version from browserstack.json = ${packages[package_]}`);
+        packageVersion = packages[package_];
+      }
+    }
+  }
+
+  /* Read package version from project's package.json if present */
+  const packageJSONPath = path.join(process.cwd(), 'package.json');
+  if(utils.isUndefined(packageVersion) && fs.existsSync(packageJSONPath)) {
+    const packageJSONContents = require(packageJSONPath);
+    if(packageJSONContents.devDependencies && !utils.isUndefined(packageJSONContents.devDependencies["cypress"])) packages[package_] = packageJSONContents.devDependencies["cypress"];
+    if(packageJSONContents.dependencies && !utils.isUndefined(packageJSONContents.dependencies["cypress"])) packages[package_] = packageJSONContents.dependencies["cypress"];
+    logger.info(`Getting ${package_} package version from package.json = ${packages[package_]}`);
+    packageVersion = packages[package_];
+  }
+
+  return packageVersion;
 }
 
 exports.getAgentVersion = () => {
@@ -452,9 +486,14 @@ const setBrowserstackCypressCliDependency = (bsConfig) => {
 }
 
 const getCypressConfigFileContent = (bsConfig, cypressConfigPath) => {
-  const cypressConfigFile = require(path.resolve(bsConfig ? bsConfig.run_settings.cypress_config_file : cypressConfigPath));
-  if(bsConfig) process.env.OBS_CRASH_REPORTING_CYPRESS_CONFIG_PATH = bsConfig.run_settings.cypress_config_file;
-  return cypressConfigFile;
+  try {
+    const cypressConfigFile = require(path.resolve(bsConfig ? bsConfig.run_settings.cypress_config_file : cypressConfigPath));
+    if(bsConfig) process.env.OBS_CRASH_REPORTING_CYPRESS_CONFIG_PATH = bsConfig.run_settings.cypress_config_file;
+    return cypressConfigFile;
+  } catch(e) {
+    exports.debug(`Encountered an error when trying to import Cypress Config File ${e}`);
+    return {};
+  }
 }
 
 exports.setCrashReportingConfigFromReporter = (credentialsStr, bsConfigPath, cypressConfigPath) => {
@@ -530,7 +569,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
         'version_control': await getGitMetaData(),
         'observability_version': {
           frameworkName: "Cypress",
-          frameworkVersion: exports.getPackageVersion('cypress'),
+          frameworkVersion: exports.getPackageVersion('cypress', user_config),
           sdkVersion: exports.getAgentVersion()
         }
       };
