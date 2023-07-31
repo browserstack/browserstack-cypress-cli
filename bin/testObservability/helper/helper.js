@@ -381,8 +381,8 @@ exports.getPackageVersion = (package_, bsConfig = null) => {
   const packageJSONPath = path.join(process.cwd(), 'package.json');
   if(utils.isUndefined(packageVersion) && fs.existsSync(packageJSONPath)) {
     const packageJSONContents = require(packageJSONPath);
-    if(packageJSONContents.devDependencies && !utils.isUndefined(packageJSONContents.devDependencies["cypress"])) packages[package_] = packageJSONContents.devDependencies["cypress"];
-    if(packageJSONContents.dependencies && !utils.isUndefined(packageJSONContents.dependencies["cypress"])) packages[package_] = packageJSONContents.dependencies["cypress"];
+    if(packageJSONContents.devDependencies && !utils.isUndefined(packageJSONContents.devDependencies[package_])) packages[package_] = packageJSONContents.devDependencies[package_];
+    if(packageJSONContents.dependencies && !utils.isUndefined(packageJSONContents.dependencies[package_])) packages[package_] = packageJSONContents.dependencies[package_];
     logger.info(`Getting ${package_} package version from package.json = ${packages[package_]}`);
     packageVersion = packages[package_];
   }
