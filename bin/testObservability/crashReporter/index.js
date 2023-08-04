@@ -57,7 +57,7 @@ getPackageVersion = (package_, bsConfig = null) => {
     logger.info(`Getting ${package_} package version from module path = ${packages[package_]}`);
     packageVersion = packages[package_];
   } catch(e) {
-    exports.debug(`Unable to find package ${package_} at module path with error ${e}`);
+    debug(`Unable to find package ${package_} at module path with error ${e}`);
   }
 
   /* Read package version from npm_dependencies in browserstack.json file if present */
