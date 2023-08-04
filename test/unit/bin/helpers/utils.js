@@ -3938,6 +3938,127 @@ describe('utils', () => {
     });
   });
 
+  describe('#isNonBooleanValue' , () => {
+    it('return true if value passed in empty string', () => {
+      expect(utils.isNonBooleanValue('')).to.be.eql(true);
+    });
+
+    it('return true if value passed is abc(non boolean)', () => {
+      expect(utils.isNonBooleanValue("abc")).to.be.eql(true);
+    });
+
+    it('return false if value passed is false(boolean)', () => {
+      expect(utils.isNonBooleanValue("false")).to.be.eql(false);
+    });
+
+    it('return false if value passed is true(boolean)', () => {
+      expect(utils.isNonBooleanValue(true)).to.be.eql(false);
+    });
+  });
+
+  describe('#isConflictingBooleanValues' , () => {
+    it('return false if value passed is true and true', () => {
+      expect(utils.isConflictingBooleanValues(true, true)).to.be.eql(false);
+    });
+
+    it('return false if value passed is false and "false"', () => {
+      expect(utils.isConflictingBooleanValues(false, "false")).to.be.eql(false);
+    });
+
+    it('return true if value passed is "true" and "false"', () => {
+      expect(utils.isConflictingBooleanValues("true", "false")).to.be.eql(true);
+    });
+
+    it('return true if value passed is true and "false"', () => {
+      expect(utils.isConflictingBooleanValues(true, "false")).to.be.eql(true);
+    });
+
+    it('return false if value passed is false and "true"', () => {
+      expect(utils.isConflictingBooleanValues(false, "true")).to.be.eql(true);
+    });
+
+    it('return false if value passed is false and "false"', () => {
+      expect(utils.isConflictingBooleanValues(false, "false")).to.be.eql(false);
+    });
+  });
+
+  describe('#setInteractiveCapability' , () => {
+    it('should set true if interactive caps is not passed', () => {
+      let bsConfig = {
+        run_settings: {}
+      }
+      let expectedResult = {
+        run_settings: {
+          interactiveDebugging: "true"
+        }
+      }
+      utils.setInteractiveCapability(bsConfig);
+      expect(bsConfig).to.be.eql(expectedResult);
+    });
+
+    it('should set true if interactiveDebugging caps passed is true', () => {
+      let bsConfig = {
+        run_settings: {
+          interactiveDebugging: true
+        }
+      }
+      let expectedResult = {
+        run_settings: {
+          interactiveDebugging: true
+        }
+      }
+      utils.setInteractiveCapability(bsConfig);
+      expect(bsConfig).to.be.eql(expectedResult);
+    });
+
+    it('should set true if interactive_debugging caps passed is true', () => {
+      let bsConfig = {
+        run_settings: {
+          interactive_debugging: true
+        }
+      }
+      let expectedResult = {
+        run_settings: {
+          interactive_debugging: true,
+          interactiveDebugging: true
+        }
+      }
+      utils.setInteractiveCapability(bsConfig);
+      expect(bsConfig).to.be.eql(expectedResult);
+    });
+
+    it('should set true if interactive_debugging caps passed is false', () => {
+      let bsConfig = {
+        run_settings: {
+          interactive_debugging: false
+        }
+      }
+      let expectedResult = {
+        run_settings: {
+          interactive_debugging: false,
+          interactiveDebugging: false
+        }
+      }
+      utils.setInteractiveCapability(bsConfig);
+      expect(bsConfig).to.be.eql(expectedResult);
+    });
+
+    it('should set true if interactiveDebugging caps passed is false', () => {
+      let bsConfig = {
+        run_settings: {
+          interactiveDebugging: false
+        }
+      }
+      let expectedResult = {
+        run_settings: {
+          interactiveDebugging: false
+        }
+      }
+      utils.setInteractiveCapability(bsConfig);
+      expect(bsConfig).to.be.eql(expectedResult);
+    });
+  });
+
   describe('#setCypressNpmDependency', () => {
     
     it('should set cypress as latest for cypress 10 test suite if cypress_version missing', () => {
