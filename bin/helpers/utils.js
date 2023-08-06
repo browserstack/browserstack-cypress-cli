@@ -1000,24 +1000,6 @@ exports.setHeaded = (bsConfig, args) => {
   logger.debug(`headless mode set to ${bsConfig.run_settings.headless}`);
 };
 
-exports.isConflictingBooleanValues = (value1, value2) => {
-  return (value1.toString() === "true" && value2.toString() === "false") || (value1.toString() === "false" && value2.toString() === "true")
-};
-
-exports.isNonBooleanValue = (value) => {
-  return value.toString() !== "true" && value.toString() !== "false";
-};
-
-exports.setInteractiveCapability = (bsConfig) => {
-  let interactiveDebuggingTemp = "true";
-  let interactive_debugging = bsConfig.run_settings.interactive_debugging;
-  let interactiveDebugging = bsConfig.run_settings.interactiveDebugging;
-  if(this.isNotUndefined(interactive_debugging) && !this.isNonBooleanValue(interactive_debugging)) interactiveDebuggingTemp = interactive_debugging;
-  else if(this.isNotUndefined(interactiveDebugging) && !this.isNonBooleanValue(interactiveDebugging)) interactiveDebuggingTemp = interactiveDebugging;
-  logger.debug(`Setting interactiveDebugging flag to ${interactiveDebuggingTemp}`);
-  bsConfig.run_settings.interactiveDebugging = interactiveDebuggingTemp;
-}
-
 exports.setNoWrap = (_bsConfig, args) => {
   if (args.noWrap === true || this.searchForOption('--no-wrap')) {
     process.env.SYNC_NO_WRAP = true;

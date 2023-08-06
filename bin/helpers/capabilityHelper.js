@@ -242,23 +242,6 @@ const validate = (bsConfig, args) => {
       addCypressZipStartLocation(bsConfig.run_settings);
     }
 
-    // check if Interactive Capabilities Caps passed is correct or not
-    if(!Utils.isUndefined(bsConfig.run_settings.interactive_debugging) && !Utils.isUndefined(bsConfig.run_settings.interactiveDebugging)) {
-      if(Utils.isConflictingBooleanValues(bsConfig.run_settings.interactive_debugging, bsConfig.run_settings.interactiveDebugging)) {
-        reject(Constants.userMessages.CYPRESS_INTERACTIVE_SESSION_CONFLICT_VALUES);
-      } else if(Utils.isNonBooleanValue(bsConfig.run_settings.interactive_debugging) && Utils.isNonBooleanValue(bsConfig.run_settings.interactiveDebugging)) {
-        logger.warn('You have passed an invalid value to the interactive_debugging capability. Proceeding with the default value (True).');
-      }
-    } else if(!Utils.isUndefined(bsConfig.run_settings.interactive_debugging)) {
-      if(Utils.isNonBooleanValue(bsConfig.run_settings.interactive_debugging)) {
-        logger.warn('You have passed an invalid value to the interactive_debugging capability. Proceeding with the default value (True).');
-      }
-    } else if(!Utils.isUndefined(bsConfig.run_settings.interactiveDebugging)) {
-      if(Utils.isNonBooleanValue(bsConfig.run_settings.interactiveDebugging)) {
-        logger.warn('You have passed an invalid value to the interactive_debugging capability. Proceeding with the default value (True).');
-      }
-    }
-
     // check if two config files are present at the same location
     let cypressFileDirectory = path.dirname(path.resolve(bsConfig.run_settings.cypressConfigFilePath));
     let listOfFiles = fs.readdirSync(cypressFileDirectory);
