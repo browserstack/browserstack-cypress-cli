@@ -4027,7 +4027,7 @@ describe('utils', () => {
       expect(bsConfig).to.be.eql(expectedResult);
     });
 
-    it('should set true if interactive_debugging caps passed is false', () => {
+    it('should set false if interactive_debugging caps passed is false', () => {
       let bsConfig = {
         run_settings: {
           interactive_debugging: false
@@ -4043,7 +4043,7 @@ describe('utils', () => {
       expect(bsConfig).to.be.eql(expectedResult);
     });
 
-    it('should set true if interactiveDebugging caps passed is false', () => {
+    it('should set false if interactiveDebugging caps passed is false', () => {
       let bsConfig = {
         run_settings: {
           interactiveDebugging: false
