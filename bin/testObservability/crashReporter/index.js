@@ -5,6 +5,7 @@ const http = require('http');
 const https = require('https');
 
 const logger = require("../../helpers/logger").winstonLogger;
+const utils = require('../../helpers/utils');
 
 const { API_URL, consoleHolder } = require('../helper/constants');
 
@@ -47,9 +48,43 @@ exports.requireModule = (module, internal = false) => {
   return require(local_path);
 }
 
-getPackageVersion = (package_) => {
+getPackageVersion = (package_, bsConfig = null) => {
   if(packages[package_]) return packages[package_];
-  return packages[package_] = this.requireModule(`${package_}/package.json`).version;
+  let packageVersion;
+  /* Try to find version from module path */
+  try {
+    packages[package_] = this.requireModule(`${package_}/package.json`).version;
+    logger.info(`Getting ${package_} package version from module path = ${packages[package_]}`);
+    packageVersion = packages[package_];
+  } catch(e) {
+    debug(`Unable to find package ${package_} at module path with error ${e}`);
+  }
+
+  /* Read package version from npm_dependencies in browserstack.json file if present */
+  if(utils.isUndefined(packageVersion) && bsConfig && (process.env.BROWSERSTACK_AUTOMATION == "true" || process.env.BROWSERSTACK_AUTOMATION == "1")) {
+    const runSettings = bsConfig.run_settings;
+    if (runSettings && runSettings.npm_dependencies !== undefined && 
+      Object.keys(runSettings.npm_dependencies).length !== 0 &&
+      typeof runSettings.npm_dependencies === 'object') {
+      if (package_ in runSettings.npm_dependencies) {
+        packages[package_] = runSettings.npm_dependencies[package_];
+        logger.info(`Getting ${package_} package version from browserstack.json = ${packages[package_]}`);
+        packageVersion = packages[package_];
+      }
+    }
+  }
+
+  /* Read package version from project's package.json if present */
+  const packageJSONPath = path.join(process.cwd(), 'package.json');
+  if(utils.isUndefined(packageVersion) && fs.existsSync(packageJSONPath)) {
+    const packageJSONContents = require(packageJSONPath);
+    if(packageJSONContents.devDependencies && !utils.isUndefined(packageJSONContents.devDependencies[package_])) packages[package_] = packageJSONContents.devDependencies[package_];
+    if(packageJSONContents.dependencies && !utils.isUndefined(packageJSONContents.dependencies[package_])) packages[package_] = packageJSONContents.dependencies[package_];
+    logger.info(`Getting ${package_} package version from package.json = ${packages[package_]}`);
+    packageVersion = packages[package_];
+  }
+
+  return packageVersion;
 }
 
 getAgentVersion = () => {
@@ -96,7 +131,7 @@ class CrashReporter {
           hashed_id: process.env.BS_TESTOPS_BUILD_HASHED_ID,
           observability_version: {
               frameworkName: 'Cypress',
-              frameworkVersion: getPackageVersion('cypress'),
+              frameworkVersion: getPackageVersion('cypress', this.userConfigForReporting.browserstackConfigFile),
               sdkVersion: getAgentVersion()
           },
           exception: {
