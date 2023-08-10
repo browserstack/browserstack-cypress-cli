@@ -117,7 +117,9 @@ const userMessages = {
   NO_CONNECTION_WHILE_UPDATING_UPLOAD_PROGRESS_BAR:
     "Unable to determine zip upload progress due to undefined/null connection request",
   CYPRESS_PORT_WARNING:
-    "The requested port number <x> is ignored. The default BrowserStack port will be used for this execution"
+    "The requested port number <x> is ignored. The default BrowserStack port will be used for this execution",
+  CYPRESS_INTERACTIVE_SESSION_CONFLICT_VALUES:
+    "Conflicting values (True & False) were found for the interactive_debugging capability. Please resolve this issue to proceed further."
 };
 
 const validationMessages = {
