@@ -163,7 +163,7 @@ exports.getTestEnv = () => {
 }
 
 exports.getFileSeparatorData = () => {
-  const fileSeparatorRegex = /^win/.test(process.platform) ? "\\\\" : "/";
+  const fileSeparatorRegex = /^win/.test(process.platform) ? "\\" : "/";
   const fileSeparator = /^win/.test(process.platform) ? "\\" : "/";
   return {
     fileSeparator,
@@ -1003,7 +1003,7 @@ exports.runCypressTestsLocally = (bsConfig, args, rawArgs) => {
     const cypressProcess = spawn(
       'npx',
       ['cypress', 'run', ...getReRunSpecs(rawArgs.slice(1)), ...getLocalSessionReporter()],
-      { stdio: 'inherit', cwd: process.cwd(), env: process.env }
+      { stdio: 'inherit', cwd: process.cwd(), env: process.env, shell: true }
     );
     cypressProcess.on('close', async (code) => {
       logger.info(`Cypress process exited with code ${code}`);
