@@ -284,7 +284,7 @@ class MyReporter {
       if(!isBrowserstackInfra()) gitConfigPath = process.env.OBSERVABILITY_GIT_CONFIG_PATH_LOCAL ? process.env.OBSERVABILITY_GIT_CONFIG_PATH_LOCAL.toString() : null;
       const prefixedTestPath = rootParentFile ? this._paths.prefixTestPath(rootParentFile) : 'File path could not be found';
       
-      const { fileSeparator, fileSeparatorRegex } = getFileSeparatorData();
+      const fileSeparator = getFileSeparatorData();
       
       let testData = {
         'framework': 'Cypress',
