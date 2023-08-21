@@ -184,6 +184,9 @@ module.exports = function run(args, rawArgs) {
       // set record feature caps
       utils.setRecordCaps(bsConfig, args, cypressConfigFile);
 
+      // set the interactive debugging capability
+      utils.setInteractiveCapability(bsConfig);
+
       // warn if specFiles cross our limit
       utils.warnSpecLimit(bsConfig, args, specFiles, rawArgs, buildReportData);
       markBlockEnd('preArchiveSteps');
