@@ -309,11 +309,14 @@ class MyReporter {
         'failure_type': !failureReason ? null : failureReason.match(/AssertionError/) ? 'AssertionError' : 'UnhandledError',
         'retry_of': test.retryOf,
         'meta': {
-          steps: JSON.parse(JSON.stringify(this.currentTestCucumberSteps))
+          steps: []
         }
       };
 
-      this.currentTestCucumberSteps = [];
+      if(eventType.match(/TestRunFinished/) || eventType.match(/TestRunSkipped/)) {
+        testData['meta'].steps = JSON.parse(JSON.stringify(this.currentTestCucumberSteps));
+        this.currentTestCucumberSteps = [];
+      }
 
       const { os, os_version } = await getOSDetailsFromSystem(process.env.observability_product);
       if(process.env.observability_integration) {
