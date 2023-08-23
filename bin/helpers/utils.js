@@ -942,6 +942,12 @@ exports.setLocalArgs = (bsConfig, args) => {
   let local_args = {}
   local_args['key'] = bsConfig['auth']['access_key'];
   local_args['localIdentifier'] = bsConfig["connection_settings"]["local_identifier"];
+  if (bsConfig["connection_settings"]["proxyHost"])
+    local_args['proxyHost'] = bsConfig["connection_settings"]["proxyHost"];
+  if (bsConfig["connection_settings"]["proxyPort"])
+    local_args['proxyPort'] = bsConfig["connection_settings"]["proxyPort"];
+  if (bsConfig["connection_settings"]["useCaCertificate"])
+    local_args['useCaCertificate'] = bsConfig["connection_settings"]["useCaCertificate"];
   local_args['daemon'] = true;
   local_args['enable-logging-for-api'] = true
   local_args['source'] = `cypress:${usageReporting.cli_version_and_path(bsConfig).version}`;
