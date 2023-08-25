@@ -163,16 +163,11 @@ exports.getTestEnv = () => {
 }
 
 exports.getFileSeparatorData = () => {
-  const fileSeparatorRegex = /^win/.test(process.platform) ? "\\\\" : "/";
-  const fileSeparator = /^win/.test(process.platform) ? "\\" : "/";
-  return {
-    fileSeparator,
-    fileSeparatorRegex
-  };
+  return /^win/.test(process.platform) ? "\\" : "/";
 }
 
 exports.findGitConfig = (filePath) => {
-  const { fileSeparator, fileSeparatorRegex } = exports.getFileSeparatorData();
+  const fileSeparator = exports.getFileSeparatorData();
   if(filePath == null || filePath == '' || filePath == fileSeparator) {
     return null;
   }
@@ -180,7 +175,7 @@ exports.findGitConfig = (filePath) => {
     fs.statSync(filePath + fileSeparator + '.git' + fileSeparator + 'config');
     return filePath;
   } catch(e) {
-    let parentFilePath = filePath.split(fileSeparatorRegex);
+    let parentFilePath = filePath.split(fileSeparator);
     parentFilePath.pop();
     return exports.findGitConfig(parentFilePath.join(fileSeparator));
   }
@@ -1002,7 +997,7 @@ exports.runCypressTestsLocally = (bsConfig, args, rawArgs) => {
     const cypressProcess = spawn(
       'npx',
       ['cypress', 'run', ...getReRunSpecs(rawArgs.slice(1)), ...getLocalSessionReporter()],
-      { stdio: 'inherit', cwd: process.cwd(), env: process.env }
+      { stdio: 'inherit', cwd: process.cwd(), env: process.env, shell: true }
     );
     cypressProcess.on('close', async (code) => {
       logger.info(`Cypress process exited with code ${code}`);
