@@ -381,9 +381,11 @@ module.exports = function run(args, rawArgs) {
                 utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'build_failed', buildReportData, rawArgs);
                 process.exitCode = Constants.ERROR_EXIT_CODE;
               });
-            }).catch(function (err) {
+            }).catch(async function (err) {
               // Zip Upload failed | Local Start failed
               logger.error(err);
+              // stop the Local instance
+              await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs, buildReportData);
               if(err === Constants.userMessages.LOCAL_START_FAILED){
                 utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.LOCAL_START_FAILED}`, Constants.messageTypes.ERROR, 'local_start_failed', buildReportData, rawArgs);
               } else {
