@@ -211,6 +211,13 @@ module.exports = function run(args, rawArgs) {
             logger.debug("Completed archiving test suite");
             markBlockEnd('zip.archive');
 
+            //setup Local Testing
+            markBlockStart('localSetup');
+            logger.debug("Started setting up BrowserStack Local connection");
+            let bs_local = await utils.setupLocalTesting(bsConfig, args, rawArgs, buildReportData);
+            logger.debug('Completed setting up BrowserStack Local connection');
+            markBlockEnd('localSetup');
+
             let test_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.fileName));
             let npm_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.packageFileName));
             let node_modules_size = await utils.fetchFolderSize(path.join(process.cwd(), "node_modules"))            
@@ -233,12 +240,6 @@ module.exports = function run(args, rawArgs) {
               markBlockEnd('zip');
 
               // Create build
-              //setup Local Testing
-              markBlockStart('localSetup');
-              logger.debug("Started setting up BrowserStack Local connection");
-              let bs_local = await utils.setupLocalTesting(bsConfig, args, rawArgs, buildReportData);
-              logger.debug('Completed setting up BrowserStack Local connection');
-              markBlockEnd('localSetup');
               logger.debug("Started build creation");
               markBlockStart('createBuild');
               return build.createBuild(bsConfig, zip).then(function (data) {

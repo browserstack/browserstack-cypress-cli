@@ -857,7 +857,15 @@ exports.setLocalMode = (bsConfig, args) => {
 exports.setupLocalTesting = (bsConfig, args, rawArgs, buildReportData) => {
   return new Promise(async (resolve, reject) => {
     if( bsConfig['connection_settings'] && bsConfig['connection_settings']['local'] && String(bsConfig['connection_settings']['local']) === "true" ){
-      let localBinaryRunning = await this.checkLocalBinaryRunning(bsConfig, bsConfig['connection_settings']['local_identifier']);
+      let localBinaryRunning;
+      try {
+        localBinaryRunning = await this.checkLocalBinaryRunning(bsConfig, bsConfig['connection_settings']['local_identifier']);
+      } catch(error) {
+        logger.debug(`Failed to check if a local binary is already running for a user with the error: ${error}`);
+        localBinaryRunning = {
+          should_spawn_binary: true
+        };
+      }
       let localIdentifierRunning;
       if (localBinaryRunning['should_spawn_binary'] == true) {
         localIdentifierRunning = false;
