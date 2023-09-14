@@ -192,32 +192,41 @@ const getGitMetaData = () => {
       if(!info.author && exports.findGitConfig(process.cwd())) {
         /* commit objects are packed */
         gitLastCommit.getLastCommit(async (err, commit) => {
-          info["author"] = info["author"] || `${commit["author"]["name"].replace(/[“]+/g, '')} <${commit["author"]["email"].replace(/[“]+/g, '')}>`;
-          info["authorDate"] = info["authorDate"] || commit["authoredOn"];
-          info["committer"] = info["committer"] || `${commit["committer"]["name"].replace(/[“]+/g, '')} <${commit["committer"]["email"].replace(/[“]+/g, '')}>`;
-          info["committerDate"] = info["committerDate"] || commit["committedOn"]
-          info["commitMessage"] = info["commitMessage"] || commit["subject"];
+          if(err) {
+            exports.debug(`Exception in populating Git Metadata with error : ${err}`, true, err);
+            return resolve({});
+          }
+          try {
+            info["author"] = info["author"] || `${commit["author"]["name"].replace(/[“]+/g, '')} <${commit["author"]["email"].replace(/[“]+/g, '')}>`;
+            info["authorDate"] = info["authorDate"] || commit["authoredOn"];
+            info["committer"] = info["committer"] || `${commit["committer"]["name"].replace(/[“]+/g, '')} <${commit["committer"]["email"].replace(/[“]+/g, '')}>`;
+            info["committerDate"] = info["committerDate"] || commit["committedOn"];
+            info["commitMessage"] = info["commitMessage"] || commit["subject"];
 
-          const { remote } = await pGitconfig(info.commonGitDir);
-          const remotes = Object.keys(remote).map(remoteName =>  ({name: remoteName, url: remote[remoteName]['url']}));
-          resolve({
-            "name": "git",
-            "sha": info["sha"],
-            "short_sha": info["abbreviatedSha"],
-            "branch": info["branch"],
-            "tag": info["tag"],
-            "committer": info["committer"],
-            "committer_date": info["committerDate"],
-            "author": info["author"],
-            "author_date": info["authorDate"],
-            "commit_message": info["commitMessage"],
-            "root": info["root"],
-            "common_git_dir": info["commonGitDir"],
-            "worktree_git_dir": info["worktreeGitDir"],
-            "last_tag": info["lastTag"],
-            "commits_since_last_tag": info["commitsSinceLastTag"],
-            "remotes": remotes
-          });
+            const { remote } = await pGitconfig(info.commonGitDir);
+            const remotes = Object.keys(remote).map(remoteName =>  ({name: remoteName, url: remote[remoteName]['url']}));
+            resolve({
+              "name": "git",
+              "sha": info["sha"],
+              "short_sha": info["abbreviatedSha"],
+              "branch": info["branch"],
+              "tag": info["tag"],
+              "committer": info["committer"],
+              "committer_date": info["committerDate"],
+              "author": info["author"],
+              "author_date": info["authorDate"],
+              "commit_message": info["commitMessage"],
+              "root": info["root"],
+              "common_git_dir": info["commonGitDir"],
+              "worktree_git_dir": info["worktreeGitDir"],
+              "last_tag": info["lastTag"],
+              "commits_since_last_tag": info["commitsSinceLastTag"],
+              "remotes": remotes
+            });
+          } catch(e) {
+            exports.debug(`Exception in populating Git Metadata with error : ${e}`, true, e);
+            return resolve({});
+          }
         }, {dst: exports.findGitConfig(process.cwd())});
       } else {
         const { remote } = await pGitconfig(info.commonGitDir);
