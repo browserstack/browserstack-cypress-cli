@@ -479,7 +479,6 @@ const getBuildDetails = (bsConfig) => {
 const setBrowserstackCypressCliDependency = (bsConfig) => {
   const runSettings = bsConfig.run_settings;
   if (runSettings.npm_dependencies !== undefined && 
-    Object.keys(runSettings.npm_dependencies).length !== 0 &&
     typeof runSettings.npm_dependencies === 'object') {
     if (!("browserstack-cypress-cli" in runSettings.npm_dependencies)) {
       logger.warn("Missing browserstack-cypress-cli not found in npm_dependencies");        
