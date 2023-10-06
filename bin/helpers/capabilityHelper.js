@@ -7,6 +7,7 @@ const logger = require("./logger").winstonLogger,
   Utils = require("./utils");
 
 const caps = (bsConfig, zip) => {
+  // logger.info('bsConfig in caps', bsConfig);
   return new Promise(function (resolve, reject) {
     let user = undefined;
     let password = undefined;
@@ -109,6 +110,7 @@ const caps = (bsConfig, zip) => {
     obj.callbackURL = null;
     //projectNotifyURL
     obj.projectNotifyURL = null;
+    // obj.accessibility = bsConfig.accessibility;
 
     if (bsConfig.run_settings) {
       obj.project = bsConfig.run_settings.project || bsConfig.run_settings.project_name || obj.project;
@@ -116,7 +118,8 @@ const caps = (bsConfig, zip) => {
       obj.callbackURL = bsConfig.run_settings.callback_url;
       obj.projectNotifyURL = bsConfig.run_settings.project_notify_URL;
       obj.parallels = bsConfig.run_settings.parallels;
-
+      // obj.accessibility = bsConfig.accessibility;
+      // obj.accessibilityOptions = bsConfig.accessibilityOptions;
       if (!(!Utils.isUndefined(bsConfig.run_settings.headless) && String(bsConfig.run_settings.headless) === "false")) {
         logger.info(`Running your tests in headless mode. Use --headed arg to run in headful mode.`);
       }
@@ -138,6 +141,10 @@ const caps = (bsConfig, zip) => {
     if (obj.parallels) logger.info(`Parallels limit specified: ${obj.parallels}`);
 
     var data = JSON.stringify(obj);
+    logger.info('obj in caps', obj);
+
+    // logger.info('data in caps', data);
+
     resolve(data);
   })
 }

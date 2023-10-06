@@ -55,6 +55,7 @@ const httpsScreenshotsKeepAliveAgent = new https.Agent({
 });
 
 const supportFileCleanup = () => {
+  return;
   Object.keys(supportFileContentMap).forEach(file => {
     try {
       fs.writeFileSync(file, supportFileContentMap[file], {encoding: 'utf-8'});
@@ -591,7 +592,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
       exports.debug('Build creation successfull!');
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;
       setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
-      // setEventListeners();
+      setEventListeners();
       if(this.isBrowserstackInfra()) setBrowserstackCypressCliDependency(user_config);
     } catch(error) {
       if(!error.errorType) {

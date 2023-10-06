@@ -30,6 +30,12 @@ const {
   printBuildLink
 } = require('../testObservability/helper/helper');
 
+
+const { 
+  createAccessibilityTestRun,
+  checkAccessibilityPlatform
+} = require('../accessibility-automation/helper');
+
 module.exports = function run(args, rawArgs) {
 
   markBlockStart('preBuild');
@@ -57,6 +63,8 @@ module.exports = function run(args, rawArgs) {
       Set testObservability & browserstackAutomation flags
     */
     const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
+    const isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibilityPlatform(bsConfig);
+    logger.info('isAccessibilitySession', isAccessibilitySession);
 
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
@@ -131,6 +139,11 @@ module.exports = function run(args, rawArgs) {
 
       // add cypress dependency if missing
       utils.setCypressNpmDependency(bsConfig);
+      logger.info("isAccessibilitySession !!!!!!!!! ")
+      
+      if (isAccessibilitySession) {
+        await createAccessibilityTestRun(bsConfig);
+      }
     }
 
     const { packagesInstalled } = !isBrowserstackInfra ? false : await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd});
