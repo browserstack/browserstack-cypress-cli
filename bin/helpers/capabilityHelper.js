@@ -121,6 +121,10 @@ const caps = (bsConfig, zip) => {
         logger.info(`Running your tests in headless mode. Use --headed arg to run in headful mode.`);
       }
 
+      if (bsConfig.run_settings?.accessibility) {
+        bsConfig.run_settings["accessibilityPlatforms"] = getAccessibilityPlatforms(bsConfig);
+      }
+
       // send run_settings as is for other capabilities
       obj.run_settings = JSON.stringify(bsConfig.run_settings);
     }
@@ -141,6 +145,16 @@ const caps = (bsConfig, zip) => {
     resolve(data);
   })
 }
+
+const getAccessibilityPlatforms = (bsConfig) => {
+  const browserList = bsConfig.browsers;
+  const accessibilityPlatforms = Array(browserList.length).fill(false);
+  browserList.forEach((browserDetails, idx) => {
+    accessibilityPlatforms[idx] = (browserDetails?.accessibility === undefined) ? false : browserDetails?.accessibility
+  });
+  return accessibilityPlatforms;
+}
+
 
 const addCypressZipStartLocation = (runSettings) => {
   let resolvedHomeDirectoryPath = path.resolve(runSettings.home_directory);
