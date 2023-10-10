@@ -163,16 +163,11 @@ exports.getTestEnv = () => {
 }
 
 exports.getFileSeparatorData = () => {
-  const fileSeparatorRegex = /^win/.test(process.platform) ? "\\\\" : "/";
-  const fileSeparator = /^win/.test(process.platform) ? "\\" : "/";
-  return {
-    fileSeparator,
-    fileSeparatorRegex
-  };
+  return /^win/.test(process.platform) ? "\\" : "/";
 }
 
 exports.findGitConfig = (filePath) => {
-  const { fileSeparator, fileSeparatorRegex } = exports.getFileSeparatorData();
+  const fileSeparator = exports.getFileSeparatorData();
   if(filePath == null || filePath == '' || filePath == fileSeparator) {
     return null;
   }
@@ -180,7 +175,7 @@ exports.findGitConfig = (filePath) => {
     fs.statSync(filePath + fileSeparator + '.git' + fileSeparator + 'config');
     return filePath;
   } catch(e) {
-    let parentFilePath = filePath.split(fileSeparatorRegex);
+    let parentFilePath = filePath.split(fileSeparator);
     parentFilePath.pop();
     return exports.findGitConfig(parentFilePath.join(fileSeparator));
   }
@@ -197,32 +192,41 @@ const getGitMetaData = () => {
       if(!info.author && exports.findGitConfig(process.cwd())) {
         /* commit objects are packed */
         gitLastCommit.getLastCommit(async (err, commit) => {
-          info["author"] = info["author"] || `${commit["author"]["name"].replace(/[“]+/g, '')} <${commit["author"]["email"].replace(/[“]+/g, '')}>`;
-          info["authorDate"] = info["authorDate"] || commit["authoredOn"];
-          info["committer"] = info["committer"] || `${commit["committer"]["name"].replace(/[“]+/g, '')} <${commit["committer"]["email"].replace(/[“]+/g, '')}>`;
-          info["committerDate"] = info["committerDate"] || commit["committedOn"]
-          info["commitMessage"] = info["commitMessage"] || commit["subject"];
+          if(err) {
+            exports.debug(`Exception in populating Git Metadata with error : ${err}`, true, err);
+            return resolve({});
+          }
+          try {
+            info["author"] = info["author"] || `${commit["author"]["name"].replace(/[“]+/g, '')} <${commit["author"]["email"].replace(/[“]+/g, '')}>`;
+            info["authorDate"] = info["authorDate"] || commit["authoredOn"];
+            info["committer"] = info["committer"] || `${commit["committer"]["name"].replace(/[“]+/g, '')} <${commit["committer"]["email"].replace(/[“]+/g, '')}>`;
+            info["committerDate"] = info["committerDate"] || commit["committedOn"];
+            info["commitMessage"] = info["commitMessage"] || commit["subject"];
 
-          const { remote } = await pGitconfig(info.commonGitDir);
-          const remotes = Object.keys(remote).map(remoteName =>  ({name: remoteName, url: remote[remoteName]['url']}));
-          resolve({
-            "name": "git",
-            "sha": info["sha"],
-            "short_sha": info["abbreviatedSha"],
-            "branch": info["branch"],
-            "tag": info["tag"],
-            "committer": info["committer"],
-            "committer_date": info["committerDate"],
-            "author": info["author"],
-            "author_date": info["authorDate"],
-            "commit_message": info["commitMessage"],
-            "root": info["root"],
-            "common_git_dir": info["commonGitDir"],
-            "worktree_git_dir": info["worktreeGitDir"],
-            "last_tag": info["lastTag"],
-            "commits_since_last_tag": info["commitsSinceLastTag"],
-            "remotes": remotes
-          });
+            const { remote } = await pGitconfig(info.commonGitDir);
+            const remotes = Object.keys(remote).map(remoteName =>  ({name: remoteName, url: remote[remoteName]['url']}));
+            resolve({
+              "name": "git",
+              "sha": info["sha"],
+              "short_sha": info["abbreviatedSha"],
+              "branch": info["branch"],
+              "tag": info["tag"],
+              "committer": info["committer"],
+              "committer_date": info["committerDate"],
+              "author": info["author"],
+              "author_date": info["authorDate"],
+              "commit_message": info["commitMessage"],
+              "root": info["root"],
+              "common_git_dir": info["commonGitDir"],
+              "worktree_git_dir": info["worktreeGitDir"],
+              "last_tag": info["lastTag"],
+              "commits_since_last_tag": info["commitsSinceLastTag"],
+              "remotes": remotes
+            });
+          } catch(e) {
+            exports.debug(`Exception in populating Git Metadata with error : ${e}`, true, e);
+            return resolve({});
+          }
         }, {dst: exports.findGitConfig(process.cwd())});
       } else {
         const { remote } = await pGitconfig(info.commonGitDir);
@@ -475,7 +479,6 @@ const getBuildDetails = (bsConfig) => {
 const setBrowserstackCypressCliDependency = (bsConfig) => {
   const runSettings = bsConfig.run_settings;
   if (runSettings.npm_dependencies !== undefined && 
-    Object.keys(runSettings.npm_dependencies).length !== 0 &&
     typeof runSettings.npm_dependencies === 'object') {
     if (!("browserstack-cypress-cli" in runSettings.npm_dependencies)) {
       logger.warn("Missing browserstack-cypress-cli not found in npm_dependencies");        
@@ -588,7 +591,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
       exports.debug('Build creation successfull!');
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;
       setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
-      setEventListeners();
+      // setEventListeners();
       if(this.isBrowserstackInfra()) setBrowserstackCypressCliDependency(user_config);
     } catch(error) {
       if(!error.errorType) {
@@ -1003,7 +1006,7 @@ exports.runCypressTestsLocally = (bsConfig, args, rawArgs) => {
     const cypressProcess = spawn(
       'npx',
       ['cypress', 'run', ...getReRunSpecs(rawArgs.slice(1)), ...getLocalSessionReporter()],
-      { stdio: 'inherit', cwd: process.cwd(), env: process.env }
+      { stdio: 'inherit', cwd: process.cwd(), env: process.env, shell: true }
     );
     cypressProcess.on('close', async (code) => {
       logger.info(`Cypress process exited with code ${code}`);
