@@ -2,15 +2,16 @@
 const path = require("node:path");
 
 const browserstackAccessibility = (on, config) => {
+  let browser_validation = true;
   on('before:browser:launch', (browser = {}, launchOptions) => {
     try {
-      config.env.ACCESSIBILITY_EXTENSION_PATH = "process.env.ACCESSIBILITY_EXTENSION_PATH";
+      console.log(`ACCESSIBILITY_EXTENSION_PATH :: ${process.env.ACCESSIBILITY_EXTENSION_PATH}`)
 
-      if (process.env.ACCESSIBILITY_EXTENSION_PATH !== undefined) {
-
+      if (process.env.ACCESSIBILITY_EXTENSION_PATH === undefined) {
+        browser_validation = false
+        return
       }
 
-      let browser_validation = true;
       // add accessibility attribute validation !!
       // add OS validation !!
       if (browser.name !== 'chrome') {
@@ -28,21 +29,22 @@ const browserstackAccessibility = (on, config) => {
 
       if (browser_validation) {
         console.log(` inside before browser launch -> process.env.ACCESSIBILITY_EXTENSION_PATH - ${process.env.ACCESSIBILITY_EXTENSION_PATH}`)
+        const ally_path = path.dirname(process.env.ACCESSIBILITY_EXTENSION_PATH)
+        console.log(`FROM NODE ally_path : ${ally_path}`)
         launchOptions.args.push('--auto-open-devtools-for-tabs');
-        // const ally_path = path.dirname(process.env.ACCESSIBILITY_EXTENSION_PATH)
-        // console.log(`FROM NODE ally_path : ${ally_path}`)
-        // launchOptions.extensions.push(ally_path);
-
-        launchOptions.extensions.push("/Users/riyadoshi1/cypress-example-kitchensink/0.0.8.0-debug")
-        // console.log(launchOptions.args)
+        launchOptions.extensions.push(ally_path);
         return launchOptions
       }
-
     } catch (e){
       console.log(`catch error : ${e}`)
     }
     
   })
+  config.env.ACCESSIBILITY_EXTENSION_PATH = process.env.ACCESSIBILITY_EXTENSION_PATH
+  config.env.OS_VERSION = process.env.OS_VERSION
+  config.env.IS_ACCESSIBILITY_EXTENSION_LOADED = browser_validation.toString()
+  config.env.ACCESSIBILITY_VAL_2 = "1234567"
+  return config;
 }
 
 module.exports = browserstackAccessibility;
