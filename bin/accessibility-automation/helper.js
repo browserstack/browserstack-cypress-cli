@@ -222,7 +222,6 @@ exports.checkAccessibilityPlatform = (user_config) => {
 }
 
 exports.setAccessibilityCypressCapabilities = async (user_config, accessibilityResponse) => {
-  logger.info("setAccessibilityCypressCapabilities start");
   if (user_config.run_settings.accessibilityOptions) {
 
   } else {
@@ -230,19 +229,15 @@ exports.setAccessibilityCypressCapabilities = async (user_config, accessibilityR
   }
   user_config.run_settings.accessibilityOptions.authToken = accessibilityResponse.data.accessibilityToken;
   user_config.run_settings.accessibilityOptions.scannerVersion = accessibilityResponse.data.scannerVersion;
-  logger.info("setAccessibilityCypressCapabilities user_config", user_config);
 }
 
 exports.createAccessibilityTestRun = async (user_config, framework) => {
 
-  // const userName = user_config["auth"]["username"];
-  // const accessKey = user_config["auth"]["access_key"];
+  const userName = user_config["auth"]["username"];
+  const accessKey = user_config["auth"]["access_key"];
 
-  const userName = "riyadoshi_fRgbzy"
-  const accessKey = "59VRD99yQpGRxVYomXNk"
-  // logger.info("user_config in createAccessibilityTestRun", user_config)
   try {
-    let settings = user_config.accessibilityOptions; // add accessibilityOptions here
+    let settings = user_config.run_settings.accessibilityOptions;
 
     const {
       buildName,
@@ -272,7 +267,6 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
       },
       'browserstackAutomation': true // fix!!
     };
-    // logger.info("data in createAccessibilityTestRun", data);
 
     const config = {
       auth: {
@@ -293,7 +287,7 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
     process.env.BS_A11Y_TEST_RUN_ID = response.data.data.id;
   
     this.setAccessibilityCypressCapabilities(user_config, response.data);
-    logger.info("setAccessibilityCypressCapabilities", user_config);
+    setAccessibilityEventListeners();
 
   } catch (error) {
     if (error.response) {
@@ -334,7 +328,6 @@ const nodeRequest = (type, url, data, config) => {
       body: data,
       json: config.headers['Content-Type'] === 'application/json',
     }};
-    // logger.info("options in nodeRequest", options);
 
     request(options, function callback(error, response, body) {
       if(error) {
@@ -382,4 +375,40 @@ const getBuildDetails = (bsConfig) => {
     buildDescription,
     buildTags
   };
+}
+
+const getAccessibilityCypressCommandEventListener = () => {
+  return (
+    `require('browserstack-cypress-cli/bin/accessibility-automation/cypress');`
+  );
+}
+
+const setAccessibilityEventListeners = () => {
+  logger.info("setAccessibilityEventListeners")
+  try {
+    const cypressCommandEventListener = getAccessibilityCypressCommandEventListener();
+    glob(process.cwd() + '/cypress/support/*.js', {}, (err, files) => {
+      if(err) return logger.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
+      files.forEach(file => {
+        try {
+          if(!file.includes('commands.js')) {
+            const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
+            
+            if(!defaultFileContent.includes(cypressCommandEventListener)) {
+              let newFileContent =  defaultFileContent + 
+                                  '\n' +
+                                  cypressCommandEventListener +
+                                  '\n'
+              fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
+              supportFileContentMap[file] = defaultFileContent;
+            }
+          }
+        } catch(e) {
+          logger.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
+        }
+      });
+    });
+  } catch(e) {
+    logger.debug(`Unable to parse support files to set event listeners with error ${e}`, true, e);
+  }
 }

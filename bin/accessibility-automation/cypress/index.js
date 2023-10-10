@@ -1,309 +1,106 @@
 /* Event listeners + custom commands for Cypress */
 
-/* Used to detect Gherkin steps */
-Cypress.on('log:added', (log) => {
-  return () => {
-    return cy.now('task', 'test_observability_step', {
-              log
-            }, {log: false})
-  }
-});
-
-Cypress.on('test:before:run', (attributes, runnable) => {
+Cypress.on('test:before:run', () => {
 
   console.log("env ACCESSIBILITY_EXTENSION_PATH ", process.env.ACCESSIBILITY_EXTENSION_PATH)
-  // window.eval(`console.log('test:before:run!!!!!!!!! ${process.env.ACCESSIBILITY_EXTENSION_PATH}')`);
-  // window.eval("console.log(`test:before:run!!!!!!!!!, ${JSON.stringify(attributes)}`)");
-  console.log(`test:before:run!!!!!!!!!, JSON.stringify(attributes)}`, JSON.stringify(attributes))
+  console.log("Cypress.config()")
+  console.log(Cypress.config())
+  console.log("cypress.env.ACCESSIBILITY_EXTENSION_PATH")
+  console.log(Cypress.env())
 
-  window.eval("console.log('test:before:run!!!!!!!!!')");
-  window.eval("console.log('test:before:run!!!!!!!!!')");
-  window.eval("console.log('test:before:run!!!!!!!!!')");
-  window.eval("console.log('test:before:run!!!!!!!!!')");
-  const dataForExtension = {
-    "saveResults": true,
-    "testDetails": {
-      "name": 'BStackDemo',
-      "testRunId": '5058',
-      "filePath": 'cypress-test-file-path',
-      "scopeList": [
-        'path',
-        'name'
-      ]
-    },
-    "platform": {
-      "os_name": 'OS X',
-      "os_version": 'Big Sur',
-      "browser_name": 'chrome',
-      "browser_version": '117.0.5938.62'
-    }
-  };
-
-  // window.eval(`
-  // const e = new CustomEvent('A11Y_TEST_END', {detail: ${dataForExtension}});
-  //  window.parent.dispatchEvent(e);
-  //  console.log('test:before:run A11Y END !!!!!!')`);
-
-  // window.eval(`
-  //     const e = new CustomEvent('A11Y_TEST_END', {detail: {
-  //       "saveResults": true,
-  //       "testDetails": {
-  //         "name": 'BStackDemo',
-  //         "testRunId": '5164',
-  //         "filePath": 'cypress-test-file-path',
-  //         "scopeList": [
-  //           'path',
-  //           'name'
-  //         ]
-  //       },
-  //       "platform": {
-  //         "os_name": 'OS X',
-  //         "os_version": 'Big Sur',
-  //         "browser_name": 'chrome',
-  //         "browser_version": '117.0.5938.62'
-  //       }
-  //     }});
-  //      window.parent.dispatchEvent(e);
-  //      console.log('test:before:run A11Y END !!!!!!')`);
-
-
-  // window.eval("console.log('test:before:run!!!!!!!!!')");
-  // window.eval(`console.log('test:before:run!!!!!!!!!', ${attributes})`);
-
-
+  // if (process.env.ACCESSIBILITY_EXTENSION_PATH !== undefined) {
+    let rs = new Promise((resolve, reject) => {
+      window.parent.addEventListener('A11Y_TAP_STARTED', () => {
+        console.log("A11Y_TAP_STARTED !!!! resolving")
+        resolve("A11Y_TAP_STARTED");
+        console.log("A11Y_TAP_STARTED !!!! after resolve")
+      });
+      const e = new CustomEvent('A11Y_FORCE_START');
+      window.parent.dispatchEvent(e);
+    })
+    console.log("rs")
+    console.log(rs)
+    console.log("rs 1")
+  // }
 })
-// Cypress.on('test:before:run', (command) => {
-
-//   // console.log("command", command)
-//   // console.log("process variables BS_A11Y_JWT", process.env.ACCESSIBILITY);
-//   // window.eval(`console.log("command", ${command})`);
-//   // window.eval(`console.log("BS_A11Y_JWT", ${process.env.BS_A11Y_JWT})`);
-//   window.eval("console.log('test:before:run!!!!!!!!!')")
-
-//   window.eval("window.name='A11Y_TEST_BEFORE_RUN_CHECK'")
-//   // cy.now('task', 'a11y_command', {
-//   //   type: 'a11y'
-//   // });
-
-//   // cy.log("testing!!!!!!!")
-//   // cy.get('body').type('{command}', {release: false});
-//   // cy.get('body').type('{alt}', {release: false});
-//   // cy.get('body').type('J');
-//   // cy.get('body').type('{alt}{command}');
-
-// });
-
-
 
 Cypress.on('test:after:run', (attributes, runnable) => {
-  window.eval("console.log('test:after:run!!!!!!!!!')");
-  window.eval("console.log('test:after:run!!!!!!!!!')");
+  console.log("test:after:run !!!!!!!")
+  console.log("test:after:run !!!!!!!")
+  console.log("test:after:run !!!!!!!")
+  console.log("test:after:run !!!!!!!")
+  console.log("test:after:run !!!!!!!")
+  // if (process.env.ACCESSIBILITY_EXTENSION_PATH !== undefined) {
 
-  const dataForExtension = {
-    "saveResults": true,
-    "testDetails": {
-      "name": 'BStackDemo',
-      "testRunId": '5164',
-      "filePath": 'cypress-test-file-path',
-      "scopeList": [
-        'path',
-        'name'
-      ]
-    },
-    "platform": {
-      "os_name": 'OS X',
-      "os_version": 'Big Sur',
-      "browser_name": 'chrome',
-      "browser_version": '117.0.5938.62'
-    }
-  };
-  // window.eval(` console.log('A11Y_TEST_END in test:after:run !!!!!!!!!')
-  // const e = new CustomEvent('A11Y_TEST_END', {detail: ${JSON.stringify(dataForExtension)}}); window.parent.dispatchEvent(e);`);
-
-  window.eval(`
-
-  const e = new CustomEvent('A11Y_TEST_END', {detail: ${dataForExtension}});
-   window.parent.dispatchEvent(e);`);
-
-    // window.eval(`
-    //   const e = new CustomEvent('A11Y_TEST_END', {detail: {
-    //     "saveResults": true,
-    //     "testDetails": {
-    //       "name": 'BStackDemo',
-    //       "testRunId": '5164',
-    //       "filePath": 'cypress-test-file-path',
-    //       "scopeList": [
-    //         'path',
-    //         'name'
-    //       ]
-    //     },
-    //     "platform": {
-    //       "os_name": 'OS X',
-    //       "os_version": 'Big Sur',
-    //       "browser_name": 'chrome',
-    //       "browser_version": '117.0.5938.62'
-    //     }
-    //   }}); window.dispatchEvent(e);`);
-
-  window.eval("console.log('test:after:run!!!!!!!!!')");
-  window.eval("console.log('test:after:run!!!!!!!!!')");
-  window.eval("console.log('test:after:run!!!!!!!!!')");
-
-    // window.eval(`console.log('test:after:run!!!!!!!!!', ${attributes})`);
-
-
-  // window.eval(`const e = new CustomEvent('A11Y_TEST_END', {detail: ${dataForExtension}});
-  // window.dispatchEvent(e);`);
-  
-  // window.eval("1+1");window.eval("1+1");window.eval("1+1");window.eval("1+1");window.eval("1+1");window.eval("1+1");window.eval("1+1");window.eval("1+1");window.eval("1+1");window.eval("1+1");window.eval("1+1");window.eval("1+1");window.eval("1+1");
-
-});
-
-Cypress.on('command:start', (command) => {
-  if(!command || !command.attributes) return;
-  if(command.attributes.name == 'log' || (command.attributes.name == 'task' && (command.attributes.args.includes('test_observability_command') || command.attributes.args.includes('test_observability_log')))) {
-    return;
-  }
-  /* Send command details */
-  cy.now('task', 'test_observability_command', {
-    type: 'COMMAND_START',
-    command: {
-      attributes: {
-        id: command.attributes.id,
-        name: command.attributes.name,
-        args: command.attributes.args
+    let shouldScanTestForAccessibility = true;
+    // if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY_CONFIGURATION_YML) {
+    //   try {
+    //     const accessibilityConfig = JSON.parse(process.env.BROWSERSTACK_TEST_ACCESSIBILITY_CONFIGURATION_YML);
+    
+    //     const includeTags = Array.isArray(accessibilityConfig.includeTagsInTestingScope) ? accessibilityConfig.includeTagsInTestingScope : [];
+    //     const excludeTags = Array.isArray(accessibilityConfig.excludeTagsInTestingScope) ? accessibilityConfig.excludeTagsInTestingScope : [];
+    
+    //     const fullTestName = attributes.title;
+    //     const excluded = excludeTags.some((exclude) => fullTestName.includes(exclude));
+    //     const included = includeTags.length === 0 || includeTags.some((include) => fullTestName.includes(include));
+    //     shouldScanTestForAccessibility = !excluded && included;
+    //   } catch (error){
+    //     console.log("Error while validating test case for accessibility before scanning. Error : ", error);
+    //   }
+    // }
+    const dataForExtension = {
+      "saveResults": shouldScanTestForAccessibility,
+      "testDetails": {
+        "name": attributes.title,
+        "testRunId": '5058', // variable not consumed, shouldn't matter what we send
+        "filePath": attributes.invocationDetails.relativeFile,
+        "scopeList": [
+          attributes.invocationDetails.relativeFile,
+          attributes.title
+        ]
       },
-      state: 'pending'
-    }
-  }, {log: false}).then((res) => {
-  }).catch((err) => {
-  });
-
-  /* Send platform details */
-  cy.now('task', 'test_observability_platform_details', {
-    testTitle: Cypress.currentTest.title,
-    browser: Cypress.browser,
-    platform: Cypress.platform,
-    cypressVersion: Cypress.version
-  }, {log: false}).then((res) => {
-  }).catch((err) => {
-  });
-});
-
-Cypress.on('command:retry', (command) => {
-  if(!command || !command.attributes) return;
-  if(command.attributes.name == 'log' || (command.attributes.name == 'task' && (command.attributes.args.includes('test_observability_command') || command.attributes.args.includes('test_observability_log')))) {
-    return;
-  }
-  cy.now('task', 'test_observability_command', {
-    type: 'COMMAND_RETRY',
-    command: {
-      _log: command._log,
-      error: {
-        message: command && command.error ? command.error.message : null,
-        isDefaultAssertionErr: command && command.error ? command.error.isDefaultAssertionErr : null
+      "platform": {
+        "os_name": process.env.SESSION_OS,
+        "os_version": process.env.OS_VERSION,
+        "browser_name": process.env.BROWSER,
+        "browser_version": process.env.BROWSER_VERSION
       }
+    };
+    console.log("test:after:run !!!!!!! dataForExtension")
+    console.log(dataForExtension)
+    console.log("test:after:run !!!!!!! dataForExtension 2 ")
+    return new Promise((resolve, reject) => {
+      console.log("dataForExtension")
+      console.log(dataForExtension)
+
+      if (dataForExtension.saveResults) {
+        window.parent.addEventListener('A11Y_TAP_TRANSPORTER', (event) => {
+          resolve(event.detail);
+        });
+      }
+      const e = new CustomEvent('A11Y_TEST_END', {detail: dataForExtension});
+      window.parent.dispatchEvent(e);
+      if (dataForExtension.saveResults !== true ) {
+        resolve();
+      }
+    });
+//  }
+
+});
+
+Cypress.Commands.add('getAccessibilityResultsSummary', () => {
+  return new Promise(function (resolve, reject) {
+    try{
+      const e = new CustomEvent('A11Y_TAP_GET_RESULTS_SUMMARY');
+      const fn = function (event) {
+        window.parent.removeEventListener('A11Y_RESULTS_SUMMARY_RESPONSE', fn);
+          resolve(event.detail.summary);
+      };
+      window.parent.addEventListener('A11Y_RESULTS_SUMMARY_RESPONSE', fn);
+      window.parent.dispatchEvent(e);
+    } catch (err) {
+      reject(err);
     }
-  }, {log: false}).then((res) => {
-  }).catch((err) => {
-  });
-});
-
-Cypress.on('command:end', (command) => {
-  if(!command || !command.attributes) return;
-  if(command.attributes.name == 'log' || (command.attributes.name == 'task' && (command.attributes.args.includes('test_observability_command') || command.attributes.args.includes('test_observability_log')))) {
-    return;
-  }
-  cy.now('task', 'test_observability_command', {
-    'type': 'COMMAND_END',
-    'command': {
-      'attributes': {
-        'id': command.attributes.id,
-        'name': command.attributes.name,
-        'args': command.attributes.args
-      },
-      'state': command.state
-    }
-  }, {log: false}).then((res) => {
-  }).catch((err) => {
-  });
-});
-
-Cypress.Commands.overwrite('log', (originalFn, ...args) => {
-  if(args.includes('test_observability_log') || args.includes('test_observability_command')) return;
-  const message = args.reduce((result, logItem) => {
-    if (typeof logItem === 'object') {
-      return [result, JSON.stringify(logItem)].join(' ');
-    }
-
-    return [result, logItem ? logItem.toString() : ''].join(' ');
-  }, '');
-  cy.now('task', 'test_observability_log', {
-    'level': 'info',
-    message,
-  }, {log: false}).then((res) => {
-  }).catch((err) => {
-  });
-  originalFn(...args);
-});
-
-Cypress.Commands.add('trace', (message, file) => {
-  cy.now('task', 'test_observability_log', {
-    level: 'trace',
-    message,
-    file,
-  }).then((res) => {
-  }).catch((err) => {
-  });
-});
-
-Cypress.Commands.add('logDebug', (message, file) => {
-  cy.now('task', 'test_observability_log', {
-    level: 'debug',
-    message,
-    file,
-  }).then((res) => {
-  }).catch((err) => {
-  });
-});
-
-Cypress.Commands.add('info', (message, file) => {
-  cy.now('task', 'test_observability_log', {
-    level: 'info',
-    message,
-    file,
-  }).then((res) => {
-  }).catch((err) => {
-  });
-});
-
-Cypress.Commands.add('warn', (message, file) => {
-  cy.now('task', 'test_observability_log', {
-    level: 'warn',
-    message,
-    file,
-  }).then((res) => {
-  }).catch((err) => {
-  });
-});
-
-Cypress.Commands.add('error', (message, file) => {
-  cy.now('task', 'test_observability_log', {
-    level: 'error',
-    message,
-    file,
-  }).then((res) => {
-  }).catch((err) => {
-  });
-});
-
-Cypress.Commands.add('fatal', (message, file) => {
-  cy.now('task', 'test_observability_log', {
-    level: 'fatal',
-    message,
-    file,
-  }).then((res) => {
-  }).catch((err) => {
   });
 });
 
