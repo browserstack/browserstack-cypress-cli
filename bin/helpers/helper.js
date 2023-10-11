@@ -15,6 +15,16 @@ const gitconfig = require('gitconfiglocal');
 const { spawn, execSync } = require('child_process');
 const glob = require('glob');
 const pGitconfig = promisify(gitconfig);
+const CrashReporter = require('../testObservability/crashReporter');
+
+exports.debug = (text, shouldReport = false, throwable = null) => {
+  if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
+    logger.info(`[ OBSERVABILITY ] ${text}`);
+  }
+  if(shouldReport) {
+    CrashReporter.getInstance().uploadCrashReport(text, throwable ? throwable && throwable.stack : null);
+  }
+}
 
 exports.getFileSeparatorData = () => {
   return /^win/.test(process.platform) ? "\\" : "/";
@@ -45,7 +55,7 @@ exports.getPackageVersion = (package_, bsConfig = null) => {
     logger.info(`Getting ${package_} package version from module path = ${packages[package_]}`);
     packageVersion = packages[package_];
   } catch(e) {
-    logger.debug(`Unable to find package ${package_} at module path with error ${e}`);
+    exports.debug(`Unable to find package ${package_} at module path with error ${e}`);
   }
 
   /* Read package version from npm_dependencies in browserstack.json file if present */
@@ -87,6 +97,7 @@ exports.getGitMetaData = () => {
       var info = getRepoInfo();
       if(!info.commonGitDir) {
         logger.debug(`Unable to find a Git directory`);
+        exports.debug(`Unable to find a Git directory`);
         resolve({});
       }
       if(!info.author && exports.findGitConfig(process.cwd())) {
@@ -94,6 +105,7 @@ exports.getGitMetaData = () => {
         gitLastCommit.getLastCommit(async (err, commit) => {
           if(err) {
             logger.debug(`Exception in populating Git Metadata with error : ${err}`, true, err);
+            exports.debug(`Exception in populating Git Metadata with error : ${err}`, true, err);
             return resolve({});
           }
           try {
@@ -124,6 +136,7 @@ exports.getGitMetaData = () => {
               "remotes": remotes
             });
           } catch(e) {
+            exports.debug(`Exception in populating Git Metadata with error : ${e}`, true, e);
             logger.debug(`Exception in populating Git Metadata with error : ${e}`, true, e);
             return resolve({});
           }
@@ -151,12 +164,12 @@ exports.getGitMetaData = () => {
         });
       }
     } catch(err) {
+      exports.debug(`Exception in populating Git metadata with error : ${err}`, true, err);
       logger.debug(`Exception in populating Git metadata with error : ${err}`, true, err);
       resolve({});
     }
   })
 }
-
 exports.getCiInfo = () => {
   var env = process.env;
   // Jenkins

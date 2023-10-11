@@ -7,9 +7,7 @@ Cypress.on('test:before:run', () => {
   if (extensionPath !== undefined) {
     new Promise((resolve, reject) => {
       window.parent.addEventListener('A11Y_TAP_STARTED', () => {
-        console.log("A11Y_TAP_STARTED !!!! resolving")
         resolve("A11Y_TAP_STARTED");
-        console.log("A11Y_TAP_STARTED !!!! after resolve")
       });
       const e = new CustomEvent('A11Y_FORCE_START');
       window.parent.dispatchEvent(e);

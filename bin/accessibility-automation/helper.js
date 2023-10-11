@@ -89,6 +89,8 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
   
     this.setAccessibilityCypressCapabilities(user_config, response.data);
     setAccessibilityEventListeners();
+          // setEventListeners();
+
 
   } catch (error) {
     if (error.response) {
@@ -115,7 +117,9 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
           }`
         );
       }
-      user_config.accessibility = false; // since create accessibility session failed
+      // since create accessibility session failed
+      process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'false';
+      user_config.run_settings.accessibility = false; 
     }
   }
 }
