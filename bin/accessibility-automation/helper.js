@@ -228,7 +228,10 @@ exports.setAccessibilityCypressCapabilities = async (user_config, accessibilityR
     user_config.run_settings.accessibilityOptions = {}
   }
   user_config.run_settings.accessibilityOptions.authToken = accessibilityResponse.data.accessibilityToken;
+  user_config.run_settings.accessibilityOptions.auth = accessibilityResponse.data.accessibilityToken;
   user_config.run_settings.accessibilityOptions.scannerVersion = accessibilityResponse.data.scannerVersion;
+  user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_AUTH=${accessibilityResponse.data.accessibilityToken}`)
+  user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_SCANNERVERSION=${accessibilityResponse.data.scannerVersion}`)
 }
 
 exports.createAccessibilityTestRun = async (user_config, framework) => {

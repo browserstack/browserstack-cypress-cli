@@ -559,6 +559,21 @@ exports.setSystemEnvs = (bsConfig) => {
   }
 
   try {
+    const accessibilityOptions = bsConfig.run_settings.accessibilityOptions
+    Object.keys(accessibilityOptions).forEach(key => {
+      const a11y_env_key = `ACCESSIBILITY_${key.toUpperCase()}`
+      if (key === "includeTagsInTestingScope")
+        envKeys[a11y_env_key] = accessibilityOptions[key].join(";")
+      else if (key === "includeIssueType")
+        envKeys[a11y_env_key] = JSON.stringify(accessibilityOptions.includeIssueType).replaceAll('"', "")
+      else
+        envKeys[a11y_env_key] = accessibilityOptions[key];
+    })
+  } catch (error) {
+   logger.error(`Error in adding accessibility configs ${error}`)
+  }
+
+  try {
     OBSERVABILITY_ENV_VARS.forEach(key => {
       envKeys[key] = process.env[key];
     });
@@ -577,7 +592,7 @@ exports.setSystemEnvs = (bsConfig) => {
     bsConfig.run_settings.system_env_vars = Object.keys(envKeys).map(key => (`${key}=${envKeys[key]}`));
   }
 
-  logger.debug(`Setting system env vars = ${bsConfig.run_settings.system_env_vars}`);
+  logger.info(`Setting system env vars = ${bsConfig.run_settings.system_env_vars}`);
 }
 
 exports.getKeysMatchingPattern = (obj, pattern) => {
