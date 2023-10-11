@@ -559,6 +559,23 @@ exports.setSystemEnvs = (bsConfig) => {
   }
 
   try {
+    const accessibilityOptions = bsConfig.run_settings?.accessibilityOptions;
+    if (accessibilityOptions) {
+      Object.keys(accessibilityOptions).forEach(key => {
+        const a11y_env_key = `ACCESSIBILITY_${key.toUpperCase()}`
+        if (["includeTagsInTestingScope", "excludeTagsInTestingScope"].includes(key))
+          envKeys[a11y_env_key] = accessibilityOptions[key].join(";")
+        else if (key === "includeIssueType")
+          envKeys[a11y_env_key] = JSON.stringify(accessibilityOptions.includeIssueType).replaceAll('"', "")
+        else
+          envKeys[a11y_env_key] = accessibilityOptions[key];
+      })
+    }
+  } catch (error) {
+   logger.error(`Error in adding accessibility configs ${error}`)
+  }
+
+  try {
     OBSERVABILITY_ENV_VARS.forEach(key => {
       envKeys[key] = process.env[key];
     });
