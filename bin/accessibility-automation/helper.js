@@ -34,10 +34,9 @@ exports.setAccessibilityCypressCapabilities = async (user_config, accessibilityR
 
 exports.createAccessibilityTestRun = async (user_config, framework) => {
 
-  const userName = user_config["auth"]["username"];
-  const accessKey = user_config["auth"]["access_key"];
-
   try {
+    const userName = user_config["auth"]["username"];
+    const accessKey = user_config["auth"]["access_key"];
     let settings = user_config.run_settings.accessibilityOptions;
 
     const {
@@ -83,14 +82,15 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
       'POST', 'test_runs', data, config
     );
     logger.info("response in createAccessibilityTestRun", response);
-    process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'true';
-    process.env.BS_A11Y_JWT = response.data.data.accessibilityToken;
-    process.env.BS_A11Y_TEST_RUN_ID = response.data.data.id;
-  
+    process.env.BS_A11Y_JWT = response?.data?.data?.accessibilityToken;
+    process.env.BS_A11Y_TEST_RUN_ID = response?.data?.data?.id;
+
+    if (process.env.BS_A11Y_JWT) {
+      process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'true';
+    }
+   
     this.setAccessibilityCypressCapabilities(user_config, response.data);
     setAccessibilityEventListeners();
-          // setEventListeners();
-
 
   } catch (error) {
     if (error.response) {
@@ -100,7 +100,7 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
         } ${error.response.statusText} ${JSON.stringify(error.response.data)}`
       );
     } else {
-      if(error.message == 'Invalid configuration passed.') {
+      if(error.message === 'Invalid configuration passed.') {
         logger.error(
           `Exception while creating test run for BrowserStack Accessibility Automation: ${
             error.message || error.stack
