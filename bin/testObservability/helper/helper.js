@@ -267,7 +267,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
         }
       };
 
-      const response = await helper.nodeRequest('POST','api/v1/builds',data,config, API_URL);
+      const response = await nodeRequest('POST','api/v1/builds',data,config, API_URL);
       exports.debug('Build creation successfull!');
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;
       setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
@@ -302,6 +302,56 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
     }
   }
 }
+
+const httpsScreenshotsKeepAliveAgent = new https.Agent({
+  keepAlive: true,
+  timeout: 60000,
+  maxSockets: 2,
+  maxTotalSockets: 2
+});
+
+exports.httpsKeepAliveAgent = new https.Agent({
+  keepAlive: true,
+  timeout: 60000,
+  maxSockets: 2,
+  maxTotalSockets: 2
+});
+
+const nodeRequest = (type, url, data, config, api_url) => {
+  return new Promise(async (resolve, reject) => {
+    const options = {...config,...{
+      method: type,
+      url: `${api_url}/${url}`,
+      body: data,
+      json: config.headers['Content-Type'] === 'application/json',
+      agent: this.httpsKeepAliveAgent
+    }};
+
+    if(url === exports.requestQueueHandler.screenshotEventUrl) {
+      options.agent = httpsScreenshotsKeepAliveAgent;
+    }
+
+    request(options, function callback(error, response, body) {
+      if(error) {
+        reject(error);
+      } else if(response.statusCode != 200) {
+        reject(response && response.body ? response.body : `Received response from BrowserStack Server with status : ${response.statusCode}`);
+      } else {
+        try {
+          if(typeof(body) !== 'object') body = JSON.parse(body);
+        } catch(e) {
+          if(!url.includes('/stop')) {
+            reject('Not a JSON response from BrowserStack Server');
+          }
+        }
+        resolve({
+          data: body
+        });
+      }
+    });
+  });
+}
+
 
 exports.getHookDetails = (hookTitle) => {
   if(!hookTitle || typeof(hookTitle) != 'string') return [null, null];
@@ -355,7 +405,7 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
   };
 
   try {
-    const response = await helper.nodeRequest('POST',eventUrl,data,config,API_URL);
+    const response = await nodeRequest('POST',eventUrl,data,config,API_URL);
     if(response.data.error) {
       throw({message: response.data.error});
     } else {
@@ -418,7 +468,7 @@ exports.uploadEventData = async (eventData, run=0) => {
       };
   
       try {
-        const response = await helper.nodeRequest('POST',event_api_url,data,config,API_URL);
+        const response = await nodeRequest('POST',event_api_url,data,config,API_URL);
         if(response.data.error) {
           throw({message: response.data.error});
         } else {
@@ -527,7 +577,7 @@ exports.stopBuildUpstream = async () => {
       };
   
       try {
-        const response = await helper.nodeRequest('PUT',`api/v1/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}/stop`,data,config,API_URL);
+        const response = await nodeRequest('PUT',`api/v1/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}/stop`,data,config,API_URL);
         if(response.data && response.data.error) {
           throw({message: response.data.error});
         } else {
