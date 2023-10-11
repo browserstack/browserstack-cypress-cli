@@ -562,7 +562,7 @@ exports.setSystemEnvs = (bsConfig) => {
     const accessibilityOptions = bsConfig.run_settings.accessibilityOptions
     Object.keys(accessibilityOptions).forEach(key => {
       const a11y_env_key = `ACCESSIBILITY_${key.toUpperCase()}`
-      if (key === "includeTagsInTestingScope")
+      if (["includeTagsInTestingScope", "excludeTagsInTestingScope"].includes(key))
         envKeys[a11y_env_key] = accessibilityOptions[key].join(";")
       else if (key === "includeIssueType")
         envKeys[a11y_env_key] = JSON.stringify(accessibilityOptions.includeIssueType).replaceAll('"', "")

@@ -30,21 +30,20 @@ Cypress.on('test:after:run', (attributes, runnable) => {
   if (isHeaded && extensionPath !== undefined) {
 
     let shouldScanTestForAccessibility = true;
-    // if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY_CONFIGURATION_YML) {
-    //   try {
-    //     const accessibilityConfig = JSON.parse(process.env.BROWSERSTACK_TEST_ACCESSIBILITY_CONFIGURATION_YML);
-    
-    //     const includeTags = Array.isArray(accessibilityConfig.includeTagsInTestingScope) ? accessibilityConfig.includeTagsInTestingScope : [];
-    //     const excludeTags = Array.isArray(accessibilityConfig.excludeTagsInTestingScope) ? accessibilityConfig.excludeTagsInTestingScope : [];
-    
-    //     const fullTestName = attributes.title;
-    //     const excluded = excludeTags.some((exclude) => fullTestName.includes(exclude));
-    //     const included = includeTags.length === 0 || includeTags.some((include) => fullTestName.includes(include));
-    //     shouldScanTestForAccessibility = !excluded && included;
-    //   } catch (error){
-    //     console.log("Error while validating test case for accessibility before scanning. Error : ", error);
-    //   }
-    // }
+    if (Cypress.env("INCLUDE_TAGS_FOR_ACCESSIBILITY") || Cypress.env("EXCLUDE_TAGS_FOR_ACCESSIBILITY")) {
+
+      try {
+        let includeTagArray = Cypress.env("INCLUDE_TAGS_FOR_ACCESSIBILITY").split(";")
+        let excludeTagArray = Cypress.env("EXCLUDE_TAGS_FOR_ACCESSIBILITY").split(";")
+
+        const fullTestName = attributes.title;
+        const excluded = excludeTagArray.some((exclude) => fullTestName.includes(exclude));
+        const included = includeTagArray.length === 0 || includeTags.some((include) => fullTestName.includes(include));
+        shouldScanTestForAccessibility = !excluded && included;
+      } catch (error){
+        console.log("Error while validating test case for accessibility before scanning. Error : ", error);
+      }
+    }
     const dataForExtension = {
       "saveResults": shouldScanTestForAccessibility,
       "testDetails": {

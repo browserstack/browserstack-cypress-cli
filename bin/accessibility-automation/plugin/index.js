@@ -43,7 +43,10 @@ const browserstackAccessibility = (on, config) => {
   config.env.ACCESSIBILITY_EXTENSION_PATH = process.env.ACCESSIBILITY_EXTENSION_PATH
   config.env.OS_VERSION = process.env.OS_VERSION
   config.env.IS_ACCESSIBILITY_EXTENSION_LOADED = browser_validation.toString()
-  config.env.ACCESSIBILITY_VAL_2 = "1234567"
+  
+  config.env.INCLUDE_TAGS_FOR_ACCESSIBILITY = process.env.ACCESSIBILITY_INCLUDETAGSINTESTINGSCOPE
+  config.env.EXCLUDE_TAGS_FOR_ACCESSIBILITY = process.env.ACCESSIBILITY_EXCLUDETAGSINTESTINGSCOPE
+
   return config;
 }
 
