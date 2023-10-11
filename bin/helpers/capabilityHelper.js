@@ -150,7 +150,7 @@ const getAccessibilityPlatforms = (bsConfig) => {
   const browserList = bsConfig.browsers;
   const accessibilityPlatforms = Array(browserList.length).fill(false);
   browserList.forEach((browserDetails, idx) => {
-    accessibilityPlatforms[idx] = (browserDetails?.accessibility === undefined) ? false : browserDetails?.accessibility
+    accessibilityPlatforms[idx] = (browserDetails.accessibility === undefined) ? false : browserDetails.accessibility
   });
   return accessibilityPlatforms;
 }

@@ -10,24 +10,25 @@ const helper = require('../helpers/helper');
 
 exports.checkAccessibilityPlatform = (user_config) => {
   let accessibility = false;
-  user_config.browsers.forEach(browser => {
-    if (browser.accessibility) {
-      accessibility = true;
-      return true;
-    }
-  })
+  try {
+    user_config.browsers.forEach(browser => {
+      if (browser.accessibility) {
+        accessibility = true;
+        return true;
+      }
+    })
+  } catch {}
+
   return accessibility;
 }
 
 exports.setAccessibilityCypressCapabilities = async (user_config, accessibilityResponse) => {
-  if (user_config.run_settings.accessibilityOptions) {
-
-  } else {
+  if (utils.isUndefined(user_config.run_settings.accessibilityOptions)) {
     user_config.run_settings.accessibilityOptions = {}
   }
-  user_config.run_settings.accessibilityOptions.authToken = accessibilityResponse.data.accessibilityToken;
-  user_config.run_settings.accessibilityOptions.auth = accessibilityResponse.data.accessibilityToken;
-  user_config.run_settings.accessibilityOptions.scannerVersion = accessibilityResponse.data.scannerVersion;
+  user_config.run_settings.accessibilityOptions["authToken"] = accessibilityResponse.data.accessibilityToken;
+  user_config.run_settings.accessibilityOptions["auth"] = accessibilityResponse.data.accessibilityToken;
+  user_config.run_settings.accessibilityOptions["scannerVersion"] = accessibilityResponse.data.scannerVersion;
   user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_AUTH=${accessibilityResponse.data.accessibilityToken}`)
   user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_SCANNERVERSION=${accessibilityResponse.data.scannerVersion}`)
 }
@@ -37,13 +38,13 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
   try {
     const userName = user_config["auth"]["username"];
     const accessKey = user_config["auth"]["access_key"];
-    let settings = user_config.run_settings.accessibilityOptions;
+    let settings = utils.isUndefined(user_config.run_settings.accessibilityOptions) ? {} : user_config.run_settings.accessibilityOptions
 
     const {
       buildName,
       projectName,
       buildDescription
-    } = getBuildDetails(user_config);
+    } = helper.getBuildDetails(user_config);
 
     const data = {
       'projectName': projectName,
@@ -65,7 +66,7 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
         version: os.version(),
         arch: os.arch()
       },
-      'browserstackAutomation': process.env.BROWSERSTACK_AUTOMATION
+      'browserstackAutomation': process.env.BROWSERSTACK_AUTOMATION === 'true'
     };
 
     const config = {
@@ -79,9 +80,8 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
     };
 
     const response = await nodeRequest(
-      'POST', 'test_runs', data, config
+      'POST', 'test_runs', data, config, API_URL
     );
-    logger.info("response in createAccessibilityTestRun", response);
     process.env.BS_A11Y_JWT = response?.data?.data?.accessibilityToken;
     process.env.BS_A11Y_TEST_RUN_ID = response?.data?.data?.id;
 
@@ -125,7 +125,6 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
 }
 
 const nodeRequest = (type, url, data, config) => {
-  logger.info("API URL IN noderequest", API_URL);
   return new Promise(async (resolve, reject) => {
     const options = {...config,...{
       method: type,
@@ -155,31 +154,6 @@ const nodeRequest = (type, url, data, config) => {
       }
     });
   });
-}
-
-const getBuildDetails = (bsConfig) => {
-  let buildName = '',
-      projectName = '',
-      buildDescription = '',
-      buildTags = [];
-  
-  /* Pick from environment variables */
-  buildName = process.env.BROWSERSTACK_BUILD_NAME || buildName;
-  projectName = process.env.BROWSERSTACK_PROJECT_NAME || projectName;
-  
-  /* Pick from run settings */
-  buildName = buildName || bsConfig["run_settings"]["build_name"];
-  projectName = projectName || bsConfig["run_settings"]["project_name"];
-  if(!utils.isUndefined(bsConfig["run_settings"]["build_tag"])) buildTags = [...buildTags, bsConfig["run_settings"]["build_tag"]];
-
-  buildName = buildName || path.basename(path.resolve(process.cwd()));
-
-  return {
-    buildName,
-    projectName,
-    buildDescription,
-    buildTags
-  };
 }
 
 const getAccessibilityCypressCommandEventListener = () => {

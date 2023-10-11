@@ -26,6 +26,9 @@ exports.debug = (text, shouldReport = false, throwable = null) => {
   }
 }
 
+const RequestQueueHandler = require('../testObservability/helper/requestQueueHandler');
+exports.requestQueueHandler = new RequestQueueHandler();
+
 exports.getFileSeparatorData = () => {
   return /^win/.test(process.platform) ? "\\" : "/";
 }
@@ -264,4 +267,78 @@ exports.getCiInfo = () => {
   }
   // if no matches, return null
   return null;
+}
+
+exports.getBuildDetails = (bsConfig) => {
+  let buildName = '',
+      projectName = '',
+      buildDescription = '',
+      buildTags = [];
+  
+  /* Pick from environment variables */
+  buildName = process.env.BROWSERSTACK_BUILD_NAME || buildName;
+  projectName = process.env.BROWSERSTACK_PROJECT_NAME || projectName;
+  
+  /* Pick from run settings */
+  buildName = buildName || bsConfig["run_settings"]["build_name"];
+  projectName = projectName || bsConfig["run_settings"]["project_name"];
+  if(!utils.isUndefined(bsConfig["run_settings"]["build_tag"])) buildTags = [...buildTags, bsConfig["run_settings"]["build_tag"]];
+
+  buildName = buildName || path.basename(path.resolve(process.cwd()));
+
+  return {
+    buildName,
+    projectName,
+    buildDescription,
+    buildTags
+  };
+}
+
+const httpsScreenshotsKeepAliveAgent = new https.Agent({
+  keepAlive: true,
+  timeout: 60000,
+  maxSockets: 2,
+  maxTotalSockets: 2
+});
+
+exports.httpsKeepAliveAgent = new https.Agent({
+  keepAlive: true,
+  timeout: 60000,
+  maxSockets: 2,
+  maxTotalSockets: 2
+});
+
+exports.nodeRequest = (type, url, data, config, api_url) => {
+  return new Promise(async (resolve, reject) => {
+    const options = {...config,...{
+      method: type,
+      url: `${api_url}/${url}`,
+      body: data,
+      json: config.headers['Content-Type'] === 'application/json',
+      agent: this.httpsKeepAliveAgent
+    }};
+
+    if(url === exports.requestQueueHandler.screenshotEventUrl) {
+      options.agent = httpsScreenshotsKeepAliveAgent;
+    }
+
+    request(options, function callback(error, response, body) {
+      if(error) {
+        reject(error);
+      } else if(response.statusCode != 200) {
+        reject(response && response.body ? response.body : `Received response from BrowserStack Server with status : ${response.statusCode}`);
+      } else {
+        try {
+          if(typeof(body) !== 'object') body = JSON.parse(body);
+        } catch(e) {
+          if(!url.includes('/stop')) {
+            reject('Not a JSON response from BrowserStack Server');
+          }
+        }
+        resolve({
+          data: body
+        });
+      }
+    });
+  });
 }

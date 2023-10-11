@@ -16,6 +16,7 @@ const pGitconfig = promisify(gitconfig);
 
 const logger = require("../../helpers/logger").winstonLogger;
 const utils = require('../../helpers/utils');
+const helper = require('../../helpers/helper');
 const CrashReporter = require('../crashReporter');
 
 // Getting global packages path
@@ -39,20 +40,6 @@ exports.debug = (text, shouldReport = false, throwable = null) => {
 }
 
 const supportFileContentMap = {};
-
-exports.httpsKeepAliveAgent = new https.Agent({
-  keepAlive: true,
-  timeout: 60000,
-  maxSockets: 2,
-  maxTotalSockets: 2
-});
-
-const httpsScreenshotsKeepAliveAgent = new https.Agent({
-  keepAlive: true,
-  timeout: 60000,
-  maxSockets: 2,
-  maxTotalSockets: 2
-});
 
 const supportFileCleanup = () => {
   Object.keys(supportFileContentMap).forEach(file => {
@@ -85,41 +72,6 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
     exports.debug(`Error while stopping build with error : ${err}`, true, err);
   }
   if(exitCode) process.exit(exitCode);
-}
-
-const nodeRequest = (type, url, data, config) => {
-  return new Promise(async (resolve, reject) => {
-    const options = {...config,...{
-      method: type,
-      url: `${API_URL}/${url}`,
-      body: data,
-      json: config.headers['Content-Type'] === 'application/json',
-      agent: this.httpsKeepAliveAgent
-    }};
-
-    if(url === exports.requestQueueHandler.screenshotEventUrl) {
-      options.agent = httpsScreenshotsKeepAliveAgent;
-    }
-
-    request(options, function callback(error, response, body) {
-      if(error) {
-        reject(error);
-      } else if(response.statusCode != 200) {
-        reject(response && response.body ? response.body : `Received response from BrowserStack Server with status : ${response.statusCode}`);
-      } else {
-        try {
-          if(typeof(body) !== 'object') body = JSON.parse(body);
-        } catch(e) {
-          if(!url.includes('/stop')) {
-            reject('Not a JSON response from BrowserStack Server');
-          }
-        }
-        resolve({
-          data: body
-        });
-      }
-    });
-  });
 }
 
 exports.failureData = (errors,tag) => {
@@ -204,40 +156,6 @@ const setEventListeners = () => {
   }
 }
 
-const getBuildDetails = (bsConfig) => {
-  const isTestObservabilityOptionsPresent = !utils.isUndefined(bsConfig["testObservabilityOptions"]);
-  let buildName = '',
-      projectName = '',
-      buildDescription = '',
-      buildTags = [];
-  
-  /* Pick from environment variables */
-  buildName = process.env.BROWSERSTACK_BUILD_NAME || buildName;
-  projectName = process.env.BROWSERSTACK_PROJECT_NAME || projectName;
-  
-  /* Pick from testObservabilityOptions */
-  if(isTestObservabilityOptionsPresent) {
-    buildName = buildName || bsConfig["testObservabilityOptions"]["buildName"];
-    projectName = projectName || bsConfig["testObservabilityOptions"]["projectName"];
-    if(!utils.isUndefined(bsConfig["testObservabilityOptions"]["buildTag"])) buildTags = [...buildTags, ...bsConfig["testObservabilityOptions"]["buildTag"]];
-    buildDescription = buildDescription || bsConfig["testObservabilityOptions"]["buildDescription"];
-  }
-
-  /* Pick from run settings */
-  buildName = buildName || bsConfig["run_settings"]["build_name"];
-  projectName = projectName || bsConfig["run_settings"]["project_name"];
-  if(!utils.isUndefined(bsConfig["run_settings"]["build_tag"])) buildTags = [...buildTags, bsConfig["run_settings"]["build_tag"]];
-
-  buildName = buildName || path.basename(path.resolve(process.cwd()));
-
-  return {
-    buildName,
-    projectName,
-    buildDescription,
-    buildTags
-  };
-}
-
 const setBrowserstackCypressCliDependency = (bsConfig) => {
   const runSettings = bsConfig.run_settings;
   if (runSettings.npm_dependencies !== undefined && 
@@ -313,7 +231,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
         projectName,
         buildDescription,
         buildTags
-      } = getBuildDetails(user_config);
+      } = helper.getBuildDetails(user_config);
       const data = {
         'format': 'json',
         'project_name': projectName,
@@ -349,7 +267,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
         }
       };
 
-      const response = await nodeRequest('POST','api/v1/builds',data,config);
+      const response = await helper.nodeRequest('POST','api/v1/builds',data,config, API_URL);
       exports.debug('Build creation successfull!');
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;
       setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
@@ -437,7 +355,7 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
   };
 
   try {
-    const response = await nodeRequest('POST',eventUrl,data,config);
+    const response = await helper.nodeRequest('POST',eventUrl,data,config,API_URL);
     if(response.data.error) {
       throw({message: response.data.error});
     } else {
@@ -500,7 +418,7 @@ exports.uploadEventData = async (eventData, run=0) => {
       };
   
       try {
-        const response = await nodeRequest('POST',event_api_url,data,config);
+        const response = await helper.nodeRequest('POST',event_api_url,data,config,API_URL);
         if(response.data.error) {
           throw({message: response.data.error});
         } else {
@@ -609,7 +527,7 @@ exports.stopBuildUpstream = async () => {
       };
   
       try {
-        const response = await nodeRequest('PUT',`api/v1/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}/stop`,data,config);
+        const response = await helper.nodeRequest('PUT',`api/v1/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}/stop`,data,config,API_URL);
         if(response.data && response.data.error) {
           throw({message: response.data.error});
         } else {
