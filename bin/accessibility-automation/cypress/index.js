@@ -36,6 +36,12 @@ Cypress.on('test:after:run', (attributes, runnable) => {
         console.log("Error while validating test case for accessibility before scanning. Error : ", error);
       }
     }
+    let os_data;
+    if (Cypress.env("OS")) {
+      os_data = Cypress.env("OS");
+    } else {
+      os_data = Cypress.platform === 'linux' ? 'mac' : "win"
+    }
     const dataForExtension = {
       "saveResults": shouldScanTestForAccessibility,
       "testDetails": {
@@ -48,7 +54,7 @@ Cypress.on('test:after:run', (attributes, runnable) => {
         ]
       },
       "platform": {
-        "os_name": Cypress.platform === "darwin" ? "mac" : "windows",
+        "os_name": os_data,
         "os_version": Cypress.env("OS_VERSION"),
         "browser_name": Cypress.browser.name,
         "browser_version": Cypress.browser.version
