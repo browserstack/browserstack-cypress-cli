@@ -592,7 +592,7 @@ exports.setSystemEnvs = (bsConfig) => {
     bsConfig.run_settings.system_env_vars = Object.keys(envKeys).map(key => (`${key}=${envKeys[key]}`));
   }
 
-  logger.info(`Setting system env vars = ${bsConfig.run_settings.system_env_vars}`);
+  logger.debug(`Setting system env vars = ${bsConfig.run_settings.system_env_vars}`);
 }
 
 exports.getKeysMatchingPattern = (obj, pattern) => {
