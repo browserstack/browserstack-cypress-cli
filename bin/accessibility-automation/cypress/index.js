@@ -1,12 +1,11 @@
 /* Event listeners + custom commands for Cypress */
 
 Cypress.on('test:before:run', () => {
-  console.log(`is loaded from before========>  ${Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED")}`)
   if (Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED") !== "true") return
   const extensionPath = Cypress.env("ACCESSIBILITY_EXTENSION_PATH")
 
   if (extensionPath !== undefined) {
-    let rs = new Promise((resolve, reject) => {
+    new Promise((resolve, reject) => {
       window.parent.addEventListener('A11Y_TAP_STARTED', () => {
         console.log("A11Y_TAP_STARTED !!!! resolving")
         resolve("A11Y_TAP_STARTED");
@@ -19,14 +18,9 @@ Cypress.on('test:before:run', () => {
 })
 
 Cypress.on('test:after:run', (attributes, runnable) => {
-  console.log(`is loaded from after ========>  ${Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED")}`)
   if (Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED") !== "true") return
-  console.log("test:after:run !!!!!!!")
   const extensionPath = Cypress.env("ACCESSIBILITY_EXTENSION_PATH")
   const isHeaded = Cypress.browser.isHeaded;
-  console.log(extensionPath)
-  console.log(isHeaded)
-  console.log("test:after:run !!!!!!!")
   if (isHeaded && extensionPath !== undefined) {
 
     let shouldScanTestForAccessibility = true;
@@ -78,9 +72,10 @@ Cypress.on('test:after:run', (attributes, runnable) => {
 });
 
 Cypress.Commands.add('getAccessibilityResultsSummary', () => {
-  console.log(`is loaded from get ========>  ${Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED")}`)
-  if (Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED") !== "true") return
-
+  if (Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED") !== "true") {
+    console.log(`Not a Accessibility Automation session, cannot retrieve Accessibility results.`);
+    return
+  }
   return new Promise(function (resolve, reject) {
     try{
       const e = new CustomEvent('A11Y_TAP_GET_RESULTS_SUMMARY');
@@ -91,9 +86,30 @@ Cypress.Commands.add('getAccessibilityResultsSummary', () => {
       window.parent.addEventListener('A11Y_RESULTS_SUMMARY_RESPONSE', fn);
       window.parent.dispatchEvent(e);
     } catch (err) {
+      console.log("No accessibility results summary was found.");
       reject(err);
     }
   });
 });
 
+Cypress.Commands.add('getAccessibilityResults', () => {
+  if (Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED") !== "true") {
+    console.log(`Not a Accessibility Automation session, cannot retrieve Accessibility results.`);
+    return 
+  }
+  return new Promise(function (resolve, reject) {
+    try{
+      const e = new CustomEvent('A11Y_TAP_GET_RESULTS');
+      const fn = function (event) {
+        window.parent.removeEventListener('A11Y_RESULTS_RESPONSE', fn);
+          resolve(event.detail.summary);
+      };
+      window.parent.addEventListener('A11Y_RESULTS_RESPONSE', fn);
+      window.parent.dispatchEvent(e);
+    } catch (err) {
+      console.log("No accessibility results were found.");
+      reject(err);
+    }
+  });
+});
 

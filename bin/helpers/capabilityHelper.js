@@ -7,7 +7,6 @@ const logger = require("./logger").winstonLogger,
   Utils = require("./utils");
 
 const caps = (bsConfig, zip) => {
-  // logger.info('bsConfig in caps', bsConfig);
   return new Promise(function (resolve, reject) {
     let user = undefined;
     let password = undefined;
@@ -122,7 +121,7 @@ const caps = (bsConfig, zip) => {
         logger.info(`Running your tests in headless mode. Use --headed arg to run in headful mode.`);
       }
 
-      if (bsConfig.run_settings?.accessibility) { //change condition to involve more scenarios
+      if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
         bsConfig.run_settings["accessibilityPlatforms"] = getAccessibilityPlatforms(bsConfig);
       }
 
@@ -143,9 +142,6 @@ const caps = (bsConfig, zip) => {
     if (obj.parallels) logger.info(`Parallels limit specified: ${obj.parallels}`);
 
     var data = JSON.stringify(obj);
-    logger.info('obj in caps', obj);
-
-    // logger.info('data in caps', data);
 
     resolve(data);
   })

@@ -63,8 +63,8 @@ module.exports = function run(args, rawArgs) {
       Set testObservability & browserstackAutomation flags
     */
     const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
-    const isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibilityPlatform(bsConfig);
-    logger.info('isAccessibilitySession', isAccessibilitySession);
+    const checkAccessibility = checkAccessibilityPlatform(bsConfig);
+    const isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibility;
 
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
@@ -139,9 +139,8 @@ module.exports = function run(args, rawArgs) {
 
       // add cypress dependency if missing
       utils.setCypressNpmDependency(bsConfig);
-      logger.info("isAccessibilitySession !!!!!!!!! ")
       
-      if (isAccessibilitySession) {
+      if (isAccessibilitySession && isBrowserstackInfra) {
         await createAccessibilityTestRun(bsConfig);
       }
     }
