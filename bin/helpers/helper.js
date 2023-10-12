@@ -26,9 +26,6 @@ exports.debug = (text, shouldReport = false, throwable = null) => {
   }
 }
 
-const RequestQueueHandler = require('../testObservability/helper/requestQueueHandler');
-exports.requestQueueHandler = new RequestQueueHandler();
-
 exports.getFileSeparatorData = () => {
   return /^win/.test(process.platform) ? "\\" : "/";
 }
@@ -89,7 +86,7 @@ exports.getPackageVersion = (package_, bsConfig = null) => {
 }
 
 exports.getAgentVersion = () => {
-  let _path = path.join(__dirname, '../../../package.json');
+  let _path = path.join(__dirname, '../../package.json');
   if(fs.existsSync(_path))
     return require(_path).version;
 }
@@ -292,53 +289,4 @@ exports.getBuildDetails = (bsConfig) => {
     buildDescription,
     buildTags
   };
-}
-
-const httpsScreenshotsKeepAliveAgent = new https.Agent({
-  keepAlive: true,
-  timeout: 60000,
-  maxSockets: 2,
-  maxTotalSockets: 2
-});
-
-exports.httpsKeepAliveAgent = new https.Agent({
-  keepAlive: true,
-  timeout: 60000,
-  maxSockets: 2,
-  maxTotalSockets: 2
-});
-
-exports.nodeRequest = (type, url, data, config, api_url) => {
-  return new Promise(async (resolve, reject) => {
-    const options = {...config,...{
-      method: type,
-      url: `${api_url}/${url}`,
-      body: data,
-      json: config.headers['Content-Type'] === 'application/json',
-      agent: this.httpsKeepAliveAgent
-    }};
-
-    if(url === exports.requestQueueHandler.screenshotEventUrl) {
-      options.agent = httpsScreenshotsKeepAliveAgent;
-    }
-
-    request(options, function callback(error, response, body) {
-      if(error) {
-        reject(error);
-      } else if(response.statusCode != 200) {
-        reject(response && response.body ? response.body : `Received response from BrowserStack Server with status : ${response.statusCode}`);
-      } else {
-        try {
-          if(typeof(body) !== 'object') body = JSON.parse(body);
-        } catch(e) {
-          if(!url.includes('/stop')) {
-            reject('Not a JSON response from BrowserStack Server');
-          }
-        }
-        resolve({
-          data: body
-        });
-      }
-    });
-  });
 }

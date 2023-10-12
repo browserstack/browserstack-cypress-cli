@@ -16,6 +16,8 @@ const pGitconfig = promisify(gitconfig);
 
 const logger = require("../../helpers/logger").winstonLogger;
 const utils = require('../../helpers/utils');
+const helper = require('../../helpers/helper');
+
 const CrashReporter = require('../crashReporter');
 
 // Getting global packages path
@@ -181,178 +183,6 @@ exports.findGitConfig = (filePath) => {
   }
 }
 
-const getGitMetaData = () => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      var info = getRepoInfo();
-      if(!info.commonGitDir) {
-        exports.debug(`Unable to find a Git directory`);
-        resolve({});
-      }
-      if(!info.author && exports.findGitConfig(process.cwd())) {
-        /* commit objects are packed */
-        gitLastCommit.getLastCommit(async (err, commit) => {
-          if(err) {
-            exports.debug(`Exception in populating Git Metadata with error : ${err}`, true, err);
-            return resolve({});
-          }
-          try {
-            info["author"] = info["author"] || `${commit["author"]["name"].replace(/[“]+/g, '')} <${commit["author"]["email"].replace(/[“]+/g, '')}>`;
-            info["authorDate"] = info["authorDate"] || commit["authoredOn"];
-            info["committer"] = info["committer"] || `${commit["committer"]["name"].replace(/[“]+/g, '')} <${commit["committer"]["email"].replace(/[“]+/g, '')}>`;
-            info["committerDate"] = info["committerDate"] || commit["committedOn"];
-            info["commitMessage"] = info["commitMessage"] || commit["subject"];
-
-            const { remote } = await pGitconfig(info.commonGitDir);
-            const remotes = Object.keys(remote).map(remoteName =>  ({name: remoteName, url: remote[remoteName]['url']}));
-            resolve({
-              "name": "git",
-              "sha": info["sha"],
-              "short_sha": info["abbreviatedSha"],
-              "branch": info["branch"],
-              "tag": info["tag"],
-              "committer": info["committer"],
-              "committer_date": info["committerDate"],
-              "author": info["author"],
-              "author_date": info["authorDate"],
-              "commit_message": info["commitMessage"],
-              "root": info["root"],
-              "common_git_dir": info["commonGitDir"],
-              "worktree_git_dir": info["worktreeGitDir"],
-              "last_tag": info["lastTag"],
-              "commits_since_last_tag": info["commitsSinceLastTag"],
-              "remotes": remotes
-            });
-          } catch(e) {
-            exports.debug(`Exception in populating Git Metadata with error : ${e}`, true, e);
-            return resolve({});
-          }
-        }, {dst: exports.findGitConfig(process.cwd())});
-      } else {
-        const { remote } = await pGitconfig(info.commonGitDir);
-        const remotes = Object.keys(remote).map(remoteName =>  ({name: remoteName, url: remote[remoteName]['url']}));
-        resolve({
-          "name": "git",
-          "sha": info["sha"],
-          "short_sha": info["abbreviatedSha"],
-          "branch": info["branch"],
-          "tag": info["tag"],
-          "committer": info["committer"],
-          "committer_date": info["committerDate"],
-          "author": info["author"],
-          "author_date": info["authorDate"],
-          "commit_message": info["commitMessage"],
-          "root": info["root"],
-          "common_git_dir": info["commonGitDir"],
-          "worktree_git_dir": info["worktreeGitDir"],
-          "last_tag": info["lastTag"],
-          "commits_since_last_tag": info["commitsSinceLastTag"],
-          "remotes": remotes
-        });
-      }
-    } catch(err) {
-      exports.debug(`Exception in populating Git metadata with error : ${err}`, true, err);
-      resolve({});
-    }
-  })
-}
-
-const getCiInfo = () => {
-  var env = process.env;
-  // Jenkins
-  if ((typeof env.JENKINS_URL === "string" && env.JENKINS_URL.length > 0) || (typeof env.JENKINS_HOME === "string" && env.JENKINS_HOME.length > 0)) {
-    return {
-      name: "Jenkins",
-      build_url: env.BUILD_URL,
-      job_name: env.JOB_NAME,
-      build_number: env.BUILD_NUMBER
-    }
-  }
-  // CircleCI
-  if (env.CI === "true" && env.CIRCLECI === "true") {
-    return {
-      name: "CircleCI",
-      build_url: env.CIRCLE_BUILD_URL,
-      job_name: env.CIRCLE_JOB,
-      build_number: env.CIRCLE_BUILD_NUM
-    }
-  }
-  // Travis CI
-  if (env.CI === "true" && env.TRAVIS === "true") {
-    return {
-      name: "Travis CI",
-      build_url: env.TRAVIS_BUILD_WEB_URL,
-      job_name: env.TRAVIS_JOB_NAME,
-      build_number: env.TRAVIS_BUILD_NUMBER
-    }
-  }
-  // Codeship
-  if (env.CI === "true" && env.CI_NAME === "codeship") {
-    return {
-      name: "Codeship",
-      build_url: null,
-      job_name: null,
-      build_number: null
-    }
-  }
-  // Bitbucket
-  if (env.BITBUCKET_BRANCH && env.BITBUCKET_COMMIT) {
-    return {
-      name: "Bitbucket",
-      build_url: env.BITBUCKET_GIT_HTTP_ORIGIN,
-      job_name: null,
-      build_number: env.BITBUCKET_BUILD_NUMBER
-    }
-  }
-  // Drone
-  if (env.CI === "true" && env.DRONE === "true") {
-    return {
-      name: "Drone",
-      build_url: env.DRONE_BUILD_LINK,
-      job_name: null,
-      build_number: env.DRONE_BUILD_NUMBER
-    }
-  }
-  // Semaphore
-  if (env.CI === "true" && env.SEMAPHORE === "true") {
-    return {
-      name: "Semaphore",
-      build_url: env.SEMAPHORE_ORGANIZATION_URL,
-      job_name: env.SEMAPHORE_JOB_NAME,
-      build_number: env.SEMAPHORE_JOB_ID
-    }
-  }
-  // GitLab
-  if (env.CI === "true" && env.GITLAB_CI === "true") {
-    return {
-      name: "GitLab",
-      build_url: env.CI_JOB_URL,
-      job_name: env.CI_JOB_NAME,
-      build_number: env.CI_JOB_ID
-    }
-  }
-  // Buildkite
-  if (env.CI === "true" && env.BUILDKITE === "true") {
-    return {
-      name: "Buildkite",
-      build_url: env.BUILDKITE_BUILD_URL,
-      job_name: env.BUILDKITE_LABEL || env.BUILDKITE_PIPELINE_NAME,
-      build_number: env.BUILDKITE_BUILD_NUMBER
-    }
-  }
-  // Visual Studio Team Services
-  if (env.TF_BUILD === "True") {
-    return {
-      name: "Visual Studio Team Services",
-      build_url: `${env.SYSTEM_TEAMFOUNDATIONSERVERURI}${env.SYSTEM_TEAMPROJECTID}`,
-      job_name: env.SYSTEM_DEFINITIONID,
-      build_number: env.BUILD_BUILDID
-    }
-  }
-  // if no matches, return null
-  return null;
-}
-
 let packages = {};
 
 exports.getPackageVersion = (package_, bsConfig = null) => {
@@ -392,12 +222,6 @@ exports.getPackageVersion = (package_, bsConfig = null) => {
   }
 
   return packageVersion;
-}
-
-exports.getAgentVersion = () => {
-  let _path = path.join(__dirname, '../../../package.json');
-  if(fs.existsSync(_path))
-    return require(_path).version;
 }
 
 const setEnvironmentVariablesForRemoteReporter = (BS_TESTOPS_JWT, BS_TESTOPS_BUILD_HASHED_ID, BS_TESTOPS_ALLOW_SCREENSHOTS, OBSERVABILITY_LAUNCH_SDK_VERSION) => {
@@ -442,47 +266,13 @@ const setEventListeners = () => {
   }
 }
 
-const getBuildDetails = (bsConfig) => {
-  const isTestObservabilityOptionsPresent = !utils.isUndefined(bsConfig["testObservabilityOptions"]);
-  let buildName = '',
-      projectName = '',
-      buildDescription = '',
-      buildTags = [];
-  
-  /* Pick from environment variables */
-  buildName = process.env.BROWSERSTACK_BUILD_NAME || buildName;
-  projectName = process.env.BROWSERSTACK_PROJECT_NAME || projectName;
-  
-  /* Pick from testObservabilityOptions */
-  if(isTestObservabilityOptionsPresent) {
-    buildName = buildName || bsConfig["testObservabilityOptions"]["buildName"];
-    projectName = projectName || bsConfig["testObservabilityOptions"]["projectName"];
-    if(!utils.isUndefined(bsConfig["testObservabilityOptions"]["buildTag"])) buildTags = [...buildTags, ...bsConfig["testObservabilityOptions"]["buildTag"]];
-    buildDescription = buildDescription || bsConfig["testObservabilityOptions"]["buildDescription"];
-  }
-
-  /* Pick from run settings */
-  buildName = buildName || bsConfig["run_settings"]["build_name"];
-  projectName = projectName || bsConfig["run_settings"]["project_name"];
-  if(!utils.isUndefined(bsConfig["run_settings"]["build_tag"])) buildTags = [...buildTags, bsConfig["run_settings"]["build_tag"]];
-
-  buildName = buildName || path.basename(path.resolve(process.cwd()));
-
-  return {
-    buildName,
-    projectName,
-    buildDescription,
-    buildTags
-  };
-}
-
 const setBrowserstackCypressCliDependency = (bsConfig) => {
   const runSettings = bsConfig.run_settings;
   if (runSettings.npm_dependencies !== undefined && 
     typeof runSettings.npm_dependencies === 'object') {
     if (!("browserstack-cypress-cli" in runSettings.npm_dependencies)) {
       logger.warn("Missing browserstack-cypress-cli not found in npm_dependencies");        
-      runSettings.npm_dependencies['browserstack-cypress-cli'] = exports.getAgentVersion() || "latest";
+      runSettings.npm_dependencies['browserstack-cypress-cli'] = helper.getAgentVersion() || "latest";
       logger.warn(`Adding browserstack-cypress-cli version ${runSettings.npm_dependencies['browserstack-cypress-cli']} in npm_dependencies`);
     }
   }
@@ -551,7 +341,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
         projectName,
         buildDescription,
         buildTags
-      } = getBuildDetails(user_config);
+      } = helper.getBuildDetails(user_config);
       const data = {
         'format': 'json',
         'project_name': projectName,
@@ -566,14 +356,14 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
           version: os.version(),
           arch: os.arch()
         },
-        'ci_info': getCiInfo(),
+        'ci_info': helper.getCiInfo(),
         'build_run_identifier': process.env.BROWSERSTACK_BUILD_RUN_IDENTIFIER,
         'failed_tests_rerun': process.env.BROWSERSTACK_RERUN || false,
-        'version_control': await getGitMetaData(),
+        'version_control': await helper.getGitMetaData(),
         'observability_version': {
           frameworkName: "Cypress",
           frameworkVersion: exports.getPackageVersion('cypress', user_config),
-          sdkVersion: exports.getAgentVersion()
+          sdkVersion: helper.getAgentVersion()
         }
       };
       const config = {
