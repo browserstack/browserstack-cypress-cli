@@ -42,7 +42,7 @@ Cypress.on('test:after:run', (attributes, runnable) => {
           const excluded = excludeTagArray.some((exclude) => fullTestName.includes(exclude));
           const included = includeTagArray.length === 0 || includeTags.some((include) => fullTestName.includes(include));
           shouldScanTestForAccessibility = !excluded && included;
-        } catch (error){
+        } catch (error) {
           console.log("Error while validating test case for accessibility before scanning. Error : ", error);
         }
       }
@@ -52,14 +52,18 @@ Cypress.on('test:after:run', (attributes, runnable) => {
       } else {
         os_data = Cypress.platform === 'linux' ? 'mac' : "win"
       }
+      let filePath = '';
+      if (attributes.invocationDetails.relativeFile !== undefined) {
+        filePath = attributes.invocationDetails.relativeFile;
+      }
       const dataForExtension = {
         "saveResults": shouldScanTestForAccessibility,
         "testDetails": {
           "name": attributes.title,
           "testRunId": '5058', // variable not consumed, shouldn't matter what we send
-          "filePath": attributes.invocationDetails.relativeFile,
+          "filePath": filePath,
           "scopeList": [
-            attributes.invocationDetails.relativeFile,
+            filePath,
             attributes.title
           ]
         },

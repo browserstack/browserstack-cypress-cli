@@ -88,6 +88,7 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
     if (process.env.BS_A11Y_JWT) {
       process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'true';
     }
+    logger.debug(`BrowserStack Accessibility Automation Test Run ID: ${response.data.data.id}`);
    
     this.setAccessibilityCypressCapabilities(user_config, response.data);
     setAccessibilityEventListeners();
@@ -163,7 +164,6 @@ const getAccessibilityCypressCommandEventListener = () => {
 }
 
 const setAccessibilityEventListeners = () => {
-  logger.info("setAccessibilityEventListeners")
   try {
     const cypressCommandEventListener = getAccessibilityCypressCommandEventListener();
     glob(process.cwd() + '/cypress/support/*.js', {}, (err, files) => {
