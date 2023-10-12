@@ -1,3 +1,4 @@
+/* Helper methods used by Accessibility and Observability */
 
 const logger = require("../helpers/logger").winstonLogger;
 const utils = require('../helpers/utils');
@@ -6,7 +7,7 @@ const path = require('path');
 const http = require('http');
 const https = require('https');
 const request = require('request');
-var gitLastCommit = require('git-last-commit');
+const gitLastCommit = require('git-last-commit');
 const { v4: uuidv4 } = require('uuid');
 const os = require('os');
 const { promisify } = require('util');

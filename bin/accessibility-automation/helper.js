@@ -14,7 +14,6 @@ exports.checkAccessibilityPlatform = (user_config) => {
     user_config.browsers.forEach(browser => {
       if (browser.accessibility) {
         accessibility = true;
-        return true;
       }
     })
   } catch {}
@@ -82,9 +81,10 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
     const response = await nodeRequest(
       'POST', 'test_runs', data, config, API_URL
     );
-    process.env.BS_A11Y_JWT = response?.data?.data?.accessibilityToken;
-    process.env.BS_A11Y_TEST_RUN_ID = response?.data?.data?.id;
-
+    if(!utils.isUndefined(response.data)) {
+      process.env.BS_A11Y_JWT = response.data.data.accessibilityToken;
+      process.env.BS_A11Y_TEST_RUN_ID = response.data.data.id;
+    }
     if (process.env.BS_A11Y_JWT) {
       process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'true';
     }

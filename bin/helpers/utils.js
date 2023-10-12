@@ -559,7 +559,7 @@ exports.setSystemEnvs = (bsConfig) => {
   }
 
   try {
-    const accessibilityOptions = bsConfig.run_settings?.accessibilityOptions;
+    const accessibilityOptions = bsConfig.run_settings.accessibilityOptions;
     if (accessibilityOptions) {
       Object.keys(accessibilityOptions).forEach(key => {
         const a11y_env_key = `ACCESSIBILITY_${key.toUpperCase()}`

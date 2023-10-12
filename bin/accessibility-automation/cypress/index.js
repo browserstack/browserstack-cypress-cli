@@ -53,7 +53,7 @@ Cypress.on('test:after:run', (attributes, runnable) => {
         os_data = Cypress.platform === 'linux' ? 'mac' : "win"
       }
       let filePath = '';
-      if (attributes.invocationDetails.relativeFile !== undefined) {
+      if (attributes.invocationDetails !== undefined && attributes.invocationDetails.relativeFile !== undefined) {
         filePath = attributes.invocationDetails.relativeFile;
       }
       const dataForExtension = {

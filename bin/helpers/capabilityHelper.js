@@ -150,7 +150,7 @@ const getAccessibilityPlatforms = (bsConfig) => {
   const browserList = bsConfig.browsers;
   const accessibilityPlatforms = Array(browserList.length).fill(false);
   let rootLevelAccessibility = false;
-  if (bsConfig.run_settings.accessibility !== undefined) {
+  if (!Utils.isUndefined(bsConfig.run_settings.accessibility)) {
     rootLevelAccessibility = bsConfig.run_settings.accessibility.toString() === 'true'
   }
   browserList.forEach((browserDetails, idx) => {
