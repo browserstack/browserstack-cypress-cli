@@ -292,7 +292,7 @@ exports.getBuildDetails = (bsConfig) => {
   };
 }
 
-exports.setBrowserstackCypressCliDependency = () => {
+exports.setBrowserstackCypressCliDependency = (bsConfig) => {
   const runSettings = bsConfig.run_settings;
   if (runSettings.npm_dependencies !== undefined && 
     typeof runSettings.npm_dependencies === 'object') {
