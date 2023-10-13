@@ -264,18 +264,6 @@ const setEventListeners = () => {
   }
 }
 
-const setBrowserstackCypressCliDependency = (bsConfig) => {
-  const runSettings = bsConfig.run_settings;
-  if (runSettings.npm_dependencies !== undefined && 
-    typeof runSettings.npm_dependencies === 'object') {
-    if (!("browserstack-cypress-cli" in runSettings.npm_dependencies)) {
-      logger.warn("Missing browserstack-cypress-cli not found in npm_dependencies");        
-      runSettings.npm_dependencies['browserstack-cypress-cli'] = helper.getAgentVersion() || "latest";
-      logger.warn(`Adding browserstack-cypress-cli version ${runSettings.npm_dependencies['browserstack-cypress-cli']} in npm_dependencies`);
-    }
-  }
-}
-
 const getCypressConfigFileContent = (bsConfig, cypressConfigPath) => {
   try {
     const cypressConfigFile = require(path.resolve(bsConfig ? bsConfig.run_settings.cypress_config_file : cypressConfigPath));
@@ -380,7 +368,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;
       setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
       // setEventListeners();
-      if(this.isBrowserstackInfra()) setBrowserstackCypressCliDependency(user_config);
+      if(this.isBrowserstackInfra()) helper.setBrowserstackCypressCliDependency(user_config);
     } catch(error) {
       if(!error.errorType) {
         if (error.response) {
