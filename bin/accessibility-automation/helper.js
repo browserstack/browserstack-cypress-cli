@@ -92,6 +92,7 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
    
     this.setAccessibilityCypressCapabilities(user_config, response.data);
     setAccessibilityEventListeners();
+    helper.setBrowserstackCypressCliDependency(user_config);
 
   } catch (error) {
     if (error.response) {
