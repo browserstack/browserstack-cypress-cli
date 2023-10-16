@@ -33,7 +33,8 @@ const {
 
 const { 
   createAccessibilityTestRun,
-  checkAccessibilityPlatform
+  checkAccessibilityPlatform,
+  supportFileCleanup
 } = require('../accessibility-automation/helper');
 
 module.exports = function run(args, rawArgs) {
@@ -244,6 +245,9 @@ module.exports = function run(args, rawArgs) {
               markBlockEnd('zip.zipUpload');
               markBlockEnd('zip');
 
+              if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
+                supportFileCleanup();
+              }
               // Create build
               //setup Local Testing
               markBlockStart('localSetup');

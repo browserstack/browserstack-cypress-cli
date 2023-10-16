@@ -7,6 +7,8 @@ const request = require('request');
 const os = require('os');
 const glob = require('glob');
 const helper = require('../helpers/helper');
+const { CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS } = require('../helpers/constants');
+const supportFileContentMap = {}
 
 exports.checkAccessibilityPlatform = (user_config) => {
   let accessibility = false;
@@ -32,9 +34,20 @@ exports.setAccessibilityCypressCapabilities = async (user_config, accessibilityR
   user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_SCANNERVERSION=${accessibilityResponse.data.scannerVersion}`)
 }
 
+exports.isAccessibilitySupportedCypressVersion = (cypress_config_filename) => {
+  const extension = cypress_config_filename.split('.').pop();
+  return CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS.includes(extension);
+}
+
 exports.createAccessibilityTestRun = async (user_config, framework) => {
 
   try {
+    if (!this.isAccessibilitySupportedCypressVersion(user_config.run_settings.cypress_config_file) ){
+      logger.warn(`Accessibility Testing is not supported on Cypress version 9 and below.`)
+      process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'false';
+      user_config.run_settings.accessibility = false;
+      return;
+    }
     const userName = user_config["auth"]["username"];
     const accessKey = user_config["auth"]["access_key"];
     let settings = utils.isUndefined(user_config.run_settings.accessibilityOptions) ? {} : user_config.run_settings.accessibilityOptions
@@ -155,6 +168,17 @@ const nodeRequest = (type, url, data, config) => {
         });
       }
     });
+  });
+}
+
+exports.supportFileCleanup = () => {
+  logger.debug("Cleaning up support file changes added for accessibility. ")
+  Object.keys(supportFileContentMap).forEach(file => {
+    try {
+      fs.writeFileSync(file, supportFileContentMap[file], {encoding: 'utf-8'});
+    } catch(e) {
+      logger.debug(`Error while replacing file content for ${file} with it's original content with error : ${e}`, true, e);
+    }
   });
 }
 
