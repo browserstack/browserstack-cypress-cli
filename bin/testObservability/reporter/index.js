@@ -185,21 +185,27 @@ class MyReporter {
   }
 
   registerListeners() {
-    startIPCServer(
-      (server) => {
-        server.on(IPC_EVENTS.CONFIG, this.cypressConfigListener.bind(this));
-        server.on(IPC_EVENTS.LOG, this.cypressLogListener.bind(this));
-        server.on(IPC_EVENTS.SCREENSHOT, this.cypressScreenshotListener.bind(this));
-        server.on(IPC_EVENTS.COMMAND, this.cypressCommandListener.bind(this));
-        server.on(IPC_EVENTS.CUCUMBER, this.cypressCucumberStepListener.bind(this));
-        server.on(IPC_EVENTS.PLATFORM_DETAILS, this.cypressPlatformDetailsListener.bind(this));
-      },
-      (server) => {
-        server.off(IPC_EVENTS.CONFIG, '*');
-        server.off(IPC_EVENTS.LOG, '*');
-        server.off(IPC_EVENTS.SCREENSHOT, '*');
-      },
-    );
+    process.on(IPC_EVENTS.CONFIG, this.cypressConfigListener.bind(this));
+    process.on(IPC_EVENTS.LOG, this.cypressLogListener.bind(this));
+    process.on(IPC_EVENTS.SCREENSHOT, this.cypressScreenshotListener.bind(this));
+    process.on(IPC_EVENTS.COMMAND, this.cypressCommandListener.bind(this));
+    process.on(IPC_EVENTS.CUCUMBER, this.cypressCucumberStepListener.bind(this));
+    process.on(IPC_EVENTS.PLATFORM_DETAILS, this.cypressPlatformDetailsListener.bind(this));
+    // startIPCServer(
+    //   (server) => {
+    //     server.on(IPC_EVENTS.CONFIG, this.cypressConfigListener.bind(this));
+    //     server.on(IPC_EVENTS.LOG, this.cypressLogListener.bind(this));
+    //     server.on(IPC_EVENTS.SCREENSHOT, this.cypressScreenshotListener.bind(this));
+    //     server.on(IPC_EVENTS.COMMAND, this.cypressCommandListener.bind(this));
+    //     server.on(IPC_EVENTS.CUCUMBER, this.cypressCucumberStepListener.bind(this));
+    //     server.on(IPC_EVENTS.PLATFORM_DETAILS, this.cypressPlatformDetailsListener.bind(this));
+    //   },
+    //   (server) => {
+    //     server.off(IPC_EVENTS.CONFIG, '*');
+    //     server.off(IPC_EVENTS.LOG, '*');
+    //     server.off(IPC_EVENTS.SCREENSHOT, '*');
+    //   },
+    // );
   }
 
   testStarted = async (test) => {

@@ -7,19 +7,23 @@ const browserstackTestObservabilityPlugin = (on, config, callbacks) => {
 
   on('task', {
     test_observability_log(log) {
-      ipc.of.browserstackTestObservability.emit(IPC_EVENTS.LOG, log);
+      process.emit(IPC_EVENTS.LOG, log);
+      // ipc.of.browserstackTestObservability.emit(IPC_EVENTS.LOG, log);
       return null;
     },
     test_observability_command(commandObj) {
-      ipc.of.browserstackTestObservability.emit(IPC_EVENTS.COMMAND, commandObj);
+      process.emit(IPC_EVENTS.COMMAND, commandObj);
+      // ipc.of.browserstackTestObservability.emit(IPC_EVENTS.COMMAND, commandObj);
       return null;
     },
     test_observability_platform_details(platformObj) {
-      ipc.of.browserstackTestObservability.emit(IPC_EVENTS.PLATFORM_DETAILS, platformObj);
+      process.emit(IPC_EVENTS.PLATFORM_DETAILS, platformObj);
+      // ipc.of.browserstackTestObservability.emit(IPC_EVENTS.PLATFORM_DETAILS, platformObj);
       return null;
     },
     test_observability_step(log) {
-      ipc.of.browserstackTestObservability.emit(IPC_EVENTS.CUCUMBER, log);
+      process.emit(IPC_EVENTS.CUCUMBER, log);
+      // ipc.of.browserstackTestObservability.emit(IPC_EVENTS.CUCUMBER, log);
       return null;
     }
   });
@@ -29,10 +33,14 @@ const browserstackTestObservabilityPlugin = (on, config, callbacks) => {
     if (callbacks && callbacks.screenshotLogFn && typeof callbacks.screenshotLogFn === 'function') {
       logMessage = callbacks.screenshotLogFn(screenshotInfo);
     }
-    ipc.of.browserstackTestObservability.emit(IPC_EVENTS.SCREENSHOT, {
+    process.emit(IPC_EVENTS.SCREENSHOT, {
       logMessage,
       screenshotInfo,
     });
+    // ipc.of.browserstackTestObservability.emit(IPC_EVENTS.SCREENSHOT, {
+    //   logMessage,
+    //   screenshotInfo,
+    // });
     return null;
   });
 };

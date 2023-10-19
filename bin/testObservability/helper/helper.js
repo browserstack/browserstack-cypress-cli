@@ -69,7 +69,6 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
   try {
     if(shouldStopSession) {
       supportFileCleanup();
-      await this.stopBuildUpstream();
     }
     try {
       if(process.env.BS_TESTOPS_BUILD_HASHED_ID 
@@ -824,52 +823,6 @@ exports.isBrowserstackInfra = () => {
 
 exports.shouldReRunObservabilityTests = () => {
   return (process.env.BROWSERSTACK_RERUN_TESTS && process.env.BROWSERSTACK_RERUN_TESTS !== "null") ? true : false
-}
-
-exports.stopBuildUpstream = async () => {
-  if (process.env.BS_TESTOPS_BUILD_COMPLETED === "true") {
-    if(process.env.BS_TESTOPS_JWT == "null" || process.env.BS_TESTOPS_BUILD_HASHED_ID == "null") {
-      exports.debug('EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : Missing authentication token');
-      return {
-        status: 'error',
-        message: 'Token/buildID is undefined, build creation might have failed'
-      };
-    } else {
-      const data = {
-        'stop_time': (new Date()).toISOString()
-      };
-      const config = {
-        headers: {
-          'Authorization': `Bearer ${process.env.BS_TESTOPS_JWT}`,
-          'Content-Type': 'application/json',
-          'X-BSTACK-TESTOPS': 'true'
-        }
-      };
-  
-      try {
-        const response = await nodeRequest('PUT',`api/v1/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}/stop`,data,config);
-        if(response.data && response.data.error) {
-          throw({message: response.data.error});
-        } else {
-          exports.debug(`stopBuildUpstream event successfull!`)
-          return {
-            status: 'success',
-            message: ''
-          };
-        }
-      } catch(error) {
-        if (error.response) {
-          exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
-        } else {
-          exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : ${error.message || error}`, true, error);
-        }
-        return {
-          status: 'error',
-          message: error.message || error.response ? `${error.response.status}:${error.response.statusText}` : error
-        };
-      }
-    }
-  }
 }
 
 exports.getHookSkippedTests = (suite) => {
