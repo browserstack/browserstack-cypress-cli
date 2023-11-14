@@ -1,4 +1,4 @@
-name: Unit tests check
+name: unit-tests-check
 
 on:
   # Scan changed files in PRs (diff-aware scanning):
