@@ -566,7 +566,7 @@ exports.setSystemEnvs = (bsConfig) => {
         if (["includeTagsInTestingScope", "excludeTagsInTestingScope"].includes(key))
           envKeys[a11y_env_key] = accessibilityOptions[key].join(";")
         else if (key === "includeIssueType")
-          envKeys[a11y_env_key] = JSON.stringify(accessibilityOptions.includeIssueType).replaceAll('"', "")
+          envKeys[a11y_env_key] = JSON.stringify(accessibilityOptions.includeIssueType).replace(/"/g, "");
         else
           envKeys[a11y_env_key] = accessibilityOptions[key];
       })
