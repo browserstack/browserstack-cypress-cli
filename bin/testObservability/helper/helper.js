@@ -791,12 +791,13 @@ const cleanupTestObservabilityFlags = (rawArgs) => {
 
   for (let i = 0;i < rawArgs.length;i++) {
     const arg = rawArgs[i];
-    const next = i + 1 < rawArgs.length ? rawArgs[i+1] : ''
     if (arg.startsWith('-')) {
       const argName = arg.length > 1 && arg[1] == '-' ? arg.slice(2) : arg.slice(1);
-      // If this argument belongs to cli, we omit it and its value
+      // If this flag belongs to cli, we omit it and its value
       if (cliArgs[argName] && !retain.includes(argName)) {
-        if (cliArgs[argName].type && cliArgs[argName].type !== 'boolean' && !next.startsWith('-')) {
+        const nextArg = i + 1 < rawArgs.length ? rawArgs[i+1] : ''
+        // if the flag is bound to have a value, we ignore it
+        if (cliArgs[argName].type && cliArgs[argName].type !== 'boolean' && !nextArg.startsWith('-')) {
           i++;
         }
         continue;
