@@ -718,6 +718,11 @@ exports.generateUploadParams = (bsConfig, filePath, md5data, fileDetails) => {
       "User-Agent": exports.getUserAgent(),
     }
   }
+
+  if (Constants.turboScaleObj.enabled) {
+    options.url = Constants.turboScaleObj.uploadUrl;
+  }
+
   return options
 }
 
@@ -965,6 +970,13 @@ exports.setLocalArgs = (bsConfig, args) => {
     local_args['proxyPort'] = bsConfig["connection_settings"]["proxyPort"];
   if (bsConfig["connection_settings"]["useCaCertificate"])
     local_args['useCaCertificate'] = bsConfig["connection_settings"]["useCaCertificate"];
+
+  if (Constants.turboScaleObj.enabled) {
+    local_args['forceLocal'] = true;
+    local_args['localIdentifier'] = 'ats-repeater';
+    local_args['custom-repeater'] = Constants.turboScaleObj.gridDetails.customRepeaters.join(',');
+  }
+
   local_args['daemon'] = true;
   local_args['enable-logging-for-api'] = true
   local_args['source'] = `cypress:${usageReporting.cli_version_and_path(bsConfig).version}`;

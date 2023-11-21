@@ -36,6 +36,7 @@ const {
   checkAccessibilityPlatform,
   supportFileCleanup
 } = require('../accessibility-automation/helper');
+const { isTurboScaleSession, getTurboScaleGridDetails } = require('../helpers/atsHelper');
 
 module.exports = function run(args, rawArgs) {
 
@@ -66,6 +67,8 @@ module.exports = function run(args, rawArgs) {
     const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
     const checkAccessibility = checkAccessibilityPlatform(bsConfig);
     const isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibility;
+    const turboScaleSession = isTurboScaleSession(bsConfig);
+    Constants.turboScaleObj.enabled = turboScaleSession;
 
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
@@ -143,6 +146,23 @@ module.exports = function run(args, rawArgs) {
       
       if (isAccessibilitySession && isBrowserstackInfra) {
         await createAccessibilityTestRun(bsConfig);
+      }
+
+      if (turboScaleSession) {
+        const gridDetails = await getTurboScaleGridDetails(bsConfig);
+        Constants.turboScaleObj.gridDetails = gridDetails;
+
+        if (gridDetails.isTrialGrid) {
+          bsConfig.connection_settings.local = true;
+          bsConfig.connection_settings.local_inferred = true;
+          bsConfig.connection_settings.local_mode = 'on-demand';
+        }
+
+        Constants.turboScaleObj.gridUrl = gridDetails.cypressUrl;
+        Constants.turboScaleObj.uploadUrl = gridDetails.cypressUrl + '/upload';
+        Constants.turboScaleObj.buildUrl = gridDetails.cypressUrl + '/build';
+
+        logger.debug(`Automate TurboScale Grid URL set to ${gridDetails.url}`);
       }
     }
 

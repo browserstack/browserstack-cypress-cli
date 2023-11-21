@@ -23,6 +23,10 @@ const createBuild = (bsConfig, zip) => {
         body: data
       }
 
+      if (Constants.turboScaleObj.enabled) {
+        options.url = Constants.turboScaleObj.buildUrl;
+      }
+
       request.post(options, function (err, resp, body) {
         if (err) {
           logger.error(utils.formatRequest(err, resp, body));
