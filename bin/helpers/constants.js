@@ -135,7 +135,7 @@ const validationMessages = {
   EMPTY_CYPRESS_CONFIG_FILE:
     "cypress_config_file is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/configuration-file to learn more.",
   VALIDATED: "browserstack.json file is validated",
-  NOT_VALID: "browerstack.json is not valid",
+  NOT_VALID: "browserstack.json is not valid",
   NOT_VALID_JSON: "browerstack.json is not a valid json",
   INVALID_EXTENSION: "Invalid files, please remove these files and try again.",
   INVALID_PARALLELS_CONFIGURATION:
