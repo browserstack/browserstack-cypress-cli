@@ -628,6 +628,8 @@ exports.isPositiveInteger = (str) => {
 
 exports.isTrueString = value => (!this.isUndefined(value) && value.toString().toLowerCase() === 'true');
 
+exports.isUndefinedOrFalse = value => ( this.isUndefined(value) || value.toString().toLowerCase() === 'false');
+
 exports.isFloat = (value) => Number(value) && Number(value) % 1 !== 0;
 
 exports.isInteger = (value) => Number.isInteger(value);
@@ -1077,7 +1079,8 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
   if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
     defaultSpecFolder = Constants.DEFAULT_CYPRESS_10_SPEC_PATH
     testFolderPath = defaultSpecFolder
-    if(!this.isUndefined(cypressConfig) && !this.isUndefined(cypressConfig.e2e)) {
+    // Read cypress config if enforce_settings is not present
+    if(this.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) && !this.isUndefined(cypressConfig) && !this.isUndefined(cypressConfig.e2e)) {
       if(!this.isUndefined(cypressConfig.e2e.specPattern)) {
         globCypressConfigSpecPatterns = Array.isArray(cypressConfig.e2e.specPattern) ?
           cypressConfig.e2e.specPattern : [cypressConfig.e2e.specPattern];
@@ -1285,6 +1288,24 @@ exports.setConfig = (bsConfig, args) => {
     logger.debug(`Config set to ${bsConfig["run_settings"]["config"]}`);
   }
 }
+
+// set configs if enforce_settings is passed
+exports.setEnforceSettingsConfig = (bsConfig) => {
+  let config_args = (!this.isUndefined(bsConfig) && !this.isUndefined(bsConfig.run_settings) && !this.isUndefined(bsConfig.run_settings.config)) ? bsConfig.run_settings.config : undefined;
+  if ( this.isUndefined(config_args) || !config_args.includes("video") ) {
+    let video_args = (this.isUndefined(bsConfig.run_settings.video_config) || this.isUndefined(bsConfig.run_settings.video_config.video) || !bsConfig.run_settings.video_config.video ) ? 'video=false' : 'video=true' ;
+    video_args += (this.isUndefined(bsConfig.run_settings.video_config) || this.isUndefined(bsConfig.run_settings.video_config.videoUploadOnPasses) || !bsConfig.run_settings.video_config.videoUploadOnPasses ) ? ',videoUploadOnPasses=false' : ',videoUploadOnPasses=true';
+    config_args = this.isUndefined(config_args) ? video_args : config_args + ',' + video_args;
+    logger.debug(`Setting video_args for enforce_settings to ${video_args}`);
+  }
+  if ( this.isUndefined(config_args) || !config_args.includes("baseUrl") ) {
+    let base_url_args = (!this.isUndefined(bsConfig) && !this.isUndefined(bsConfig.run_settings) && !this.isUndefined(bsConfig.run_settings.config)) ? "baseUrl='"+bsConfig.run_settings.baseUrl+"'" : "baseUrl=''";
+    config_args = this.isUndefined(config_args) ? base_url_args : config_args + ',' + base_url_args;
+    logger.debug(`Setting base_url_args for enforce_settings to ${base_url_args}`);
+  }
+  if ( !this.isUndefined(config_args) ) bsConfig["run_settings"]["config"] = config_args;
+  logger.debug(`Setting conifg_args for enforce_settings to ${config_args}`);
+}  
 
 // blindly send other passed configs with run_settings and handle at backend
 exports.setOtherConfigs = (bsConfig, args) => {
@@ -1499,11 +1520,14 @@ exports.fetchFolderSize = async (dir) => {
   }
 }
 
-exports.getVideoConfig = (cypressConfig) => {
+exports.getVideoConfig = (cypressConfig, bsConfig = {}) => {
   let conf = {
     video: true,
     videoUploadOnPasses: true
   }
+   // Reading from bsconfig first to give precedance and cypress config will be empty in case of enforce_settings
+  if (!this.isUndefined(bsConfig.run_settings.video)) conf.video = bsConfig.run_settings.video;
+  if (!this.isUndefined(bsConfig.run_settings.videoUploadOnPasses)) conf.videoUploadOnPasses = bsConfig.run_settings.videoUploadOnPasses;
   if (!this.isUndefined(cypressConfig.video)) conf.video = cypressConfig.video;
   if (!this.isUndefined(cypressConfig.videoUploadOnPasses)) conf.videoUploadOnPasses = cypressConfig.videoUploadOnPasses;
 

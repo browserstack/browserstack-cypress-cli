@@ -133,7 +133,10 @@ const packageSetupAndInstaller = (bsConfig, packageDir, instrumentBlocks) => {
     let obj = {
       packagesInstalled: false
     };
-
+    if (bsConfig && bsConfig.run_settings && bsConfig.run_settings.enforce_settings && bsConfig.run_settings.enforce_settings.toString() === 'true' ) {
+      logger.info(Constants.userMessages.SKIP_NPM_INSTALL);
+      return resolve(obj);
+    }
     logger.info(Constants.userMessages.NPM_INSTALL);
     instrumentBlocks.markBlockStart("packageInstaller.folderSetup");
     logger.debug("Started setting up package folder");

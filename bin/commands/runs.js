@@ -186,7 +186,7 @@ module.exports = function run(args, rawArgs) {
       let specFiles = utils.getNumberOfSpecFiles(bsConfig, args, cypressConfigFile);
       markBlockEnd('getNumberOfSpecFiles');
 
-      bsConfig['run_settings']['video_config'] = utils.getVideoConfig(cypressConfigFile);
+      bsConfig['run_settings']['video_config'] = utils.getVideoConfig(cypressConfigFile, bsConfig);
 
       // return the number of parallels user specified
       let userSpecifiedParallels = utils.getParallels(bsConfig, args);
@@ -247,6 +247,14 @@ module.exports = function run(args, rawArgs) {
 
               if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
                 supportFileCleanup();
+              }
+              // Set config args for enforce_settings
+              if ( !utils.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) ) {
+                markBlockStart('setEnforceSettingsConfig');
+                logger.debug('Started setting the configs');
+                utils.setEnforceSettingsConfig(bsConfig);
+                logger.debug('Completed setting the configs');
+                markBlockEnd('setEnforceSettingsConfig');
               }
               // Create build
               //setup Local Testing
