@@ -64,8 +64,11 @@ const supportFileCleanup = () => {
   });
 }
 
+exports.buildStopped = false;
+
 exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
-  if(!this.isTestObservabilitySession()) return;
+  if(!this.isTestObservabilitySession() || exports.buildStopped) return;
+  exports.buildStopped = true;
   try {
     if(shouldStopSession) {
       supportFileCleanup();
@@ -472,6 +475,10 @@ const RequestQueueHandler = require('./requestQueueHandler');
 exports.requestQueueHandler = new RequestQueueHandler();
 
 exports.uploadEventData = async (eventData, run=0) => {
+  exports.debug("I aminside upload event data")
+  exports.debug(JSON.stringify(eventData))
+  consoleHolder.log("I aminside upload event data")
+  consoleHolder.log(JSON.stringify(eventData))
   const log_tag = {
     ['TestRunStarted']: 'Test_Start_Upload',
     ['TestRunFinished']: 'Test_End_Upload',

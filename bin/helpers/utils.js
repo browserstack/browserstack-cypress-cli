@@ -1451,7 +1451,23 @@ exports.setProcessHooks = (buildId, bsConfig, bsLocal, args, buildReportData) =>
   process.on('SIGTERM', processExitHandler.bind(this, bindData));
   process.on('SIGBREAK', processExitHandler.bind(this, bindData));
   process.on('uncaughtException', processExitHandler.bind(this, bindData));
+  process.on('beforeExit', processO11yExitHandler.bind(this, bindData));
 }
+
+exports.setO11yProcessHooks = (() => {
+  let bindData = {};
+  let handlerAdded = false;
+  return (buildId, bsConfig, bsLocal, args, buildReportData) => {
+    bindData.buildId = buildId;
+    bindData.bsConfig = bsConfig;
+    bindData.bsLocal = bsLocal;
+    bindData.args = args;
+    bindData.buildReportData = buildReportData;
+    if (handlerAdded) return;
+    handlerAdded = true;
+    process.on('beforeExit', processO11yExitHandler.bind(this, bindData));
+  }
+})()
 
 async function processExitHandler(exitData){
   logger.warn(Constants.userMessages.PROCESS_KILL_MESSAGE);
@@ -1459,6 +1475,14 @@ async function processExitHandler(exitData){
   await this.stopLocalBinary(exitData.bsConfig, exitData.bsLocalInstance, exitData.args, null, exitData.buildReportData);
   await printBuildLink(true);
   process.exit(0);
+}
+
+async function processO11yExitHandler(exitData){
+  if (!exitData.buildId && args.async) {
+    await printBuildLink(false);
+  } else {
+    await printBuildLink(true);
+  }
 }
 
 exports.fetchZipSize = (fileName) => {

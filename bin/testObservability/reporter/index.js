@@ -93,6 +93,7 @@ class MyReporter {
             delete this.runStatusMarkedHash[hook.hookAnalyticsId];
             hook.hookAnalyticsId = uuidv4();
           }
+          console.log("At hook begin ", hook.hookAnalyticsId + hook.fullTitle())
           hook.hook_started_at = (new Date()).toISOString();
           hook.started_at = (new Date()).toISOString();
           this.current_hook = hook;
@@ -101,7 +102,9 @@ class MyReporter {
       })
 
       .on(EVENT_HOOK_END, async (hook) => {
+        console.log("At hook end ", this.current_hook.hookAnalyticsId, hook.fullTitle())
         if(this.testObservability == true) {
+          // console.log("At hook end bool", this.runStatusMarkedHash[hook.hookAnalyticsId])
           if(!this.runStatusMarkedHash[hook.hookAnalyticsId]) {
             if(!hook.hookAnalyticsId) {
               /* Hook objects don't maintain uuids in Cypress-Mocha */
@@ -110,6 +113,7 @@ class MyReporter {
             } else {
               this.runStatusMarkedHash[hook.hookAnalyticsId] = true;
             }
+            console.log("Sending hook finished ", hook.hookAnalyticsId);
             await this.sendTestRunEvent(hook,undefined,false,"HookRunFinished");
           }
         }
@@ -143,21 +147,27 @@ class MyReporter {
 
       .on(EVENT_TEST_PENDING, async (test) => {
         if(this.testObservability == true) {
+          test.isSkipped = true;
           if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             this.runStatusMarkedHash[test.testAnalyticsId] = true;
+            consoleHolder.log("Inside event for event_test_pending " + test.state);
             await this.sendTestRunEvent(test,undefined,false,"TestRunSkipped");
           }
         }
       })
 
       .on(EVENT_TEST_BEGIN, async (test) => {
+        consoleHolder.log("Inside event for event_test_begin " + test.state + " " + test.isSkipped);
+        if (test.isSkipped) return;
         if(this.testObservability == true) {
           await this.testStarted(test);
         }
       })
 
       .on(EVENT_TEST_END, async (test) => {
+        consoleHolder.log("Inside event for event_test_end " + test.state + " " + test.isSkipped);
+        if (test.isSkipped) return;
         if(this.testObservability == true) {
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
@@ -253,6 +263,8 @@ class MyReporter {
   }
 
   sendTestRunEvent = async (test, err = undefined, customFinished=false, eventType = "TestRunFinished") => {
+    debug("Sending test run event for " + eventType);
+    consoleHolder.log("Sending test run event for " + eventType)
     try {
       if(test.body && test.body.match(/browserstack internal helper hook/)) return;
       let failureArgs = [];
