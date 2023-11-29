@@ -3,7 +3,7 @@
 const yargs = require('yargs'),
   logger = require("./helpers/logger").winstonLogger,
   Constants = require('./helpers/constants'),
-  { commonBuildOptions, runOptions } = require('./helpers/runnerArgs');
+  { disableUsageReportingOptions, commonBuildOptions, runOptions } = require('./helpers/runnerArgs');
 
 
 function checkCommands(yargs, argv, numRequired) {

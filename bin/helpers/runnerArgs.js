@@ -1,13 +1,5 @@
 const Constants = require('./constants');
 
-const disableUsageReportingOptions = {
-  'disable-usage-reporting': {
-    default: undefined,
-    description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
-    type: "boolean"
-  },
-}
-
 const usernameOptions = {
   'u': {
     alias: 'username',
@@ -46,9 +38,17 @@ const debugModeOptions = {
   },
 }
 
+exports.disableUsageReportingOptions = {
+  'disable-usage-reporting': {
+    default: undefined,
+    description: Constants.cliMessages.COMMON.DISABLE_USAGE_REPORTING,
+    type: "boolean"
+  },
+}
+
 exports.commonBuildOptions = {
   ...configFileOptions,
-  ...disableUsageReportingOptions,
+  ...this.disableUsageReportingOptions,
   ...usernameOptions,
   ...accessKeyOptions,
   ...debugModeOptions,
