@@ -1306,9 +1306,9 @@ exports.setEnforceSettingsConfig = (bsConfig) => {
   }
   // set specs in config of specpattern to override cypress config
   if(!this.isUndefined(bsConfig) && !this.isUndefined(bsConfig.run_settings) && !this.isUndefined(bsConfig.run_settings.specs)) {
-    let spec_pattern_args = "specPattern='"+bsConfig.run_settings.specs+"'";
+    let spec_pattern_args = 'specPattern="'+bsConfig.run_settings.specs+'"';
     if( bsConfig.run_settings.cypressTestSuiteType !== Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
-      spec_pattern_args = "testFiles='"+bsConfig.run_settings.specs+"'";
+      spec_pattern_args = 'testFiles="'+bsConfig.run_settings.specs+'"';
     }
     config_args = this.isUndefined(config_args) ? spec_pattern_args : config_args + ',' + spec_pattern_args;
   }

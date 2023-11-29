@@ -3071,7 +3071,7 @@ describe('utils', () => {
         run_settings: { specs: 'somerandomspecs', cypressTestSuiteType: 'CYPRESS_V10_AND_ABOVE_TYPE' },
       };
       let args = {
-        config: "video=false,videoUploadOnPasses=false,specPattern='somerandomspecs'"
+        config: 'video=false,videoUploadOnPasses=false,specPattern="somerandomspecs"'
       }
       utils.setEnforceSettingsConfig(bsConfig);
       expect(args.config).to.be.eql(bsConfig.run_settings.config);
@@ -3081,7 +3081,7 @@ describe('utils', () => {
         run_settings: { specs: 'somerandomspecs', cypressTestSuiteType: 'CYPRESS_V9_AND_OLDER_TYPE' },
       };
       let args = {
-        config: "video=false,videoUploadOnPasses=false,testFiles='somerandomspecs'"
+        config: 'video=false,videoUploadOnPasses=false,testFiles="somerandomspecs"'
       }
       utils.setEnforceSettingsConfig(bsConfig);
       expect(args.config).to.be.eql(bsConfig.run_settings.config);
