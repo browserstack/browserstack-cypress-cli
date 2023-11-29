@@ -70,8 +70,6 @@ const userMessages = {
   UPLOADING_TESTS_SUCCESS: "Uploaded tests successfully",
   UPLOADING_NPM_PACKAGES: "Uploading required node_modules to BrowserStack",
   UPLOADING_NPM_PACKAGES_SUCCESS: "Uploaded node_modules successfully",
-  SKIP_CYPRESSCONFIG_INSTALL:
-    "Skipping Cypress Config Install as the enforce_settings has been passed.",
   SKIP_UPLOADING_TESTS:
     "Skipping zip upload since BrowserStack already has your test suite that has not changed since the last run.",
   SKIP_NPM_INSTALL:

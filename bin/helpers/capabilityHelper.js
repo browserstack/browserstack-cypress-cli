@@ -239,9 +239,11 @@ const validate = (bsConfig, args) => {
         // Detect if the user is not using the right directory structure, and throw an error
         if (!Utils.isUndefined(cypressConfigFile.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,cypressConfigFile.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
       }
-      logger.debug("Validating baseurl and integrationFolder in browserstack.json");
-      if (!Utils.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) &&  !Utils.isUndefined(bsConfig.run_settings.baseUrl) && bsConfig.run_settings.baseUrl.includes("localhost") && !Utils.getLocalFlag(bsConfig.connection_settings)) reject(Constants.validationMessages.LOCAL_NOT_SET.replace("<baseUrlValue>", bsConfig.run_settings.baseUrl));
-      if (!Utils.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) &&  !Utils.isUndefined(bsConfig.run_settings.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,bsConfig.run_settings.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
+      else {
+        logger.debug("Validating baseurl and integrationFolder in browserstack.json");
+        if (!Utils.isUndefined(bsConfig.run_settings.baseUrl) && bsConfig.run_settings.baseUrl.includes("localhost") && !Utils.getLocalFlag(bsConfig.connection_settings)) reject(Constants.validationMessages.LOCAL_NOT_SET.replace("<baseUrlValue>", bsConfig.run_settings.baseUrl));
+        if (!Utils.isUndefined(bsConfig.run_settings.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,bsConfig.run_settings.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
+      }
     } catch(error){
       reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
     }
