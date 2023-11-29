@@ -1451,7 +1451,6 @@ exports.setProcessHooks = (buildId, bsConfig, bsLocal, args, buildReportData) =>
   process.on('SIGTERM', processExitHandler.bind(this, bindData));
   process.on('SIGBREAK', processExitHandler.bind(this, bindData));
   process.on('uncaughtException', processExitHandler.bind(this, bindData));
-  process.on('beforeExit', processO11yExitHandler.bind(this, bindData));
 }
 
 exports.setO11yProcessHooks = (() => {
