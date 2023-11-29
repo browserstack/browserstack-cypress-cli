@@ -713,6 +713,8 @@ describe("runs", () => {
       stopLocalBinaryStub = sandbox.stub();
       setLocalConfigFileStub = sandbox.stub();
       setConfigStub = sandbox.stub();
+      setEnforceSettingsConfigStub = sandbox.stub();
+      isUndefinedOrFalseStub = sandbox.stub();
       setBrowsersStub = sandbox.stub();
       setCLIModeStub = sandbox.stub();
       fetchZipSizeStub = sandbox.stub();
@@ -773,6 +775,8 @@ describe("runs", () => {
           setLocalConfigFile: setLocalConfigFileStub,
           setBrowsers: setBrowsersStub,
           setConfig: setConfigStub,
+          setEnforceSettingsConfig: setEnforceSettingsConfigStub,
+          isUndefinedOrFalse: isUndefinedOrFalseStub,
           setCLIMode: setCLIModeStub,
           fetchZipSize: fetchZipSizeStub,
           setGeolocation: setGeolocationStub,
@@ -882,6 +886,7 @@ describe("runs", () => {
           sinon.assert.calledTwice(fetchZipSizeStub);
           sinon.assert.calledOnce(fetchFolderSizeStub);
           sinon.assert.calledOnce(zipUploadStub);
+          sinon.assert.calledOnce(isUndefinedOrFalseStub);
           sinon.assert.calledOnce(createBuildStub);
           sinon.assert.calledOnce(stopLocalBinaryStub);
           sinon.assert.calledOnceWithExactly(
@@ -939,6 +944,7 @@ describe("runs", () => {
       deleteResultsStub = sandbox.stub();
       setDefaultsStub = sandbox.stub();
       isUndefinedStub = sandbox.stub();
+      isUndefinedOrFalseStub = sandbox.stub();
       setLocalStub = sandbox.stub();
       setLocalModeStub = sandbox.stub();
       setupLocalTestingStub = sandbox.stub();
@@ -954,6 +960,7 @@ describe("runs", () => {
       markBlockStartStub = sandbox.stub();
       markBlockEndStub = sandbox.stub();
       setConfigStub = sandbox.stub();
+      setEnforceSettingsConfigStub = sandbox.stub();
       setBrowsersStub = sandbox.stub();
       stopLocalBinaryStub = sandbox.stub();
       nonEmptyArrayStub = sandbox.stub();
@@ -1021,6 +1028,8 @@ describe("runs", () => {
           setLocalConfigFile: setLocalConfigFileStub,
           setBrowsers: setBrowsersStub,
           setConfig: setConfigStub,
+          setEnforceSettingsConfig: setEnforceSettingsConfigStub,
+          isUndefinedOrFalse: isUndefinedOrFalseStub,
           stopLocalBinary: stopLocalBinaryStub,
           nonEmptyArray: nonEmptyArrayStub,
           checkError: checkErrorStub,
@@ -1150,6 +1159,7 @@ describe("runs", () => {
           sinon.assert.calledTwice(fetchZipSizeStub);
           sinon.assert.calledOnce(fetchFolderSizeStub);
           sinon.assert.calledOnce(zipUploadStub);
+          sinon.assert.calledOnce(isUndefinedOrFalseStub);
           sinon.assert.calledOnce(createBuildStub);
           sinon.assert.calledOnce(setProcessHooksStub);
           sinon.assert.calledOnce(exportResultsStub);

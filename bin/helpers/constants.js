@@ -74,6 +74,8 @@ const userMessages = {
     "Skipping Cypress Config Install as the enforce_settings has been passed.",
   SKIP_UPLOADING_TESTS:
     "Skipping zip upload since BrowserStack already has your test suite that has not changed since the last run.",
+  SKIP_NPM_INSTALL:
+    "Skipping NPM Install as the enforce_settings has been passed.",
   SKIP_UPLOADING_NPM_PACKAGES:
     "Skipping the upload of node_modules since BrowserStack has already cached your npm dependencies that have not changed since the last run.",
   LOCAL_TRUE: "you will now be able to test localhost / private URLs",
@@ -137,7 +139,7 @@ const validationMessages = {
   EMPTY_CYPRESS_CONFIG_FILE:
     "cypress_config_file is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/configuration-file to learn more.",
   EMPTY_SPECS_IN_BROWSERSTACK_JSON:
-    "No specs have been provided in run_settings. It is required to be passed on browserstack.json if enforce_settings is set.",
+    "specs is required when enforce_settings is true in run_settings of browserstack.json",
   VALIDATED: "browserstack.json file is validated",
   NOT_VALID: "browerstack.json is not valid",
   NOT_VALID_JSON: "browerstack.json is not a valid json",

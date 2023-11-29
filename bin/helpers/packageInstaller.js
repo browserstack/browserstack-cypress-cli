@@ -134,7 +134,8 @@ const packageSetupAndInstaller = (bsConfig, packageDir, instrumentBlocks) => {
       packagesInstalled: false
     };
     if (bsConfig && bsConfig.run_settings && bsConfig.run_settings.enforce_settings && bsConfig.run_settings.enforce_settings.toString() === 'true' ) {
-      logger.info(Constants.userMessages.SKIP_NPM_INSTALL);
+      logger.info("Enforce_settings is enabled in run_settings");
+      logger.debug(Constants.userMessages.SKIP_NPM_INSTALL);
       return resolve(obj);
     }
     logger.info(Constants.userMessages.NPM_INSTALL);
