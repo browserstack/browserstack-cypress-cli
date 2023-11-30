@@ -1477,7 +1477,7 @@ async function processExitHandler(exitData){
 }
 
 async function processO11yExitHandler(exitData){
-  if (!exitData.buildId && args.async) {
+  if (exitData.buildId && exitData.args && exitData.args.async) {
     await printBuildLink(false);
   } else {
     await printBuildLink(true);
