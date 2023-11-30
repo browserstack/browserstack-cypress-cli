@@ -147,7 +147,6 @@ class MyReporter {
 
       .on(EVENT_TEST_PENDING, async (test) => {
         if(this.testObservability == true) {
-          test.isSkipped = true;
           if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             this.runStatusMarkedHash[test.testAnalyticsId] = true;
@@ -451,14 +450,20 @@ class MyReporter {
       // Send pending hook finsihed events for hook starts
       if (eventType === 'TestRunFinished') {
         Object.values(this.hooksStarted).forEach(async hookData => {
-          hookData['hook_run'].finished_at = hookData['hook_run'].started_at;
-          hookData['hook_run'].duration = 0;
+          hookData['event_type'] = 'HookRunFinished';
           hookData['hook_run'].result = uploadData['test_run'].result;
           hookData['hook_run'].failure = uploadData['test_run'].failure;
           hookData['hook_run'].failure_type = uploadData['test_run'].failure_type;
           hookData['hook_run'].failure_reason = uploadData['test_run'].failure_reason;
           hookData['hook_run'].failure_reason_expanded = uploadData['test_run'].failure_reason_expanded;
           hookData['hook_run'].failure_backtrace = uploadData['test_run'].failure_backtrace;
+          if (hookData['hook_run']['hook_type'] === 'BEFORE_ALL') {
+            hookData['hook_run'].finished_at = uploadData['test_run'].finished_at;
+            hookData['hook_run'].duration_in_ms = new Date(hookData['hook_run'].finished_at).getTime() - new Date(hookData['hook_run'].started_at).getTime();
+          } else {
+            hookData['hook_run'].finished_at = hookData['hook_run'].started_at;
+            hookData['hook_run'].duration_in_ms = 0;
+          }
           await uploadEventData(hookData);
         })
         this.hooksStarted = {};
