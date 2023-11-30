@@ -451,12 +451,17 @@ class MyReporter {
       if (eventType === 'TestRunFinished') {
         Object.values(this.hooksStarted).forEach(async hookData => {
           hookData['event_type'] = 'HookRunFinished';
-          hookData['hook_run'].result = uploadData['test_run'].result;
-          hookData['hook_run'].failure = uploadData['test_run'].failure;
-          hookData['hook_run'].failure_type = uploadData['test_run'].failure_type;
-          hookData['hook_run'].failure_reason = uploadData['test_run'].failure_reason;
-          hookData['hook_run'].failure_reason_expanded = uploadData['test_run'].failure_reason_expanded;
-          hookData['hook_run'].failure_backtrace = uploadData['test_run'].failure_backtrace;
+          hookData['hook_run'] = {
+            ...hookData['hook_run'],
+            result: uploadData['test_run'].result,
+            failure: uploadData['test_run'].failure,
+            failure_type: uploadData['test_run'].failure_type,
+            failure_reason: uploadData['test_run'].failure_reason,
+            failure_reason_expanded: uploadData['test_run'].failure_reason_expanded,
+            failure_backtrace: uploadData['test_run'].failure_backtrace
+
+          }
+
           if (hookData['hook_run']['hook_type'] === 'BEFORE_ALL') {
             hookData['hook_run'].finished_at = uploadData['test_run'].finished_at;
             hookData['hook_run'].duration_in_ms = new Date(hookData['hook_run'].finished_at).getTime() - new Date(hookData['hook_run'].started_at).getTime();
@@ -464,6 +469,7 @@ class MyReporter {
             hookData['hook_run'].finished_at = hookData['hook_run'].started_at;
             hookData['hook_run'].duration_in_ms = 0;
           }
+          console.log(hookData);
           await uploadEventData(hookData);
         })
         this.hooksStarted = {};
