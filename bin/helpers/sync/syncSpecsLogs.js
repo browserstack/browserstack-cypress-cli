@@ -24,7 +24,7 @@ let terminalWidth = (process.stdout.columns) * 0.9;
 let lineSeparator = Constants.syncCLI.DEFAULT_LINE_SEP;
 if (!isNaN(terminalWidth)) lineSeparator = "\n" + "-".repeat(terminalWidth);
 
-let  getOptions = (auth, build_id) => {
+let getOptions = (auth, build_id) => {
   const options = {
     url: `${config.buildUrlV2}${build_id}`,
     auth: {
