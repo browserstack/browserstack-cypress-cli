@@ -132,13 +132,15 @@ describe("syncSpecsLogs", () => {
       var getBorderConfigStub = sandbox.stub();
       syncSpecsLogs.__set__('getBorderConfig', getBorderConfigStub);
 
-      let options = getTableConfig((process.stdout.columns) * 0.9);
-      console.log(`***************************** ${process.stdout.columns}`)
-      expect(options.columnDefault.width).to.equal(Math.floor(((process.stdout.columns) * 0.9) * 0.2));
+      const columns = 10
+      // process.stdout.columns is giving `undefined` value in unit test job.
+      // Hardcoding the columns value to 10 and not using process.stdout.columns
+      let options = getTableConfig((columns) * 0.9);
+      expect(options.columnDefault.width).to.equal(Math.floor(((columns) * 0.9) * 0.2));
       expect(options.columns[1].alignment).to.equal('center');
       expect(options.columns[2].alignment).to.equal('left');
-      expect(options.columns[1].width).to.equal(Math.ceil(((process.stdout.columns) * 0.9) * 0.01));
-      expect(options.columns[2].width).to.equal(Math.floor(((process.stdout.columns) * 0.9) * 0.75));
+      expect(options.columns[1].width).to.equal(Math.ceil(((columns) * 0.9) * 0.01));
+      expect(options.columns[2].width).to.equal(Math.floor(((columns) * 0.9) * 0.75));
       expect(options.columnCount).to.equal(3);
       expect(getBorderConfigStub.calledOnce).to.be.true;
     });
@@ -147,7 +149,6 @@ describe("syncSpecsLogs", () => {
       var getBorderConfigStub = sandbox.stub();
       syncSpecsLogs.__set__('getBorderConfig', getBorderConfigStub);
 
-      // Sending NaN input to getTableConfig
       let options = getTableConfig(NaN);
       expect(options.columnDefault.width).to.equal(30);
       expect(options.columns[1].alignment).to.equal('center');
