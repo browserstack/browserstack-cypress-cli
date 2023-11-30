@@ -103,7 +103,6 @@ class MyReporter {
 
       .on(EVENT_HOOK_END, async (hook) => {
         if(this.testObservability == true) {
-          // console.log("At hook end bool", this.runStatusMarkedHash[hook.hookAnalyticsId])
           if(!this.runStatusMarkedHash[hook.hookAnalyticsId]) {
             if(!hook.hookAnalyticsId) {
               /* Hook objects don't maintain uuids in Cypress-Mocha */
@@ -112,7 +111,7 @@ class MyReporter {
             } else {
               this.runStatusMarkedHash[hook.hookAnalyticsId] = true;
             }
-            console.log("Sending hook finished ", hook.hookAnalyticsId);
+
             // Remove hooks added at hook start
             delete this.hooksStarted[hook.hookAnalyticsId];
             await this.sendTestRunEvent(hook,undefined,false,"HookRunFinished");

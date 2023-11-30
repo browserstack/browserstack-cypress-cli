@@ -475,10 +475,6 @@ const RequestQueueHandler = require('./requestQueueHandler');
 exports.requestQueueHandler = new RequestQueueHandler();
 
 exports.uploadEventData = async (eventData, run=0) => {
-  exports.debug("I aminside upload event data")
-  exports.debug(JSON.stringify(eventData))
-  consoleHolder.log("I aminside upload event data")
-  consoleHolder.log(JSON.stringify(eventData))
   const log_tag = {
     ['TestRunStarted']: 'Test_Start_Upload',
     ['TestRunFinished']: 'Test_End_Upload',
