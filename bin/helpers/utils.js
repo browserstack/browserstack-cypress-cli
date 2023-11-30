@@ -1290,6 +1290,21 @@ exports.setConfig = (bsConfig, args) => {
   }
 }
 
+exports.setVideoCliConfig = (bsConfig, videoConfig) => {
+  // set cli config for video for cypress 13 and above to attain default value of true.
+  if(this.isUndefined(videoConfig) || this.isUndefined(videoConfig.video) || this.isUndefined(videoConfig.videoUploadOnPasses) || this.isUndefined(bsConfig)) return;
+  let user_cypress_version = (bsConfig && bsConfig.run_settings && bsConfig.run_settings.cypress_version) ? bsConfig.run_settings.cypress_version.toString() : undefined;
+  let cypress_major_version = (user_cypress_version && user_cypress_version.match(/^(\d+)/)) ? user_cypress_version.split(".")[0] : undefined;
+  let config_args = (bsConfig && bsConfig.run_settings && bsConfig.run_settings.config) ? bsConfig.run_settings.config : undefined;
+  if(this.isUndefined(user_cypress_version) || this.isUndefined(cypress_major_version) || parseInt(cypress_major_version) >= 13 ) {
+    logger.info('Setting default video for cypress 13 and above');
+    let video_args = `video=${videoConfig.video},videoUploadOnPasses=${videoConfig.videoUploadOnPasses}`;
+    config_args = this.isUndefined(config_args) ? video_args : config_args + ',' + video_args;
+    logger.debug(`Setting video true in cli for cypress version ${user_cypress_version} with cli args - ${config_args}`)
+  }
+  if (bsConfig.run_settings && this.isNotUndefined(config_args)) bsConfig["run_settings"]["config"] = config_args;
+}
+
 // set configs if enforce_settings is passed
 exports.setEnforceSettingsConfig = (bsConfig) => {
   if ( this.isUndefined(bsConfig) || this.isUndefined(bsConfig.run_settings) ) return;
@@ -1536,11 +1551,13 @@ exports.getVideoConfig = (cypressConfig, bsConfig = {}) => {
    // Reading from bsconfig first to give precedance and cypress config will be empty in case of enforce_settings
   if (!this.isUndefined(bsConfig.run_settings) && !this.isUndefined(bsConfig.run_settings.video)) conf.video = bsConfig.run_settings.video;
   if (!this.isUndefined(bsConfig.run_settings) && !this.isUndefined(bsConfig.run_settings.videoUploadOnPasses)) conf.videoUploadOnPasses = bsConfig.run_settings.videoUploadOnPasses;
-  if ( this.isUndefined(bsConfig.run_settings) || this.isUndefined(bsConfig.run_settings.enforce_settings) ) {
+  if ( this.isUndefined(bsConfig.run_settings) || this.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) ) {
     if (!this.isUndefined(cypressConfig.video)) conf.video = cypressConfig.video;
     if (!this.isUndefined(cypressConfig.videoUploadOnPasses)) conf.videoUploadOnPasses = cypressConfig.videoUploadOnPasses;
   }
 
+  // set video in cli config in case of cypress 13 or above as default value is false there.
+  this.setVideoCliConfig(bsConfig,conf);
   logger.debug(`Setting video = ${conf.video}`);
   logger.debug(`Setting videoUploadOnPasses = ${conf.videoUploadOnPasses}`);
   return conf;

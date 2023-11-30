@@ -3055,6 +3055,41 @@ describe('utils', () => {
     });
   });
 
+  describe('setVideoCliConfig', () => {
+    it('the args should be empty if any of videoconfig or bsconfig is undefined', () => {
+      let bsConfig = {
+        run_settings: {},
+      };
+      let videoConfig = {
+      };
+      utils.setVideoCliConfig(bsConfig, videoConfig);
+      expect(undefined).to.be.eql(bsConfig.run_settings.config);
+    });
+    it('the config should have video true if video is passed true', () => {
+      let bsConfig = {
+        run_settings: {},
+      };
+      let videoConfig = {video:true, videoUploadOnPasses:true};
+      let outputConfig = {
+        config: 'video=true,videoUploadOnPasses=true'
+      };
+      utils.setVideoCliConfig(bsConfig, videoConfig);
+      expect(outputConfig.config).to.be.eql(bsConfig.run_settings.config);
+    });
+    it('the config should have config with video false if video is passed false', () => {
+      let bsConfig = {
+        run_settings: {},
+      };
+      let videoConfig = {video:false, videoUploadOnPasses:true};
+      let outputConfig = {
+        config: 'video=false,videoUploadOnPasses=true'
+      };
+      utils.setVideoCliConfig(bsConfig, videoConfig);
+      expect(outputConfig.config).to.be.eql(bsConfig.run_settings.config);
+    });
+  });
+
+
   describe('setEnforceSettingsConfig', () => {
     it('the video config should be assigned to bsconfig run_settings config', () => {
       let bsConfig = {
@@ -3081,7 +3116,7 @@ describe('utils', () => {
         run_settings: { specs: 'somerandomspecs', cypressTestSuiteType: 'CYPRESS_V9_AND_OLDER_TYPE' },
       };
       let args = {
-        config: 'video=false,videoUploadOnPasses=false,testFiles="somerandomspecs"'
+        config: 'video=false,videoUploadOnPasses=false'
       }
       utils.setEnforceSettingsConfig(bsConfig);
       expect(args.config).to.be.eql(bsConfig.run_settings.config);
@@ -3462,6 +3497,43 @@ describe('utils', () => {
       expect(utils.getVideoConfig({videoUploadOnPasses: false})).to.be.eql({video: true, videoUploadOnPasses: false});
       expect(utils.getVideoConfig({video: false, videoUploadOnPasses: false})).to.be.eql({video: false, videoUploadOnPasses: false});
     });
+
+    it('should add default video config in cli config only for cyp 13', () => {
+      let bsConfig = {
+        run_settings: {cypress_version: '13.latest'},
+      };
+      let outputConfig = 'video=true,videoUploadOnPasses=true';
+      utils.getVideoConfig({}, bsConfig);
+      expect(outputConfig).to.be.eql(bsConfig.run_settings.config);
+    });
+
+    it('should add not default video config in cli config only for cyp 12 or below', () => {
+      let bsConfig = {
+        run_settings: {cypress_version: '12.latest'},
+      };
+      utils.getVideoConfig({}, bsConfig);
+      expect(undefined).to.be.eql(bsConfig.run_settings.config);
+    });
+
+    it('should add bstack json video config in cli config if none in cypress config for cyp 13', () => {
+      let bsConfig = {
+        run_settings: {cypress_version: '13.latest', video: true, videoUploadOnPasses: false}
+      };
+      let cypressConfig = {};
+      let outputConfig = 'video=true,videoUploadOnPasses=false';
+      utils.getVideoConfig(cypressConfig, bsConfig);
+      expect(outputConfig).to.be.eql(bsConfig.run_settings.config);
+    });
+
+    it('should add cypress config video config in cli config over bstack json for cyp 13', () => {
+      let bsConfig = {
+        run_settings: {cypress_version: '13.latest'},
+      };
+      let cypressConfig = {video: false};
+      let outputConfig = 'video=false,videoUploadOnPasses=true';
+      utils.getVideoConfig(cypressConfig, bsConfig);
+      expect(outputConfig).to.be.eql(bsConfig.run_settings.config);
+    });    
 
     it('should return default hash and ignore video config in cypress config if enforce_settings is passed by the user', () => {
       expect(utils.getVideoConfig({video: false}, {run_settings: {enforce_settings: true}})).to.be.eql({video: true, videoUploadOnPasses: true});
