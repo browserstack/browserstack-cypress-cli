@@ -146,6 +146,7 @@ describe("syncSpecsLogs", () => {
       var getBorderConfigStub = sandbox.stub();
       syncSpecsLogs.__set__('getBorderConfig', getBorderConfigStub);
 
+      // Sending NaN input to getTableConfig
       let options = getTableConfig(NaN);
       expect(options.columnDefault.width).to.equal(30);
       expect(options.columns[1].alignment).to.equal('center');
