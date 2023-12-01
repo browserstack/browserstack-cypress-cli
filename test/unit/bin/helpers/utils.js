@@ -3101,12 +3101,22 @@ describe('utils', () => {
       utils.setEnforceSettingsConfig(bsConfig);
       expect(args.config).to.be.eql(bsConfig.run_settings.config);
     });
-    it('the specPattern config should be assigned to bsconfig run_settings config', () => {
+    it('the specPattern config should be assigned as strings for single string to bsconfig run_settings config', () => {
       let bsConfig = {
         run_settings: { specs: 'somerandomspecs', cypressTestSuiteType: 'CYPRESS_V10_AND_ABOVE_TYPE' },
       };
       let args = {
         config: 'video=false,videoUploadOnPasses=false,specPattern="somerandomspecs"'
+      }
+      utils.setEnforceSettingsConfig(bsConfig);
+      expect(args.config).to.be.eql(bsConfig.run_settings.config);
+    });
+    it('the specPattern config should be assigned as array for multiple spec strings to bsconfig run_settings config', () => {
+      let bsConfig = {
+        run_settings: { specs: 'somerandomspecs1,somerandomspecs2', cypressTestSuiteType: 'CYPRESS_V10_AND_ABOVE_TYPE' },
+      };
+      let args = {
+        config: 'video=false,videoUploadOnPasses=false,specPattern="["somerandomspecs1","somerandomspecs2"]"'
       }
       utils.setEnforceSettingsConfig(bsConfig);
       expect(args.config).to.be.eql(bsConfig.run_settings.config);

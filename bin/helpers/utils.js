@@ -1297,7 +1297,7 @@ exports.setVideoCliConfig = (bsConfig, videoConfig) => {
   let cypress_major_version = (user_cypress_version && user_cypress_version.match(/^(\d+)/)) ? user_cypress_version.split(".")[0] : undefined;
   let config_args = (bsConfig && bsConfig.run_settings && bsConfig.run_settings.config) ? bsConfig.run_settings.config : undefined;
   if(this.isUndefined(user_cypress_version) || this.isUndefined(cypress_major_version) || parseInt(cypress_major_version) >= 13 ) {
-    logger.info('Setting default video for cypress 13 and above');
+    logger.debug('Setting default video for cypress 13 and above');
     let video_args = `video=${videoConfig.video},videoUploadOnPasses=${videoConfig.videoUploadOnPasses}`;
     config_args = this.isUndefined(config_args) ? video_args : config_args + ',' + video_args;
     logger.debug(`Setting video true in cli for cypress version ${user_cypress_version} with cli args - ${config_args}`)
@@ -1321,9 +1321,14 @@ exports.setEnforceSettingsConfig = (bsConfig) => {
     logger.debug(`Setting base_url_args for enforce_settings to ${base_url_args}`);
   }
   // set specs in config of specpattern to override cypress config
-  if( this.isNotUndefined(bsConfig.run_settings.specs) && bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE ) {
+  if( this.isNotUndefined(bsConfig.run_settings.specs) && bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE && (this.isUndefined(config_args) || !config_args.includes("specPattern"))  ) {
     // doing this only for cypress 10 and above as --spec is given precedence for cypress 9.
-    let spec_pattern_args = 'specPattern="'+bsConfig.run_settings.specs+'"';
+    let specConfigs = bsConfig.run_settings.specs;
+    // if multiple specs are passed, convert it into an array.
+    if(specConfigs && specConfigs.includes(',')) {
+      specConfigs = JSON.stringify(bsConfig.run_settings.specs.split(','));
+    }
+    let spec_pattern_args = 'specPattern="'+specConfigs+'"';
     config_args = this.isUndefined(config_args) ? spec_pattern_args : config_args + ',' + spec_pattern_args;
   }
   if ( this.isNotUndefined(config_args) ) bsConfig["run_settings"]["config"] = config_args;
