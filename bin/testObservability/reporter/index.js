@@ -469,7 +469,6 @@ class MyReporter {
             hookData['hook_run'].finished_at = hookData['hook_run'].started_at;
             hookData['hook_run'].duration_in_ms = 0;
           }
-          console.log(hookData);
           await uploadEventData(hookData);
         })
         this.hooksStarted = {};
