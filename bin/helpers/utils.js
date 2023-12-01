@@ -1326,7 +1326,7 @@ exports.setEnforceSettingsConfig = (bsConfig) => {
     let specConfigs = bsConfig.run_settings.specs;
     // if multiple specs are passed, convert it into an array.
     if(specConfigs && specConfigs.includes(',')) {
-      specConfigs = JSON.stringify(bsConfig.run_settings.specs.split(','));
+      specConfigs = JSON.stringify(specConfigs.split(','));
     }
     let spec_pattern_args = 'specPattern="'+specConfigs+'"';
     config_args = this.isUndefined(config_args) ? spec_pattern_args : config_args + ',' + spec_pattern_args;
