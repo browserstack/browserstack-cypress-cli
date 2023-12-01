@@ -3517,7 +3517,7 @@ describe('utils', () => {
       expect(outputConfig).to.be.eql(bsConfig.run_settings.config);
     });
 
-    it('should add not default video config in cli config only for cyp 12 or below', () => {
+    it('should not add default video config in cli config only for cyp 12 or below', () => {
       let bsConfig = {
         run_settings: {cypress_version: '12.latest'},
       };
@@ -3525,12 +3525,12 @@ describe('utils', () => {
       expect(undefined).to.be.eql(bsConfig.run_settings.config);
     });
 
-    it('should add bstack json video config in cli config if none in cypress config for cyp 13', () => {
+    it('should not add bstack json video config in cli config if none in cypress config for cyp 13', () => {
       let bsConfig = {
         run_settings: {cypress_version: '13.latest', video: true, videoUploadOnPasses: false}
       };
       let cypressConfig = {};
-      let outputConfig = 'video=true,videoUploadOnPasses=false';
+      let outputConfig = 'video=true,videoUploadOnPasses=true';
       utils.getVideoConfig(cypressConfig, bsConfig);
       expect(outputConfig).to.be.eql(bsConfig.run_settings.config);
     });
