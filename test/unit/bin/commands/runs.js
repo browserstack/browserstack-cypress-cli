@@ -125,6 +125,9 @@ describe("runs", () => {
       setNodeVersionStub = sandbox.stub();
       setBuildTagsStub = sandbox.stub();
       setNetworkLogsStub = sandbox.stub();
+      setDebugModeStub = sandbox.stub();
+      setTimezoneStub = sandbox.stub();
+      setCypressNpmDependencyStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -172,7 +175,9 @@ describe("runs", () => {
           setDebugMode: setDebugModeStub,
           setNodeVersion: setNodeVersionStub,
           setBuildTags: setBuildTagsStub,
-          setNetworkLogs: setNetworkLogsStub
+          setNetworkLogs: setNetworkLogsStub,
+          setTimezone: setTimezoneStub,
+          setCypressNpmDependency: setCypressNpmDependencyStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub
@@ -192,37 +197,41 @@ describe("runs", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
+          sinon.assert.calledOnce(setDebugModeStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
+          sinon.assert.calledOnce(setUsageReportingFlagStub);
           sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnce(setUsernameStub);
           sinon.assert.calledOnce(setAccessKeyStub);
+          sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.calledOnce(setBuildNameStub);
           sinon.assert.calledOnce(setCypressConfigFilenameStub);
           sinon.assert.calledOnce(setCypressTestSuiteTypeStub);
+          sinon.assert.calledOnce(setGeolocationStub);
+          sinon.assert.calledOnce(setTimezoneStub);
+          sinon.assert.calledOnce(setSpecTimeoutStub);
           sinon.assert.calledOnce(setUserSpecsStub);
           sinon.assert.calledOnce(setTestEnvsStub);
+          sinon.assert.calledOnce(setBuildTagsStub);
           sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setLocalStub);
+          sinon.assert.calledOnce(setNetworkLogsStub);
           sinon.assert.calledOnce(setLocalModeStub);
+          sinon.assert.calledOnce(setLocalIdentifierStub);
           sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setCypressNpmDependencyStub);
+          sinon.assert.calledOnce(setNodeVersionStub);
           sinon.assert.calledOnce(setConfigStub);
           sinon.assert.calledOnce(setCLIModeStub);
           sinon.assert.calledOnce(setOtherConfigsStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
+          sinon.assert.calledOnce(isJSONInvalidStub);
           sinon.assert.calledOnce(getErrorCodeFromMsgStub);
-          sinon.assert.calledOnce(setLocalIdentifierStub);
-          sinon.assert.calledOnce(setUsageReportingFlagStub);
-          sinon.assert.calledOnce(setGeolocationStub);
-          sinon.assert.calledOnce(setSpecTimeoutStub);
-          sinon.assert.calledOnce(getInitialDetailsStub);
-          sinon.assert.calledOnce(setNodeVersionStub);
-          sinon.assert.calledOnce(setBuildTagsStub);
-          sinon.assert.calledOnce(setNetworkLogsStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -237,7 +246,7 @@ describe("runs", () => {
     });
   });
 
-  describe("handle achieve failed", () => {
+  describe("handle archive failed", () => {
     var sandbox;
 
     beforeEach(() => {
@@ -287,6 +296,11 @@ describe("runs", () => {
       setNodeVersionStub = sandbox.stub();
       setBuildTagsStub = sandbox.stub();
       setNetworkLogsStub = sandbox.stub();
+      setInteractiveCapabilityStub = sandbox.stub();
+      setDebugModeStub = sandbox.stub();
+      setTimezoneStub = sandbox.stub();
+      setCypressNpmDependencyStub = sandbox.stub();
+      packageSetupAndInstallerStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -337,7 +351,10 @@ describe("runs", () => {
           setDebugMode: setDebugModeStub,
           setNodeVersion: setNodeVersionStub,
           setBuildTags: setBuildTagsStub,
-          setNetworkLogs: setNetworkLogsStub
+          setNetworkLogs: setNetworkLogsStub,
+          setInteractiveCapability: setInteractiveCapabilityStub,
+          setTimezone: setTimezoneStub,
+          setCypressNpmDependency: setCypressNpmDependencyStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -354,6 +371,7 @@ describe("runs", () => {
         },
         '../helpers/packageInstaller': {
           packageWrapper: packageInstallerStub,
+          packageSetupAndInstaller: packageSetupAndInstallerStub
         },
         '../helpers/getInitialDetails': {
           getInitialDetails: getInitialDetailsStub,
@@ -367,47 +385,57 @@ describe("runs", () => {
       packageInstallerStub.returns(Promise.resolve({ packageArchieveCreated: false }));
       getInitialDetailsStub.returns(Promise.resolve({}));
       archiverStub.returns(Promise.reject("random-error"));
+      packageSetupAndInstallerStub.returns(true)
 
       return runs(args, rawArgs)
         .then(function (_bsConfig) {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
+          sinon.assert.calledOnce(setDebugModeStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
-          sinon.assert.calledOnce(setLocalModeStub);
+          sinon.assert.calledOnce(deleteResultsStub);
+          sinon.assert.calledOnce(validateBstackJsonStub);
+          sinon.assert.calledOnce(setUsageReportingFlagStub);
+          sinon.assert.calledOnce(setDefaultsStub);
           sinon.assert.calledOnce(setUsernameStub);
           sinon.assert.calledOnce(setAccessKeyStub);
+          sinon.assert.calledOnce(getInitialDetailsStub);
           sinon.assert.calledOnce(setBuildNameStub);
-          sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(setCypressConfigFilenameStub);
           sinon.assert.calledOnce(setCypressTestSuiteTypeStub);
-          sinon.assert.calledOnce(getNumberOfSpecFilesStub);
-          sinon.assert.calledOnce(getParallelsStub);
-          sinon.assert.calledOnce(setParallelsStub);
-          sinon.assert.calledOnce(warnSpecLimitStub);
+          sinon.assert.calledOnce(setGeolocationStub);
+          sinon.assert.calledOnce(setTimezoneStub);
+          sinon.assert.calledOnce(setSpecTimeoutStub);
+          sinon.assert.calledOnce(setUserSpecsStub);
+          sinon.assert.calledOnce(setTestEnvsStub);
+          sinon.assert.calledOnce(setBuildTagsStub);
+          sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setLocalStub);
+          sinon.assert.calledOnce(setNetworkLogsStub);
+          sinon.assert.calledOnce(setLocalModeStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
+          sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
-          sinon.assert.calledOnce(setCLIModeStub);
-          sinon.assert.calledOnce(getVideoConfigStub);
-          sinon.assert.calledOnce(setOtherConfigsStub);
-          sinon.assert.calledOnce(validateBstackJsonStub);
-          sinon.assert.calledOnce(capabilityValidatorStub);
-          sinon.assert.calledOnce(archiverStub);
-          sinon.assert.calledOnce(setUsageReportingFlagStub);
-          sinon.assert.calledOnce(deleteZipStub);
-          sinon.assert.calledOnce(deleteResultsStub);
-          sinon.assert.calledOnce(setDefaultsStub);
-          sinon.assert.calledOnce(setSystemEnvsStub);
-          sinon.assert.calledOnce(setGeolocationStub);
-          sinon.assert.calledOnce(setSpecTimeoutStub);
-          sinon.assert.calledOnce(getInitialDetailsStub);
-          sinon.assert.calledOnce(setRecordCapsStub);
+          sinon.assert.calledOnce(setCypressNpmDependencyStub);
           sinon.assert.calledOnce(setNodeVersionStub);
-          sinon.assert.calledOnce(setBuildTagsStub);
-          sinon.assert.calledOnce(setNetworkLogsStub);
+          sinon.assert.calledOnce(setConfigStub);
+          sinon.assert.calledOnce(setCLIModeStub);
+          sinon.assert.calledOnce(setOtherConfigsStub);
+          sinon.assert.calledOnce(capabilityValidatorStub);
+          sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+          sinon.assert.calledOnce(getVideoConfigStub);
+          sinon.assert.calledOnce(getParallelsStub);
+          sinon.assert.calledOnce(setParallelsStub);
+          sinon.assert.calledOnce(setRecordCapsStub);
+          sinon.assert.calledOnce(setInteractiveCapabilityStub);
+          sinon.assert.calledOnce(warnSpecLimitStub);
+          sinon.assert.calledOnce(packageInstallerStub);
+          sinon.assert.calledOnce(archiverStub);
+          sinon.assert.calledOnce(deleteZipStub);
+          sinon.assert.calledOnce(deletePackageArchieveStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -474,6 +502,12 @@ describe("runs", () => {
       setNodeVersionStub = sandbox.stub();
       setBuildTagsStub = sandbox.stub();
       setNetworkLogsStub = sandbox.stub();
+      setInteractiveCapabilityStub = sandbox.stub();
+      setDebugModeStub = sandbox.stub();
+      setTimezoneStub = sandbox.stub();
+      setCypressNpmDependencyStub = sandbox.stub();
+      packageSetupAndInstallerStub = sandbox.stub();
+      fetchFolderSizeStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -525,7 +559,11 @@ describe("runs", () => {
           setDebugMode: setDebugModeStub,
           setNodeVersion: setNodeVersionStub,
           setBuildTags: setBuildTagsStub,
-          setNetworkLogs: setNetworkLogsStub
+          setNetworkLogs: setNetworkLogsStub,
+          setInteractiveCapability: setInteractiveCapabilityStub,
+          setTimezone: setTimezoneStub,
+          setCypressNpmDependency: setCypressNpmDependencyStub,
+          fetchFolderSize: fetchFolderSizeStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -545,6 +583,7 @@ describe("runs", () => {
         },
         '../helpers/packageInstaller': {
           packageWrapper: packageInstallerStub,
+          packageSetupAndInstaller: packageSetupAndInstallerStub
         },
         '../helpers/getInitialDetails': {
           getInitialDetails: getInitialDetailsStub,
@@ -560,44 +599,60 @@ describe("runs", () => {
       zipUploadStub.returns(Promise.reject("random-error"));
       fetchZipSizeStub.returns(123);
       getInitialDetailsStub.returns({});
+      packageSetupAndInstallerStub.returns(true)
 
       return runs(args, rawArgs)
         .then(function (_bsConfig) {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
+          sinon.assert.calledOnce(setDebugModeStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
-          sinon.assert.calledTwice(fetchZipSizeStub);
-          sinon.assert.calledOnce(getVideoConfigStub);
-          sinon.assert.calledOnce(setLocalModeStub);
-          sinon.assert.calledOnce(setLocalConfigFileStub);
-          sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+          sinon.assert.calledOnce(deleteResultsStub);
+          sinon.assert.calledOnce(validateBstackJsonStub);
+          sinon.assert.calledOnce(setUsageReportingFlagStub);
+          sinon.assert.calledOnce(setDefaultsStub);
+          sinon.assert.calledOnce(setUsernameStub);
+          sinon.assert.calledOnce(setAccessKeyStub);
+          sinon.assert.calledOnce(getInitialDetailsStub);
+          sinon.assert.calledOnce(setBuildNameStub);
+          sinon.assert.calledOnce(setCypressConfigFilenameStub);
           sinon.assert.calledOnce(setCypressTestSuiteTypeStub);
-          sinon.assert.calledOnce(getParallelsStub);
-          sinon.assert.calledOnce(setParallelsStub);
-          sinon.assert.calledOnce(warnSpecLimitStub);
+          sinon.assert.calledOnce(setGeolocationStub);
+          sinon.assert.calledOnce(setTimezoneStub);
+          sinon.assert.calledOnce(setSpecTimeoutStub);
+          sinon.assert.calledOnce(setUserSpecsStub);
+          sinon.assert.calledOnce(setTestEnvsStub);
+          sinon.assert.calledOnce(setBuildTagsStub);
+          sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setLocalStub);
+          sinon.assert.calledOnce(setNetworkLogsStub);
+          sinon.assert.calledOnce(setLocalModeStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
+          sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setCypressNpmDependencyStub);
+          sinon.assert.calledOnce(setNodeVersionStub);
+          sinon.assert.calledOnce(setConfigStub);
           sinon.assert.calledOnce(setCLIModeStub);
           sinon.assert.calledOnce(setOtherConfigsStub);
-          sinon.assert.calledOnce(validateBstackJsonStub);
           sinon.assert.calledOnce(capabilityValidatorStub);
-          sinon.assert.calledOnce(archiverStub);
-          sinon.assert.calledOnce(setUsageReportingFlagStub);
-          sinon.assert.calledOnce(zipUploadStub);
-          sinon.assert.calledOnce(deleteResultsStub);
-          sinon.assert.calledOnce(setDefaultsStub);
-          sinon.assert.calledOnce(setSystemEnvsStub);
-          sinon.assert.calledOnce(setGeolocationStub);
-          sinon.assert.calledOnce(setSpecTimeoutStub);
-          sinon.assert.calledOnce(getInitialDetailsStub);
+          sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+          sinon.assert.calledOnce(getVideoConfigStub);
+          sinon.assert.calledOnce(getParallelsStub);
+          sinon.assert.calledOnce(setParallelsStub);
           sinon.assert.calledOnce(setRecordCapsStub);
-          sinon.assert.calledOnce(setNodeVersionStub);
-          sinon.assert.calledOnce(setBuildTagsStub);
-          sinon.assert.calledOnce(setNetworkLogsStub);
+          sinon.assert.calledOnce(setInteractiveCapabilityStub);
+          sinon.assert.calledOnce(warnSpecLimitStub);
+          sinon.assert.calledOnce(packageInstallerStub);
+          sinon.assert.calledOnce(archiverStub);
+          sinon.assert.calledTwice(fetchZipSizeStub);
+          sinon.assert.calledOnce(fetchFolderSizeStub);
+          sinon.assert.calledOnce(zipUploadStub);
+          sinon.assert.calledOnce(deleteZipStub);
+          sinon.assert.calledOnce(deletePackageArchieveStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -669,6 +724,12 @@ describe("runs", () => {
       setNodeVersionStub = sandbox.stub();
       setBuildTagsStub = sandbox.stub();
       setNetworkLogsStub = sandbox.stub();
+      setInteractiveCapabilityStub = sandbox.stub();
+      setDebugModeStub = sandbox.stub();
+      setTimezoneStub = sandbox.stub();
+      setCypressNpmDependencyStub = sandbox.stub();
+      packageSetupAndInstallerStub = sandbox.stub();
+      fetchFolderSizeStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -721,7 +782,11 @@ describe("runs", () => {
           setDebugMode: setDebugModeStub,
           setNodeVersion: setNodeVersionStub,
           setBuildTags: setBuildTagsStub,
-          setNetworkLogs: setNetworkLogsStub
+          setNetworkLogs: setNetworkLogsStub,
+          setInteractiveCapability: setInteractiveCapabilityStub,
+          setTimezone: setTimezoneStub,
+          setCypressNpmDependency: setCypressNpmDependencyStub,
+          fetchFolderSize: fetchFolderSizeStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -744,6 +809,7 @@ describe("runs", () => {
         },
         '../helpers/packageInstaller': {
           packageWrapper: packageInstallerStub,
+          packageSetupAndInstaller: packageSetupAndInstallerStub
         },
         '../helpers/getInitialDetails': {
           getInitialDetails: getInitialDetailsStub,
@@ -763,47 +829,61 @@ describe("runs", () => {
       createBuildStub.returns(Promise.reject("random-error"));
       fetchZipSizeStub.returns(123);
       getInitialDetailsStub.returns(Promise.resolve({}));
+      fetchFolderSizeStub.returns(123);
+      packageSetupAndInstallerStub.returns(true)
 
       return runs(args, rawArgs)
         .then(function (_bsConfig) {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
+          sinon.assert.calledOnce(setDebugModeStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
-          sinon.assert.calledTwice(fetchZipSizeStub);
-          sinon.assert.calledOnce(getVideoConfigStub);
-          sinon.assert.calledOnce(setLocalConfigFileStub);
-          sinon.assert.calledOnce(setLocalModeStub);
-          sinon.assert.calledOnce(setupLocalTestingStub);
+          sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
-          sinon.assert.calledOnce(capabilityValidatorStub);
-          sinon.assert.calledOnce(getNumberOfSpecFilesStub);
-          sinon.assert.calledOnce(getParallelsStub);
-          sinon.assert.calledOnce(setParallelsStub);
-          sinon.assert.calledOnce(warnSpecLimitStub);
+          sinon.assert.calledOnce(setUsageReportingFlagStub);
+          sinon.assert.calledOnce(setDefaultsStub);
+          sinon.assert.calledOnce(setUsernameStub);
+          sinon.assert.calledOnce(setAccessKeyStub);
+          sinon.assert.calledOnce(getInitialDetailsStub);
+          sinon.assert.calledOnce(setBuildNameStub);
+          sinon.assert.calledOnce(setCypressConfigFilenameStub);
+          sinon.assert.calledOnce(setCypressTestSuiteTypeStub);
+          sinon.assert.calledOnce(setGeolocationStub);
+          sinon.assert.calledOnce(setTimezoneStub);
+          sinon.assert.calledOnce(setSpecTimeoutStub);
+          sinon.assert.calledOnce(setUserSpecsStub);
+          sinon.assert.calledOnce(setTestEnvsStub);
+          sinon.assert.calledOnce(setBuildTagsStub);
+          sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setLocalStub);
+          sinon.assert.calledOnce(setNetworkLogsStub);
+          sinon.assert.calledOnce(setLocalModeStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
+          sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setCypressNpmDependencyStub);
+          sinon.assert.calledOnce(setNodeVersionStub);
+          sinon.assert.calledOnce(setConfigStub);
           sinon.assert.calledOnce(setCLIModeStub);
           sinon.assert.calledOnce(setOtherConfigsStub);
+          sinon.assert.calledOnce(capabilityValidatorStub);
+          sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+          sinon.assert.calledOnce(getVideoConfigStub);
+          sinon.assert.calledOnce(getParallelsStub);
+          sinon.assert.calledOnce(setParallelsStub);
+          sinon.assert.calledOnce(setRecordCapsStub);
+          sinon.assert.calledOnce(setInteractiveCapabilityStub);
+          sinon.assert.calledOnce(warnSpecLimitStub);
+          sinon.assert.calledOnce(packageInstallerStub);
           sinon.assert.calledOnce(archiverStub);
-          sinon.assert.calledOnce(setUsageReportingFlagStub);
+          sinon.assert.calledTwice(fetchZipSizeStub);
+          sinon.assert.calledOnce(fetchFolderSizeStub);
           sinon.assert.calledOnce(zipUploadStub);
           sinon.assert.calledOnce(createBuildStub);
-
-          sinon.assert.calledOnce(sendUsageReportStub);
-          sinon.assert.calledOnce(deleteResultsStub);
-          sinon.assert.calledOnce(setDefaultsStub);
-          sinon.assert.calledOnce(setSystemEnvsStub);
-          sinon.assert.calledOnce(setGeolocationStub);
-          sinon.assert.calledOnce(setSpecTimeoutStub);
-          sinon.assert.calledOnce(getInitialDetailsStub);
-          sinon.assert.calledOnce(setRecordCapsStub);
-          sinon.assert.calledOnce(setNodeVersionStub);
-          sinon.assert.calledOnce(setBuildTagsStub);
-          sinon.assert.calledOnce(setNetworkLogsStub);
+          sinon.assert.calledOnce(stopLocalBinaryStub);
           sinon.assert.calledOnceWithExactly(
             sendUsageReportStub,
             bsConfig,
@@ -888,6 +968,12 @@ describe("runs", () => {
       setNodeVersionStub = sandbox.stub();
       setBuildTagsStub = sandbox.stub();
       setNetworkLogsStub = sandbox.stub();
+      setInteractiveCapabilityStub = sandbox.stub();
+      setDebugModeStub = sandbox.stub();
+      setTimezoneStub = sandbox.stub();
+      setCypressNpmDependencyStub = sandbox.stub();
+      packageSetupAndInstallerStub = sandbox.stub();
+      fetchFolderSizeStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -900,7 +986,7 @@ describe("runs", () => {
       let errorCode = null;
       let message = `Success! ${Constants.userMessages.BUILD_CREATED} with build id: random_build_id`;
       let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${dashboardUrl}`;
-      let data = { user_id: 1234, parallels: 10, time_components: {}, unique_id: 'random_hash', package_error: 'test', checkmd5_error: 'test', build_id: 'random_build_id', test_zip_size: 123, npm_zip_size: 123, test_suite_zip_upload: 1, package_zip_upload: 1}
+      let data = { user_id: 1234, parallels: 10, time_components: {}, unique_id: 'random_hash', package_error: 'test', checkmd5_error: 'test', build_id: 'random_build_id', test_zip_size: 123, npm_zip_size: 123, node_modules_size: 123, test_suite_zip_upload: 1, package_zip_upload: 1, is_package_diff: false}
 
       const runs = proxyquire('../../../../bin/commands/runs', {
         '../helpers/utils': {
@@ -948,7 +1034,11 @@ describe("runs", () => {
           setDebugMode: setDebugModeStub,
           setNodeVersion: setNodeVersionStub,
           setBuildTags: setBuildTagsStub,
-          setNetworkLogs: setNetworkLogsStub
+          setNetworkLogs: setNetworkLogsStub,
+          setInteractiveCapability: setInteractiveCapabilityStub,
+          setTimezone: setTimezoneStub,
+          setCypressNpmDependency: setCypressNpmDependencyStub,
+          fetchFolderSize: fetchFolderSizeStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -977,6 +1067,7 @@ describe("runs", () => {
         },
         '../helpers/packageInstaller': {
           packageWrapper: packageInstallerStub,
+          packageSetupAndInstaller: packageSetupAndInstallerStub
         },
         '../helpers/timeComponents': {
           initTimeComponents: initTimeComponentsStub,
@@ -1006,48 +1097,66 @@ describe("runs", () => {
       createBuildStub.returns(Promise.resolve({ message: 'Success', build_id: 'random_build_id', dashboard_url: dashboardUrl, user_id: 1234 }));
       fetchZipSizeStub.returns(123);
       getInitialDetailsStub.returns(Promise.resolve({user_id: 1234}));
+      fetchFolderSizeStub.returns(123);
+      packageSetupAndInstallerStub.returns(true)
 
       return runs(args, rawArgs)
         .then(function (_bsConfig) {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
+          sinon.assert.calledOnce(setDebugModeStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getConfigPathStub);
+          sinon.assert.calledOnce(deleteResultsStub);
           sinon.assert.calledOnce(validateBstackJsonStub);
-          sinon.assert.calledOnce(setLocalConfigFileStub);
-          sinon.assert.calledOnce(capabilityValidatorStub);
-          sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+          sinon.assert.calledOnce(setUsageReportingFlagStub);
+          sinon.assert.calledOnce(setDefaultsStub);
+          sinon.assert.calledOnce(setUsernameStub);
+          sinon.assert.calledOnce(setAccessKeyStub);
+          sinon.assert.calledOnce(getInitialDetailsStub);
+          sinon.assert.calledOnce(setBuildNameStub);
+          sinon.assert.calledOnce(setCypressConfigFilenameStub);
           sinon.assert.calledOnce(setCypressTestSuiteTypeStub);
-          sinon.assert.calledOnce(getParallelsStub);
-          sinon.assert.calledOnce(setParallelsStub);
-          sinon.assert.calledOnce(warnSpecLimitStub);
-          sinon.assert.calledTwice(fetchZipSizeStub);
-          sinon.assert.calledOnce(getVideoConfigStub);
+          sinon.assert.calledOnce(setGeolocationStub);
+          sinon.assert.calledOnce(setTimezoneStub);
+          sinon.assert.calledOnce(setSpecTimeoutStub);
+          sinon.assert.calledOnce(setUserSpecsStub);
+          sinon.assert.calledOnce(setTestEnvsStub);
+          sinon.assert.calledOnce(setBuildTagsStub);
+          sinon.assert.calledOnce(setSystemEnvsStub);
           sinon.assert.calledOnce(setLocalStub);
+          sinon.assert.calledOnce(setNetworkLogsStub);
           sinon.assert.calledOnce(setLocalModeStub);
-          sinon.assert.calledOnce(setupLocalTestingStub);
           sinon.assert.calledOnce(setLocalIdentifierStub);
+          sinon.assert.calledOnce(setLocalConfigFileStub);
           sinon.assert.calledOnce(setHeadedStub);
           sinon.assert.calledOnce(setNoWrapStub);
+          sinon.assert.calledOnce(setCypressNpmDependencyStub);
+          sinon.assert.calledOnce(setNodeVersionStub);
+          sinon.assert.calledOnce(setConfigStub);
           sinon.assert.calledOnce(setCLIModeStub);
-          sinon.assert.calledOnce(setProcessHooksStub);
           sinon.assert.calledOnce(setOtherConfigsStub);
-          sinon.assert.calledOnce(generateUniqueHashStub);
+          sinon.assert.calledOnce(capabilityValidatorStub);
+          sinon.assert.calledOnce(getNumberOfSpecFilesStub);
+          sinon.assert.calledOnce(getVideoConfigStub);
+          sinon.assert.calledOnce(getParallelsStub);
+          sinon.assert.calledOnce(setParallelsStub);
+          sinon.assert.calledOnce(setRecordCapsStub);
+          sinon.assert.calledOnce(setInteractiveCapabilityStub);
+          sinon.assert.calledOnce(warnSpecLimitStub);
+          sinon.assert.calledOnce(packageInstallerStub);
           sinon.assert.calledOnce(archiverStub);
-          sinon.assert.calledOnce(setUsageReportingFlagStub);
+          sinon.assert.calledTwice(fetchZipSizeStub);
+          sinon.assert.calledOnce(fetchFolderSizeStub);
           sinon.assert.calledOnce(zipUploadStub);
           sinon.assert.calledOnce(createBuildStub);
+          sinon.assert.calledOnce(setProcessHooksStub);
           sinon.assert.calledOnce(exportResultsStub);
-          sinon.assert.calledOnce(deleteResultsStub);
-          sinon.assert.calledOnce(setDefaultsStub);
-          sinon.assert.calledOnce(setSystemEnvsStub);
-          sinon.assert.calledOnce(setGeolocationStub);
-          sinon.assert.calledOnce(getInitialDetailsStub);
-          sinon.assert.calledOnce(setRecordCapsStub);
-          sinon.assert.calledOnce(setNodeVersionStub);
-          sinon.assert.calledOnce(setBuildTagsStub);
-          sinon.assert.calledOnce(setNetworkLogsStub);
+          sinon.assert.calledTwice(isUndefinedStub);
+          sinon.assert.calledOnce(nonEmptyArrayStub);
+          sinon.assert.calledOnce(generateUniqueHashStub);
+          sinon.assert.calledTwice(checkErrorStub);
           sinon.assert.match(
             sendUsageReportStub.getCall(0).args,
             [
