@@ -15,7 +15,7 @@ const decompress = require('decompress');
 let BUILD_ARTIFACTS_TOTAL_COUNT = 0;
 let BUILD_ARTIFACTS_FAIL_COUNT = 0;
 
-const parseAndDownloadArtifacts = async (buildId, data) => {
+const parseAndDownloadArtifacts = async (buildId, data, bsConfig, args, rawArgs, buildReportData) => {
   return new Promise(async (resolve, reject) => {
     let all_promises = [];
     let combs = Object.keys(data);
@@ -28,7 +28,14 @@ const parseAndDownloadArtifacts = async (buildId, data) => {
         let fileName = 'build_artifacts.zip';
         BUILD_ARTIFACTS_TOTAL_COUNT += 1;
         all_promises.push(downloadAndUnzip(filePath, fileName, data[comb][sessionId]).catch((error) => {
-          BUILD_ARTIFACTS_FAIL_COUNT += 1;
+          if (error === Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_NOT_FOUND) {
+            // Don't consider build artifact 404 error as a failure
+            let warningMessage = Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_NOT_FOUND.replace('<session-id>', sessionId);
+            logger.warn(warningMessage);
+            utils.sendUsageReport(bsConfig, args, warningMessage, Constants.messageTypes.ERROR, 'build_artifacts_not_found', buildReportData, rawArgs);
+          } else {
+            BUILD_ARTIFACTS_FAIL_COUNT += 1;
+          }
           // delete malformed zip if present
           let tmpFilePath = path.join(filePath, fileName);
           if(fs.existsSync(tmpFilePath)){
@@ -99,6 +106,9 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
     request.get(url).on('response', function(response) {
 
       if(response.statusCode != 200) {
+        if (response.statusCode === 404) {
+          reject(Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_NOT_FOUND);
+        }
         reject();
       } else {
         //ensure that the user can call `then()` only when the file has
@@ -220,7 +230,7 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs, buildR
             process.exitCode = Constants.ERROR_EXIT_CODE;
           } else {
             await createDirectories(buildId, buildDetails);
-            await parseAndDownloadArtifacts(buildId, buildDetails);
+            await parseAndDownloadArtifacts(buildId, buildDetails, bsConfig, args, rawArgs, buildReportData);
             if (BUILD_ARTIFACTS_FAIL_COUNT > 0) {
               messageType = Constants.messageTypes.ERROR;
               message = Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_FAILED.replace('<build-id>', buildId).replace('<machine-count>', BUILD_ARTIFACTS_FAIL_COUNT);

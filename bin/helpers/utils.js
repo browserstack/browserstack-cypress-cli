@@ -559,6 +559,23 @@ exports.setSystemEnvs = (bsConfig) => {
   }
 
   try {
+    const accessibilityOptions = bsConfig.run_settings.accessibilityOptions;
+    if (accessibilityOptions) {
+      Object.keys(accessibilityOptions).forEach(key => {
+        const a11y_env_key = `ACCESSIBILITY_${key.toUpperCase()}`
+        if (["includeTagsInTestingScope", "excludeTagsInTestingScope"].includes(key))
+          envKeys[a11y_env_key] = accessibilityOptions[key].join(";")
+        else if (key === "includeIssueType")
+          envKeys[a11y_env_key] = JSON.stringify(accessibilityOptions.includeIssueType).replace(/"/g, "");
+        else
+          envKeys[a11y_env_key] = accessibilityOptions[key];
+      })
+    }
+  } catch (error) {
+   logger.error(`Error in adding accessibility configs ${error}`)
+  }
+
+  try {
     OBSERVABILITY_ENV_VARS.forEach(key => {
       envKeys[key] = process.env[key];
     });
@@ -942,6 +959,12 @@ exports.setLocalArgs = (bsConfig, args) => {
   let local_args = {}
   local_args['key'] = bsConfig['auth']['access_key'];
   local_args['localIdentifier'] = bsConfig["connection_settings"]["local_identifier"];
+  if (bsConfig["connection_settings"]["proxyHost"])
+    local_args['proxyHost'] = bsConfig["connection_settings"]["proxyHost"];
+  if (bsConfig["connection_settings"]["proxyPort"])
+    local_args['proxyPort'] = bsConfig["connection_settings"]["proxyPort"];
+  if (bsConfig["connection_settings"]["useCaCertificate"])
+    local_args['useCaCertificate'] = bsConfig["connection_settings"]["useCaCertificate"];
   local_args['daemon'] = true;
   local_args['enable-logging-for-api'] = true
   local_args['source'] = `cypress:${usageReporting.cli_version_and_path(bsConfig).version}`;
@@ -1291,25 +1314,29 @@ exports.readBsConfigJSON = (bsConfigPath) => {
 }
 
 exports.getCypressConfigFile = (bsConfig) => {
-  let cypressConfigFile = undefined;
-  if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
-    if (bsConfig.run_settings.cypress_config_filename.endsWith("cypress.config.js")) {
-      if (bsConfig.run_settings.cypress_config_file && bsConfig.run_settings.cypress_config_filename !== 'false') {
-        cypressConfigFile = require(path.resolve(bsConfig.run_settings.cypressConfigFilePath));
-      } else if (bsConfig.run_settings.cypressProjectDir) {
-        cypressConfigFile = require(path.join(bsConfig.run_settings.cypressProjectDir, bsConfig.run_settings.cypress_config_filename));
+  try {
+    let cypressConfigFile = undefined;
+    if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
+      if (bsConfig.run_settings.cypress_config_filename.endsWith("cypress.config.js")) {
+        if (bsConfig.run_settings.cypress_config_file && bsConfig.run_settings.cypress_config_filename !== 'false') {
+          cypressConfigFile = require(path.resolve(bsConfig.run_settings.cypressConfigFilePath));
+        } else if (bsConfig.run_settings.cypressProjectDir) {
+          cypressConfigFile = require(path.join(bsConfig.run_settings.cypressProjectDir, bsConfig.run_settings.cypress_config_filename));
+        }
+      } else {
+        cypressConfigFile = {};
       }
     } else {
-      cypressConfigFile = {};
+      if (bsConfig.run_settings.cypress_config_file && bsConfig.run_settings.cypress_config_filename !== 'false') {
+        cypressConfigFile = JSON.parse(fs.readFileSync(bsConfig.run_settings.cypressConfigFilePath))
+      } else if (bsConfig.run_settings.cypressProjectDir) {
+        cypressConfigFile = JSON.parse(fs.readFileSync(path.join(bsConfig.run_settings.cypressProjectDir, bsConfig.run_settings.cypress_config_filename)));
+      }
     }
-  } else {
-    if (bsConfig.run_settings.cypress_config_file && bsConfig.run_settings.cypress_config_filename !== 'false') {
-      cypressConfigFile = JSON.parse(fs.readFileSync(bsConfig.run_settings.cypressConfigFilePath))
-    } else if (bsConfig.run_settings.cypressProjectDir) {
-      cypressConfigFile = JSON.parse(fs.readFileSync(path.join(bsConfig.run_settings.cypressProjectDir, bsConfig.run_settings.cypress_config_filename)));
-    }
+    return cypressConfigFile;
+  } catch (err) {
+    return {}
   }
-  return cypressConfigFile;
 }
 
 exports.setCLIMode = (bsConfig, args) => {

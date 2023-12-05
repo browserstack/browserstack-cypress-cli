@@ -121,6 +121,10 @@ const caps = (bsConfig, zip) => {
         logger.info(`Running your tests in headless mode. Use --headed arg to run in headful mode.`);
       }
 
+      if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
+        bsConfig.run_settings["accessibilityPlatforms"] = getAccessibilityPlatforms(bsConfig);
+      }
+
       // send run_settings as is for other capabilities
       obj.run_settings = JSON.stringify(bsConfig.run_settings);
     }
@@ -138,8 +142,21 @@ const caps = (bsConfig, zip) => {
     if (obj.parallels) logger.info(`Parallels limit specified: ${obj.parallels}`);
 
     var data = JSON.stringify(obj);
+
     resolve(data);
   })
+}
+const getAccessibilityPlatforms = (bsConfig) => {
+  const browserList = bsConfig.browsers;
+  const accessibilityPlatforms = Array(browserList.length).fill(false);
+  let rootLevelAccessibility = false;
+  if (!Utils.isUndefined(bsConfig.run_settings.accessibility)) {
+    rootLevelAccessibility = bsConfig.run_settings.accessibility.toString() === 'true'
+  }
+  browserList.forEach((browserDetails, idx) => {
+    accessibilityPlatforms[idx] = (browserDetails.accessibility === undefined) ? rootLevelAccessibility : browserDetails.accessibility
+  });
+  return accessibilityPlatforms;
 }
 
 const addCypressZipStartLocation = (runSettings) => {
