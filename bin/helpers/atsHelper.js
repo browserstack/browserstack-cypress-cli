@@ -1,5 +1,3 @@
-// TODO: confirm if we need to add command line args. if yes then decide priority
-
 const request = require('request'),
       logger = require('./logger').winstonLogger,
       utils = require('./utils'),
@@ -59,7 +57,7 @@ exports.getTurboScaleGridDetails = async (bsConfig) => {
       request.get(options, function (err, resp, data) {
         if(err) {
           logger.warn(utils.formatRequest(err, resp, data));
-          utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'get_initial_details_failed', null, rawArgs);
+          utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
           resolve({});
         } else {
           try {
@@ -69,7 +67,7 @@ exports.getTurboScaleGridDetails = async (bsConfig) => {
           }
           if(resp.statusCode != 200) {
             logger.warn(`Warn: Get Initial Details Request failed with status code ${resp.statusCode}`);
-            utils.sendUsageReport(bsConfig, args, responseData["error"], Constants.messageTypes.ERROR, 'get_initial_details_failed', null, rawArgs);
+            utils.sendUsageReport(bsConfig, args, responseData["error"], Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
             resolve({});
           }
           resolve(responseData);

@@ -177,6 +177,35 @@ const runSampleRawArgs = {
   $0: "browserstack-cypress",
 };
 
+const sampleATSBsConfig = {
+  auth: {
+    username: "random-username",
+    access_key: "random-access-key",
+  },
+  run_settings: {
+    cypress_proj_dir: "random path",
+    cypressConfigFilePath: "random path",
+    cypressProjectDir: "random path",
+    turboScale: true,
+  }
+};
+
+const sampleATSBsConfigWithOptions = {
+  auth: {
+    username: "random-username",
+    access_key: "random-access-key",
+  },
+  run_settings: {
+    cypress_proj_dir: "random path",
+    cypressConfigFilePath: "random path",
+    cypressProjectDir: "random path",
+    turboScale: true,
+    turboScaleOptions: {
+      gridName: 'abc'
+    }
+  }
+};
+
 module.exports = Object.freeze({
   sampleBsConfig,
   sampleBsConfigWithParallels,
@@ -194,5 +223,7 @@ module.exports = Object.freeze({
   generateReportInputArgs,
   generateReportInputRawArgs,
   generateDownloadsInputArgs,
-  generateDownloadsInputRawArgs
+  generateDownloadsInputRawArgs,
+  sampleATSBsConfig,
+  sampleATSBsConfigWithOptions
 });
