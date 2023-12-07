@@ -66,7 +66,7 @@ exports.getTurboScaleGridDetails = async (bsConfig) => {
             responseData = {};
           }
           if(resp.statusCode != 200) {
-            logger.warn(`Warn: Get Initial Details Request failed with status code ${resp.statusCode}`);
+            logger.warn(`Warn: Get Automate TurboScale Details Request failed with status code ${resp.statusCode}`);
             utils.sendUsageReport(bsConfig, args, responseData["error"], Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
             resolve({});
           }

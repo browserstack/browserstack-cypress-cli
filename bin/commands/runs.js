@@ -149,20 +149,29 @@ module.exports = function run(args, rawArgs) {
       }
 
       if (turboScaleSession) {
+        // Local is only required in case user is running on trial grid and wants to access private website.
+        // Even then, it will be spawned separately via browserstack-cli ats connect-grid command and not via browserstack-cypress-cli
+        // Hence whenever running on ATS, need to make local as false
+        bsConfig.connection_settings.local = false;
+
         const gridDetails = await getTurboScaleGridDetails(bsConfig);
-        Constants.turboScaleObj.gridDetails = gridDetails;
 
-        if (gridDetails.isTrialGrid) {
-          bsConfig.connection_settings.local = true;
-          bsConfig.connection_settings.local_inferred = true;
-          bsConfig.connection_settings.local_mode = 'on-demand';
+        if (gridDetails && Object.keys(gridDetails).length > 0) {
+          Constants.turboScaleObj.gridDetails = gridDetails;
+
+          if (gridDetails.isTrialGrid) {
+            logger.info('Will be running the build on Trial Grid. Ensure you are using connect-grid command if using a private website');
+          }
+
+          Constants.turboScaleObj.gridUrl = gridDetails.cypressUrl;
+          Constants.turboScaleObj.uploadUrl = gridDetails.cypressUrl + '/upload';
+          Constants.turboScaleObj.buildUrl = gridDetails.cypressUrl + '/build';
+
+          logger.debug(`Automate TurboScale Grid URL set to ${gridDetails.url}`);
+        } else {
+          process.exitCode = Constants.ERROR_EXIT_CODE;
+          return;
         }
-
-        Constants.turboScaleObj.gridUrl = gridDetails.cypressUrl;
-        Constants.turboScaleObj.uploadUrl = gridDetails.cypressUrl + '/upload';
-        Constants.turboScaleObj.buildUrl = gridDetails.cypressUrl + '/build';
-
-        logger.debug(`Automate TurboScale Grid URL set to ${gridDetails.url}`);
       }
     }
 
