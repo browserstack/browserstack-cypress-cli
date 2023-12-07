@@ -154,7 +154,7 @@ module.exports = function run(args, rawArgs) {
         // Hence whenever running on ATS, need to make local as false
         bsConfig.connection_settings.local = false;
 
-        const gridDetails = await getTurboScaleGridDetails(bsConfig);
+        const gridDetails = await getTurboScaleGridDetails(bsConfig, args, rawArgs);
 
         if (gridDetails && Object.keys(gridDetails).length > 0) {
           Constants.turboScaleObj.gridDetails = gridDetails;

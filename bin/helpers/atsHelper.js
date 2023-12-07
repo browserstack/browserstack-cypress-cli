@@ -38,7 +38,7 @@ exports.getTurboScaleGridName = (bsConfig) => {
   return 'NO_GRID_NAME_PASSED';
 };
 
-exports.getTurboScaleGridDetails = async (bsConfig) => {
+exports.getTurboScaleGridDetails = async (bsConfig, args, rawArgs) => {
   try {
     const gridName = this.getTurboScaleGridName(bsConfig);
 

@@ -87,7 +87,7 @@ describe('#atsHelper', () => {
 
       requestStub.yields(null, { statusCode: 200 }, body);
       sendUsageReportStub.notCalled;
-      atsHelper.getTurboScaleGridDetails(testObjects.sampleATSBsConfigWithOptions).then((result) => {
+      atsHelper.getTurboScaleGridDetails(testObjects.sampleATSBsConfigWithOptions, {}, {}).then((result) => {
         expect(result).to.eq(body);
       })
     });
@@ -104,7 +104,7 @@ describe('#atsHelper', () => {
       };
 
       requestStub.yields(null, { statusCode: 422 }, body);
-      atsHelper.getTurboScaleGridDetails(testObjects.sampleATSBsConfigWithOptions).then((result) => {
+      atsHelper.getTurboScaleGridDetails(testObjects.sampleATSBsConfigWithOptions, {}, {}).then((result) => {
         expect(result).to.eq({});
         expect(sendUsageReportStub.calledOnce).to.be.true;
       })
