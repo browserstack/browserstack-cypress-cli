@@ -19,17 +19,19 @@ module.exports = function stop(args, rawArgs) {
     // accept the access key from command line if provided
     utils.setAccessKey(bsConfig, args);
 
-    let buildReportData = await getInitialDetails(bsConfig, args, rawArgs);
-
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
     // set cypress config filename
     utils.setCypressConfigFilename(bsConfig, args);
 
     let buildId = args._[1];
+    let buildReportData = null;
+
+    if (!Constants.turboScaleObj.enabled) {
+      buildReportData = await getInitialDetails(bsConfig, args, rawArgs);
+    }
 
     await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs, buildReportData);
-
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);

@@ -1388,6 +1388,11 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs, buildRe
         'User-Agent': that.getUserAgent(),
       },
     };
+
+    if (Constants.turboScaleObj.enabled) {
+      options.url = `${config.turboScaleBuildsUrl}/${buildId}/stop`;
+    }
+
     let message = null;
     let messageType = null;
     let errorCode = null;
