@@ -111,7 +111,10 @@ module.exports = function run(args, rawArgs) {
     /* 
       Send build start to Observability
     */
-    if(isTestObservabilitySession) await launchTestSession(bsConfig, bsConfigPath);
+    if(isTestObservabilitySession) {
+      await launchTestSession(bsConfig, bsConfigPath);
+      utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
+    }
     
     // accept the system env list from bsconf and set it
     utils.setSystemEnvs(bsConfig);
@@ -272,6 +275,9 @@ module.exports = function run(args, rawArgs) {
                 markBlockEnd('createBuild');
                 markBlockEnd('total');
                 utils.setProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
+                if(isTestObservabilitySession) {
+                  utils.setO11yProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
+                }
                 let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
                 let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
                 buildReportData = { 'build_id': data.build_id, 'parallels': userSpecifiedParallels, ...buildReportData }
