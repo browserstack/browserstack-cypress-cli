@@ -139,7 +139,7 @@ const validationMessages = {
   EMPTY_SPECS_IN_BROWSERSTACK_JSON:
     "specs is required when enforce_settings is true in run_settings of browserstack.json",
   VALIDATED: "browserstack.json file is validated",
-  NOT_VALID: "browerstack.json is not valid",
+  NOT_VALID: "browserstack.json is not valid",
   NOT_VALID_JSON: "browerstack.json is not a valid json",
   INVALID_EXTENSION: "Invalid files, please remove these files and try again.",
   INVALID_PARALLELS_CONFIGURATION:

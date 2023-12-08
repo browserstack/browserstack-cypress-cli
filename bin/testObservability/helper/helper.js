@@ -9,6 +9,7 @@ const { promisify } = require('util');
 const gitconfig = require('gitconfiglocal');
 const { spawn, execSync } = require('child_process');
 const glob = require('glob');
+const { runOptions } = require('../../helpers/runnerArgs')
 
 const pGitconfig = promisify(gitconfig);
 
@@ -769,13 +770,45 @@ const getLocalSessionReporter = () => {
 }
 
 const cleanupTestObservabilityFlags = (rawArgs) => {
-  const newRawArgs = [];
-  for(let idx=0; idx<rawArgs.length; idx++) {
-    if(!['--disable-browserstack-automation', '--disable-test-observability'].includes(rawArgs[idx])) {
-      newRawArgs.push(rawArgs[idx]);
+  const newArgs = [];
+  const aliasMap = Object.keys(runOptions).reduce( (acc, key) => {
+    const curr = runOptions[key];
+    if (curr.alias)	 {
+      const aliases = Array.isArray(curr.alias) ? curr.alias : [curr.alias] 
+      for (const alias of aliases) {
+        acc[alias] = curr;
+      }
     }
+    return acc;
+  }, {})
+
+  const cliArgs = {
+    ...runOptions,
+    ...aliasMap
   }
-  return newRawArgs;
+
+  // these flags are present in cypress too, but in some the same cli and
+  // cypress flags have different meaning. In that case, we assume user has
+  // given cypress related args
+  const retain = ['c', 'p', 'b', 'o', 's', 'specs', 'spec']
+
+  for (let i = 0;i < rawArgs.length;i++) {
+    const arg = rawArgs[i];
+    if (arg.startsWith('-')) {
+      const argName = arg.length > 1 && arg[1] == '-' ? arg.slice(2) : arg.slice(1);
+      // If this flag belongs to cli, we omit it and its value
+      if (cliArgs[argName] && !retain.includes(argName)) {
+        const nextArg = i + 1 < rawArgs.length ? rawArgs[i+1] : ''
+        // if the flag is bound to have a value, we ignore it
+        if (cliArgs[argName].type && cliArgs[argName].type !== 'boolean' && !nextArg.startsWith('-')) {
+          i++;
+        }
+        continue;
+      }
+    }
+    newArgs.push(rawArgs[i]);
+  }
+  return newArgs;
 }
 
 exports.runCypressTestsLocally = (bsConfig, args, rawArgs) => {
