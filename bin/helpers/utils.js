@@ -22,7 +22,7 @@ const usageReporting = require("./usageReporting"),
   config = require("../helpers/config"),
   pkg = require('../../package.json'),
   transports = require('./logger').transports,
-  { findGitConfig, printBuildLink, isTestObservabilitySession, isBrowserstackInfra, shouldReRunObservabilityTests } = require('../testObservability/helper/helper'),
+  o11yHelpers = require('../testObservability/helper/helper'),
   { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER } = require('../testObservability/helper/constants');
 
 const request = require('request');
@@ -480,7 +480,7 @@ exports.setNodeVersion = (bsConfig, args) => {
 // specs can be passed via command line args as a string
 // command line args takes precedence over config
 exports.setUserSpecs = (bsConfig, args) => {
-  if(isBrowserstackInfra() && isTestObservabilitySession() && shouldReRunObservabilityTests()) {
+  if(o11yHelpers.isBrowserstackInfra() && o11yHelpers.isTestObservabilitySession() && o11yHelpers.shouldReRunObservabilityTests()) {
     bsConfig.run_settings.specs = process.env.BROWSERSTACK_RERUN_TESTS;
     return;
   }
@@ -580,8 +580,8 @@ exports.setSystemEnvs = (bsConfig) => {
       envKeys[key] = process.env[key];
     });
   
-    let gitConfigPath = findGitConfig(process.cwd());
-    if(!isBrowserstackInfra()) process.env.OBSERVABILITY_GIT_CONFIG_PATH_LOCAL = gitConfigPath;
+    let gitConfigPath = o11yHelpers.findGitConfig(process.cwd());
+    if(!o11yHelpers.isBrowserstackInfra()) process.env.OBSERVABILITY_GIT_CONFIG_PATH_LOCAL = gitConfigPath;
     if(gitConfigPath) {
       const relativePathFromGitConfig = path.relative(gitConfigPath, process.cwd());
       envKeys["OBSERVABILITY_GIT_CONFIG_PATH"] = relativePathFromGitConfig ? relativePathFromGitConfig : 'DEFAULT';
@@ -1184,8 +1184,8 @@ exports.handleSyncExit = (exitCode, dashboard_url) => {
     syncCliLogger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
     syncCliLogger.info(dashboard_url);
   }
-  if(isTestObservabilitySession()) {
-    printBuildLink(true, exitCode);
+  if(o11yHelpers.isTestObservabilitySession()) {
+    o11yHelpers.printBuildLink(true, exitCode);
   } else {
     process.exit(exitCode);
   }
@@ -1288,7 +1288,7 @@ exports.setConfig = (bsConfig, args) => {
 
 // blindly send other passed configs with run_settings and handle at backend
 exports.setOtherConfigs = (bsConfig, args) => {
-  if(isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
+  if(o11yHelpers.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
     bsConfig["run_settings"]["reporter"] = TEST_OBSERVABILITY_REPORTER;
     return;
   }
@@ -1453,12 +1453,35 @@ exports.setProcessHooks = (buildId, bsConfig, bsLocal, args, buildReportData) =>
   process.on('uncaughtException', processExitHandler.bind(this, bindData));
 }
 
+exports.setO11yProcessHooks = (() => {
+  let bindData = {};
+  let handlerAdded = false;
+  return (buildId, bsConfig, bsLocal, args, buildReportData) => {
+    bindData.buildId = buildId;
+    bindData.bsConfig = bsConfig;
+    bindData.bsLocal = bsLocal;
+    bindData.args = args;
+    bindData.buildReportData = buildReportData;
+    if (handlerAdded) return;
+    handlerAdded = true;
+    process.on('beforeExit', processO11yExitHandler.bind(this, bindData));
+  }
+})()
+
 async function processExitHandler(exitData){
   logger.warn(Constants.userMessages.PROCESS_KILL_MESSAGE);
   await this.stopBrowserStackBuild(exitData.bsConfig, exitData.args, exitData.buildId, null, exitData.buildReportData);
   await this.stopLocalBinary(exitData.bsConfig, exitData.bsLocalInstance, exitData.args, null, exitData.buildReportData);
-  await printBuildLink(true);
+  await o11yHelpers.printBuildLink(true);
   process.exit(0);
+}
+
+async function processO11yExitHandler(exitData){
+  if (exitData.buildId) {
+    await o11yHelpers.printBuildLink(false);
+  } else {
+    await o11yHelpers.printBuildLink(true);
+  }
 }
 
 exports.fetchZipSize = (fileName) => {

@@ -21,7 +21,8 @@ const utils = require('../../../../bin/helpers/utils'),
   fileHelpers = require('../../../../bin/helpers/fileHelpers'),
   testObjects = require('../../support/fixtures/testObjects'),
   syncLogger = require('../../../../bin/helpers/logger').syncCliLogger,
-  Contants = require('../../../../bin/helpers/constants');
+  Contants = require('../../../../bin/helpers/constants'),
+  o11yHelpers = require('../../../../bin/testObservability/helper/helper');
 const browserstack = require('browserstack-local');
 const { CYPRESS_V10_AND_ABOVE_TYPE, CYPRESS_V9_AND_OLDER_TYPE } = require('../../../../bin/helpers/constants');
 const { winstonLogger, syncCliLogger } = require('../../../../bin/helpers/logger');
@@ -3393,6 +3394,72 @@ describe('utils', () => {
       process.emit('SIGINT');
       sinon.stub.restore();
       process.exit.restore();
+    });
+  });
+
+  describe('setO11yProcessHooks', () => {
+    it('should handle multiple calls', (done) => {
+      let buildId = null;
+      let bsConfig = testObjects.sampleBsConfig;
+      let bsLocalStub = sinon.stub();
+      let args= {};
+
+      let printBuildLinkStub = sinon.stub(o11yHelpers, 'printBuildLink').returns(Promise.resolve(true));
+      let processOnSpy = sinon.spy(process, 'on');
+
+      utils.setO11yProcessHooks(buildId, bsConfig, bsLocalStub, args);
+      sinon.assert.calledOnce(processOnSpy);
+      processOnSpy.restore();
+      processOnSpy = sinon.spy(process, 'on');
+      utils.setO11yProcessHooks('build_id', bsConfig, bsLocalStub, args);
+      sinon.assert.notCalled(processOnSpy);
+      processOnSpy.restore();
+      process.on('beforeExit', () => {
+        sinon.assert.calledOnce(printBuildLinkStub);
+        sinon.assert.calledWith(printBuildLinkStub, false);
+        done();
+      });
+      process.emit('beforeExit');
+      printBuildLinkStub.restore();
+      sinon.stub.restore();
+    });
+
+    it('should handle "beforeExit" event, with build id', (done) => {
+      let buildId = 'build_id';
+      let bsConfig = testObjects.sampleBsConfig;
+      let bsLocalStub = sinon.stub();
+      let args= {};
+
+      let printBuildLinkStub = sinon.stub(o11yHelpers, 'printBuildLink').returns(Promise.resolve(true));
+
+      utils.setO11yProcessHooks(buildId, bsConfig, bsLocalStub, args);
+      process.on('beforeExit', () => {
+        sinon.assert.calledOnce(printBuildLinkStub);
+        sinon.assert.calledWith(printBuildLinkStub, false);
+        done();
+      });
+      process.emit('beforeExit');
+      printBuildLinkStub.restore();
+      sinon.stub.restore();
+    });
+
+    it('should handle "beforeExit" event, without build id', (done) => {
+      let buildId = null;
+      let bsConfig = testObjects.sampleBsConfig;
+      let bsLocalStub = sinon.stub();
+      let args= {};
+
+      let printBuildLinkStub = sinon.stub(o11yHelpers, 'printBuildLink').returns(Promise.resolve(true));
+
+      utils.setO11yProcessHooks(buildId, bsConfig, bsLocalStub, args);
+      process.on('beforeExit', () => {
+        sinon.assert.calledOnce(printBuildLinkStub);
+        sinon.assert.calledWith(printBuildLinkStub, true);
+        done();
+      });
+      process.emit('beforeExit');
+      printBuildLinkStub.restore();
+      sinon.stub.restore();
     });
   });
 
