@@ -1073,7 +1073,7 @@ exports.getFilesToIgnore = (runSettings, excludeFiles, logging = true) => {
   return ignoreFiles;
 }
 
-exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
+exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession=false) => {
   let defaultSpecFolder
   let testFolderPath
   let globCypressConfigSpecPatterns = []
@@ -1147,6 +1147,13 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
   }
 
   logger.debug(`${files ? files.length : 0} spec files found`);
+
+  if (turboScaleSession) {
+    // remove unwanted path prefix for turboscale
+    files = files.map((x) => { return path.join(testFolderPath, x.split(testFolderPath)[1]) })
+    // setting specs for turboScale as we don't have patched API for turboscale so we will rely on info from CLI
+    bsConfig.run_settings.specs = files;
+  }
   return files;
 };
 
