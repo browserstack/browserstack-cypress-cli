@@ -65,8 +65,11 @@ const supportFileCleanup = () => {
   });
 }
 
+exports.buildStopped = false;
+
 exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
-  if(!this.isTestObservabilitySession()) return;
+  if(!this.isTestObservabilitySession() || exports.buildStopped) return;
+  exports.buildStopped = true;
   try {
     if(shouldStopSession) {
       supportFileCleanup();
