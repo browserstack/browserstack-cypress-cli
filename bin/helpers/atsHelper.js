@@ -1,3 +1,6 @@
+const path = require('path');
+const fs = require('fs')
+
 const request = require('request'),
       logger = require('./logger').winstonLogger,
       utils = require('./utils'),
@@ -78,3 +81,38 @@ exports.getTurboScaleGridDetails = async (bsConfig, args, rawArgs) => {
     logger.error(`Failed to find TurboScale Grid: ${err}: ${err.stack}`);
   }
 };
+
+exports.patchCypressConfigFileContent = (bsConfig) => {
+  try {
+    let cypressConfigFileData = fs.readFileSync(path.resolve(bsConfig.run_settings.cypress_config_file)).toString();
+    const patchedConfigFileData = cypressConfigFileData + '\n\n' + `
+    let originalFunction = module.exports.e2e.setupNodeEvents;
+
+    module.exports.e2e.setupNodeEvents = (on, config) => {
+      const bstackOn = require("./cypressPatch.js")(on);
+      if (originalFunction !== null && originalFunction !== undefined) {
+        originalFunction(bstackOn, config);
+      }
+    }
+    `
+
+    let confPath = bsConfig.run_settings.cypress_config_file;
+    let patchedConfPathList = confPath.split(path.sep);
+    patchedConfPathList[patchedConfPathList.length - 1] = 'patched_ats_config_file.js'
+    const patchedConfPath = patchedConfPathList.join(path.sep);
+
+    bsConfig.run_settings.patched_cypress_config_file = patchedConfPath;
+
+    fs.writeFileSync(path.resolve(bsConfig.run_settings.patched_cypress_config_file), patchedConfigFileData);
+  } catch(e) {
+    logger.error(`Encountered an error when trying to patch ATS Cypress Config File ${e}`);
+    return {};
+  }
+}
+
+exports.atsFileCleanup = (bsConfig) => {
+  const filePath = path.resolve(bsConfig.run_settings.patched_cypress_config_file);
+  if(fs.existsSync(filePath)){
+    fs.unlinkSync(filePath);
+  }
+}

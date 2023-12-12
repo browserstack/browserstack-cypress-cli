@@ -36,7 +36,7 @@ const {
   checkAccessibilityPlatform,
   supportFileCleanup
 } = require('../accessibility-automation/helper');
-const { isTurboScaleSession, getTurboScaleGridDetails } = require('../helpers/atsHelper');
+const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
 
 module.exports = function run(args, rawArgs) {
 
@@ -163,6 +163,8 @@ module.exports = function run(args, rawArgs) {
           Constants.turboScaleObj.buildUrl = gridDetails.cypressUrl + '/build';
 
           logger.debug(`Automate TurboScale Grid URL set to ${gridDetails.url}`);
+
+          patchCypressConfigFileContent(bsConfig);
         } else {
           process.exitCode = Constants.ERROR_EXIT_CODE;
           return;
@@ -272,6 +274,11 @@ module.exports = function run(args, rawArgs) {
               if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
                 supportFileCleanup();
               }
+
+              if (turboScaleSession) {
+                atsFileCleanup(bsConfig);
+              }
+
               // Create build
               //setup Local Testing
               markBlockStart('localSetup');
