@@ -114,7 +114,10 @@ module.exports = function run(args, rawArgs) {
     /* 
       Send build start to Observability
     */
-    if(isTestObservabilitySession) await launchTestSession(bsConfig, bsConfigPath);
+    if(isTestObservabilitySession) {
+      await launchTestSession(bsConfig, bsConfigPath);
+      utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
+    }
     
     // accept the system env list from bsconf and set it
     utils.setSystemEnvs(bsConfig);
@@ -210,7 +213,7 @@ module.exports = function run(args, rawArgs) {
       let specFiles = utils.getNumberOfSpecFiles(bsConfig, args, cypressConfigFile, turboScaleSession);
       markBlockEnd('getNumberOfSpecFiles');
 
-      bsConfig['run_settings']['video_config'] = utils.getVideoConfig(cypressConfigFile);
+      bsConfig['run_settings']['video_config'] = utils.getVideoConfig(cypressConfigFile, bsConfig);
 
       // return the number of parallels user specified
       let userSpecifiedParallels = utils.getParallels(bsConfig, args);
@@ -272,6 +275,14 @@ module.exports = function run(args, rawArgs) {
               if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
                 supportFileCleanup();
               }
+              // Set config args for enforce_settings
+              if ( !utils.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) ) {
+                markBlockStart('setEnforceSettingsConfig');
+                logger.debug('Started setting the configs');
+                utils.setEnforceSettingsConfig(bsConfig);
+                logger.debug('Completed setting the configs');
+                markBlockEnd('setEnforceSettingsConfig');
+              }
               // Create build
               //setup Local Testing
               markBlockStart('localSetup');
@@ -288,6 +299,9 @@ module.exports = function run(args, rawArgs) {
                 markBlockEnd('createBuild');
                 markBlockEnd('total');
                 utils.setProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
+                if(isTestObservabilitySession) {
+                  utils.setO11yProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
+                }
                 let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
                 let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
                 buildReportData = { 'build_id': data.build_id, 'parallels': userSpecifiedParallels, ...buildReportData }
