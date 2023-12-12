@@ -184,6 +184,10 @@ const validate = (bsConfig, args) => {
       reject(Constants.validationMessages.EMPTY_CYPRESS_CONFIG_FILE);
     }
 
+    if ( bsConfig && bsConfig.run_settings && bsConfig.run_settings.enforce_settings && bsConfig.run_settings.enforce_settings.toString() === 'true' && Utils.isUndefined(bsConfig.run_settings.specs) ) {
+      reject(Constants.validationMessages.EMPTY_SPECS_IN_BROWSERSTACK_JSON);
+    }
+
     // validate parallels specified in browserstack.json if parallels are not specified via arguments
     if (!Utils.isUndefined(args) && Utils.isUndefined(args.parallels) && !Utils.isParallelValid(bsConfig.run_settings.parallels)) reject(Constants.validationMessages.INVALID_PARALLELS_CONFIGURATION);
 
@@ -214,7 +218,8 @@ const validate = (bsConfig, args) => {
 
     logger.debug(`Validating ${bsConfig.run_settings.cypress_config_filename}`);
     try {
-      if (bsConfig.run_settings.cypress_config_filename !== 'false') {
+      // Not reading cypress config file upon enforce_settings
+      if (Utils.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) && bsConfig.run_settings.cypress_config_filename !== 'false') {
         if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
           const completeCypressConfigFile = readCypressConfigFile(bsConfig)
           if (!Utils.isUndefined(completeCypressConfigFile)) {
@@ -233,6 +238,11 @@ const validate = (bsConfig, args) => {
 
         // Detect if the user is not using the right directory structure, and throw an error
         if (!Utils.isUndefined(cypressConfigFile.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,cypressConfigFile.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
+      }
+      else {
+        logger.debug("Validating baseurl and integrationFolder in browserstack.json");
+        if (!Utils.isUndefined(bsConfig.run_settings.baseUrl) && bsConfig.run_settings.baseUrl.includes("localhost") && !Utils.getLocalFlag(bsConfig.connection_settings)) reject(Constants.validationMessages.LOCAL_NOT_SET.replace("<baseUrlValue>", bsConfig.run_settings.baseUrl));
+        if (!Utils.isUndefined(bsConfig.run_settings.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,bsConfig.run_settings.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
       }
     } catch(error){
       reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
