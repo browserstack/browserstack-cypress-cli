@@ -1340,7 +1340,7 @@ exports.setEnforceSettingsConfig = (bsConfig) => {
     if(specConfigs && specConfigs.includes(',')) {
       specConfigs = JSON.stringify(specConfigs.split(','));
     }
-    let spec_pattern_args = 'specPattern="'+specConfigs+'"';
+    let spec_pattern_args = `specPattern=${specConfigs}`;
     config_args = this.isUndefined(config_args) ? spec_pattern_args : config_args + ',' + spec_pattern_args;
   }
   if ( this.isNotUndefined(config_args) ) bsConfig["run_settings"]["config"] = config_args;
