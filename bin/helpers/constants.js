@@ -441,6 +441,8 @@ const CYPRESS_CONFIG_FILE_NAMES = Object.keys(CYPRESS_CONFIG_FILE_MAPPING);
 
 const CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS = ['js', 'ts', 'cjs', 'mjs']
 
+const turboScaleObj = {};
+
 module.exports = Object.freeze({
   syncCLI,
   userMessages,
@@ -453,6 +455,7 @@ module.exports = Object.freeze({
   hashingOptions,
   packageInstallerOptions,
   specFileTypes,
+  turboScaleObj,
   DEFAULT_CYPRESS_SPEC_PATH,
   DEFAULT_CYPRESS_10_SPEC_PATH,
   SPEC_TOTAL_CHAR_LIMIT,

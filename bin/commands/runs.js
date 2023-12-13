@@ -36,6 +36,7 @@ const {
   checkAccessibilityPlatform,
   supportFileCleanup
 } = require('../accessibility-automation/helper');
+const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
 
 module.exports = function run(args, rawArgs) {
 
@@ -66,6 +67,8 @@ module.exports = function run(args, rawArgs) {
     const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
     const checkAccessibility = checkAccessibilityPlatform(bsConfig);
     const isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibility;
+    const turboScaleSession = isTurboScaleSession(bsConfig);
+    Constants.turboScaleObj.enabled = turboScaleSession;
 
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
@@ -77,7 +80,7 @@ module.exports = function run(args, rawArgs) {
     // accept the access key from command line or env variable if provided
     utils.setAccessKey(bsConfig, args);
 
-    let buildReportData = !isBrowserstackInfra ? null : await getInitialDetails(bsConfig, args, rawArgs);
+    let buildReportData = (turboScaleSession || !isBrowserstackInfra) ? null : await getInitialDetails(bsConfig, args, rawArgs);
 
     // accept the build name from command line if provided
     utils.setBuildName(bsConfig, args);
@@ -147,6 +150,29 @@ module.exports = function run(args, rawArgs) {
       if (isAccessibilitySession && isBrowserstackInfra) {
         await createAccessibilityTestRun(bsConfig);
       }
+
+      if (turboScaleSession) {
+        // Local is only required in case user is running on trial grid and wants to access private website.
+        // Even then, it will be spawned separately via browserstack-cli ats connect-grid command and not via browserstack-cypress-cli
+        // Hence whenever running on ATS, need to make local as false
+        bsConfig.connection_settings.local = false;
+
+        const gridDetails = await getTurboScaleGridDetails(bsConfig, args, rawArgs);
+
+        if (gridDetails && Object.keys(gridDetails).length > 0) {
+          Constants.turboScaleObj.gridDetails = gridDetails;
+          Constants.turboScaleObj.gridUrl = gridDetails.cypressUrl;
+          Constants.turboScaleObj.uploadUrl = gridDetails.cypressUrl + '/upload';
+          Constants.turboScaleObj.buildUrl = gridDetails.cypressUrl + '/build';
+
+          logger.debug(`Automate TurboScale Grid URL set to ${gridDetails.url}`);
+
+          patchCypressConfigFileContent(bsConfig);
+        } else {
+          process.exitCode = Constants.ERROR_EXIT_CODE;
+          return;
+        }
+      }
     }
 
     const { packagesInstalled } = !isBrowserstackInfra ? false : await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd});
@@ -186,7 +212,7 @@ module.exports = function run(args, rawArgs) {
 
       //get the number of spec files
       markBlockStart('getNumberOfSpecFiles');
-      let specFiles = utils.getNumberOfSpecFiles(bsConfig, args, cypressConfigFile);
+      let specFiles = utils.getNumberOfSpecFiles(bsConfig, args, cypressConfigFile, turboScaleSession);
       markBlockEnd('getNumberOfSpecFiles');
 
       bsConfig['run_settings']['video_config'] = utils.getVideoConfig(cypressConfigFile, bsConfig);
@@ -251,6 +277,11 @@ module.exports = function run(args, rawArgs) {
               if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
                 supportFileCleanup();
               }
+
+              if (turboScaleSession) {
+                atsFileCleanup(bsConfig);
+              }
+
               // Set config args for enforce_settings
               if ( !utils.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) ) {
                 markBlockStart('setEnforceSettingsConfig');
@@ -310,13 +341,13 @@ module.exports = function run(args, rawArgs) {
                     logger.debug("Completed polling of build status");
 
                     // stop the Local instance
-                    await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs, buildReportData);
+                    if (!turboScaleSession) await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs, buildReportData);
 
                     // waiting for 5 secs for upload to complete (as a safety measure)
                     await new Promise(resolve => setTimeout(resolve, 5000));
 
                     // download build artifacts
-                    if (exitCode != Constants.BUILD_FAILED_EXIT_CODE) {
+                    if (exitCode != Constants.BUILD_FAILED_EXIT_CODE && !turboScaleSession) {
                       if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
                         logger.debug("Downloading build artifacts");
                         await downloadBuildArtifacts(bsConfig, data.build_id, args, rawArgs, buildReportData);
@@ -328,7 +359,7 @@ module.exports = function run(args, rawArgs) {
                         markBlockEnd('postBuild');
                         utils.handleSyncExit(exitCode, data.dashboard_url);
                       });
-                    } else {
+                    } else if(!turboScaleSession){
                       let stacktraceUrl = getStackTraceUrl();
                       downloadBuildStacktrace(stacktraceUrl).then((message) => {
                         utils.sendUsageReport(bsConfig, args, message, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
@@ -344,7 +375,7 @@ module.exports = function run(args, rawArgs) {
                       });
                     }
                   });
-                } else if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
+                } else if (utils.nonEmptyArray(bsConfig.run_settings.downloads && !turboScaleSession)) {
                   logger.info(Constants.userMessages.ASYNC_DOWNLOADS.replace('<build-id>', data.build_id));
                 }
 

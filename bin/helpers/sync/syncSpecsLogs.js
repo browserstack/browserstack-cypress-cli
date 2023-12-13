@@ -24,8 +24,8 @@ let terminalWidth = (process.stdout.columns) * 0.9;
 let lineSeparator = Constants.syncCLI.DEFAULT_LINE_SEP;
 if (!isNaN(terminalWidth)) lineSeparator = "\n" + "-".repeat(terminalWidth);
 
-let  getOptions = (auth, build_id) => {
-  return {
+let getOptions = (auth, build_id) => {
+  const options = {
     url: `${config.buildUrlV2}${build_id}`,
     auth: {
       user: auth.username,
@@ -37,6 +37,12 @@ let  getOptions = (auth, build_id) => {
       "User-Agent": utils.getUserAgent()
     }
   };
+
+  if (Constants.turboScaleObj.enabled) {
+    options.url = `${config.turboScaleBuildsUrl}/${build_id}`;
+  }
+
+  return options;
 }
 
 let getTableConfig = (termWidth) => {

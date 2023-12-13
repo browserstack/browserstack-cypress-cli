@@ -721,6 +721,11 @@ exports.generateUploadParams = (bsConfig, filePath, md5data, fileDetails) => {
       "User-Agent": exports.getUserAgent(),
     }
   }
+
+  if (Constants.turboScaleObj.enabled) {
+    options.url = Constants.turboScaleObj.uploadUrl;
+  }
+
   return options
 }
 
@@ -968,6 +973,7 @@ exports.setLocalArgs = (bsConfig, args) => {
     local_args['proxyPort'] = bsConfig["connection_settings"]["proxyPort"];
   if (bsConfig["connection_settings"]["useCaCertificate"])
     local_args['useCaCertificate'] = bsConfig["connection_settings"]["useCaCertificate"];
+
   local_args['daemon'] = true;
   local_args['enable-logging-for-api'] = true
   local_args['source'] = `cypress:${usageReporting.cli_version_and_path(bsConfig).version}`;
@@ -1070,7 +1076,7 @@ exports.getFilesToIgnore = (runSettings, excludeFiles, logging = true) => {
   return ignoreFiles;
 }
 
-exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
+exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession=false) => {
   let defaultSpecFolder
   let testFolderPath
   let globCypressConfigSpecPatterns = []
@@ -1145,6 +1151,13 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
   }
 
   logger.debug(`${files ? files.length : 0} spec files found`);
+
+  if (turboScaleSession) {
+    // remove unwanted path prefix for turboscale
+    files = files.map((x) => { return path.join(testFolderPath, x.split(testFolderPath)[1]) })
+    // setting specs for turboScale as we don't have patched API for turboscale so we will rely on info from CLI
+    bsConfig.run_settings.specs = files;
+  }
   return files;
 };
 
@@ -1430,6 +1443,11 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs, buildRe
         'User-Agent': that.getUserAgent(),
       },
     };
+
+    if (Constants.turboScaleObj.enabled) {
+      options.url = `${config.turboScaleBuildsUrl}/${buildId}/stop`;
+    }
+
     let message = null;
     let messageType = null;
     let errorCode = null;
