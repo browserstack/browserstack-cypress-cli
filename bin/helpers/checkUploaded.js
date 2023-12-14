@@ -121,6 +121,10 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
         body: JSON.stringify(data)
       };
 
+      if (Constants.turboScaleObj.enabled) {
+        options.url = config.turboScaleMd5Sum;
+      }
+
       instrumentBlocks.markBlockStart("checkAlreadyUploaded.railsCheck");
       request.post(options, function (err, resp, body) {
         if (err) {

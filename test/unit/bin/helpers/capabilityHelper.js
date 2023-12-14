@@ -925,6 +925,40 @@ describe("capabilityHelper.js", () => {
         });
     });
 
+    it("validate bsConfig.run_settings.enforce_settings", () => {
+      let bsConfig = {
+        auth: {},
+        browsers: [
+          {
+            browser: "chrome",
+            os: "Windows 10",
+            versions: ["78", "77"],
+          },
+        ],
+        run_settings: {
+          cypress_proj_dir: "random path",
+          cypressConfigFilePath: "random path",
+          cypressProjectDir: "random path",
+          cypress_config_filename: "cypress.json",
+          spec_timeout: 10,
+          cypressTestSuiteType: Constants.CYPRESS_V9_AND_OLDER_TYPE,
+          enforce_settings: true
+        },
+      };
+
+      return capabilityHelper
+        .validate(bsConfig, { parallels: undefined })
+        .then(function (data) {
+          chai.assert.fail("Promise error");
+        })
+        .catch((error) => {
+          chai.assert.equal(
+            error,
+            Constants.validationMessages.EMPTY_SPECS_IN_BROWSERSTACK_JSON
+          );
+        });
+    });
+
     it("resolve with proper message", () => {
       let bsConfig = {
         auth: {},
