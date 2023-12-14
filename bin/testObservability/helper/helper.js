@@ -41,14 +41,14 @@ exports.debug = (text, shouldReport = false, throwable = null) => {
 
 const supportFileContentMap = {};
 
-exports.httpsKeepAliveAgent = new https.Agent({
+exports.httpsKeepAliveAgent = new http.Agent({
   keepAlive: true,
   timeout: 60000,
   maxSockets: 2,
   maxTotalSockets: 2
 });
 
-const httpsScreenshotsKeepAliveAgent = new https.Agent({
+const httpsScreenshotsKeepAliveAgent = new http.Agent({
   keepAlive: true,
   timeout: 60000,
   maxSockets: 2,

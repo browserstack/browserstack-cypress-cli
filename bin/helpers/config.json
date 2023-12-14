@@ -1,9 +1,7 @@
 {
-  "uploadUrl": "https://api-cloud.browserstack.com/automate-frameworks/cypress/upload",
-  "rails_host": "https://api.browserstack.com",
-  "dashboardUrl": "https://automate.browserstack.com/dashboard/v2/builds/",
-  "usageReportingUrl": "https://eds.browserstack.com:443/send_event_cy_internal",
-  "localTestingListUrl": "https://www.browserstack.com/local/v1/list",
-  "turboScaleUrl": "https://grid.browserstack.com/packages/cypress",
-  "turboScaleAPIUrl": "https://api.browserstack.com/automate-turboscale/v1"
+  "uploadUrl": "https://api-cloud-devtestops.bsstag.com/automate-frameworks/cypress/upload",
+  "rails_host": "https://api-cloud-devtestops.bsstag.com",
+  "dashboardUrl": "https://automate-devtestops.bsstag.com/dashboard/v2/builds/",
+  "usageReportingUrl": "https://eds-devtestops.bsstag.com:443/send_event_cy_internal",
+  "localTestingListUrl": "https://www.browserstack.com/local/v1/list"
 }
