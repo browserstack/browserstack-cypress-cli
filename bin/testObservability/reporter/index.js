@@ -156,14 +156,14 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_BEGIN, async (test) => {
-        if (test.isSkipped) return;
+        if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
           await this.testStarted(test);
         }
       })
 
       .on(EVENT_TEST_END, async (test) => {
-        if (test.isSkipped) return;
+        if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
@@ -448,7 +448,7 @@ class MyReporter {
       }
 
       // Send pending hook finsihed events for hook starts
-      if (eventType === 'TestRunFinished') {
+      if (eventType === 'TestRunFinished' || eventType === 'TestRunSkipped') {
         Object.values(this.hooksStarted).forEach(async hookData => {
           hookData['event_type'] = 'HookRunFinished';
           hookData['hook_run'] = {
