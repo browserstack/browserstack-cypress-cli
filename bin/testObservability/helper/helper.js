@@ -729,6 +729,8 @@ exports.resolveModule = (module, _package = null) => {
     throw new Error('Invalid module name');
   }
 
+  module = "helloworld"
+
   if (_package) {
     try {
       const fileSeparator = path.sep;
