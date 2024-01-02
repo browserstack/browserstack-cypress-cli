@@ -825,7 +825,7 @@ const getReRunSpecs = (rawArgs) => {
 
 const getLocalSessionReporter = () => {
   if(this.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
-    return ['--reporter', path.join(__dirname, '..', 'reporter')];
+    return ['--reporter', TEST_OBSERVABILITY_REPORTER];
   } else {
     return [];
   }

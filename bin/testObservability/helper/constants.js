@@ -1,3 +1,5 @@
+const path = require('path');
+
 exports.consoleHolder = Object.assign({},console);
 exports.BATCH_SIZE = 1000;
 exports.BATCH_INTERVAL = 2000;
@@ -27,4 +29,4 @@ exports.OBSERVABILITY_ENV_VARS = [
   "OBS_CRASH_REPORTING_CYPRESS_CONFIG_PATH"
 ];
 
-exports.TEST_OBSERVABILITY_REPORTER = 'browserstack-cypress-cli/bin/testObservability/reporter';
+exports.TEST_OBSERVABILITY_REPORTER = path.join(__dirname, '..', 'reporter');
