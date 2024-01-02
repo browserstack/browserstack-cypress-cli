@@ -755,7 +755,7 @@ exports.resolveModule = (module) => {
       if (WORKSPACE_MODULE_PATH) {
         exports.debug(`Getting ${module} from path ${WORKSPACE_MODULE_PATH}`);
         let workspace_path = null;
-        if (['jest-runner', 'jest-runtime'].includes(module)) {workspace_path = path.join(WORKSPACE_MODULE_PATH, 'node_modules', 'jest', 'node_modules', module)} else {workspace_path = path.join(WORKSPACE_MODULE_PATH, 'node_modules', module)}
+        workspace_path = path.join(WORKSPACE_MODULE_PATH, 'node_modules', module);
         if (workspace_path && fs.existsSync(workspace_path)) {
           exports.debug(`Found ${module} from ${WORKSPACE_MODULE_PATH}`);
 
@@ -766,7 +766,7 @@ exports.resolveModule = (module) => {
       /* Find from node path */
       let node_path = null;
       if (!exports.isUndefined(process.env.NODE_PATH)) {
-        if (['jest-runner', 'jest-runtime'].includes(module)) {node_path = path.join(process.env.NODE_PATH, 'jest', 'node_modules', module)} else {node_path = path.join(process.env.NODE_PATH, module)}
+        node_path = path.join(process.env.NODE_PATH, module);
       }
       if (node_path && fs.existsSync(node_path)) {
         exports.debug(`Getting ${module} from ${process.env.NODE_PATH}`);
@@ -777,8 +777,7 @@ exports.resolveModule = (module) => {
       /* Find from global node modules path */
       exports.debug(`Getting ${module} from ${GLOBAL_MODULE_PATH}`);
 
-      let global_path = null;
-      global_path = path.join(GLOBAL_MODULE_PATH, module);
+      let global_path = path.join(GLOBAL_MODULE_PATH, module);
       if (!global_path || !fs.existsSync(global_path)) {
         return {error: 'module_not_found'};
       }
