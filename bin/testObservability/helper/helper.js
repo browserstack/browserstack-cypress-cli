@@ -729,8 +729,6 @@ exports.resolveModule = (module) => {
     throw new Error('Invalid module name');
   }
 
-  module = "helloworld"
-
 
   /*
   Modules will be resolved in the following order,
