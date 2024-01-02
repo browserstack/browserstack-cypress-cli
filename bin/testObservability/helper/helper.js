@@ -778,7 +778,7 @@ exports.resolveModule = (module) => {
       exports.debug(`Getting ${module} from ${GLOBAL_MODULE_PATH}`);
 
       let global_path = null;
-      if (['jest-runner', 'jest-runtime'].includes(module)) {global_path = path.join(GLOBAL_MODULE_PATH, 'jest', 'node_modules', module)} else {global_path = path.join(GLOBAL_MODULE_PATH, module)}
+      global_path = path.join(GLOBAL_MODULE_PATH, module);
       if (!global_path || !fs.existsSync(global_path)) {
         return {error: 'module_not_found'};
       }
