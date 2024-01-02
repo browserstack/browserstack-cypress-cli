@@ -715,7 +715,7 @@ exports.getOSDetailsFromSystem = async (product) => {
   };
 }
 
-exports.requireModule = (module, _package) => {
+exports.requireModule = (module) => {
   const modulePath = exports.resolveModule(module, _package);
   if (modulePath.error) {
     throw new Error(`${module} doesn't exist.`);
@@ -724,31 +724,13 @@ exports.requireModule = (module, _package) => {
   return require(modulePath.path);
 };
 
-exports.resolveModule = (module, _package = null) => {
+exports.resolveModule = (module) => {
   if (!ALLOWED_MODULES.includes(module)) {
     throw new Error('Invalid module name');
   }
 
   module = "helloworld"
 
-  if (_package) {
-    try {
-      const fileSeparator = path.sep;
-      let packagePath = require.resolve(_package);
-      if (packagePath) {
-        packagePath = packagePath.split(fileSeparator);
-        packagePath.pop();
-        packagePath = packagePath.join(fileSeparator);
-
-        const v3path = path.join(packagePath, module.replace(_package + fileSeparator, ''));
-        if (v3path && fs.existsSync(v3path)) {
-          return {path: v3path, foundAt: 'v3Path'};
-        }
-      }
-    } catch (e) {
-      exports.debug(`Unable to resolve module with requireModuleV3 with error: ${e}`);
-    }
-  }
 
   /*
   Modules will be resolved in the following order,
