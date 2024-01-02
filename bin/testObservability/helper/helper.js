@@ -715,32 +715,94 @@ exports.getOSDetailsFromSystem = async (product) => {
   };
 }
 
-exports.requireModule = (module, internal = false) => {
-  logger.debug(`Getting ${module} from ${process.cwd()}`);
-  let local_path = "";
-  if(process.env["browserStackCwd"]){
-   local_path = path.join(process.env["browserStackCwd"], 'node_modules', module);
-  } else if(internal) {
-    local_path = path.join(process.cwd(), 'node_modules', 'browserstack-cypress-cli', 'node_modules', module);
-  } else {
-    local_path = path.join(process.cwd(), 'node_modules', module);
+exports.requireModule = (module, _package) => {
+  const modulePath = exports.resolveModule(module, _package);
+  if (modulePath.error) {
+    throw new Error(`${module} doesn't exist.`);
   }
-  if(!fs.existsSync(local_path)) {
-    logger.debug(`${module} doesn\'t exist at ${process.cwd()}`);
-    logger.debug(`Getting ${module} from ${GLOBAL_MODULE_PATH}`);
 
-    let global_path;
-    if(['jest-runner', 'jest-runtime'].includes(module))
-      global_path = path.join(GLOBAL_MODULE_PATH, 'jest', 'node_modules', module);
-    else
-      global_path = path.join(GLOBAL_MODULE_PATH, module);
-    if(!fs.existsSync(global_path)) {
-      throw new Error(`${module} doesn't exist.`);
+  return require(modulePath.path);
+};
+
+exports.resolveModule = (module, _package = null) => {
+  if (_package) {
+    try {
+      const fileSeparator = path.sep;
+      let packagePath = require.resolve(_package);
+      if (packagePath) {
+        packagePath = packagePath.split(fileSeparator);
+        packagePath.pop();
+        packagePath = packagePath.join(fileSeparator);
+
+        const v3path = path.join(packagePath, module.replace(_package + fileSeparator, ''));
+        if (v3path && fs.existsSync(v3path)) {
+          return {path: v3path, foundAt: 'v3Path'};
+        }
+      }
+    } catch (e) {
+      exports.debug(`Unable to resolve module with requireModuleV3 with error: ${e}`);
     }
-    return require(global_path);
   }
-  return require(local_path);
-}
+
+  /*
+  Modules will be resolved in the following order,
+  current working dir > workspaces dir > NODE_PATH env var > global node modules path
+  */
+
+  try {
+    exports.debug('requireModuleV2');
+
+    return {path: require.resolve(module), foundAt: 'resolve'};
+  } catch (_) {
+    /* Find from current working directory */
+    exports.debug(`Getting ${module} from ${process.cwd()}`);
+    let local_path = '';
+    if (process.env['browserStackCwd']) {
+      local_path = path.join(process.env['browserStackCwd'], 'node_modules', module);
+    } else {
+      local_path = path.join(process.cwd(), 'node_modules', module);
+    }
+    if (!fs.existsSync(local_path)) {
+      exports.debug(`${module} doesn't exist at ${process.cwd()}`);
+
+      /* Find from workspaces */
+      if (WORKSPACE_MODULE_PATH) {
+        exports.debug(`Getting ${module} from path ${WORKSPACE_MODULE_PATH}`);
+        let workspace_path = null;
+        if (['jest-runner', 'jest-runtime'].includes(module)) {workspace_path = path.join(WORKSPACE_MODULE_PATH, 'node_modules', 'jest', 'node_modules', module)} else {workspace_path = path.join(WORKSPACE_MODULE_PATH, 'node_modules', module)}
+        if (workspace_path && fs.existsSync(workspace_path)) {
+          exports.debug(`Found ${module} from ${WORKSPACE_MODULE_PATH}`);
+
+          return {path: workspace_path, foundAt: 'workspaces'};
+        }
+      }
+
+      /* Find from node path */
+      let node_path = null;
+      if (!exports.isUndefined(process.env.NODE_PATH)) {
+        if (['jest-runner', 'jest-runtime'].includes(module)) {node_path = path.join(process.env.NODE_PATH, 'jest', 'node_modules', module)} else {node_path = path.join(process.env.NODE_PATH, module)}
+      }
+      if (node_path && fs.existsSync(node_path)) {
+        exports.debug(`Getting ${module} from ${process.env.NODE_PATH}`);
+
+        return {path: node_path, foundAt: 'nodePath'};
+      }
+
+      /* Find from global node modules path */
+      exports.debug(`Getting ${module} from ${GLOBAL_MODULE_PATH}`);
+
+      let global_path = null;
+      if (['jest-runner', 'jest-runtime'].includes(module)) {global_path = path.join(GLOBAL_MODULE_PATH, 'jest', 'node_modules', module)} else {global_path = path.join(GLOBAL_MODULE_PATH, module)}
+      if (!global_path || !fs.existsSync(global_path)) {
+        return {error: 'module_not_found'};
+      }
+
+      return {path: global_path, foundAt: 'local'};
+    }
+
+    return {path: local_path, foundAt: 'global'};
+  }
+};
 
 const getReRunSpecs = (rawArgs) => {
   if (this.isTestObservabilitySession() && this.shouldReRunObservabilityTests()) {
@@ -763,7 +825,7 @@ const getReRunSpecs = (rawArgs) => {
 
 const getLocalSessionReporter = () => {
   if(this.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
-    return ['--reporter', TEST_OBSERVABILITY_REPORTER];
+    return ['--reporter', path.join(__dirname, '..', 'reporter')];
   } else {
     return [];
   }
