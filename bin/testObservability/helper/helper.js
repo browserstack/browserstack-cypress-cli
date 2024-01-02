@@ -726,7 +726,7 @@ exports.getOSDetailsFromSystem = async (product) => {
 let WORKSPACE_MODULE_PATH;
 
 exports.requireModule = (module) => {
-  const modulePath = exports.resolveModule(module, _package);
+  const modulePath = exports.resolveModule(module);
   if (modulePath.error) {
     throw new Error(`${module} doesn't exist.`);
   }
