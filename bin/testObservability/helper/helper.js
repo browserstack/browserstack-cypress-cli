@@ -25,7 +25,7 @@ const GLOBAL_MODULE_PATH = execSync('npm root -g').toString().trim();
 const { name, version } = require('../../../package.json');
 
 const { CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS } = require('../../helpers/constants');
-const { consoleHolder, API_URL, TEST_OBSERVABILITY_REPORTER } = require('./constants');
+const { consoleHolder, API_URL, TEST_OBSERVABILITY_REPORTER, ALLOWED_MODULES } = require('./constants');
 exports.pending_test_uploads = {
   count: 0
 };
@@ -725,6 +725,10 @@ exports.requireModule = (module, _package) => {
 };
 
 exports.resolveModule = (module, _package = null) => {
+  if (!ALLOWED_MODULES.includes(module)) {
+    throw new Error('Invalid module name');
+  }
+
   if (_package) {
     try {
       const fileSeparator = path.sep;
