@@ -723,6 +723,8 @@ exports.getOSDetailsFromSystem = async (product) => {
   };
 }
 
+let WORKSPACE_MODULE_PATH;
+
 exports.requireModule = (module) => {
   const modulePath = exports.resolveModule(module, _package);
   if (modulePath.error) {
@@ -737,6 +739,15 @@ exports.resolveModule = (module) => {
     throw new Error('Invalid module name');
   }
 
+  if (WORKSPACE_MODULE_PATH == undefined) {
+    try {
+      WORKSPACE_MODULE_PATH = execSync('npm ls').toString().trim();
+      WORKSPACE_MODULE_PATH = WORKSPACE_MODULE_PATH.split('\n')[0].split(' ')[1];
+    } catch (e) {
+      WORKSPACE_MODULE_PATH = null;
+      logger.debug('Could not locate npm module path with error ', e);
+    }
+  }
 
   /*
   Modules will be resolved in the following order,
@@ -750,12 +761,7 @@ exports.resolveModule = (module) => {
   } catch (_) {
     /* Find from current working directory */
     exports.debug(`Getting ${module} from ${process.cwd()}`);
-    let local_path = '';
-    if (process.env['browserStackCwd']) {
-      local_path = path.join(process.env['browserStackCwd'], 'node_modules', module);
-    } else {
-      local_path = path.join(process.cwd(), 'node_modules', module);
-    }
+    let local_path = path.join(process.cwd(), 'node_modules', module);
     if (!fs.existsSync(local_path)) {
       exports.debug(`${module} doesn't exist at ${process.cwd()}`);
 
