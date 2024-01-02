@@ -745,7 +745,7 @@ exports.resolveModule = (module) => {
       WORKSPACE_MODULE_PATH = WORKSPACE_MODULE_PATH.split('\n')[0].split(' ')[1];
     } catch (e) {
       WORKSPACE_MODULE_PATH = null;
-      logger.debug('Could not locate npm module path with error ', e);
+      exports.debug(`Could not locate npm module path with error ${e}`);
     }
   }
 
