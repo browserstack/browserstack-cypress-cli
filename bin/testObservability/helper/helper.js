@@ -25,7 +25,15 @@ const GLOBAL_MODULE_PATH = execSync('npm root -g').toString().trim();
 const { name, version } = require('../../../package.json');
 
 const { CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS } = require('../../helpers/constants');
-const { consoleHolder, API_URL, TEST_OBSERVABILITY_REPORTER, ALLOWED_MODULES } = require('./constants');
+const { consoleHolder, API_URL, TEST_OBSERVABILITY_REPORTER } = require('./constants');
+
+const ALLOWED_MODULES = [
+  'cypress/package.json',
+  'mocha/lib/reporters/base.js',
+  'mocha/lib/utils.js',
+  'mocha'
+];
+
 exports.pending_test_uploads = {
   count: 0
 };

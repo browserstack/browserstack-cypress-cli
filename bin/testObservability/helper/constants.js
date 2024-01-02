@@ -30,10 +30,3 @@ exports.OBSERVABILITY_ENV_VARS = [
 ];
 
 exports.TEST_OBSERVABILITY_REPORTER = path.join(__dirname, '..', 'reporter');
-
-exports.ALLOWED_MODULES = [
-  'cypress/package.json',
-  'mocha/lib/reporters/base.js',
-  'mocha/lib/utils.js',
-  'mocha'
-]
