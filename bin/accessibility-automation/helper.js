@@ -191,7 +191,7 @@ const getAccessibilityCypressCommandEventListener = () => {
 const setAccessibilityEventListeners = () => {
   try {
     const cypressCommandEventListener = getAccessibilityCypressCommandEventListener();
-    glob(process.cwd() + '/cypress/support/*.js', {}, (err, files) => {
+    glob(process.cwd() + '/**/cypress/support/*.js', {}, (err, files) => {
       if(err) return logger.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
       files.forEach(file => {
         try {
