@@ -331,7 +331,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
         projectName,
         buildDescription,
         buildTags
-      } = helper.getBuildDetails(user_config);
+      } = helper.getBuildDetails(user_config, true);
       const data = {
         'format': 'json',
         'project_name': projectName,
