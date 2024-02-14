@@ -1,94 +1,228 @@
 /* Event listeners + custom commands for Cypress */
 
-Cypress.on('test:before:run', () => {
-  try {
-    if (Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED") !== "true") return
-    const extensionPath = Cypress.env("ACCESSIBILITY_EXTENSION_PATH")
-  
-    if (extensionPath !== undefined) {
-      new Promise((resolve, reject) => {
-        window.parent.addEventListener('A11Y_TAP_STARTED', () => {
-          resolve("A11Y_TAP_STARTED");
-        });
-        const e = new CustomEvent('A11Y_FORCE_START');
-        window.parent.dispatchEvent(e);
-      })
+const commandsToWrap = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scroll', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
+
+const performScan = (win, payloadToSend) =>
+  new Promise(async (resolve, reject) => {
+
+    const isHttpOrHttps = /^(http|https):$/.test(win.location.protocol);
+    if (!isHttpOrHttps) {
+      resolve();
     }
-  } catch {}
-  
-});
 
-Cypress.on('test:after:run', (attributes, runnable) => {
-  try {
-    if (Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED") !== "true") return
-    const extensionPath = Cypress.env("ACCESSIBILITY_EXTENSION_PATH")
-    const isHeaded = Cypress.browser.isHeaded;
-    if (isHeaded && extensionPath !== undefined) {
+    function findAccessibilityAutomationElement() {
+      return win.document.querySelector("#accessibility-automation-element");
+    }
 
-      let shouldScanTestForAccessibility = true;
-      if (Cypress.env("INCLUDE_TAGS_FOR_ACCESSIBILITY") || Cypress.env("EXCLUDE_TAGS_FOR_ACCESSIBILITY")) {
-
-        try {
-          let includeTagArray = [];
-          let excludeTagArray = [];
-          if (Cypress.env("INCLUDE_TAGS_FOR_ACCESSIBILITY")) {
-            includeTagArray = Cypress.env("INCLUDE_TAGS_FOR_ACCESSIBILITY").split(";")
+    function waitForScannerReadiness(retryCount = 30, retryInterval = 100) {
+      return new Promise(async (resolve, reject) => {
+        let count = 0;
+        const intervalID = setInterval(async () => {
+          if (count > retryCount) {
+            clearInterval(intervalID);
+            reject(
+              new Error(
+                "Accessibility Automation Scanner is not ready on the page."
+              )
+            );
+          } else if (findAccessibilityAutomationElement()) {
+            clearInterval(intervalID);
+            resolve("Scanner set");
+          } else {
+            count += 1;
           }
-          if (Cypress.env("EXCLUDE_TAGS_FOR_ACCESSIBILITY")) {
-            excludeTagArray = Cypress.env("EXCLUDE_TAGS_FOR_ACCESSIBILITY").split(";")
-          }
-
-          const fullTestName = attributes.title;
-          const excluded = excludeTagArray.some((exclude) => fullTestName.includes(exclude));
-          const included = includeTagArray.length === 0 || includeTags.some((include) => fullTestName.includes(include));
-          shouldScanTestForAccessibility = !excluded && included;
-        } catch (error) {
-          console.log("Error while validating test case for accessibility before scanning. Error : ", error);
-        }
-      }
-      let os_data;
-      if (Cypress.env("OS")) {
-        os_data = Cypress.env("OS");
-      } else {
-        os_data = Cypress.platform === 'linux' ? 'mac' : "win"
-      }
-      let filePath = '';
-      if (attributes.invocationDetails !== undefined && attributes.invocationDetails.relativeFile !== undefined) {
-        filePath = attributes.invocationDetails.relativeFile;
-      }
-      const dataForExtension = {
-        "saveResults": shouldScanTestForAccessibility,
-        "testDetails": {
-          "name": attributes.title,
-          "testRunId": '5058', // variable not consumed, shouldn't matter what we send
-          "filePath": filePath,
-          "scopeList": [
-            filePath,
-            attributes.title
-          ]
-        },
-        "platform": {
-          "os_name": os_data,
-          "os_version": Cypress.env("OS_VERSION"),
-          "browser_name": Cypress.browser.name,
-          "browser_version": Cypress.browser.version
-        }
-      };
-      return new Promise((resolve, reject) => {
-        if (dataForExtension.saveResults) {
-          window.parent.addEventListener('A11Y_TAP_TRANSPORTER', (event) => {
-            resolve(event.detail);
-          });
-        }
-        const e = new CustomEvent('A11Y_TEST_END', {detail: dataForExtension});
-        window.parent.dispatchEvent(e);
-        if (dataForExtension.saveResults !== true )
-          resolve();
+        }, retryInterval);
       });
     }
 
-  } catch {}
-});
+    function startScan() {
+      function onScanComplete() {
+        win.removeEventListener("A11Y_SCAN_FINISHED", onScanComplete);
+        resolve();
+      }
+
+      win.addEventListener("A11Y_SCAN_FINISHED", onScanComplete);
+      const e = new CustomEvent("A11Y_SCAN", { detail: payloadToSend });
+      win.dispatchEvent(e);
+    }
+
+    if (findAccessibilityAutomationElement()) {
+      startScan();
+    } else {
+      waitForScannerReadiness()
+        .then(startScan)
+        .catch(async (err) => {
+          resolve("Scanner is not ready on the page after multiple retries. performscan");
+        });
+    }
+  })
+
+const saveTestResults = (win, payloadToSend) =>
+  new Promise( (resolve, reject) => {
+    try {
+      const isHttpOrHttps = /^(http|https):$/.test(win.location.protocol);
+      if (!isHttpOrHttps) {
+        resolve("Unable to save accessibility results, Invalid URL.");
+      }
+
+      function findAccessibilityAutomationElement() {
+        return win.document.querySelector("#accessibility-automation-element");
+      }
+
+      function waitForScannerReadiness(retryCount = 30, retryInterval = 100) {
+        return new Promise((resolve, reject) => {
+          let count = 0;
+          const intervalID = setInterval(async () => {
+            if (count > retryCount) {
+              clearInterval(intervalID);
+              reject(
+                new Error(
+                  "Accessibility Automation Scanner is not ready on the page."
+                )
+              );
+            } else if (findAccessibilityAutomationElement()) {
+              clearInterval(intervalID);
+              resolve("Scanner set");
+            } else {
+              count += 1;
+            }
+          }, retryInterval);
+        });
+      }
+
+      function saveResults() {
+        function onResultsSaved(event) {
+          resolve();
+        }
+        win.addEventListener("A11Y_RESULTS_SAVED", onResultsSaved);
+        const e = new CustomEvent("A11Y_SAVE_RESULTS", {
+          detail: payloadToSend,
+        });
+        win.dispatchEvent(e);
+      }
+
+      if (findAccessibilityAutomationElement()) {
+        saveResults();
+      } else {
+        waitForScannerReadiness()
+          .then(saveResults)
+          .catch(async (err) => {
+            resolve("Scanner is not ready on the page after multiple retries. after run");
+          });
+      }
+
+    } catch(er) {
+      resolve()
+    }
+
+  })
+
+const shouldScanForAccessibility = (attributes) => {
+  if (Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED") !== "true") return false;
+
+  const extensionPath = Cypress.env("ACCESSIBILITY_EXTENSION_PATH");
+  const isHeaded = Cypress.browser.isHeaded;
+
+  if (!isHeaded || (extensionPath === undefined)) return false;
+
+  let shouldScanTestForAccessibility = true;
+
+  if (Cypress.env("INCLUDE_TAGS_FOR_ACCESSIBILITY") || Cypress.env("EXCLUDE_TAGS_FOR_ACCESSIBILITY")) {
+    try {
+      let includeTagArray = [];
+      let excludeTagArray = [];
+      if (Cypress.env("INCLUDE_TAGS_FOR_ACCESSIBILITY")) {
+        includeTagArray = Cypress.env("INCLUDE_TAGS_FOR_ACCESSIBILITY").split(";")
+      }
+      if (Cypress.env("EXCLUDE_TAGS_FOR_ACCESSIBILITY")) {
+        excludeTagArray = Cypress.env("EXCLUDE_TAGS_FOR_ACCESSIBILITY").split(";")
+      }
+
+      const fullTestName = attributes.title;
+      const excluded = excludeTagArray.some((exclude) => fullTestName.includes(exclude));
+      const included = includeTagArray.length === 0 || includeTags.some((include) => fullTestName.includes(include));
+      shouldScanTestForAccessibility = !excluded && included;
+    } catch (error) {
+      console.log("Error while validating test case for accessibility before scanning. Error : ", error);
+    }
+  }
+
+  return shouldScanTestForAccessibility;
+}
+
+Cypress.on('command:start', async (command) => {
+  if(!command || !command.attributes) return;
+  if(command.attributes.name == 'window' || command.attributes.name == 'then' || command.attributes.name == 'wrap') {
+    return;
+  }
+
+  if (!commandsToWrap.includes(command.attributes.name)) return;
+
+  const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
+
+  let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
+  if (!shouldScanTestForAccessibility) return;
+
+  cy.window().then((win) => {
+    cy.wrap(performScan(win, {method: command.attributes.name}), {timeout: 30000})
+  })
+})
+
+afterEach(() => {
+  const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
+  cy.window().then(async (win) => {
+    cy.wrap(new Promise((resolve) => {
+      setTimeout(async () => {
+        resolve();
+      }, 5000);
+    }), {timeout: 20000}).then(() => {
+      cy.wrap(new Promise((resolve) => {
+        setTimeout(async () => {
+          resolve();
+        }, 5000);
+      }), {timeout: 20000})
+    })
+
+    let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
+    if (!shouldScanTestForAccessibility) return;
+
+    cy.wrap(performScan(win), {timeout: 30000}).then(() => {
+      try {
+        let os_data;
+        if (Cypress.env("OS")) {
+          os_data = Cypress.env("OS");
+        } else {
+          os_data = Cypress.platform === 'linux' ? 'mac' : "win"
+        }
+        let filePath = '';
+        if (attributes.invocationDetails !== undefined && attributes.invocationDetails.relativeFile !== undefined) {
+          filePath = attributes.invocationDetails.relativeFile;
+        }
+        const payloadToSend = {
+          "saveResults": shouldScanTestForAccessibility,
+          "testDetails": {
+            "name": attributes.title,
+            "testRunId": '5058', // variable not consumed, shouldn't matter what we send
+            "filePath": filePath,
+            "scopeList": [
+              filePath,
+              attributes.title
+            ]
+          },
+          "platform": {
+            "os_name": os_data,
+            "os_version": Cypress.env("OS_VERSION"),
+            "browser_name": Cypress.browser.name,
+            "browser_version": Cypress.browser.version
+          }
+        };
+        cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000})
+
+      } catch (er) {
+      }
+    })
+  });
+})
 
 Cypress.Commands.add('getAccessibilityResultsSummary', () => {
   try {
@@ -96,20 +230,68 @@ Cypress.Commands.add('getAccessibilityResultsSummary', () => {
       console.log(`Not a Accessibility Automation session, cannot retrieve Accessibility results.`);
       return
     }
-    return new Promise(function (resolve, reject) {
-      try{
-        const e = new CustomEvent('A11Y_TAP_GET_RESULTS_SUMMARY');
-        const fn = function (event) {
-          window.parent.removeEventListener('A11Y_RESULTS_SUMMARY_RESPONSE', fn);
-            resolve(event.detail.summary);
-        };
-        window.parent.addEventListener('A11Y_RESULTS_SUMMARY_RESPONSE', fn);
-        window.parent.dispatchEvent(e);
-      } catch (err) {
-        console.log("No accessibility results summary was found.");
-        reject(err);
-      }
-    });
+    return new Promise(resolved => {
+      cy.window().then((win) => {
+        new Promise((resolve) => {
+          const isHttpOrHttps = /^(http|https):$/.test(window.location.protocol);
+          if (!isHttpOrHttps) {
+            cy.log("Unable to retrieve accessibility result summary, Invalid URL.");
+            resolve();
+          }
+      
+          function findAccessibilityAutomationElement() {
+            return win.document.querySelector("#accessibility-automation-element");
+          }
+      
+          function waitForScannerReadiness(retryCount = 30, retryInterval = 100) {
+            return new Promise((resolve, reject) => {
+              let count = 0;
+              const intervalID = setInterval(() => {
+                if (count > retryCount) {
+                  clearInterval(intervalID);
+                  reject(
+                    new Error(
+                      "Accessibility Automation Scanner is not ready on the page."
+                    )
+                  );
+                } else if (findAccessibilityAutomationElement()) {
+                  clearInterval(intervalID);
+                  resolve("Scanner set");
+                } else {
+                  count += 1;
+                }
+              }, retryInterval);
+            });
+          }
+      
+          function getSummary() {
+            function onReceiveSummary(event) {
+              cy.log("Received Summary");
+              cy.log(event.detail);
+              win.removeEventListener("A11Y_RESULTS_SUMMARY", onReceiveSummary);
+              resolve(event.detail);
+            }
+      
+            win.addEventListener("A11Y_RESULTS_SUMMARY", onReceiveSummary);
+            const e = new CustomEvent("A11Y_GET_RESULTS_SUMMARY");
+            win.dispatchEvent(e);
+          }
+      
+          if (findAccessibilityAutomationElement()) {
+            getSummary();
+          } else {
+            waitForScannerReadiness()
+              .then(getSummary)
+              .catch((err) => {
+                cy.log(
+                  "Scanner is not ready on the page after multiple retries.",
+                  err
+                );
+              });
+          }
+        }).then(res => resolved(res)).finally(resolved);
+      });
+    })
   } catch {}
   
 });
@@ -120,21 +302,71 @@ Cypress.Commands.add('getAccessibilityResults', () => {
       console.log(`Not a Accessibility Automation session, cannot retrieve Accessibility results.`);
       return 
     }
-    return new Promise(function (resolve, reject) {
-      try{
-        const e = new CustomEvent('A11Y_TAP_GET_RESULTS');
-        const fn = function (event) {
-          window.parent.removeEventListener('A11Y_RESULTS_RESPONSE', fn);
-            resolve(event.detail.summary);
-        };
-        window.parent.addEventListener('A11Y_RESULTS_RESPONSE', fn);
-        window.parent.dispatchEvent(e);
-      } catch (err) {
-        console.log("No accessibility results were found.");
-        reject(err);
-      }
-    });
+
+/* browserstack_accessibility_automation_script */
+    return new Promise(resolved => {
+      cy.window().then((win) => {
+        new Promise((resolve) => {
+          const isHttpOrHttps = /^(http|https):$/.test(window.location.protocol);
+          if (!isHttpOrHttps) {
+            cy.log("Unable to retrieve accessibility results, Invalid URL.");
+            resolve();
+          }
+      
+          function findAccessibilityAutomationElement() {
+            return win.document.querySelector("#accessibility-automation-element");
+          }
+      
+          function waitForScannerReadiness(retryCount = 30, retryInterval = 100) {
+            return new Promise((resolve, reject) => {
+              let count = 0;
+              const intervalID = setInterval(() => {
+                if (count > retryCount) {
+                  clearInterval(intervalID);
+                  reject(
+                    new Error(
+                      "Accessibility Automation Scanner is not ready on the page."
+                    )
+                  );
+                } else if (findAccessibilityAutomationElement()) {
+                  clearInterval(intervalID);
+                  resolve("Scanner set");
+                } else {
+                  count += 1;
+                }
+              }, retryInterval);
+            });
+          }
+      
+          function getResults() {
+            function onReceivedResult(event) {
+              cy.log("Received Result");
+              cy.log(event.detail);
+              win.removeEventListener("A11Y_RESULTS_RESPONSE", onReceivedResult);
+              resolve(event.detail);
+            }
+      
+            win.addEventListener("A11Y_RESULTS_RESPONSE", onReceivedResult);
+            const e = new CustomEvent("A11Y_GET_RESULTS");
+            win.dispatchEvent(e);
+          }
+      
+          if (findAccessibilityAutomationElement()) {
+            getResults();
+          } else {
+            waitForScannerReadiness()
+              .then(getResults)
+              .catch((err) => {
+                cy.log(
+                  "Scanner is not ready on the page after multiple retries.",
+                  err
+                );
+              });
+          }
+        }).then(res => resolved(res)).finally(resolved);
+      });
+    })
+
   } catch {}
   
 });
-

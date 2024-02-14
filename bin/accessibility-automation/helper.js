@@ -66,7 +66,10 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
       'source': {
         frameworkName: "Cypress",
         frameworkVersion: helper.getPackageVersion('cypress', user_config),
-        sdkVersion: helper.getAgentVersion()
+        sdkVersion: helper.getAgentVersion(),
+        language: 'javascript',
+        testFramework: 'cypress',
+        testFrameworkVersion: helper.getPackageVersion('cypress', user_config)
       },
       'settings': settings,
       'versionControl': await helper.getGitMetaData(),
@@ -92,7 +95,7 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
     };
 
     const response = await nodeRequest(
-      'POST', 'test_runs', data, config, API_URL
+      'POST', 'v2/test_runs', data, config, API_URL
     );
     if(!utils.isUndefined(response.data)) {
       process.env.BS_A11Y_JWT = response.data.data.accessibilityToken;

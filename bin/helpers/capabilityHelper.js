@@ -122,7 +122,7 @@ const caps = (bsConfig, zip) => {
       }
 
       if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
-        bsConfig.run_settings["accessibilityPlatforms"] = getAccessibilityPlatforms(bsConfig);
+        bsConfig.run_settings["accessibilityPlatforms"] = getAccessibilityPlatforms(bsConfig, obj);
       }
 
       // send run_settings as is for other capabilities
@@ -146,8 +146,8 @@ const caps = (bsConfig, zip) => {
     resolve(data);
   })
 }
-const getAccessibilityPlatforms = (bsConfig) => {
-  const browserList = bsConfig.browsers;
+const getAccessibilityPlatforms = (bsConfig, obj) => {
+  const browserList = obj.devices;
   const accessibilityPlatforms = Array(browserList.length).fill(false);
   let rootLevelAccessibility = false;
   if (!Utils.isUndefined(bsConfig.run_settings.accessibility)) {
