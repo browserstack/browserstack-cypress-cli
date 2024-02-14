@@ -25,7 +25,15 @@ const GLOBAL_MODULE_PATH = execSync('npm root -g').toString().trim();
 const { name, version } = require('../../../package.json');
 
 const { CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS } = require('../../helpers/constants');
-const { consoleHolder, API_URL, TEST_OBSERVABILITY_REPORTER } = require('./constants');
+const { consoleHolder, API_URL, TEST_OBSERVABILITY_REPORTER, TEST_OBSERVABILITY_REPORTER_LOCAL } = require('./constants');
+
+const ALLOWED_MODULES = [
+  'cypress/package.json',
+  'mocha/lib/reporters/base.js',
+  'mocha/lib/utils.js',
+  'mocha'
+];
+
 exports.pending_test_uploads = {
   count: 0
 };
@@ -331,7 +339,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
         projectName,
         buildDescription,
         buildTags
-      } = helper.getBuildDetails(user_config);
+      } = helper.getBuildDetails(user_config, true);
       const data = {
         'format': 'json',
         'project_name': projectName,
@@ -715,32 +723,85 @@ exports.getOSDetailsFromSystem = async (product) => {
   };
 }
 
-exports.requireModule = (module, internal = false) => {
-  logger.debug(`Getting ${module} from ${process.cwd()}`);
-  let local_path = "";
-  if(process.env["browserStackCwd"]){
-   local_path = path.join(process.env["browserStackCwd"], 'node_modules', module);
-  } else if(internal) {
-    local_path = path.join(process.cwd(), 'node_modules', 'browserstack-cypress-cli', 'node_modules', module);
-  } else {
-    local_path = path.join(process.cwd(), 'node_modules', module);
-  }
-  if(!fs.existsSync(local_path)) {
-    logger.debug(`${module} doesn\'t exist at ${process.cwd()}`);
-    logger.debug(`Getting ${module} from ${GLOBAL_MODULE_PATH}`);
+let WORKSPACE_MODULE_PATH;
 
-    let global_path;
-    if(['jest-runner', 'jest-runtime'].includes(module))
-      global_path = path.join(GLOBAL_MODULE_PATH, 'jest', 'node_modules', module);
-    else
-      global_path = path.join(GLOBAL_MODULE_PATH, module);
-    if(!fs.existsSync(global_path)) {
-      throw new Error(`${module} doesn't exist.`);
-    }
-    return require(global_path);
+exports.requireModule = (module) => {
+  const modulePath = exports.resolveModule(module);
+  if (modulePath.error) {
+    throw new Error(`${module} doesn't exist.`);
   }
-  return require(local_path);
-}
+
+  return require(modulePath.path);
+};
+
+exports.resolveModule = (module) => {
+  if (!ALLOWED_MODULES.includes(module)) {
+    throw new Error('Invalid module name');
+  }
+
+  if (WORKSPACE_MODULE_PATH == undefined) {
+    try {
+      WORKSPACE_MODULE_PATH = execSync('npm ls').toString().trim();
+      WORKSPACE_MODULE_PATH = WORKSPACE_MODULE_PATH.split('\n')[0].split(' ')[1];
+    } catch (e) {
+      WORKSPACE_MODULE_PATH = null;
+      exports.debug(`Could not locate npm module path with error ${e}`);
+    }
+  }
+
+  /*
+  Modules will be resolved in the following order,
+  current working dir > workspaces dir > NODE_PATH env var > global node modules path
+  */
+
+  try {
+    exports.debug('requireModuleV2');
+
+    return {path: require.resolve(module), foundAt: 'resolve'};
+  } catch (_) {
+    /* Find from current working directory */
+    exports.debug(`Getting ${module} from ${process.cwd()}`);
+    let local_path = path.join(process.cwd(), 'node_modules', module);
+    if (!fs.existsSync(local_path)) {
+      exports.debug(`${module} doesn't exist at ${process.cwd()}`);
+
+      /* Find from workspaces */
+      if (WORKSPACE_MODULE_PATH) {
+        exports.debug(`Getting ${module} from path ${WORKSPACE_MODULE_PATH}`);
+        let workspace_path = null;
+        workspace_path = path.join(WORKSPACE_MODULE_PATH, 'node_modules', module);
+        if (workspace_path && fs.existsSync(workspace_path)) {
+          exports.debug(`Found ${module} from ${WORKSPACE_MODULE_PATH}`);
+
+          return {path: workspace_path, foundAt: 'workspaces'};
+        }
+      }
+
+      /* Find from node path */
+      let node_path = null;
+      if (!exports.isUndefined(process.env.NODE_PATH)) {
+        node_path = path.join(process.env.NODE_PATH, module);
+      }
+      if (node_path && fs.existsSync(node_path)) {
+        exports.debug(`Getting ${module} from ${process.env.NODE_PATH}`);
+
+        return {path: node_path, foundAt: 'nodePath'};
+      }
+
+      /* Find from global node modules path */
+      exports.debug(`Getting ${module} from ${GLOBAL_MODULE_PATH}`);
+
+      let global_path = path.join(GLOBAL_MODULE_PATH, module);
+      if (!global_path || !fs.existsSync(global_path)) {
+        return {error: 'module_not_found'};
+      }
+
+      return {path: global_path, foundAt: 'local'};
+    }
+
+    return {path: local_path, foundAt: 'global'};
+  }
+};
 
 const getReRunSpecs = (rawArgs) => {
   if (this.isTestObservabilitySession() && this.shouldReRunObservabilityTests()) {
@@ -763,7 +824,7 @@ const getReRunSpecs = (rawArgs) => {
 
 const getLocalSessionReporter = () => {
   if(this.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
-    return ['--reporter', TEST_OBSERVABILITY_REPORTER];
+    return ['--reporter', TEST_OBSERVABILITY_REPORTER_LOCAL];
   } else {
     return [];
   }

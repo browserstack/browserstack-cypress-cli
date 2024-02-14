@@ -267,16 +267,26 @@ exports.getCiInfo = () => {
   return null;
 }
 
-exports.getBuildDetails = (bsConfig) => {
+exports.getBuildDetails = (bsConfig, isO11y = false) => {
+  const isTestObservabilityOptionsPresent = isO11y && !utils.isUndefined(bsConfig["testObservabilityOptions"]);
+
   let buildName = '',
       projectName = '',
       buildDescription = '',
       buildTags = [];
-  
+
   /* Pick from environment variables */
   buildName = process.env.BROWSERSTACK_BUILD_NAME || buildName;
   projectName = process.env.BROWSERSTACK_PROJECT_NAME || projectName;
-  
+
+  /* Pick from testObservabilityOptions */
+  if(isTestObservabilityOptionsPresent) {
+    buildName = buildName || bsConfig["testObservabilityOptions"]["buildName"];
+    projectName = projectName || bsConfig["testObservabilityOptions"]["projectName"];
+    if(!utils.isUndefined(bsConfig["testObservabilityOptions"]["buildTag"])) buildTags = [...buildTags, ...bsConfig["testObservabilityOptions"]["buildTag"]];
+    buildDescription = buildDescription || bsConfig["testObservabilityOptions"]["buildDescription"];
+  }
+
   /* Pick from run settings */
   buildName = buildName || bsConfig["run_settings"]["build_name"];
   projectName = projectName || bsConfig["run_settings"]["project_name"];
