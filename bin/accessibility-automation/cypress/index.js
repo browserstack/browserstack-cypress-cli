@@ -334,7 +334,7 @@ afterEach(() => {
   });
 })
 
-Cypress.Commands.add('perfromScan', () => {
+Cypress.Commands.add('performScan', () => {
   cy.window().then(async (win) => {
     await performScan(win);
     return await getAccessibilityResultsSummary(win);
