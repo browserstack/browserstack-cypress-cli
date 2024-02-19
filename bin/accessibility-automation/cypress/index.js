@@ -57,6 +57,116 @@ const performScan = (win, payloadToSend) =>
     }
   })
 
+const getAccessibilityResultsSummary = (win) =>
+  new Promise((resolve) => {
+    const isHttpOrHttps = /^(http|https):$/.test(window.location.protocol);
+    if (!isHttpOrHttps) {
+      resolve();
+    }
+
+    function findAccessibilityAutomationElement() {
+      return win.document.querySelector("#accessibility-automation-element");
+    }
+
+    function waitForScannerReadiness(retryCount = 30, retryInterval = 100) {
+      return new Promise((resolve, reject) => {
+        let count = 0;
+        const intervalID = setInterval(() => {
+          if (count > retryCount) {
+            clearInterval(intervalID);
+            reject(
+              new Error(
+                "Accessibility Automation Scanner is not ready on the page."
+              )
+            );
+          } else if (findAccessibilityAutomationElement()) {
+            clearInterval(intervalID);
+            resolve("Scanner set");
+          } else {
+            count += 1;
+          }
+        }, retryInterval);
+      });
+    }
+
+    function getSummary() {
+      function onReceiveSummary(event) {
+
+        win.removeEventListener("A11Y_RESULTS_SUMMARY", onReceiveSummary);
+        resolve(event.detail);
+      }
+
+      win.addEventListener("A11Y_RESULTS_SUMMARY", onReceiveSummary);
+      const e = new CustomEvent("A11Y_GET_RESULTS_SUMMARY");
+      win.dispatchEvent(e);
+    }
+
+    if (findAccessibilityAutomationElement()) {
+      getSummary();
+    } else {
+      waitForScannerReadiness()
+        .then(getSummary)
+        .catch((err) => {
+    
+        });
+    }
+  })
+
+const getAccessibilityResults = (win) =>
+  new Promise((resolve) => {
+    const isHttpOrHttps = /^(http|https):$/.test(window.location.protocol);
+    if (!isHttpOrHttps) {
+      resolve();
+    }
+
+    function findAccessibilityAutomationElement() {
+      return win.document.querySelector("#accessibility-automation-element");
+    }
+
+    function waitForScannerReadiness(retryCount = 30, retryInterval = 100) {
+      return new Promise((resolve, reject) => {
+        let count = 0;
+        const intervalID = setInterval(() => {
+          if (count > retryCount) {
+            clearInterval(intervalID);
+            reject(
+              new Error(
+                "Accessibility Automation Scanner is not ready on the page."
+              )
+            );
+          } else if (findAccessibilityAutomationElement()) {
+            clearInterval(intervalID);
+            resolve("Scanner set");
+          } else {
+            count += 1;
+          }
+        }, retryInterval);
+      });
+    }
+
+    function getResults() {
+      function onReceivedResult(event) {
+
+        win.removeEventListener("A11Y_RESULTS_RESPONSE", onReceivedResult);
+        resolve(event.detail);
+      }
+
+      win.addEventListener("A11Y_RESULTS_RESPONSE", onReceivedResult);
+      const e = new CustomEvent("A11Y_GET_RESULTS");
+      win.dispatchEvent(e);
+    }
+
+    if (findAccessibilityAutomationElement()) {
+      getResults();
+    } else {
+      waitForScannerReadiness()
+        .then(getResults)
+        .catch((err) => {
+    
+        });
+    }
+  });
+
 const saveTestResults = (win, payloadToSend) =>
   new Promise( (resolve, reject) => {
     try {
@@ -224,74 +334,23 @@ afterEach(() => {
   });
 })
 
+Cypress.Commands.add('perfromScan', () => {
+  cy.window().then(async (win) => {
+    await performScan(win);
+    return await getAccessibilityResultsSummary(win);
+  });
+})
+
 Cypress.Commands.add('getAccessibilityResultsSummary', () => {
   try {
     if (Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED") !== "true") {
       console.log(`Not a Accessibility Automation session, cannot retrieve Accessibility results.`);
       return
     }
-    return new Promise(resolved => {
-      cy.window().then((win) => {
-        new Promise((resolve) => {
-          const isHttpOrHttps = /^(http|https):$/.test(window.location.protocol);
-          if (!isHttpOrHttps) {
-            cy.log("Unable to retrieve accessibility result summary, Invalid URL.");
-            resolve();
-          }
-      
-          function findAccessibilityAutomationElement() {
-            return win.document.querySelector("#accessibility-automation-element");
-          }
-      
-          function waitForScannerReadiness(retryCount = 30, retryInterval = 100) {
-            return new Promise((resolve, reject) => {
-              let count = 0;
-              const intervalID = setInterval(() => {
-                if (count > retryCount) {
-                  clearInterval(intervalID);
-                  reject(
-                    new Error(
-                      "Accessibility Automation Scanner is not ready on the page."
-                    )
-                  );
-                } else if (findAccessibilityAutomationElement()) {
-                  clearInterval(intervalID);
-                  resolve("Scanner set");
-                } else {
-                  count += 1;
-                }
-              }, retryInterval);
-            });
-          }
-      
-          function getSummary() {
-            function onReceiveSummary(event) {
-              cy.log("Received Summary");
-              cy.log(event.detail);
-              win.removeEventListener("A11Y_RESULTS_SUMMARY", onReceiveSummary);
-              resolve(event.detail);
-            }
-      
-            win.addEventListener("A11Y_RESULTS_SUMMARY", onReceiveSummary);
-            const e = new CustomEvent("A11Y_GET_RESULTS_SUMMARY");
-            win.dispatchEvent(e);
-          }
-      
-          if (findAccessibilityAutomationElement()) {
-            getSummary();
-          } else {
-            waitForScannerReadiness()
-              .then(getSummary)
-              .catch((err) => {
-                cy.log(
-                  "Scanner is not ready on the page after multiple retries.",
-                  err
-                );
-              });
-          }
-        }).then(res => resolved(res)).finally(resolved);
+      cy.window().then(async (win) => {
+        await performScan(win);
+        return await getAccessibilityResultsSummary(win);
       });
-    })
   } catch {}
   
 });
@@ -304,68 +363,11 @@ Cypress.Commands.add('getAccessibilityResults', () => {
     }
 
 /* browserstack_accessibility_automation_script */
-    return new Promise(resolved => {
-      cy.window().then((win) => {
-        new Promise((resolve) => {
-          const isHttpOrHttps = /^(http|https):$/.test(window.location.protocol);
-          if (!isHttpOrHttps) {
-            cy.log("Unable to retrieve accessibility results, Invalid URL.");
-            resolve();
-          }
-      
-          function findAccessibilityAutomationElement() {
-            return win.document.querySelector("#accessibility-automation-element");
-          }
-      
-          function waitForScannerReadiness(retryCount = 30, retryInterval = 100) {
-            return new Promise((resolve, reject) => {
-              let count = 0;
-              const intervalID = setInterval(() => {
-                if (count > retryCount) {
-                  clearInterval(intervalID);
-                  reject(
-                    new Error(
-                      "Accessibility Automation Scanner is not ready on the page."
-                    )
-                  );
-                } else if (findAccessibilityAutomationElement()) {
-                  clearInterval(intervalID);
-                  resolve("Scanner set");
-                } else {
-                  count += 1;
-                }
-              }, retryInterval);
-            });
-          }
-      
-          function getResults() {
-            function onReceivedResult(event) {
-              cy.log("Received Result");
-              cy.log(event.detail);
-              win.removeEventListener("A11Y_RESULTS_RESPONSE", onReceivedResult);
-              resolve(event.detail);
-            }
-      
-            win.addEventListener("A11Y_RESULTS_RESPONSE", onReceivedResult);
-            const e = new CustomEvent("A11Y_GET_RESULTS");
-            win.dispatchEvent(e);
-          }
-      
-          if (findAccessibilityAutomationElement()) {
-            getResults();
-          } else {
-            waitForScannerReadiness()
-              .then(getResults)
-              .catch((err) => {
-                cy.log(
-                  "Scanner is not ready on the page after multiple retries.",
-                  err
-                );
-              });
-          }
-        }).then(res => resolved(res)).finally(resolved);
+
+      cy.window().then(async (win) => {
+        await performScan(win);
+        return await getAccessibilityResults(win);
       });
-    })
 
   } catch {}
   
