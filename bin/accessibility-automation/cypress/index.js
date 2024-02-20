@@ -281,18 +281,6 @@ Cypress.on('command:start', async (command) => {
 afterEach(() => {
   const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
   cy.window().then(async (win) => {
-    cy.wrap(new Promise((resolve) => {
-      setTimeout(async () => {
-        resolve();
-      }, 5000);
-    }), {timeout: 20000}).then(() => {
-      cy.wrap(new Promise((resolve) => {
-        setTimeout(async () => {
-          resolve();
-        }, 5000);
-      }), {timeout: 20000})
-    })
-
     let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
     if (!shouldScanTestForAccessibility) return;
 
