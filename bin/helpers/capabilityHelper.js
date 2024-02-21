@@ -122,7 +122,7 @@ const caps = (bsConfig, zip) => {
       }
 
       if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
-        bsConfig.run_settings["accessibilityPlatforms"] = getAccessibilityPlatforms(bsConfig, obj);
+        bsConfig.run_settings["accessibilityPlatforms"] = getAccessibilityPlatforms(bsConfig);
       }
 
       // send run_settings as is for other capabilities
@@ -146,15 +146,26 @@ const caps = (bsConfig, zip) => {
     resolve(data);
   })
 }
-const getAccessibilityPlatforms = (bsConfig, obj) => {
-  const browserList = obj.devices;
+const getAccessibilityPlatforms = (bsConfig) => {
+  const browserList = [];
+  if (bsConfig.browsers) {
+    bsConfig.browsers.forEach((element) => {
+      element.versions.forEach((version) => {
+        browserList.push({...element, version, platform: element.os + "-" + element.browser});
+      });
+    });
+  }
+  
   const accessibilityPlatforms = Array(browserList.length).fill(false);
   let rootLevelAccessibility = false;
   if (!Utils.isUndefined(bsConfig.run_settings.accessibility)) {
-    rootLevelAccessibility = bsConfig.run_settings.accessibility.toString() === 'true'
+    rootLevelAccessibility = bsConfig.run_settings.accessibility.toString() === 'true';
   }
   browserList.forEach((browserDetails, idx) => {
-    accessibilityPlatforms[idx] = (browserDetails.accessibility === undefined) ? rootLevelAccessibility : browserDetails.accessibility
+    accessibilityPlatforms[idx] = (browserDetails.accessibility === undefined) ? rootLevelAccessibility : browserDetails.accessibility;
+    if (browserDetails.version && (!browserDetails.version.includes('latest') || browserDetails.version < 94)) {
+      logger.warn(`Accessibility Automation will run only on Chrome browser version greater than 94 for ${browserDetails.platform}.`);
+    }
   });
   return accessibilityPlatforms;
 }
