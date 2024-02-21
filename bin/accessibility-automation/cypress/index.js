@@ -282,7 +282,7 @@ afterEach(() => {
   const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
   cy.window().then(async (win) => {
     let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
-    if (!shouldScanTestForAccessibility) return;
+    if (!shouldScanTestForAccessibility) return cy.wrap({});
 
     cy.wrap(performScan(win), {timeout: 30000}).then(() => {
       try {
@@ -323,39 +323,51 @@ afterEach(() => {
 })
 
 Cypress.Commands.add('performScan', () => {
-  cy.window().then(async (win) => {
-    await performScan(win);
-    return await getAccessibilityResultsSummary(win);
-  });
+  try {
+    const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
+    const shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
+    if (!shouldScanTestForAccessibility) {
+      console.log(`Not a Accessibility Automation session, cannot perform scan.`);
+      return cy.wrap({});
+    }
+    cy.window().then(async (win) => {
+      await performScan(win);
+      return await getAccessibilityResultsSummary(win);
+    });
+  } catch {}
 })
 
 Cypress.Commands.add('getAccessibilityResultsSummary', () => {
   try {
-    if (Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED") !== "true") {
-      console.log(`Not a Accessibility Automation session, cannot retrieve Accessibility results.`);
-      return
+    const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
+    const shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
+    if (!shouldScanTestForAccessibility) {
+      console.log(`Not a Accessibility Automation session, cannot retrieve Accessibility results summary.`);
+      return cy.wrap({});
     }
-      cy.window().then(async (win) => {
-        await performScan(win);
-        return await getAccessibilityResultsSummary(win);
-      });
+    cy.window().then(async (win) => {
+      await performScan(win);
+      return await getAccessibilityResultsSummary(win);
+    });
   } catch {}
   
 });
 
 Cypress.Commands.add('getAccessibilityResults', () => {
   try {
-    if (Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED") !== "true") {
+    const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
+    const shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
+    if (!shouldScanTestForAccessibility) {
       console.log(`Not a Accessibility Automation session, cannot retrieve Accessibility results.`);
-      return 
+      return cy.wrap({});
     }
 
 /* browserstack_accessibility_automation_script */
 
-      cy.window().then(async (win) => {
-        await performScan(win);
-        return await getAccessibilityResults(win);
-      });
+    cy.window().then(async (win) => {
+      await performScan(win);
+      return await getAccessibilityResults(win);
+    });
 
   } catch {}
   
