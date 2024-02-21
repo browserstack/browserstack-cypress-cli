@@ -122,6 +122,8 @@ const caps = (bsConfig, zip) => {
       }
 
       if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
+        // If any of the platform has accessibility true, make it true
+        bsConfig.run_settings["accessibility"] = true;
         bsConfig.run_settings["accessibilityPlatforms"] = getAccessibilityPlatforms(bsConfig);
       }
 
