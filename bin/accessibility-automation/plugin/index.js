@@ -3,8 +3,10 @@ const path = require("node:path");
 
 const browserstackAccessibility = (on, config) => {
   let browser_validation = true;
-  config.env.BROWSERSTACK_LOGS = 'true';
-  process.env.BROWSERSTACK_LOGS = 'true';
+  if (process.env.BROWSERSTACK_ACCESSIBILITY_DEBUG === 'true') {
+    config.env.BROWSERSTACK_LOGS = 'true';
+    process.env.BROWSERSTACK_LOGS = 'true';
+  }
   on('task', {
     browserstack_log(message) {
       console.log(message)
