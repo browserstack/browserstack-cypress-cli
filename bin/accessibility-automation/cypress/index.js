@@ -277,7 +277,7 @@ Cypress.on('command:start', async (command) => {
   if (!shouldScanTestForAccessibility) return;
 
   cy.window().then((win) => {
-    browserStackLog('Performsing scan form command ' + command.attributes.name);
+    browserStackLog('Performing scan form command ' + command.attributes.name);
     cy.wrap(performScan(win, {method: command.attributes.name}), {timeout: 30000});
   })
 })
