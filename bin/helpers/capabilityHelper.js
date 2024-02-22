@@ -165,7 +165,7 @@ const getAccessibilityPlatforms = (bsConfig) => {
   }
   browserList.forEach((browserDetails, idx) => {
     accessibilityPlatforms[idx] = (browserDetails.accessibility === undefined) ? rootLevelAccessibility : browserDetails.accessibility;
-    if (browserDetails.browser !== 'chrome') {
+    if (browserDetails.browser && browserDetails.browser.toLowerCase() !== 'chrome') {
       logger.warn(`Accessibility Automation will run only on Chrome browsers for ${browserDetails.platform}.`);
     } else if (browserDetails.version && (!browserDetails.version.includes('latest') || browserDetails.version < 94)) {
       logger.warn(`Accessibility Automation will run only on Chrome browser version greater than 94 for ${browserDetails.platform}.`);
