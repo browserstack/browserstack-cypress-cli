@@ -165,9 +165,11 @@ const getAccessibilityPlatforms = (bsConfig) => {
   }
   browserList.forEach((browserDetails, idx) => {
     accessibilityPlatforms[idx] = (browserDetails.accessibility === undefined) ? rootLevelAccessibility : browserDetails.accessibility;
-    if (browserDetails.browser && browserDetails.browser.toLowerCase() !== 'chrome') {
+    if (Utils.isUndefined(bsConfig.run_settings.headless) || !(String(bsConfig.run_settings.headless) === "false")) {
+      logger.warn(`Accessibility Automation will not run on legacy headless mode. Switch to new headless mode or avoid using headless mode for ${browserDetails.platform}.`);
+    } else if (browserDetails.browser && browserDetails.browser.toLowerCase() !== 'chrome') {
       logger.warn(`Accessibility Automation will run only on Chrome browsers for ${browserDetails.platform}.`);
-    } else if (browserDetails.version && (!browserDetails.version.includes('latest') || browserDetails.version < 94)) {
+    } else if (browserDetails.version && !browserDetails.version.includes('latest') && browserDetails.version <= 94) {
       logger.warn(`Accessibility Automation will run only on Chrome browser version greater than 94 for ${browserDetails.platform}.`);
     }
   });
