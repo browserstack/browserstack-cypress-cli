@@ -61,6 +61,9 @@ module.exports = function run(args, rawArgs) {
     markBlockStart('setConfig');
     logger.debug('Started setting the configs');
 
+    // set cypress config filename
+    utils.setCypressConfigFilename(bsConfig, args);
+    
     /* 
       Set testObservability & browserstackAutomation flags
     */
@@ -85,9 +88,6 @@ module.exports = function run(args, rawArgs) {
     // accept the build name from command line if provided
     utils.setBuildName(bsConfig, args);
 
-    // set cypress config filename
-    utils.setCypressConfigFilename(bsConfig, args);
-    
     if(isBrowserstackInfra) {
       // set cypress test suite type
       utils.setCypressTestSuiteType(bsConfig);
