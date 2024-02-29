@@ -561,6 +561,7 @@ exports.setSystemEnvs = (bsConfig) => {
 
   try {
     const accessibilityOptions = bsConfig.run_settings.accessibilityOptions;
+    envKeys['BROWSERSTACK_ACCESSIBILITY_DEBUG'] = process.env.BROWSERSTACK_ACCESSIBILITY_DEBUG;
     if (accessibilityOptions) {
       Object.keys(accessibilityOptions).forEach(key => {
         const a11y_env_key = `ACCESSIBILITY_${key.toUpperCase()}`
