@@ -122,6 +122,8 @@ const caps = (bsConfig, zip) => {
       }
 
       if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
+        // If any of the platform has accessibility true, make it true
+        bsConfig.run_settings["accessibility"] = true;
         bsConfig.run_settings["accessibilityPlatforms"] = getAccessibilityPlatforms(bsConfig);
       }
 
@@ -147,14 +149,29 @@ const caps = (bsConfig, zip) => {
   })
 }
 const getAccessibilityPlatforms = (bsConfig) => {
-  const browserList = bsConfig.browsers;
+  const browserList = [];
+  if (bsConfig.browsers) {
+    bsConfig.browsers.forEach((element) => {
+      element.versions.forEach((version) => {
+        browserList.push({...element, version, platform: element.os + "-" + element.browser});
+      });
+    });
+  }
+  
   const accessibilityPlatforms = Array(browserList.length).fill(false);
   let rootLevelAccessibility = false;
   if (!Utils.isUndefined(bsConfig.run_settings.accessibility)) {
-    rootLevelAccessibility = bsConfig.run_settings.accessibility.toString() === 'true'
+    rootLevelAccessibility = bsConfig.run_settings.accessibility.toString() === 'true';
   }
   browserList.forEach((browserDetails, idx) => {
-    accessibilityPlatforms[idx] = (browserDetails.accessibility === undefined) ? rootLevelAccessibility : browserDetails.accessibility
+    accessibilityPlatforms[idx] = (browserDetails.accessibility === undefined) ? rootLevelAccessibility : browserDetails.accessibility;
+    if (Utils.isUndefined(bsConfig.run_settings.headless) || !(String(bsConfig.run_settings.headless) === "false")) {
+      logger.warn(`Accessibility Automation will not run on legacy headless mode. Switch to new headless mode or avoid using headless mode for ${browserDetails.platform}.`);
+    } else if (browserDetails.browser && browserDetails.browser.toLowerCase() !== 'chrome') {
+      logger.warn(`Accessibility Automation will run only on Chrome browsers for ${browserDetails.platform}.`);
+    } else if (browserDetails.version && !browserDetails.version.includes('latest') && browserDetails.version <= 94) {
+      logger.warn(`Accessibility Automation will run only on Chrome browser version greater than 94 for ${browserDetails.platform}.`);
+    }
   });
   return accessibilityPlatforms;
 }
