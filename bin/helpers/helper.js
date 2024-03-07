@@ -323,7 +323,8 @@ exports.deleteSupportFileOrDir = (fileOrDirPath) => {
     if (fs.existsSync(resolvedPath)) {
       if (fs.lstatSync(resolvedPath).isDirectory()) {
         fs.readdirSync(resolvedPath).forEach((file) => {
-          const currentPath = path.join(resolvedPath, file);
+          const sanitizedFile = file.replace(/(\.\.\/|\.\/|\/\/)/g, '');
+          const currentPath = path.join(resolvedPath, sanitizedFile);
           fs.unlinkSync(currentPath);
         });
         fs.rmdirSync(resolvedPath);
