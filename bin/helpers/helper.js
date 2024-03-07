@@ -317,18 +317,18 @@ exports.setBrowserstackCypressCliDependency = (bsConfig) => {
 
 exports.deleteSupportFileOrDir = (fileOrDirPath) => {
   try {
-    if (!fileOrDirPath.includes("..")) {
-      const resolvedPath = path.resolve(fileOrDirPath);
-      if (fs.existsSync(resolvedPath)) {
-        if (fs.lstatSync(resolvedPath).isDirectory()) {
-          fs.readdirSync(resolvedPath).forEach((file) => {
-            const currentPath = path.join(resolvedPath, file);
-            fs.unlinkSync(currentPath);
-          });
-          fs.rmdirSync(resolvedPath);
-        } else {
-          fs.unlinkSync(resolvedPath);
-        }
+    // Sanitize the input to remove any characters that could be used for directory traversal
+    const sanitizedPath = fileOrDirPath.replace(/(\.\.\/|\.\/|\/\/)/g, '');
+    const resolvedPath = path.resolve(sanitizedPath);
+    if (fs.existsSync(resolvedPath)) {
+      if (fs.lstatSync(resolvedPath).isDirectory()) {
+        fs.readdirSync(resolvedPath).forEach((file) => {
+          const currentPath = path.join(resolvedPath, file);
+          fs.unlinkSync(currentPath);
+        });
+        fs.rmdirSync(resolvedPath);
+      } else {
+        fs.unlinkSync(resolvedPath);
       }
     }
   } catch(err) {}
