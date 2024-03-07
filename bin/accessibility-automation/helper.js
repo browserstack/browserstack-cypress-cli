@@ -192,8 +192,8 @@ exports.supportFileCleanup = () => {
   });
 }
 
-const getAccessibilityCypressCommandEventListener = (isJS) => {
-  return isJS ? (
+const getAccessibilityCypressCommandEventListener = (extName) => {
+  return extName == 'js' ? (
     `require('browserstack-cypress-cli/bin/accessibility-automation/cypress');`
   ) : (
     `import 'browserstack-cypress-cli/bin/accessibility-automation/cypress'`
@@ -212,7 +212,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
           if(!file.includes('commands.js') && !file.includes('commands.ts')) {
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
             
-            let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(file.includes('js'));
+            let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
             if(!defaultFileContent.includes(cypressCommandEventListener)) {
               let newFileContent =  defaultFileContent + 
                                   '\n' +
