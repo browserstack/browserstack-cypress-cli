@@ -356,9 +356,10 @@ exports.getSupportFiles = (bsConfig, isA11y) => {
         fs.mkdirSync(supportFolderPath);
         cleanupParams.deleteSupportDir = true;
       }
-      const supportFilePath = path.join(supportFolderPath, `tmpBstackSupportFile.${extension}`);
+      const sanitizedExtension = extension.replace(/(\.\.\/|\.\/|\/\/)/g, '');
+      const supportFilePath = path.join(supportFolderPath, `tmpBstackSupportFile.${sanitizedExtension}`);
       fs.writeFileSync(supportFilePath, "");
-      supportFile = `/cypress/support/tmpBstackSupportFile.${extension}`;
+      supportFile = `/cypress/support/tmpBstackSupportFile.${sanitizedExtension}`;
       const currEnvVars = bsConfig.run_settings.system_env_vars;
       const supportFileEnv = `CYPRESS_SUPPORT_FILE=${supportFile.substring(1)}`;
       if(!currEnvVars) {
