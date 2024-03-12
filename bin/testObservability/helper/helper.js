@@ -815,6 +815,7 @@ exports.resolveModule = (module) => {
 };
 
 const getReRunSpecs = (rawArgs) => {
+  let finalArgs = rawArgs;
   if (this.isTestObservabilitySession() && this.shouldReRunObservabilityTests()) {
     let startIdx = -1, numEle = 0;
     for(let idx=0; idx<rawArgs.length; idx++) {
@@ -827,10 +828,9 @@ const getReRunSpecs = (rawArgs) => {
       }
     }
     if(startIdx != -1) rawArgs.splice(startIdx, numEle + 1);
-    return [...rawArgs, '--spec', process.env.BROWSERSTACK_RERUN_TESTS];
-  } else {
-    return rawArgs;
+    finalArgs = [...rawArgs, '--spec', process.env.BROWSERSTACK_RERUN_TESTS];
   }
+  return finalArgs.filter(item => item !== '--disable-test-observability' && item !== '--disable-browserstack-automation');
 }
 
 const getLocalSessionReporter = () => {
