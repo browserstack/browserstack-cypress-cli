@@ -25,6 +25,7 @@ const { getStackTraceUrl } = require('../helpers/sync/syncSpecsLogs');
 
 const { 
   launchTestSession, 
+  setEventListeners,
   setTestObservabilityFlags, 
   runCypressTestsLocally, 
   printBuildLink
@@ -33,6 +34,7 @@ const {
 
 const { 
   createAccessibilityTestRun,
+  setAccessibilityEventListeners,
   checkAccessibilityPlatform,
   supportFileCleanup
 } = require('../accessibility-automation/helper');
@@ -146,7 +148,7 @@ module.exports = function run(args, rawArgs) {
 
       // add cypress dependency if missing
       utils.setCypressNpmDependency(bsConfig);
-      
+
       if (isAccessibilitySession && isBrowserstackInfra) {
         await createAccessibilityTestRun(bsConfig);
       }
@@ -205,6 +207,12 @@ module.exports = function run(args, rawArgs) {
     markBlockStart('validateConfig');
     logger.debug("Started configs validation");
     return capabilityHelper.validate(bsConfig, args).then(function (cypressConfigFile) {
+      if(process.env.BROWSERSTACK_TEST_ACCESSIBILITY) {
+        setAccessibilityEventListeners(bsConfig);
+      }
+      if(process.env.BS_TESTOPS_BUILD_COMPLETED) {
+        // setEventListeners(bsConfig);
+      }
       markBlockEnd('validateConfig');
       logger.debug("Completed configs validation");
       markBlockStart('preArchiveSteps');
