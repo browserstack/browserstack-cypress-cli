@@ -66,7 +66,10 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
       'source': {
         frameworkName: "Cypress",
         frameworkVersion: helper.getPackageVersion('cypress', user_config),
-        sdkVersion: helper.getAgentVersion()
+        sdkVersion: helper.getAgentVersion(),
+        language: 'javascript',
+        testFramework: 'cypress',
+        testFrameworkVersion: helper.getPackageVersion('cypress', user_config)
       },
       'settings': settings,
       'versionControl': await helper.getGitMetaData(),
@@ -92,7 +95,7 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
     };
 
     const response = await nodeRequest(
-      'POST', 'test_runs', data, config, API_URL
+      'POST', 'v2/test_runs', data, config, API_URL
     );
     if(!utils.isUndefined(response.data)) {
       process.env.BS_A11Y_JWT = response.data.data.accessibilityToken;
@@ -104,7 +107,6 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
     logger.debug(`BrowserStack Accessibility Automation Test Run ID: ${response.data.data.id}`);
    
     this.setAccessibilityCypressCapabilities(user_config, response.data);
-    setAccessibilityEventListeners();
     helper.setBrowserstackCypressCliDependency(user_config);
 
   } catch (error) {
@@ -172,41 +174,52 @@ const nodeRequest = (type, url, data, config) => {
 }
 
 exports.supportFileCleanup = () => {
-  logger.debug("Cleaning up support file changes added for accessibility. ")
+  logger.debug("Cleaning up support file changes added for accessibility.")
   Object.keys(supportFileContentMap).forEach(file => {
     try {
-      fs.writeFileSync(file, supportFileContentMap[file], {encoding: 'utf-8'});
+      if(typeof supportFileContentMap[file] === 'object') {
+        let fileOrDirpath = file;
+        if(supportFileContentMap[file].deleteSupportDir) {
+          fileOrDirpath = path.join(process.cwd(), 'cypress', 'support');
+        }
+        helper.deleteSupportFileOrDir(fileOrDirpath);
+      } else {
+        fs.writeFileSync(file, supportFileContentMap[file], {encoding: 'utf-8'});
+      }
     } catch(e) {
       logger.debug(`Error while replacing file content for ${file} with it's original content with error : ${e}`, true, e);
     }
   });
 }
 
-const getAccessibilityCypressCommandEventListener = () => {
-  return (
+const getAccessibilityCypressCommandEventListener = (extName) => {
+  return extName == 'js' ? (
     `require('browserstack-cypress-cli/bin/accessibility-automation/cypress');`
-  );
+  ) : (
+    `import 'browserstack-cypress-cli/bin/accessibility-automation/cypress'`
+  )
 }
 
-const setAccessibilityEventListeners = () => {
+exports.setAccessibilityEventListeners = (bsConfig) => {
   try {
-    const cypressCommandEventListener = getAccessibilityCypressCommandEventListener();
-
     // Searching form command.js recursively
-    glob(process.cwd() + '/**/cypress/support/*.js', {}, (err, files) => {
+    const supportFilesData = helper.getSupportFiles(bsConfig, true);
+    if(!supportFilesData.supportFile) return;
+    glob(process.cwd() + supportFilesData.supportFile, {}, (err, files) => {
       if(err) return logger.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
       files.forEach(file => {
         try {
-          if(!file.includes('commands.js')) {
+          if(!file.includes('commands.js') && !file.includes('commands.ts')) {
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
             
+            let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
             if(!defaultFileContent.includes(cypressCommandEventListener)) {
               let newFileContent =  defaultFileContent + 
                                   '\n' +
                                   cypressCommandEventListener +
                                   '\n'
               fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
-              supportFileContentMap[file] = defaultFileContent;
+              supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
             }
           }
         } catch(e) {
