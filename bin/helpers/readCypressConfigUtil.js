@@ -13,6 +13,48 @@ exports.detectLanguage = (cypress_config_filename) => {
     return constants.CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS.includes(extension) ? extension : 'js'
 }
 
+exports.updateConfig = (runSettings, beforeArchive = true) => {
+    var cypressFolderPath = '';
+    let cypressAppendFilesZipLocation = '';
+    if (runSettings.home_directory) {
+      cypressFolderPath = runSettings.home_directory;
+      cypressAppendFilesZipLocation = runSettings.cypressZipStartLocation;
+      if (cypressAppendFilesZipLocation !== '') {
+        cypressAppendFilesZipLocation += '/';
+      }
+    } else {
+      cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
+    }
+    for (const possibleCypressFileName of constants.CYPRESS_CONFIG_FILE_NAMES) {
+        if (path.extname(runSettings.cypress_config_filename) == path.extname(possibleCypressFileName)) {
+            let cypressFilePath = `${cypressAppendFilesZipLocation}${possibleCypressFileName}`;
+            let tmpCypressFilePath = `${cypressAppendFilesZipLocation}tmp${possibleCypressFileName}`;
+            if (beforeArchive){
+                // Before archiving updating the cypress.config from the config file mentioned in browserstack.json
+                const configData = fs.readFileSync(runSettings.cypressConfigFilePath, {encoding: "utf-8"});
+                if (fs.existsSync(cypressFilePath)) {
+                    if (fs.existsSync(tmpCypressFilePath)){
+                        fs.rmSync(tmpCypressFilePath);
+                    }
+                    fs.writeFileSync(tmpCypressFilePath, fs.readFileSync(cypressFilePath));
+                    fs.writeFileSync(cypressFilePath, configData);
+                }
+                break;
+            } else {
+                // After archiving, reverting the cypress.config to the original config
+                if (fs.existsSync(tmpCypressFilePath)) {
+                    if (fs.existsSync(cypressFilePath)){
+                        fs.rmSync(cypressFilePath);
+                    }
+                    fs.writeFileSync(cypressFilePath, fs.readFileSync(tmpCypressFilePath));
+                    fs.rmSync(tmpCypressFilePath);
+                }
+                break;
+            }
+        }
+    }
+}
+
 exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_modules_path) => {
     const cypress_config_filename = bsConfig.run_settings.cypress_config_filename
     const working_dir = path.dirname(cypress_config_filepath);

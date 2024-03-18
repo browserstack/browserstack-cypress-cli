@@ -20,7 +20,8 @@ const archiver = require("../helpers/archiver"),
   downloadBuildStacktrace = require('../helpers/downloadBuildStacktrace').downloadBuildStacktrace,
   updateNotifier = require('update-notifier'),
   pkg = require('../../package.json'),
-  packageDiff = require('../helpers/package-diff');
+  packageDiff = require('../helpers/package-diff'),
+  { updateConfig } = require('../helpers/readCypressConfigUtil');
 const { getStackTraceUrl } = require('../helpers/sync/syncSpecsLogs');
 
 const { 
@@ -249,6 +250,7 @@ module.exports = function run(args, rawArgs) {
           // Archive the spec files
           logger.debug("Started archiving test suite");
           markBlockStart('zip.archive');
+          updateConfig(bsConfig.run_settings);
           return archiver.archive(bsConfig.run_settings, config.fileName, args.exclude, md5data).then(async function (data) {
             logger.debug("Completed archiving test suite");
             markBlockEnd('zip.archive');
@@ -269,6 +271,8 @@ module.exports = function run(args, rawArgs) {
             logger.debug("Started uploading the node_module zip");
             markBlockStart('zip.zipUpload');
             return zipUploader.zipUpload(bsConfig, md5data, packageData).then(async function (zip) {
+              updateConfig(bsConfig.run_settings, false);
+
               logger.debug("Completed uploading the test suite zip");
               logger.debug("Completed uploading the node_module zip");
               markBlockEnd('zip.zipUpload');
