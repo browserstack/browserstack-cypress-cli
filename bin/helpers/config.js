@@ -26,6 +26,7 @@ config.retries = 5;
 config.networkErrorExitCode = 2;
 config.compiledConfigJsDirName = 'tmpBstackCompiledJs';
 config.configJsonFileName = 'tmpCypressConfig.json';
+config.tmpTestSuiteDirName = 'tmpTestSuite';
 
 // turboScale
 config.turboScaleMd5Sum = `${config.turboScaleUrl}/md5sumcheck`;

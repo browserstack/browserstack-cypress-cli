@@ -13,6 +13,18 @@ exports.detectLanguage = (cypress_config_filename) => {
     return constants.CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS.includes(extension) ? extension : 'js'
 }
 
+exports.updateConfig = (runSettings, cypressAppendFilesZipLocation) => {
+    logger.debug(`Updating cypress config based on provided cypress config file: ${runSettings.cypress_config_filename}`);
+    for (const possibleCypressFileName of constants.CYPRESS_CONFIG_FILE_NAMES) {
+        if (path.extname(runSettings.cypress_config_filename) == path.extname(possibleCypressFileName)) {
+            const cypressFilePath = path.join(cypressAppendFilesZipLocation, possibleCypressFileName);
+            const configData = fs.readFileSync(runSettings.cypressConfigFilePath, {encoding: "utf-8"});
+            fs.writeFileSync(cypressFilePath, configData);
+            break;
+        }
+    }
+}
+
 exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_modules_path) => {
     const cypress_config_filename = bsConfig.run_settings.cypress_config_filename
     const working_dir = path.dirname(cypress_config_filepath);

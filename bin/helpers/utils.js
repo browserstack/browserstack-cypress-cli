@@ -11,6 +11,7 @@ const util = require('util');
 const { promisify } = require('util');
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
+const cp = require('child_process');
 const TIMEZONE = require("../helpers/timezone.json");
 
 const usageReporting = require("./usageReporting"),
@@ -26,6 +27,37 @@ const usageReporting = require("./usageReporting"),
   { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER } = require('../testObservability/helper/constants');
 
 const request = require('request');
+
+const getTmpTestSuiteDir = (runSettings) => {
+  if (runSettings.home_directory) {
+    return path.join(runSettings.home_directory, config.tmpTestSuiteDirName);
+  } else {
+    return path.join(path.dirname(runSettings.cypressConfigFilePath), config.tmpTestSuiteDirName);
+  }
+}
+
+exports.createTmpTestSuiteDir = (runSettings) => {
+  const tmpDirPath = getTmpTestSuiteDir(runSettings);
+  logger.debug(`Creating temp test suite dir: ${tmpDirPath}`);
+  if (fs.existsSync(tmpDirPath)){
+    fs.rmdirSync(tmpDirPath, { recursive: true, force: true });
+  }
+  const listOfFiles = fs.readdirSync(runSettings.home_directory || path.dirname(runSettings.cypressConfigFilePath));
+  fs.mkdirSync(tmpDirPath);
+  logger.debug(`Copying files & folders from home_dir to temp test suite dir: ${tmpDirPath}`);
+  listOfFiles.forEach((file) => {
+    cp.execSync(`cp -r ${file} ${tmpDirPath}`);
+  })
+  return tmpDirPath
+}
+
+exports.deleteTmpTestSuiteDir = (runSettings) => {
+  const tmpDirPath = getTmpTestSuiteDir(runSettings);
+  if (fs.existsSync(tmpDirPath)){
+    logger.debug(`Deleting temp test suite dir: ${tmpDirPath}`);
+    fs.rmdirSync(tmpDirPath, { recursive: true, force: true });
+  }
+}
 
 exports.validateBstackJson = (bsConfigPath) => {
   return new Promise(function (resolve, reject) {

@@ -277,6 +277,7 @@ module.exports = function run(args, rawArgs) {
             logger.debug("Started uploading the node_module zip");
             markBlockStart('zip.zipUpload');
             return zipUploader.zipUpload(bsConfig, md5data, packageData).then(async function (zip) {
+              utils.deleteTmpTestSuiteDir(bsConfig.run_settings);
               logger.debug("Completed uploading the test suite zip");
               logger.debug("Completed uploading the node_module zip");
               markBlockEnd('zip.zipUpload');

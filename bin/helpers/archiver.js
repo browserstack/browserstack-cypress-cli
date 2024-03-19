@@ -6,7 +6,8 @@ const fs = require("fs"),
 const archiver = require("archiver"),
   Constants = require('../helpers/constants'),
   logger = require("./logger").winstonLogger,
-  utils = require('../helpers/utils');
+  utils = require('../helpers/utils'),
+  { updateConfig } = require('../helpers/readCypressConfigUtil');
 
 const archiveSpecs = (runSettings, filePath, excludeFiles, md5data) => {
   return new Promise(function (resolve, reject) {
@@ -27,8 +28,15 @@ const archiveSpecs = (runSettings, filePath, excludeFiles, md5data) => {
     } else {
       cypressFolderPath = path.dirname(runSettings.cypressConfigFilePath);
     }
-
     logger.info(`Creating tests.zip with files in ${cypressFolderPath}`);
+    if (
+      runSettings.cypress_config_file &&
+      runSettings.cypress_config_filename !== 'false'
+    ) {
+      cypressFolderPath = utils.createTmpTestSuiteDir(runSettings);
+      logger.debug(`Created temp directory for test suite: ${cypressFolderPath}`);
+      updateConfig(runSettings, path.join(config.tmpTestSuiteDirName, cypressAppendFilesZipLocation));
+    }
 
     var archive = archiver('zip', {
       zlib: {level: 9}, // Sets the compression level.
