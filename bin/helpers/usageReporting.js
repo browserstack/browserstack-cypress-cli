@@ -10,6 +10,7 @@ const config = require('./config'),
   utils = require('./utils');
 
 const { AUTH_REGEX, REDACTED_AUTH, REDACTED, CLI_ARGS_REGEX, RAW_ARGS_REGEX } = require("./constants");
+const { isTurboScaleSession } = require('../helpers/atsHelper');
 
 function get_version(package_name) {
   try {
@@ -197,10 +198,58 @@ function redactKeys(str, regex, redact) {
   return str.replace(regex, redact);
 }
 
+function sendTurboscaleErrorLogs(args) {
+  let bsConfig = JSON.parse(JSON.stringify(args.bstack_config));
+  let data = utils.isUndefined(args.data) ? {} : args.data;
+  const turboscaleErrorPayload = {
+    kind: 'hst-cypress-cli-error',
+    userId: data.user_id,
+    error: args.message
+  }
+
+  const options = {
+    headers: {
+      'User-Agent': utils.getUserAgent()
+    },
+    method: "POST",
+    auth: {
+      username: bsConfig.auth.username,
+      password: bsConfig.auth.access_key,
+    },
+    url: `${config.turboScaleAPIUrl}/send-instrumentation`,
+    body: turboscaleErrorPayload,
+    json: true,
+    maxAttempts: 10, // (default) try 3 times
+    retryDelay: 2000, // (default) wait for 2s before trying again
+    retrySrategy: request.RetryStrategies.HTTPOrNetworkError, // (default) retry on 5xx or network errors
+  };
+
+  fileLogger.info(`Sending ${JSON.stringify(turboscaleErrorPayload)} to ${config.turboScaleAPIUrl}/send-instrumentation`);
+  request(options, function (error, res, body) {
+    if (error) {
+      //write err response to file
+      fileLogger.error(JSON.stringify(error));
+      return;
+    }
+    // write response file
+    let response = {
+      attempts: res.attempts,
+      statusCode: res.statusCode,
+      body: body
+    };
+    fileLogger.info(`${JSON.stringify(response)}`);
+  });
+}
+
 function send(args) {
+  let bsConfig = JSON.parse(JSON.stringify(args.bstack_config));
+
+  if (isTurboScaleSession(bsConfig) && args.message_type === 'error') {
+    sendTurboscaleErrorLogs(args);
+  }
+
   if (isUsageReportingEnabled() === "true") return;
 
-  let bsConfig = JSON.parse(JSON.stringify(args.bstack_config));
   let runSettings = "";
   let sanitizedbsConfig = "";
   let cli_details = cli_version_and_path(bsConfig);
@@ -257,6 +306,10 @@ function send(args) {
       ...args,
     },
   };
+
+  if (isTurboScaleSession(bsConfig)) {
+    payload.event_type = 'hst_cypress_cli_stats';
+  }
 
   const options = {
     headers: {
