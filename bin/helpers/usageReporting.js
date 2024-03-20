@@ -203,7 +203,7 @@ function sendTurboscaleErrorLogs(args) {
   let data = utils.isUndefined(args.data) ? {} : args.data;
   const turboscaleErrorPayload = {
     kind: 'hst-cypress-cli-error',
-    userId: data.user_id,
+    data: data,
     error: args.message
   }
 
