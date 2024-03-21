@@ -270,7 +270,6 @@ module.exports = function run(args, rawArgs) {
               let npm_package_md5sum = await checkUploaded.checkPackageMd5(bsConfig.run_settings);
               Object.assign(md5data, { npm_package_md5sum });
               Object.assign(md5data, { zip_md5sum });
-              process.exit(0);
             }
             
             //Package diff
