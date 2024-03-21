@@ -266,10 +266,11 @@ module.exports = function run(args, rawArgs) {
             let node_modules_size = await utils.fetchFolderSize(path.join(process.cwd(), "node_modules"));
 
             if (Constants.turboScaleObj.enabled) {
-              let zip_md5sum = await checkUploaded.checkSpecsMd5(bsConfig, args, {markBlockStart, markBlockEnd});
-              let npm_package_md5sum = await checkUploaded.checkPackageMd5(bsConfig);
+              let zip_md5sum = await checkUploaded.checkSpecsMd5(bsConfig.run_settings, args, {markBlockStart, markBlockEnd});
+              let npm_package_md5sum = await checkUploaded.checkPackageMd5(bsConfig.run_settings);
               Object.assign(md5data, { npm_package_md5sum });
               Object.assign(md5data, { zip_md5sum });
+              process.exit(0);
             }
             
             //Package diff

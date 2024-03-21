@@ -163,7 +163,7 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
   });
 };
 
-exports = {
+module.exports = {
   checkSpecsMd5,
   checkPackageMd5,
   checkUploadedMd5
