@@ -2721,6 +2721,10 @@ describe('utils', () => {
       expect(utils.sanitizeSpecsPattern('pattern3')).to.eq('pattern3');
     });
 
+    it('should not wrap pattern around {} when input already has {}', () => {
+      expect(utils.sanitizeSpecsPattern('pattern/{folderA,folderB}/*.spec.ts')).to.eq('pattern/{folderA,folderB}/*.spec.ts');
+    });
+
     it('should return undefined when --spec is undefined', () => {
       expect(utils.sanitizeSpecsPattern(undefined)).to.eq(undefined);
     });

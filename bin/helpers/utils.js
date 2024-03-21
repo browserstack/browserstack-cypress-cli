@@ -1163,7 +1163,7 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
 };
 
 exports.sanitizeSpecsPattern = (pattern) => {
-  return pattern && pattern.split(",").length > 1 ? "{" + pattern + "}" : pattern;
+  return pattern && !(pattern.includes("{") && pattern.includes("}")) && pattern.split(",").length > 1 ? "{" + pattern + "}" : pattern;
 }
 
 exports.generateUniqueHash = () => {
