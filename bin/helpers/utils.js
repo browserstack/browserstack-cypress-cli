@@ -22,7 +22,7 @@ const usageReporting = require("./usageReporting"),
   config = require("../helpers/config"),
   pkg = require('../../package.json'),
   transports = require('./logger').transports,
-  { findGitConfig, printBuildLink, isTestObservabilitySession, isBrowserstackInfra, shouldReRunObservabilityTests } = require('../testObservability/helper/helper'),
+  o11yHelpers = require('../testObservability/helper/helper'),
   { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER } = require('../testObservability/helper/constants');
 
 const request = require('request');
@@ -434,7 +434,8 @@ exports.setProjectId = (bsConfig, args, cypressConfigFile) => {
   } else if(!this.isUndefined(bsConfig.run_settings["projectId"])) {
     return bsConfig.run_settings["projectId"]; 
   } else {
-    if (!this.isUndefined(cypressConfigFile) && !this.isUndefined(cypressConfigFile["projectId"])) {  
+    // ignore reading cypressconfig if enforce_settings is passed
+    if (this.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) && !this.isUndefined(cypressConfigFile) && !this.isUndefined(cypressConfigFile["projectId"])) {
       return cypressConfigFile["projectId"]; 
     }
   }
@@ -480,7 +481,7 @@ exports.setNodeVersion = (bsConfig, args) => {
 // specs can be passed via command line args as a string
 // command line args takes precedence over config
 exports.setUserSpecs = (bsConfig, args) => {
-  if(isBrowserstackInfra() && isTestObservabilitySession() && shouldReRunObservabilityTests()) {
+  if(o11yHelpers.isBrowserstackInfra() && o11yHelpers.isTestObservabilitySession() && o11yHelpers.shouldReRunObservabilityTests()) {
     bsConfig.run_settings.specs = process.env.BROWSERSTACK_RERUN_TESTS;
     return;
   }
@@ -560,6 +561,7 @@ exports.setSystemEnvs = (bsConfig) => {
 
   try {
     const accessibilityOptions = bsConfig.run_settings.accessibilityOptions;
+    envKeys['BROWSERSTACK_ACCESSIBILITY_DEBUG'] = process.env.BROWSERSTACK_ACCESSIBILITY_DEBUG;
     if (accessibilityOptions) {
       Object.keys(accessibilityOptions).forEach(key => {
         const a11y_env_key = `ACCESSIBILITY_${key.toUpperCase()}`
@@ -580,8 +582,8 @@ exports.setSystemEnvs = (bsConfig) => {
       envKeys[key] = process.env[key];
     });
   
-    let gitConfigPath = findGitConfig(process.cwd());
-    if(!isBrowserstackInfra()) process.env.OBSERVABILITY_GIT_CONFIG_PATH_LOCAL = gitConfigPath;
+    let gitConfigPath = o11yHelpers.findGitConfig(process.cwd());
+    if(!o11yHelpers.isBrowserstackInfra()) process.env.OBSERVABILITY_GIT_CONFIG_PATH_LOCAL = gitConfigPath;
     if(gitConfigPath) {
       const relativePathFromGitConfig = path.relative(gitConfigPath, process.cwd());
       envKeys["OBSERVABILITY_GIT_CONFIG_PATH"] = relativePathFromGitConfig ? relativePathFromGitConfig : 'DEFAULT';
@@ -627,6 +629,8 @@ exports.isPositiveInteger = (str) => {
 }
 
 exports.isTrueString = value => (!this.isUndefined(value) && value.toString().toLowerCase() === 'true');
+
+exports.isUndefinedOrFalse = value => ( this.isUndefined(value) || value.toString().toLowerCase() === 'false');
 
 exports.isFloat = (value) => Number(value) && Number(value) % 1 !== 0;
 
@@ -718,6 +722,11 @@ exports.generateUploadParams = (bsConfig, filePath, md5data, fileDetails) => {
       "User-Agent": exports.getUserAgent(),
     }
   }
+
+  if (Constants.turboScaleObj.enabled) {
+    options.url = Constants.turboScaleObj.uploadUrl;
+  }
+
   return options
 }
 
@@ -965,6 +974,7 @@ exports.setLocalArgs = (bsConfig, args) => {
     local_args['proxyPort'] = bsConfig["connection_settings"]["proxyPort"];
   if (bsConfig["connection_settings"]["useCaCertificate"])
     local_args['useCaCertificate'] = bsConfig["connection_settings"]["useCaCertificate"];
+
   local_args['daemon'] = true;
   local_args['enable-logging-for-api'] = true
   local_args['source'] = `cypress:${usageReporting.cli_version_and_path(bsConfig).version}`;
@@ -1067,7 +1077,7 @@ exports.getFilesToIgnore = (runSettings, excludeFiles, logging = true) => {
   return ignoreFiles;
 }
 
-exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
+exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession=false) => {
   let defaultSpecFolder
   let testFolderPath
   let globCypressConfigSpecPatterns = []
@@ -1077,7 +1087,8 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
   if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
     defaultSpecFolder = Constants.DEFAULT_CYPRESS_10_SPEC_PATH
     testFolderPath = defaultSpecFolder
-    if(!this.isUndefined(cypressConfig) && !this.isUndefined(cypressConfig.e2e)) {
+    // Read cypress config if enforce_settings is not present
+    if(this.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) && !this.isUndefined(cypressConfig) && !this.isUndefined(cypressConfig.e2e)) {
       if(!this.isUndefined(cypressConfig.e2e.specPattern)) {
         globCypressConfigSpecPatterns = Array.isArray(cypressConfig.e2e.specPattern) ?
           cypressConfig.e2e.specPattern : [cypressConfig.e2e.specPattern];
@@ -1141,6 +1152,13 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig) => {
   }
 
   logger.debug(`${files ? files.length : 0} spec files found`);
+
+  if (turboScaleSession) {
+    // remove unwanted path prefix for turboscale
+    files = files.map((x) => { return path.join(testFolderPath, x.split(testFolderPath)[1]) })
+    // setting specs for turboScale as we don't have patched API for turboscale so we will rely on info from CLI
+    bsConfig.run_settings.specs = files;
+  }
   return files;
 };
 
@@ -1184,8 +1202,8 @@ exports.handleSyncExit = (exitCode, dashboard_url) => {
     syncCliLogger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
     syncCliLogger.info(dashboard_url);
   }
-  if(isTestObservabilitySession()) {
-    printBuildLink(true, exitCode);
+  if(o11yHelpers.isTestObservabilitySession()) {
+    o11yHelpers.printBuildLink(true, exitCode);
   } else {
     process.exit(exitCode);
   }
@@ -1286,9 +1304,53 @@ exports.setConfig = (bsConfig, args) => {
   }
 }
 
+exports.setVideoCliConfig = (bsConfig, videoConfig) => {
+  // set cli config for video for cypress 13 and above to attain default value of true.
+  if(this.isUndefined(videoConfig) || this.isUndefined(videoConfig.video) || this.isUndefined(videoConfig.videoUploadOnPasses) || this.isUndefined(bsConfig)) return;
+  let user_cypress_version = (bsConfig && bsConfig.run_settings && bsConfig.run_settings.cypress_version) ? bsConfig.run_settings.cypress_version.toString() : undefined;
+  let cypress_major_version = (user_cypress_version && user_cypress_version.match(/^(\d+)/)) ? user_cypress_version.split(".")[0] : undefined;
+  let config_args = (bsConfig && bsConfig.run_settings && bsConfig.run_settings.config) ? bsConfig.run_settings.config : undefined;
+  if(this.isUndefined(user_cypress_version) || this.isUndefined(cypress_major_version) || parseInt(cypress_major_version) >= 13 ) {
+    let video_args = `video=${videoConfig.video},videoUploadOnPasses=${videoConfig.videoUploadOnPasses}`;
+    config_args = this.isUndefined(config_args) ? video_args : config_args + ',' + video_args;
+    logger.debug(`Setting default video true for cypress 13 and above in cli for cypress version ${user_cypress_version} with cli args - ${config_args}`)
+  }
+  if (bsConfig.run_settings && this.isNotUndefined(config_args)) bsConfig["run_settings"]["config"] = config_args;
+}
+
+// set configs if enforce_settings is passed
+exports.setEnforceSettingsConfig = (bsConfig) => {
+  if ( this.isUndefined(bsConfig) || this.isUndefined(bsConfig.run_settings) ) return;
+  let config_args = (bsConfig && bsConfig.run_settings && bsConfig.run_settings.config) ? bsConfig.run_settings.config : undefined;
+  if ( this.isUndefined(config_args) || !config_args.includes("video") ) {
+    let video_args = (this.isUndefined(bsConfig.run_settings.video_config) || this.isUndefined(bsConfig.run_settings.video_config.video) || !bsConfig.run_settings.video_config.video ) ? 'video=false' : 'video=true' ;
+    video_args += (this.isUndefined(bsConfig.run_settings.video_config) || this.isUndefined(bsConfig.run_settings.video_config.videoUploadOnPasses) || !bsConfig.run_settings.video_config.videoUploadOnPasses ) ? ',videoUploadOnPasses=false' : ',videoUploadOnPasses=true';
+    config_args = this.isUndefined(config_args) ? video_args : config_args + ',' + video_args;
+    logger.debug(`Setting video_args for enforce_settings to ${video_args}`);
+  }
+  if ( (bsConfig && bsConfig.run_settings && bsConfig.run_settings.baseUrl) && (this.isUndefined(config_args) || !config_args.includes("baseUrl")) ) {
+    let base_url_args = 'baseUrl='+bsConfig.run_settings.baseUrl;
+    config_args = this.isUndefined(config_args) ? base_url_args : config_args + ',' + base_url_args;
+    logger.debug(`Setting base_url_args for enforce_settings to ${base_url_args}`);
+  }
+  // set specs in config of specpattern to override cypress config
+  if( this.isNotUndefined(bsConfig.run_settings.specs) && bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE && (this.isUndefined(config_args) || !config_args.includes("specPattern"))  ) {
+    // doing this only for cypress 10 and above as --spec is given precedence for cypress 9.
+    let specConfigs = bsConfig.run_settings.specs;
+    // if multiple specs are passed, convert it into an array.
+    if(specConfigs && specConfigs.includes(',')) {
+      specConfigs = JSON.stringify(specConfigs.split(','));
+    }
+    let spec_pattern_args = `specPattern=${specConfigs}`;
+    config_args = this.isUndefined(config_args) ? spec_pattern_args : config_args + ',' + spec_pattern_args;
+  }
+  if ( this.isNotUndefined(config_args) ) bsConfig["run_settings"]["config"] = config_args;
+  logger.debug(`Setting conifg_args for enforce_settings to ${config_args}`);
+}
+
 // blindly send other passed configs with run_settings and handle at backend
 exports.setOtherConfigs = (bsConfig, args) => {
-  if(isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
+  if(o11yHelpers.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
     bsConfig["run_settings"]["reporter"] = TEST_OBSERVABILITY_REPORTER;
     return;
   }
@@ -1382,6 +1444,11 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs, buildRe
         'User-Agent': that.getUserAgent(),
       },
     };
+
+    if (Constants.turboScaleObj.enabled) {
+      options.url = `${config.turboScaleBuildsUrl}/${buildId}/stop`;
+    }
+
     let message = null;
     let messageType = null;
     let errorCode = null;
@@ -1453,12 +1520,35 @@ exports.setProcessHooks = (buildId, bsConfig, bsLocal, args, buildReportData) =>
   process.on('uncaughtException', processExitHandler.bind(this, bindData));
 }
 
+exports.setO11yProcessHooks = (() => {
+  let bindData = {};
+  let handlerAdded = false;
+  return (buildId, bsConfig, bsLocal, args, buildReportData) => {
+    bindData.buildId = buildId;
+    bindData.bsConfig = bsConfig;
+    bindData.bsLocal = bsLocal;
+    bindData.args = args;
+    bindData.buildReportData = buildReportData;
+    if (handlerAdded) return;
+    handlerAdded = true;
+    process.on('beforeExit', processO11yExitHandler.bind(this, bindData));
+  }
+})()
+
 async function processExitHandler(exitData){
   logger.warn(Constants.userMessages.PROCESS_KILL_MESSAGE);
   await this.stopBrowserStackBuild(exitData.bsConfig, exitData.args, exitData.buildId, null, exitData.buildReportData);
   await this.stopLocalBinary(exitData.bsConfig, exitData.bsLocalInstance, exitData.args, null, exitData.buildReportData);
-  await printBuildLink(true);
+  await o11yHelpers.printBuildLink(true);
   process.exit(0);
+}
+
+async function processO11yExitHandler(exitData){
+  if (exitData.buildId) {
+    await o11yHelpers.printBuildLink(false);
+  } else {
+    await o11yHelpers.printBuildLink(true);
+  }
 }
 
 exports.fetchZipSize = (fileName) => {
@@ -1499,14 +1589,23 @@ exports.fetchFolderSize = async (dir) => {
   }
 }
 
-exports.getVideoConfig = (cypressConfig) => {
+exports.getVideoConfig = (cypressConfig, bsConfig = {}) => {
   let conf = {
     video: true,
     videoUploadOnPasses: true
   }
-  if (!this.isUndefined(cypressConfig.video)) conf.video = cypressConfig.video;
-  if (!this.isUndefined(cypressConfig.videoUploadOnPasses)) conf.videoUploadOnPasses = cypressConfig.videoUploadOnPasses;
+   // Reading bsconfig in case of enforce_settings
+  if ( this.isUndefined(bsConfig.run_settings) || this.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) ) {
+    if (!this.isUndefined(cypressConfig.video)) conf.video = cypressConfig.video;
+    if (!this.isUndefined(cypressConfig.videoUploadOnPasses)) conf.videoUploadOnPasses = cypressConfig.videoUploadOnPasses;
+  }
+  else {
+    if (!this.isUndefined(bsConfig.run_settings) && !this.isUndefined(bsConfig.run_settings.video)) conf.video = bsConfig.run_settings.video;
+    if (!this.isUndefined(bsConfig.run_settings) && !this.isUndefined(bsConfig.run_settings.videoUploadOnPasses)) conf.videoUploadOnPasses = bsConfig.run_settings.videoUploadOnPasses;
+  }
 
+  // set video in cli config in case of cypress 13 or above as default value is false there.
+  this.setVideoCliConfig(bsConfig,conf);
   logger.debug(`Setting video = ${conf.video}`);
   logger.debug(`Setting videoUploadOnPasses = ${conf.videoUploadOnPasses}`);
   return conf;

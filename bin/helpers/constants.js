@@ -72,6 +72,8 @@ const userMessages = {
   UPLOADING_NPM_PACKAGES_SUCCESS: "Uploaded node_modules successfully",
   SKIP_UPLOADING_TESTS:
     "Skipping zip upload since BrowserStack already has your test suite that has not changed since the last run.",
+  SKIP_NPM_INSTALL:
+    "Skipping NPM Install as the enforce_settings has been passed.",
   SKIP_UPLOADING_NPM_PACKAGES:
     "Skipping the upload of node_modules since BrowserStack has already cached your npm dependencies that have not changed since the last run.",
   LOCAL_TRUE: "you will now be able to test localhost / private URLs",
@@ -134,8 +136,10 @@ const validationMessages = {
     "cypress_proj_dir is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/sample-tutorial to learn more.",
   EMPTY_CYPRESS_CONFIG_FILE:
     "cypress_config_file is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/configuration-file to learn more.",
+  EMPTY_SPECS_IN_BROWSERSTACK_JSON:
+    "specs is required when enforce_settings is true in run_settings of browserstack.json",
   VALIDATED: "browserstack.json file is validated",
-  NOT_VALID: "browerstack.json is not valid",
+  NOT_VALID: "browserstack.json is not valid",
   NOT_VALID_JSON: "browerstack.json is not a valid json",
   INVALID_EXTENSION: "Invalid files, please remove these files and try again.",
   INVALID_PARALLELS_CONFIGURATION:
@@ -437,6 +441,8 @@ const CYPRESS_CONFIG_FILE_NAMES = Object.keys(CYPRESS_CONFIG_FILE_MAPPING);
 
 const CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS = ['js', 'ts', 'cjs', 'mjs']
 
+const turboScaleObj = {};
+
 module.exports = Object.freeze({
   syncCLI,
   userMessages,
@@ -449,6 +455,7 @@ module.exports = Object.freeze({
   hashingOptions,
   packageInstallerOptions,
   specFileTypes,
+  turboScaleObj,
   DEFAULT_CYPRESS_SPEC_PATH,
   DEFAULT_CYPRESS_10_SPEC_PATH,
   SPEC_TOTAL_CHAR_LIMIT,

@@ -71,6 +71,7 @@ class MyReporter {
     this._paths = new PathHelper({ cwd: process.cwd() }, this._testEnv.location_prefix);
     this.currentTestSteps = [];
     this.currentTestCucumberSteps = [];
+    this.hooksStarted = {};
     this.beforeHooks = [];
     this.platformDetailsMap = {};
     this.runStatusMarkedHash = {};
@@ -110,6 +111,9 @@ class MyReporter {
             } else {
               this.runStatusMarkedHash[hook.hookAnalyticsId] = true;
             }
+
+            // Remove hooks added at hook start
+            delete this.hooksStarted[hook.hookAnalyticsId];
             await this.sendTestRunEvent(hook,undefined,false,"HookRunFinished");
           }
         }
@@ -152,12 +156,14 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_BEGIN, async (test) => {
+        if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
           await this.testStarted(test);
         }
       })
 
       .on(EVENT_TEST_END, async (test) => {
+        if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
@@ -434,6 +440,38 @@ class MyReporter {
           }
         };
         await uploadEventData(buildUpdateData);
+      }
+
+      // Add started hooks to the hash
+      if(eventType === 'HookRunStarted' && ['BEFORE_EACH', 'AFTER_EACH', 'BEFORE_ALL'].includes(testData['hook_type'])) {
+        this.hooksStarted[testData.uuid] = uploadData;
+      }
+
+      // Send pending hook finsihed events for hook starts
+      if (eventType === 'TestRunFinished' || eventType === 'TestRunSkipped') {
+        Object.values(this.hooksStarted).forEach(async hookData => {
+          hookData['event_type'] = 'HookRunFinished';
+          hookData['hook_run'] = {
+            ...hookData['hook_run'],
+            result: uploadData['test_run'].result,
+            failure: uploadData['test_run'].failure,
+            failure_type: uploadData['test_run'].failure_type,
+            failure_reason: uploadData['test_run'].failure_reason,
+            failure_reason_expanded: uploadData['test_run'].failure_reason_expanded,
+            failure_backtrace: uploadData['test_run'].failure_backtrace
+
+          }
+
+          if (hookData['hook_run']['hook_type'] === 'BEFORE_ALL') {
+            hookData['hook_run'].finished_at = uploadData['test_run'].finished_at;
+            hookData['hook_run'].duration_in_ms = new Date(hookData['hook_run'].finished_at).getTime() - new Date(hookData['hook_run'].started_at).getTime();
+          } else {
+            hookData['hook_run'].finished_at = hookData['hook_run'].started_at;
+            hookData['hook_run'].duration_in_ms = 0;
+          }
+          await uploadEventData(hookData);
+        })
+        this.hooksStarted = {};
       }
     } catch(error) {
       debug(`Exception in populating test data for event ${eventType} with error : ${error}`, true, error);

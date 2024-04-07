@@ -9,6 +9,7 @@ const { promisify } = require('util');
 const gitconfig = require('gitconfiglocal');
 const { spawn, execSync } = require('child_process');
 const glob = require('glob');
+const { runOptions } = require('../../helpers/runnerArgs')
 
 const pGitconfig = promisify(gitconfig);
 
@@ -24,7 +25,15 @@ const GLOBAL_MODULE_PATH = execSync('npm root -g').toString().trim();
 const { name, version } = require('../../../package.json');
 
 const { CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS } = require('../../helpers/constants');
-const { consoleHolder, API_URL, TEST_OBSERVABILITY_REPORTER } = require('./constants');
+const { consoleHolder, API_URL, TEST_OBSERVABILITY_REPORTER, TEST_OBSERVABILITY_REPORTER_LOCAL } = require('./constants');
+
+const ALLOWED_MODULES = [
+  'cypress/package.json',
+  'mocha/lib/reporters/base.js',
+  'mocha/lib/utils.js',
+  'mocha'
+];
+
 exports.pending_test_uploads = {
   count: 0
 };
@@ -57,15 +66,26 @@ const httpsScreenshotsKeepAliveAgent = new https.Agent({
 const supportFileCleanup = () => {
   Object.keys(supportFileContentMap).forEach(file => {
     try {
-      fs.writeFileSync(file, supportFileContentMap[file], {encoding: 'utf-8'});
+      if(typeof supportFileContentMap[file] === 'object') {
+        let fileOrDirpath = file;
+        if(supportFileContentMap[file].deleteSupportDir) {
+          fileOrDirpath = path.join(process.cwd(), 'cypress', 'support');
+        }
+        helper.deleteSupportFileOrDir(fileOrDirpath);
+      } else {
+        fs.writeFileSync(file, supportFileContentMap[file], {encoding: 'utf-8'});
+      }
     } catch(e) {
       exports.debug(`Error while replacing file content for ${file} with it's original content with error : ${e}`, true, e);
     }
   });
 }
 
+exports.buildStopped = false;
+
 exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
-  if(!this.isTestObservabilitySession()) return;
+  if(!this.isTestObservabilitySession() || exports.buildStopped) return;
+  exports.buildStopped = true;
   try {
     if(shouldStopSession) {
       supportFileCleanup();
@@ -229,29 +249,33 @@ const setEnvironmentVariablesForRemoteReporter = (BS_TESTOPS_JWT, BS_TESTOPS_BUI
   process.env.OBSERVABILITY_LAUNCH_SDK_VERSION = OBSERVABILITY_LAUNCH_SDK_VERSION;
 }
 
-const getCypressCommandEventListener = () => {
-  return (
+const getCypressCommandEventListener = (isJS) => {
+  return isJS ? (
     `require('browserstack-cypress-cli/bin/testObservability/cypress');`
-  );
+  ) : (
+    `import 'browserstack-cypress-cli/bin/testObservability/cypress'`
+  )
 }
 
-const setEventListeners = () => {
+exports.setEventListeners = (bsConfig) => {
   try {
-    const cypressCommandEventListener = getCypressCommandEventListener();
-    glob(process.cwd() + '/cypress/support/*.js', {}, (err, files) => {
+    const supportFilesData = helper.getSupportFiles(bsConfig, false);
+    if(!supportFilesData.supportFile) return;
+    glob(process.cwd() + supportFilesData.supportFile, {}, (err, files) => {
       if(err) return exports.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
       files.forEach(file => {
         try {
           if(!file.includes('commands.js')) {
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
             
+            let cypressCommandEventListener = getCypressCommandEventListener(file.includes('js'));
             if(!defaultFileContent.includes(cypressCommandEventListener)) {
               let newFileContent =  defaultFileContent + 
                                   '\n' +
                                   cypressCommandEventListener +
                                   '\n'
               fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
-              supportFileContentMap[file] = defaultFileContent;
+              supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
             }
           }
         } catch(e) {
@@ -327,7 +351,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
         projectName,
         buildDescription,
         buildTags
-      } = helper.getBuildDetails(user_config);
+      } = helper.getBuildDetails(user_config, true);
       const data = {
         'format': 'json',
         'project_name': projectName,
@@ -367,7 +391,6 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
       exports.debug('Build creation successfull!');
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;
       setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
-      // setEventListeners();
       if(this.isBrowserstackInfra()) helper.setBrowserstackCypressCliDependency(user_config);
     } catch(error) {
       if(!error.errorType) {
@@ -711,34 +734,88 @@ exports.getOSDetailsFromSystem = async (product) => {
   };
 }
 
-exports.requireModule = (module, internal = false) => {
-  logger.debug(`Getting ${module} from ${process.cwd()}`);
-  let local_path = "";
-  if(process.env["browserStackCwd"]){
-   local_path = path.join(process.env["browserStackCwd"], 'node_modules', module);
-  } else if(internal) {
-    local_path = path.join(process.cwd(), 'node_modules', 'browserstack-cypress-cli', 'node_modules', module);
-  } else {
-    local_path = path.join(process.cwd(), 'node_modules', module);
-  }
-  if(!fs.existsSync(local_path)) {
-    logger.debug(`${module} doesn\'t exist at ${process.cwd()}`);
-    logger.debug(`Getting ${module} from ${GLOBAL_MODULE_PATH}`);
+let WORKSPACE_MODULE_PATH;
 
-    let global_path;
-    if(['jest-runner', 'jest-runtime'].includes(module))
-      global_path = path.join(GLOBAL_MODULE_PATH, 'jest', 'node_modules', module);
-    else
-      global_path = path.join(GLOBAL_MODULE_PATH, module);
-    if(!fs.existsSync(global_path)) {
-      throw new Error(`${module} doesn't exist.`);
-    }
-    return require(global_path);
+exports.requireModule = (module) => {
+  const modulePath = exports.resolveModule(module);
+  if (modulePath.error) {
+    throw new Error(`${module} doesn't exist.`);
   }
-  return require(local_path);
-}
+
+  return require(modulePath.path);
+};
+
+exports.resolveModule = (module) => {
+  if (!ALLOWED_MODULES.includes(module)) {
+    throw new Error('Invalid module name');
+  }
+
+  if (WORKSPACE_MODULE_PATH == undefined) {
+    try {
+      WORKSPACE_MODULE_PATH = execSync('npm ls').toString().trim();
+      WORKSPACE_MODULE_PATH = WORKSPACE_MODULE_PATH.split('\n')[0].split(' ')[1];
+    } catch (e) {
+      WORKSPACE_MODULE_PATH = null;
+      exports.debug(`Could not locate npm module path with error ${e}`);
+    }
+  }
+
+  /*
+  Modules will be resolved in the following order,
+  current working dir > workspaces dir > NODE_PATH env var > global node modules path
+  */
+
+  try {
+    exports.debug('requireModuleV2');
+
+    return {path: require.resolve(module), foundAt: 'resolve'};
+  } catch (_) {
+    /* Find from current working directory */
+    exports.debug(`Getting ${module} from ${process.cwd()}`);
+    let local_path = path.join(process.cwd(), 'node_modules', module);
+    if (!fs.existsSync(local_path)) {
+      exports.debug(`${module} doesn't exist at ${process.cwd()}`);
+
+      /* Find from workspaces */
+      if (WORKSPACE_MODULE_PATH) {
+        exports.debug(`Getting ${module} from path ${WORKSPACE_MODULE_PATH}`);
+        let workspace_path = null;
+        workspace_path = path.join(WORKSPACE_MODULE_PATH, 'node_modules', module);
+        if (workspace_path && fs.existsSync(workspace_path)) {
+          exports.debug(`Found ${module} from ${WORKSPACE_MODULE_PATH}`);
+
+          return {path: workspace_path, foundAt: 'workspaces'};
+        }
+      }
+
+      /* Find from node path */
+      let node_path = null;
+      if (!exports.isUndefined(process.env.NODE_PATH)) {
+        node_path = path.join(process.env.NODE_PATH, module);
+      }
+      if (node_path && fs.existsSync(node_path)) {
+        exports.debug(`Getting ${module} from ${process.env.NODE_PATH}`);
+
+        return {path: node_path, foundAt: 'nodePath'};
+      }
+
+      /* Find from global node modules path */
+      exports.debug(`Getting ${module} from ${GLOBAL_MODULE_PATH}`);
+
+      let global_path = path.join(GLOBAL_MODULE_PATH, module);
+      if (!global_path || !fs.existsSync(global_path)) {
+        return {error: 'module_not_found'};
+      }
+
+      return {path: global_path, foundAt: 'local'};
+    }
+
+    return {path: local_path, foundAt: 'global'};
+  }
+};
 
 const getReRunSpecs = (rawArgs) => {
+  let finalArgs = rawArgs;
   if (this.isTestObservabilitySession() && this.shouldReRunObservabilityTests()) {
     let startIdx = -1, numEle = 0;
     for(let idx=0; idx<rawArgs.length; idx++) {
@@ -751,28 +828,59 @@ const getReRunSpecs = (rawArgs) => {
       }
     }
     if(startIdx != -1) rawArgs.splice(startIdx, numEle + 1);
-    return [...rawArgs, '--spec', process.env.BROWSERSTACK_RERUN_TESTS];
-  } else {
-    return rawArgs;
+    finalArgs = [...rawArgs, '--spec', process.env.BROWSERSTACK_RERUN_TESTS];
   }
+  return finalArgs.filter(item => item !== '--disable-test-observability' && item !== '--disable-browserstack-automation');
 }
 
 const getLocalSessionReporter = () => {
   if(this.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
-    return ['--reporter', TEST_OBSERVABILITY_REPORTER];
+    return ['--reporter', TEST_OBSERVABILITY_REPORTER_LOCAL];
   } else {
     return [];
   }
 }
 
 const cleanupTestObservabilityFlags = (rawArgs) => {
-  const newRawArgs = [];
-  for(let idx=0; idx<rawArgs.length; idx++) {
-    if(!['--disable-browserstack-automation', '--disable-test-observability'].includes(rawArgs[idx])) {
-      newRawArgs.push(rawArgs[idx]);
+  const newArgs = [];
+  const aliasMap = Object.keys(runOptions).reduce( (acc, key) => {
+    const curr = runOptions[key];
+    if (curr.alias)	 {
+      const aliases = Array.isArray(curr.alias) ? curr.alias : [curr.alias] 
+      for (const alias of aliases) {
+        acc[alias] = curr;
+      }
     }
+    return acc;
+  }, {})
+
+  const cliArgs = {
+    ...runOptions,
+    ...aliasMap
   }
-  return newRawArgs;
+
+  // these flags are present in cypress too, but in some the same cli and
+  // cypress flags have different meaning. In that case, we assume user has
+  // given cypress related args
+  const retain = ['c', 'p', 'b', 'o', 's', 'specs', 'spec']
+
+  for (let i = 0;i < rawArgs.length;i++) {
+    const arg = rawArgs[i];
+    if (arg.startsWith('-')) {
+      const argName = arg.length > 1 && arg[1] == '-' ? arg.slice(2) : arg.slice(1);
+      // If this flag belongs to cli, we omit it and its value
+      if (cliArgs[argName] && !retain.includes(argName)) {
+        const nextArg = i + 1 < rawArgs.length ? rawArgs[i+1] : ''
+        // if the flag is bound to have a value, we ignore it
+        if (cliArgs[argName].type && cliArgs[argName].type !== 'boolean' && !nextArg.startsWith('-')) {
+          i++;
+        }
+        continue;
+      }
+    }
+    newArgs.push(rawArgs[i]);
+  }
+  return newArgs;
 }
 
 exports.runCypressTestsLocally = (bsConfig, args, rawArgs) => {

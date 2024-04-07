@@ -122,6 +122,8 @@ const caps = (bsConfig, zip) => {
       }
 
       if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
+        // If any of the platform has accessibility true, make it true
+        bsConfig.run_settings["accessibility"] = true;
         bsConfig.run_settings["accessibilityPlatforms"] = getAccessibilityPlatforms(bsConfig);
       }
 
@@ -147,14 +149,29 @@ const caps = (bsConfig, zip) => {
   })
 }
 const getAccessibilityPlatforms = (bsConfig) => {
-  const browserList = bsConfig.browsers;
+  const browserList = [];
+  if (bsConfig.browsers) {
+    bsConfig.browsers.forEach((element) => {
+      element.versions.forEach((version) => {
+        browserList.push({...element, version, platform: element.os + "-" + element.browser});
+      });
+    });
+  }
+  
   const accessibilityPlatforms = Array(browserList.length).fill(false);
   let rootLevelAccessibility = false;
   if (!Utils.isUndefined(bsConfig.run_settings.accessibility)) {
-    rootLevelAccessibility = bsConfig.run_settings.accessibility.toString() === 'true'
+    rootLevelAccessibility = bsConfig.run_settings.accessibility.toString() === 'true';
   }
   browserList.forEach((browserDetails, idx) => {
-    accessibilityPlatforms[idx] = (browserDetails.accessibility === undefined) ? rootLevelAccessibility : browserDetails.accessibility
+    accessibilityPlatforms[idx] = (browserDetails.accessibility === undefined) ? rootLevelAccessibility : browserDetails.accessibility;
+    if (Utils.isUndefined(bsConfig.run_settings.headless) || !(String(bsConfig.run_settings.headless) === "false")) {
+      logger.warn(`Accessibility Automation will not run on legacy headless mode. Switch to new headless mode or avoid using headless mode for ${browserDetails.platform}.`);
+    } else if (browserDetails.browser && browserDetails.browser.toLowerCase() !== 'chrome') {
+      logger.warn(`Accessibility Automation will run only on Chrome browsers for ${browserDetails.platform}.`);
+    } else if (browserDetails.version && !browserDetails.version.includes('latest') && browserDetails.version <= 94) {
+      logger.warn(`Accessibility Automation will run only on Chrome browser version greater than 94 for ${browserDetails.platform}.`);
+    }
   });
   return accessibilityPlatforms;
 }
@@ -182,6 +199,10 @@ const validate = (bsConfig, args) => {
 
     if (!bsConfig.run_settings.cypressConfigFilePath && !bsConfig.run_settings.userProvidedCypessConfigFile) {
       reject(Constants.validationMessages.EMPTY_CYPRESS_CONFIG_FILE);
+    }
+
+    if ( bsConfig && bsConfig.run_settings && bsConfig.run_settings.enforce_settings && bsConfig.run_settings.enforce_settings.toString() === 'true' && Utils.isUndefined(bsConfig.run_settings.specs) ) {
+      reject(Constants.validationMessages.EMPTY_SPECS_IN_BROWSERSTACK_JSON);
     }
 
     // validate parallels specified in browserstack.json if parallels are not specified via arguments
@@ -214,7 +235,8 @@ const validate = (bsConfig, args) => {
 
     logger.debug(`Validating ${bsConfig.run_settings.cypress_config_filename}`);
     try {
-      if (bsConfig.run_settings.cypress_config_filename !== 'false') {
+      // Not reading cypress config file upon enforce_settings
+      if (Utils.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) && bsConfig.run_settings.cypress_config_filename !== 'false') {
         if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
           const completeCypressConfigFile = readCypressConfigFile(bsConfig)
           if (!Utils.isUndefined(completeCypressConfigFile)) {
@@ -233,6 +255,11 @@ const validate = (bsConfig, args) => {
 
         // Detect if the user is not using the right directory structure, and throw an error
         if (!Utils.isUndefined(cypressConfigFile.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,cypressConfigFile.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
+      }
+      else {
+        logger.debug("Validating baseurl and integrationFolder in browserstack.json");
+        if (!Utils.isUndefined(bsConfig.run_settings.baseUrl) && bsConfig.run_settings.baseUrl.includes("localhost") && !Utils.getLocalFlag(bsConfig.connection_settings)) reject(Constants.validationMessages.LOCAL_NOT_SET.replace("<baseUrlValue>", bsConfig.run_settings.baseUrl));
+        if (!Utils.isUndefined(bsConfig.run_settings.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,bsConfig.run_settings.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
       }
     } catch(error){
       reject(Constants.validationMessages.INVALID_CYPRESS_JSON)

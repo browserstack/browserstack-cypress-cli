@@ -3,9 +3,19 @@ const path = require("node:path");
 
 const browserstackAccessibility = (on, config) => {
   let browser_validation = true;
+  if (process.env.BROWSERSTACK_ACCESSIBILITY_DEBUG === 'true') {
+    config.env.BROWSERSTACK_LOGS = 'true';
+    process.env.BROWSERSTACK_LOGS = 'true';
+  }
+  on('task', {
+    browserstack_log(message) {
+      console.log(message)
+
+      return null
+    },
+  })
   on('before:browser:launch', (browser = {}, launchOptions) => {
     try {
-
       if (process.env.ACCESSIBILITY_EXTENSION_PATH !== undefined) {
         if (browser.name !== 'chrome') {
           console.log(`Accessibility Automation will run only on Chrome browsers.`);
