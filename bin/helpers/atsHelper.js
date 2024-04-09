@@ -13,7 +13,7 @@ exports.isTurboScaleSession = (bsConfig) => {
     return true;
   }
 
-  if (bsConfig.run_settings && bsConfig.run_settings.turboScale) {
+  if (utils.isNotUndefined(bsConfig) && bsConfig.run_settings && bsConfig.run_settings.turboScale) {
     return true;
   }
 
