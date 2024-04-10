@@ -66,7 +66,15 @@ const httpsScreenshotsKeepAliveAgent = new https.Agent({
 const supportFileCleanup = () => {
   Object.keys(supportFileContentMap).forEach(file => {
     try {
-      fs.writeFileSync(file, supportFileContentMap[file], {encoding: 'utf-8'});
+      if(typeof supportFileContentMap[file] === 'object') {
+        let fileOrDirpath = file;
+        if(supportFileContentMap[file].deleteSupportDir) {
+          fileOrDirpath = path.join(process.cwd(), 'cypress', 'support');
+        }
+        helper.deleteSupportFileOrDir(fileOrDirpath);
+      } else {
+        fs.writeFileSync(file, supportFileContentMap[file], {encoding: 'utf-8'});
+      }
     } catch(e) {
       exports.debug(`Error while replacing file content for ${file} with it's original content with error : ${e}`, true, e);
     }
@@ -241,29 +249,33 @@ const setEnvironmentVariablesForRemoteReporter = (BS_TESTOPS_JWT, BS_TESTOPS_BUI
   process.env.OBSERVABILITY_LAUNCH_SDK_VERSION = OBSERVABILITY_LAUNCH_SDK_VERSION;
 }
 
-const getCypressCommandEventListener = () => {
-  return (
+const getCypressCommandEventListener = (isJS) => {
+  return isJS ? (
     `require('browserstack-cypress-cli/bin/testObservability/cypress');`
-  );
+  ) : (
+    `import 'browserstack-cypress-cli/bin/testObservability/cypress'`
+  )
 }
 
-const setEventListeners = () => {
+exports.setEventListeners = (bsConfig) => {
   try {
-    const cypressCommandEventListener = getCypressCommandEventListener();
-    glob(process.cwd() + '/cypress/support/*.js', {}, (err, files) => {
+    const supportFilesData = helper.getSupportFiles(bsConfig, false);
+    if(!supportFilesData.supportFile) return;
+    glob(process.cwd() + supportFilesData.supportFile, {}, (err, files) => {
       if(err) return exports.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
       files.forEach(file => {
         try {
           if(!file.includes('commands.js')) {
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
             
+            let cypressCommandEventListener = getCypressCommandEventListener(file.includes('js'));
             if(!defaultFileContent.includes(cypressCommandEventListener)) {
               let newFileContent =  defaultFileContent + 
                                   '\n' +
                                   cypressCommandEventListener +
                                   '\n'
               fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
-              supportFileContentMap[file] = defaultFileContent;
+              supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
             }
           }
         } catch(e) {
@@ -379,7 +391,6 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
       exports.debug('Build creation successfull!');
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;
       setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
-      // setEventListeners();
       if(this.isBrowserstackInfra()) helper.setBrowserstackCypressCliDependency(user_config);
     } catch(error) {
       if(!error.errorType) {
@@ -804,6 +815,7 @@ exports.resolveModule = (module) => {
 };
 
 const getReRunSpecs = (rawArgs) => {
+  let finalArgs = rawArgs;
   if (this.isTestObservabilitySession() && this.shouldReRunObservabilityTests()) {
     let startIdx = -1, numEle = 0;
     for(let idx=0; idx<rawArgs.length; idx++) {
@@ -816,10 +828,9 @@ const getReRunSpecs = (rawArgs) => {
       }
     }
     if(startIdx != -1) rawArgs.splice(startIdx, numEle + 1);
-    return [...rawArgs, '--spec', process.env.BROWSERSTACK_RERUN_TESTS];
-  } else {
-    return rawArgs;
+    finalArgs = [...rawArgs, '--spec', process.env.BROWSERSTACK_RERUN_TESTS];
   }
+  return finalArgs.filter(item => item !== '--disable-test-observability' && item !== '--disable-browserstack-automation');
 }
 
 const getLocalSessionReporter = () => {
