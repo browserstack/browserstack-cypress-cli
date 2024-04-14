@@ -3098,32 +3098,75 @@ describe('utils', () => {
   describe('setEnforceSettingsConfig', () => {
     it('the video config should be assigned to bsconfig run_settings config', () => {
       let bsConfig = {
-        run_settings: { video_config: { video:true, videoUploadOnPasses:true} },
+        run_settings: { 
+          video_config: { video:true, videoUploadOnPasses:true }, 
+          cypressProjectDir: 'cypressProjectDir', 
+        },
       };
       let args = {
         config: 'video=true,videoUploadOnPasses=true'
       }
-      utils.setEnforceSettingsConfig(bsConfig);
+      utils.setEnforceSettingsConfig(bsConfig, args);
       expect(args.config).to.be.eql(bsConfig.run_settings.config);
     });
-    it('the specPattern config should be assigned as strings for single string to bsconfig run_settings config', () => {
+    it('the specPattern config should be assigned as array for single spec string to bsconfig run_settings config', () => {
       let bsConfig = {
-        run_settings: { specs: 'somerandomspecs', cypressTestSuiteType: 'CYPRESS_V10_AND_ABOVE_TYPE' },
+        run_settings: { 
+          specs: 'somerandomspecs', 
+          cypressTestSuiteType: 'CYPRESS_V10_AND_ABOVE_TYPE', 
+          cypressProjectDir: 'cypressProjectDir', 
+        },
       };
       let args = {
-        config: 'video=false,videoUploadOnPasses=false,specPattern=somerandomspecs'
+        exclude: "",
+        config: 'video=false,videoUploadOnPasses=false,specPattern=["somerandomspecs"]'
       }
-      utils.setEnforceSettingsConfig(bsConfig);
+      utils.setEnforceSettingsConfig(bsConfig, args);
       expect(args.config).to.be.eql(bsConfig.run_settings.config);
     });
     it('the specPattern config should be assigned as array for multiple spec strings to bsconfig run_settings config', () => {
       let bsConfig = {
-        run_settings: { specs: 'somerandomspecs1,somerandomspecs2', cypressTestSuiteType: 'CYPRESS_V10_AND_ABOVE_TYPE' },
+        run_settings: { 
+          specs: 'somerandomspecs1,somerandomspecs2', 
+          cypressTestSuiteType: 'CYPRESS_V10_AND_ABOVE_TYPE', 
+          cypressProjectDir: 'cypressProjectDir', 
+        },
       };
       let args = {
+        exclude: "",
         config: 'video=false,videoUploadOnPasses=false,specPattern=["somerandomspecs1","somerandomspecs2"]'
       }
-      utils.setEnforceSettingsConfig(bsConfig);
+      utils.setEnforceSettingsConfig(bsConfig, args);
+      expect(args.config).to.be.eql(bsConfig.run_settings.config);
+    });
+    it('the specPattern config should not be assigned just on the basis of "," as array for single spec string to bsconfig run_settings config', () => {
+      let bsConfig = {
+        run_settings: { 
+          specs: 'folders/{sample1,sample2}/somerandomspecs', 
+          cypressTestSuiteType: 'CYPRESS_V10_AND_ABOVE_TYPE', 
+          cypressProjectDir: 'cypressProjectDir', 
+        },
+      };
+      let args = {
+        exclude: "",
+        config: 'video=false,videoUploadOnPasses=false,specPattern=["folders/{sample1,sample2}/somerandomspecs"]'
+      }
+      utils.setEnforceSettingsConfig(bsConfig, args);
+      expect(args.config).to.be.eql(bsConfig.run_settings.config);
+    });
+    it('the specPattern config should not be assigned just on the basis of "," as array for multiple spec strings to bsconfig run_settings config', () => {
+      let bsConfig = {
+        run_settings: { 
+          specs: 'folders/{sample1,sample2}/somerandomspecs,folders2/sample3/somerandomspecs2', 
+          cypressTestSuiteType: 'CYPRESS_V10_AND_ABOVE_TYPE',
+          cypressProjectDir: 'cypressProjectDir',
+        },
+      };
+      let args = {
+        exclude: "",
+        config: 'video=false,videoUploadOnPasses=false,specPattern=["folders/{sample1,sample2}/somerandomspecs","folders2/sample3/somerandomspecs2"]'
+      }
+      utils.setEnforceSettingsConfig(bsConfig, args);
       expect(args.config).to.be.eql(bsConfig.run_settings.config);
     });
     it('the testFiles config should be assigned to bsconfig run_settings config', () => {
@@ -3131,20 +3174,54 @@ describe('utils', () => {
         run_settings: { specs: 'somerandomspecs', cypressTestSuiteType: 'CYPRESS_V9_AND_OLDER_TYPE' },
       };
       let args = {
-        config: 'video=false,videoUploadOnPasses=false'
+        config: 'video=false,videoUploadOnPasses=false',
+        cypressProjectDir: 'cypressProjectDir',
       }
-      utils.setEnforceSettingsConfig(bsConfig);
+      utils.setEnforceSettingsConfig(bsConfig, args);
       expect(args.config).to.be.eql(bsConfig.run_settings.config);
     });
     it('the baseUrl config should be assigned to bsconfig run_settings config', () => {
       let bsConfig = {
-        run_settings: { baseUrl: 'http://localhost:8080' },
+        run_settings: { 
+          baseUrl: 'http://localhost:8080',
+          cypressProjectDir: 'cypressProjectDir',
+        },
       };
       let args = {
         config: 'video=false,videoUploadOnPasses=false,baseUrl=http://localhost:8080'
       }
-      utils.setEnforceSettingsConfig(bsConfig);
+      utils.setEnforceSettingsConfig(bsConfig, args);
       expect(args.config).to.be.eql(bsConfig.run_settings.config);
+    });
+  });
+
+  describe('splitStringByCharButIgnoreIfWithinARange', () => {
+    it('should return null if string is not provided', () => {
+      expect(utils.splitStringByCharButIgnoreIfWithinARange()).to.be.eql(null);
+    });
+
+    it('should return null if splitChar is not provided', () => {
+      expect(utils.splitStringByCharButIgnoreIfWithinARange("some")).to.be.eql(null);
+    });
+
+    it('should return splitted string even if leftLimiter and rightLimiter is not provided', () => {
+      expect(utils.splitStringByCharButIgnoreIfWithinARange("some,random,text", ",")).to.be.eql(["some", "random", "text"]);
+    });
+
+    it('should return splitted string even if leftLimiter is provided but rightLimiter is not provided', () => {
+      expect(utils.splitStringByCharButIgnoreIfWithinARange("some,random,{text,here},and,here", ",", "{")).to.be.eql(["some", "random", "{text", "here}", "and", "here"]);
+    });
+
+    it('should return splitted string even if leftLimiter is not provided but rightLimiter is provided', () => {
+      expect(utils.splitStringByCharButIgnoreIfWithinARange("some,random,{text,here},and,here", ",", null, "}")).to.be.eql(["some", "random", "{text", "here}", "and", "here"]);
+    });
+
+    it('should return splitted string and ignore splitting if splitChar is withing the leftLimiter and rightLimiter', () => {
+      expect(utils.splitStringByCharButIgnoreIfWithinARange("some,random,{text,here},and,here", ",", "{", "}")).to.be.eql(["some", "random", "{text,here}", "and", "here"]);
+    });
+
+    it('should return splitted string and ignore splitting if splitChar is withing the leftLimiter and rightLimiter', () => {
+      expect(utils.splitStringByCharButIgnoreIfWithinARange("some,random,{text,here}", ",", "{", "}")).to.be.eql(["some", "random", "{text,here}"]);
     });
   });
 
