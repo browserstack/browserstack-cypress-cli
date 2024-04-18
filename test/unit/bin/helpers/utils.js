@@ -3119,7 +3119,7 @@ describe('utils', () => {
       };
       let args = {
         exclude: "",
-        config: 'video=false,videoUploadOnPasses=false,specPattern=["somerandomspecs"]'
+        config: 'video=false,videoUploadOnPasses=false,specPattern=somerandomspecs'
       }
       utils.setEnforceSettingsConfig(bsConfig, args);
       expect(args.config).to.be.eql(bsConfig.run_settings.config);
