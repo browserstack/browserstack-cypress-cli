@@ -1337,27 +1337,36 @@ exports.setEnforceSettingsConfig = (bsConfig, args) => {
   if( this.isNotUndefined(bsConfig.run_settings.specs) && bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE && (this.isUndefined(config_args) || !config_args.includes("specPattern"))  ) {
     // doing this only for cypress 10 and above as --spec is given precedence for cypress 9.
     let specConfigs = bsConfig.run_settings.specs;
-    // if multiple specs are passed, convert it into an array.
-    if (specConfigs && !Array.isArray(specConfigs)) {
-      if (specConfigs.includes(',')) {
-        specConfigs = this.splitStringByCharButIgnoreIfWithinARange(specConfigs, ',', '{', '}');
-      } else {
-        specConfigs = [specConfigs];
+    let spec_pattern_args = "";
+
+    if (specConfigs && specConfigs.includes('{') && specConfigs.includes('}')) {
+      if (specConfigs && !Array.isArray(specConfigs)) {
+        if (specConfigs.includes(',')) {
+          specConfigs = this.splitStringByCharButIgnoreIfWithinARange(specConfigs, ',', '{', '}');
+        } else {
+          specConfigs = [specConfigs];
+        }
       }
+      let ignoreFiles = args.exclude || bsConfig.run_settings.exclude
+      let specFilesMatched = [];
+      specConfigs.forEach(specPattern => {
+        specFilesMatched.push(
+          ...glob.sync(specPattern, {
+            cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles
+          })
+        );
+      });
+      logger.debug(`${specFilesMatched && specFilesMatched.length > 0 ? specFilesMatched.length : 0} spec files found with the provided specPattern for enforce_settings`);
+      // If spec files were found then lets we'll load the matched spec files
+      // If spec files were not found then we'll let cypress decide the loading of spec files
+      spec_pattern_args = `specPattern=${JSON.stringify(specFilesMatched && specFilesMatched.length > 0 ? specFilesMatched : specConfigs)}`;
+    } else {
+      // if multiple specs are passed, convert it into an array.
+      if(specConfigs && specConfigs.includes(',')) {
+        specConfigs = JSON.stringify(specConfigs.split(','));
+      }
+      spec_pattern_args = `specPattern=${specConfigs}`;
     }
-    let ignoreFiles = args.exclude || bsConfig.run_settings.exclude
-    let specFilesMatched = [];
-    specConfigs.forEach(specPattern => {
-      specFilesMatched.push(
-        ...glob.sync(specPattern, {
-          cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles
-        })
-      );
-    });
-    logger.debug(`${specFilesMatched && specFilesMatched.length > 0 ? specFilesMatched.length : 0} spec files found with the provided specPattern for enforce_settings`);
-    // If spec files were found then lets we'll load the matched spec files
-    // If spec files were not found then we'll let cypress decide the loading of spec files
-    let spec_pattern_args = `specPattern=${JSON.stringify(specFilesMatched && specFilesMatched.length > 0 ? specFilesMatched : specConfigs)}`;
     config_args = this.isUndefined(config_args) ? spec_pattern_args : config_args + ',' + spec_pattern_args;
   }
   if ( this.isNotUndefined(config_args) ) bsConfig["run_settings"]["config"] = config_args;
