@@ -302,7 +302,7 @@ module.exports = function run(args, rawArgs) {
               if ( !utils.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) ) {
                 markBlockStart('setEnforceSettingsConfig');
                 logger.debug('Started setting the configs');
-                utils.setEnforceSettingsConfig(bsConfig);
+                utils.setEnforceSettingsConfig(bsConfig, args);
                 logger.debug('Completed setting the configs');
                 markBlockEnd('setEnforceSettingsConfig');
               }
