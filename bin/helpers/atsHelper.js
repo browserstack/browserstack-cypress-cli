@@ -93,6 +93,7 @@ exports.patchCypressConfigFileContent = (bsConfig) => {
       if (originalFunction !== null && originalFunction !== undefined) {
         originalFunction(bstackOn, config);
       }
+      return config;
     }
     `
 
