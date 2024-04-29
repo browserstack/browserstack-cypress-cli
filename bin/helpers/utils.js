@@ -1217,6 +1217,7 @@ exports.getNetworkErrorMessage = (dashboard_url) => {
 }
 
 exports.setNetworkLogs = (bsConfig) => {
+  let capture_content = null
   if(
     (bsConfig.run_settings.networkLogs == 'true' || bsConfig.run_settings.networkLogs == true)
     || (bsConfig.run_settings.network_logs == 'true' || bsConfig.run_settings.network_logs == true)
@@ -1227,14 +1228,34 @@ exports.setNetworkLogs = (bsConfig) => {
       this.isNotUndefined(bsConfig.run_settings.networkLogsOptions)
       && typeof(bsConfig.run_settings.networkLogsOptions) === "object"
     ){
-      bsConfig.run_settings.networkLogsOptions = {capture_content: (bsConfig.run_settings.networkLogsOptions.captureContent || bsConfig.run_settings.networkLogsOptions.capture_content)}
-      bsConfig.run_settings.network_logs_options = {capture_content: (bsConfig.run_settings.networkLogsOptions.captureContent || bsConfig.run_settings.networkLogsOptions.capture_content)}
+      if (
+        bsConfig.run_settings.networkLogsOptions.captureContent == 'true'
+        || bsConfig.run_settings.networkLogsOptions.captureContent == true
+        || bsConfig.run_settings.networkLogsOptions.capture_content == 'true'
+        || bsConfig.run_settings.networkLogsOptions.capture_content == true
+      ) {
+        capture_content = 'true'
+      } else {
+        capture_content = 'false'
+      }
+      bsConfig.run_settings.networkLogsOptions = {capture_content: capture_content}
+      bsConfig.run_settings.network_logs_options = {capture_content: capture_content}
     } else {
       if(
         this.isNotUndefined(bsConfig.run_settings.network_logs_options)
         && typeof(bsConfig.run_settings.network_logs_options) === "object") {
-          bsConfig.run_settings.networkLogsOptions = {capture_content: (bsConfig.run_settings.network_logs_options.captureContent || bsConfig.run_settings.network_logs_options.capture_content)}
-          bsConfig.run_settings.network_logs_options = {capture_content: (bsConfig.run_settings.network_logs_options.captureContent || bsConfig.run_settings.network_logs_options.capture_content)}
+          if (
+            bsConfig.run_settings.network_logs_options.captureContent == 'true'
+            || bsConfig.run_settings.network_logs_options.captureContent == true
+            || bsConfig.run_settings.network_logs_options.capture_content == 'true'
+            || bsConfig.run_settings.network_logs_options.capture_content == true
+          ) {
+            capture_content = 'true'
+          } else {
+            capture_content = 'false'
+          }
+          bsConfig.run_settings.networkLogsOptions = {capture_content: capture_content}
+          bsConfig.run_settings.network_logs_options = {capture_content: capture_content}
       } else {
         bsConfig.run_settings.networkLogsOptions = null
         bsConfig.run_settings.network_logs_options = null
