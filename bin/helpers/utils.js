@@ -1238,28 +1238,27 @@ exports.setNetworkLogs = (bsConfig) => {
       } else {
         capture_content = 'false'
       }
-      bsConfig.run_settings.networkLogsOptions = {capture_content: capture_content}
-      bsConfig.run_settings.network_logs_options = {capture_content: capture_content}
+      bsConfig.run_settings.networkLogsOptions = {capture_content}
+      bsConfig.run_settings.network_logs_options = {capture_content}
+    } else if (
+      this.isNotUndefined(bsConfig.run_settings.network_logs_options)
+      && typeof(bsConfig.run_settings.network_logs_options) === "object"
+    ) {
+      if (
+        bsConfig.run_settings.network_logs_options.captureContent == 'true'
+        || bsConfig.run_settings.network_logs_options.captureContent == true
+        || bsConfig.run_settings.network_logs_options.capture_content == 'true'
+        || bsConfig.run_settings.network_logs_options.capture_content == true
+      ){
+        capture_content = 'true'
+        } else {
+          capture_content = 'false'
+        }
+        bsConfig.run_settings.networkLogsOptions = {capture_content}
+        bsConfig.run_settings.network_logs_options = {capture_content}
     } else {
-      if(
-        this.isNotUndefined(bsConfig.run_settings.network_logs_options)
-        && typeof(bsConfig.run_settings.network_logs_options) === "object") {
-          if (
-            bsConfig.run_settings.network_logs_options.captureContent == 'true'
-            || bsConfig.run_settings.network_logs_options.captureContent == true
-            || bsConfig.run_settings.network_logs_options.capture_content == 'true'
-            || bsConfig.run_settings.network_logs_options.capture_content == true
-          ) {
-            capture_content = 'true'
-          } else {
-            capture_content = 'false'
-          }
-          bsConfig.run_settings.networkLogsOptions = {capture_content: capture_content}
-          bsConfig.run_settings.network_logs_options = {capture_content: capture_content}
-      } else {
-        bsConfig.run_settings.networkLogsOptions = null
-        bsConfig.run_settings.network_logs_options = null
-      }
+      bsConfig.run_settings.networkLogsOptions = null
+      bsConfig.run_settings.network_logs_options = null
     }
   } else {
     bsConfig.run_settings.networkLogs = 'false'
