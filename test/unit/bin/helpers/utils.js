@@ -3716,7 +3716,7 @@ describe('utils', () => {
         run_settings: { networkLogs: true }
       };
       let expectResult = {
-        run_settings: { networkLogs: 'true' }
+        run_settings: { networkLogs: 'true', network_logs: 'true', networkLogsOptions: null, network_logs_options: null }
       }
       utils.setNetworkLogs(bsConfig);
       expect(bsConfig).to.be.eql(expectResult);
@@ -3727,7 +3727,7 @@ describe('utils', () => {
         run_settings: { networkLogs: "true" }
       };
       let expectResult = {
-        run_settings: { networkLogs: "true" }
+        run_settings: { networkLogs: "true", network_logs: 'true', networkLogsOptions: null, network_logs_options: null }
       }
       utils.setNetworkLogs(bsConfig);
       expect(bsConfig).to.be.eql(expectResult);
@@ -3738,7 +3738,7 @@ describe('utils', () => {
         run_settings: { networkLogs: "abc" }
       };
       let expectResult = {
-        run_settings: { networkLogs: "false" }
+        run_settings: { networkLogs: "false", network_logs: 'false', networkLogsOptions: null, network_logs_options: null }
       }
       utils.setNetworkLogs(bsConfig);
       expect(bsConfig).to.be.eql(expectResult);
@@ -3749,7 +3749,105 @@ describe('utils', () => {
         run_settings: { }
       };
       let expectResult = {
-        run_settings: { networkLogs: "false" }
+        run_settings: { networkLogs: "false", network_logs: 'false', networkLogsOptions: null, network_logs_options: null }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return true if networkLogsOptions.captureContent is passed as boolean true', () => {
+      let bsConfig = {
+        run_settings: { networkLogs: true, networkLogsOptions: {captureContent: true} }
+      };
+      let expectResult = {
+        run_settings: { networkLogs: 'true', network_logs: 'true', networkLogsOptions: {capture_content: 'true'}, network_logs_options: {capture_content: 'true'} }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return true if networkLogsOptions.captureContent is passed as string true', () => {
+      let bsConfig = {
+        run_settings: { networkLogs: true, networkLogsOptions: {captureContent: 'true'} }
+      };
+      let expectResult = {
+        run_settings: { networkLogs: 'true', network_logs: 'true', networkLogsOptions: {capture_content: 'true'}, network_logs_options: {capture_content: 'true'} }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return false if networkLogsOptions.captureContent is passed as any other non true value', () => {
+      let bsConfig = {
+        run_settings: { networkLogs: true, networkLogsOptions: {captureContent: 'abc'} }
+      };
+      let expectResult = {
+        run_settings: { networkLogs: 'true', network_logs: 'true', networkLogsOptions: {capture_content: 'false'}, network_logs_options: {capture_content: 'false'} }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return null if networkLogsOptions.captureContent is not passed', () => {
+      let bsConfig = {
+        run_settings: {networkLogs: true,  }
+      };
+      let expectResult = {
+        run_settings: { networkLogs: 'true', network_logs: 'true', networkLogsOptions: null, network_logs_options: null  }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+    it('should return null if networkLogs is false', () => {
+      let bsConfig = {
+        run_settings: { networkLogs: false, networkLogsOptions: {captureContent: true} }
+      };
+      let expectResult = {
+        run_settings: { networkLogs: 'false', network_logs: 'false', networkLogsOptions: null, network_logs_options: null }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return true if network_logs_options.capture_content is passed as boolean true', () => {
+      let bsConfig = {
+        run_settings: { network_logs: true, network_logs_options: {capture_content: true} }
+      };
+      let expectResult = {
+        run_settings: { network_logs: 'true', networkLogs: 'true', network_logs_options: {capture_content: 'true'}, networkLogsOptions: {capture_content: 'true'} }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return true if network_logs_options.capture_content is passed as string true', () => {
+      let bsConfig = {
+        run_settings: { network_logs: true, network_logs_options: {capture_content: 'true'} }
+      };
+      let expectResult = {
+        run_settings: { network_logs: 'true', networkLogs: 'true', network_logs_options: {capture_content: 'true'}, networkLogsOptions: {capture_content: 'true'} }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return false if network_logs_options.capture_content is passed as any other non true value', () => {
+      let bsConfig = {
+        run_settings: { network_logs: true, network_logs_options: {capture_content: 'abc'} }
+      };
+      let expectResult = {
+        run_settings: { network_logs: 'true', networkLogs: 'true', network_logs_options: {capture_content: 'false'}, networkLogsOptions: {capture_content: 'false'} }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return null if network_logs is false', () => {
+      let bsConfig = {
+        run_settings: { network_logs: false, network_logs_options: {capture_content: 'true'} }
+      };
+      let expectResult = {
+        run_settings: { network_logs: 'false', networkLogs: 'false', networkLogsOptions: null, network_logs_options: null }
       }
       utils.setNetworkLogs(bsConfig);
       expect(bsConfig).to.be.eql(expectResult);

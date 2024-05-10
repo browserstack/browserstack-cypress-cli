@@ -1217,12 +1217,57 @@ exports.getNetworkErrorMessage = (dashboard_url) => {
 }
 
 exports.setNetworkLogs = (bsConfig) => {
-  if(bsConfig.run_settings.networkLogs == 'true' || bsConfig.run_settings.networkLogs == true) {
+  let capture_content = null
+  if(
+    (bsConfig.run_settings.networkLogs == 'true' || bsConfig.run_settings.networkLogs == true)
+    || (bsConfig.run_settings.network_logs == 'true' || bsConfig.run_settings.network_logs == true)
+  ) {
     bsConfig.run_settings.networkLogs = 'true'
+    bsConfig.run_settings.network_logs = 'true'
+    if (
+      this.isNotUndefined(bsConfig.run_settings.networkLogsOptions)
+      && typeof(bsConfig.run_settings.networkLogsOptions) === "object"
+    ){
+      if (
+        bsConfig.run_settings.networkLogsOptions.captureContent == 'true'
+        || bsConfig.run_settings.networkLogsOptions.captureContent == true
+        || bsConfig.run_settings.networkLogsOptions.capture_content == 'true'
+        || bsConfig.run_settings.networkLogsOptions.capture_content == true
+      ) {
+        capture_content = 'true'
+      } else {
+        capture_content = 'false'
+      }
+      bsConfig.run_settings.networkLogsOptions = {capture_content}
+      bsConfig.run_settings.network_logs_options = {capture_content}
+    } else if (
+      this.isNotUndefined(bsConfig.run_settings.network_logs_options)
+      && typeof(bsConfig.run_settings.network_logs_options) === "object"
+    ) {
+      if (
+        bsConfig.run_settings.network_logs_options.captureContent == 'true'
+        || bsConfig.run_settings.network_logs_options.captureContent == true
+        || bsConfig.run_settings.network_logs_options.capture_content == 'true'
+        || bsConfig.run_settings.network_logs_options.capture_content == true
+      ){
+        capture_content = 'true'
+        } else {
+          capture_content = 'false'
+        }
+        bsConfig.run_settings.networkLogsOptions = {capture_content}
+        bsConfig.run_settings.network_logs_options = {capture_content}
+    } else {
+      bsConfig.run_settings.networkLogsOptions = null
+      bsConfig.run_settings.network_logs_options = null
+    }
   } else {
     bsConfig.run_settings.networkLogs = 'false'
+    bsConfig.run_settings.network_logs = 'false'
+    bsConfig.run_settings.networkLogsOptions = null
+    bsConfig.run_settings.network_logs_options = null
   }
-  logger.debug(`Networks logs value: ${bsConfig.run_settings.networkLogs}`);
+  logger.debug(`Networks logs value: ${bsConfig.run_settings.network_logs}`);
+  logger.debug(`Networks logs options value: ${JSON.stringify(bsConfig.run_settings.network_logs_options)}`);
 }
 
 exports.versionChangedMessage = (preferredVersion, actualVersion, frameworkUpgradeMessage = '') => {
