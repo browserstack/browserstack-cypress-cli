@@ -18,6 +18,7 @@ const glob = require('glob');
 const pGitconfig = promisify(gitconfig);
 const { readCypressConfigFile } = require('./readCypressConfigUtil');
 const CrashReporter = require('../testObservability/crashReporter');
+const { MAX_GIT_META_DATA_SIZE_IN_KB, GIT_META_DATA_TRUNCATED } = require('./constants')
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
@@ -119,7 +120,7 @@ exports.getGitMetaData = () => {
 
             const { remote } = await pGitconfig(info.commonGitDir);
             const remotes = Object.keys(remote).map(remoteName =>  ({name: remoteName, url: remote[remoteName]['url']}));
-            resolve({
+            let gitMetaData = {
               "name": "git",
               "sha": info["sha"],
               "short_sha": info["abbreviatedSha"],
@@ -136,7 +137,11 @@ exports.getGitMetaData = () => {
               "last_tag": info["lastTag"],
               "commits_since_last_tag": info["commitsSinceLastTag"],
               "remotes": remotes
-            });
+            };
+
+            gitMetaData = this.checkAndTruncateVCSInfo(gitMetaData);
+
+            resolve(gitMetaData);
           } catch(e) {
             exports.debug(`Exception in populating Git Metadata with error : ${e}`, true, e);
             logger.debug(`Exception in populating Git Metadata with error : ${e}`, true, e);
@@ -146,7 +151,7 @@ exports.getGitMetaData = () => {
       } else {
         const { remote } = await pGitconfig(info.commonGitDir);
         const remotes = Object.keys(remote).map(remoteName =>  ({name: remoteName, url: remote[remoteName]['url']}));
-        resolve({
+        let gitMetaData = {
           "name": "git",
           "sha": info["sha"],
           "short_sha": info["abbreviatedSha"],
@@ -163,7 +168,11 @@ exports.getGitMetaData = () => {
           "last_tag": info["lastTag"],
           "commits_since_last_tag": info["commitsSinceLastTag"],
           "remotes": remotes
-        });
+        };
+
+        gitMetaData = this.checkAndTruncateVCSInfo(gitMetaData);
+
+        resolve(gitMetaData);
       }
     } catch(err) {
       exports.debug(`Exception in populating Git metadata with error : ${err}`, true, err);
@@ -387,3 +396,52 @@ exports.getSupportFiles = (bsConfig, isA11y) => {
     cleanupParams: Object.keys(cleanupParams).length ? cleanupParams : null
   };
 }
+
+exports.checkAndTruncateVCSInfo = (gitMetaData) => {
+  const gitMetaDataSizeInKb = this.getSizeOfJsonObjectInKb(gitMetaData);
+
+  if (gitMetaDataSizeInKb && gitMetaDataSizeInKb > 0 && gitMetaDataSizeInKb > MAX_GIT_META_DATA_SIZE_IN_KB) {
+    const truncateSize = gitMetaDataSizeInKb - MAX_GIT_META_DATA_SIZE_IN_KB;
+    const truncatedCommitMessage = this.truncateString(gitMetaData.commit_message, truncateSize);
+    gitMetaData.commit_message = truncatedCommitMessage;
+    exports.debug('The commit has been truncated');
+    logger.debug('The commit has been truncated');
+  }
+
+  return gitMetaData;
+};
+
+exports.getSizeOfJsonObjectInKb = (jsonData) => {
+  try {
+    if (jsonData) {
+      const buffer = Buffer.from(JSON.stringify(jsonData));
+
+      return Math.floor(buffer.length/1024);
+    }
+  } catch (error) {
+    exports.debug(`Something went wrong while calculating size of JSON object: ${error}`, true, error);
+    logger.debug(`Something went wrong while calculating size of JSON object: ${error}`, true, error);
+  }
+
+  return -1;
+};
+
+exports.truncateString = (field, truncateSizeInKb) => {
+  try {
+    const bufferSizeInBytes = Buffer.from(GIT_META_DATA_TRUNCATED).length;
+
+    const fieldBufferObj = Buffer.from(field);
+    const lenOfFieldBufferObj = fieldBufferObj.length;
+    const finalLen = Math.round(lenOfFieldBufferObj - (truncateSizeInKb * 1024) - (bufferSizeInBytes));
+    if (finalLen > 0) {
+      const truncatedString = fieldBufferObj.subarray(0, finalLen).toString() + GIT_META_DATA_TRUNCATED;
+
+      return truncatedString;
+    }
+  } catch (error) {
+    exports.debug(`Error while truncating field, nothing was truncated here: ${error}`, true, error);
+    logger.debug(`Error while truncating field, nothing was truncated here: ${error}`, true, error);
+  }
+
+  return field;
+};

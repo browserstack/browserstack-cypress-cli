@@ -441,6 +441,14 @@ const CYPRESS_CONFIG_FILE_NAMES = Object.keys(CYPRESS_CONFIG_FILE_MAPPING);
 
 const CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS = ['js', 'ts', 'cjs', 'mjs']
 
+// Maximum size of VCS info which is allowed
+const MAX_GIT_META_DATA_SIZE_IN_KB = 64;
+
+/* The value to be appended at the end if git metadata is larger than
+MAX_GIT_META_DATA_SIZE_IN_KB
+*/
+const GIT_META_DATA_TRUNCATED = '...[TRUNCATED]';
+
 const turboScaleObj = {};
 
 module.exports = Object.freeze({
@@ -475,5 +483,7 @@ module.exports = Object.freeze({
   CYPRESS_V10_AND_ABOVE_TYPE,
   CYPRESS_CONFIG_FILE_MAPPING,
   CYPRESS_CONFIG_FILE_NAMES,
-  CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS
+  CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS,
+  MAX_GIT_META_DATA_SIZE_IN_KB,
+  GIT_META_DATA_TRUNCATED
 });
