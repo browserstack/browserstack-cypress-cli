@@ -402,8 +402,7 @@ exports.checkAndTruncateVCSInfo = (gitMetaData) => {
 
   if (gitMetaDataSizeInBytes && gitMetaDataSizeInBytes > MAX_GIT_META_DATA_SIZE_IN_BYTES) {
     const truncateSize = gitMetaDataSizeInBytes - MAX_GIT_META_DATA_SIZE_IN_BYTES;
-    const truncatedCommitMessage = exports.truncateString(gitMetaData.commit_message, truncateSize);
-    gitMetaData.commit_message = truncatedCommitMessage;
+    gitMetaData.commit_message = exports.truncateString(gitMetaData.commit_message, truncateSize);
     logger.info(`The commit has been truncated. Size of commit after truncation is ${ exports.getSizeOfJsonObjectInBytes(gitMetaData) / 1024} KB`);
   }
 
