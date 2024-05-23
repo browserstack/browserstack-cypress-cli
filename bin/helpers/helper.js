@@ -18,7 +18,7 @@ const glob = require('glob');
 const pGitconfig = promisify(gitconfig);
 const { readCypressConfigFile } = require('./readCypressConfigUtil');
 const CrashReporter = require('../testObservability/crashReporter');
-const { MAX_GIT_META_DATA_SIZE_IN_KB, GIT_META_DATA_TRUNCATED } = require('./constants')
+const { MAX_GIT_META_DATA_SIZE_IN_BYTES, GIT_META_DATA_TRUNCATED } = require('./constants')
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
@@ -139,7 +139,7 @@ exports.getGitMetaData = () => {
               "remotes": remotes
             };
 
-            gitMetaData = this.checkAndTruncateVCSInfo(gitMetaData);
+            gitMetaData = exports.checkAndTruncateVCSInfo(gitMetaData);
 
             resolve(gitMetaData);
           } catch(e) {
@@ -170,7 +170,7 @@ exports.getGitMetaData = () => {
           "remotes": remotes
         };
 
-        gitMetaData = this.checkAndTruncateVCSInfo(gitMetaData);
+        gitMetaData = exports.checkAndTruncateVCSInfo(gitMetaData);
 
         resolve(gitMetaData);
       }
@@ -398,48 +398,46 @@ exports.getSupportFiles = (bsConfig, isA11y) => {
 }
 
 exports.checkAndTruncateVCSInfo = (gitMetaData) => {
-  const gitMetaDataSizeInKb = this.getSizeOfJsonObjectInKb(gitMetaData);
+  const gitMetaDataSizeInBytes = exports.getSizeOfJsonObjectInBytes(gitMetaData);
 
-  if (gitMetaDataSizeInKb && gitMetaDataSizeInKb > 0 && gitMetaDataSizeInKb > MAX_GIT_META_DATA_SIZE_IN_KB) {
-    const truncateSize = gitMetaDataSizeInKb - MAX_GIT_META_DATA_SIZE_IN_KB;
-    const truncatedCommitMessage = this.truncateString(gitMetaData.commit_message, truncateSize);
+  if (gitMetaDataSizeInBytes && gitMetaDataSizeInBytes > MAX_GIT_META_DATA_SIZE_IN_BYTES) {
+    const truncateSize = gitMetaDataSizeInBytes - MAX_GIT_META_DATA_SIZE_IN_BYTES;
+    const truncatedCommitMessage = exports.truncateString(gitMetaData.commit_message, truncateSize);
     gitMetaData.commit_message = truncatedCommitMessage;
-    logger.info(`The commit has been truncated. Size of commit after truncation is ${ this.getSizeOfJsonObjectInKb(gitMetaData) }`);
+    logger.info(`The commit has been truncated. Size of commit after truncation is ${ exports.getSizeOfJsonObjectInBytes(gitMetaData) / 1024} KB`);
   }
 
   return gitMetaData;
 };
 
-exports.getSizeOfJsonObjectInKb = (jsonData) => {
+exports.getSizeOfJsonObjectInBytes = (jsonData) => {
   try {
     if (jsonData && jsonData instanceof Object) {
       const buffer = Buffer.from(JSON.stringify(jsonData));
 
-      return Math.floor(buffer.length/1024);
+      return buffer.length;
     }
   } catch (error) {
-    exports.debug(`Something went wrong while calculating size of JSON object: ${error}`, true, error);
-    logger.debug(`Something went wrong while calculating size of JSON object: ${error}`, true, error);
+    logger.debug(`Something went wrong while calculating size of JSON object: ${error}`);
   }
 
   return -1;
 };
 
-exports.truncateString = (field, truncateSizeInKb) => {
+exports.truncateString = (field, truncateSizeInBytes) => {
   try {
     const bufferSizeInBytes = Buffer.from(GIT_META_DATA_TRUNCATED).length;
 
     const fieldBufferObj = Buffer.from(field);
     const lenOfFieldBufferObj = fieldBufferObj.length;
-    const finalLen = Math.round(lenOfFieldBufferObj - (truncateSizeInKb * 1024) - (bufferSizeInBytes));
+    const finalLen = Math.ceil(lenOfFieldBufferObj - truncateSizeInBytes - bufferSizeInBytes);
     if (finalLen > 0) {
       const truncatedString = fieldBufferObj.subarray(0, finalLen).toString() + GIT_META_DATA_TRUNCATED;
 
       return truncatedString;
     }
   } catch (error) {
-    exports.debug(`Error while truncating field, nothing was truncated here: ${error}`, true, error);
-    logger.debug(`Error while truncating field, nothing was truncated here: ${error}`, true, error);
+    logger.debug(`Error while truncating field, nothing was truncated here: ${error}`);
   }
 
   return field;
