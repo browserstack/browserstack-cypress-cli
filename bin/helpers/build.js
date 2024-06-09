@@ -37,15 +37,15 @@ const createBuild = (bsConfig, zip) => {
         } catch (error) {
           build = null;
         }
-        if (response.status == 299) {
+        if (resp.statusCode == 299) {
           if (build) {
             resolve(build.message);
           } else {
-            logger.error(utils.formatRequest(response.statusText, response, response.data));
+            logger.error(utils.formatRequest(err, resp, body));
             reject(Constants.userMessages.API_DEPRECATED);
           }
-        } else if (response.status != 201) {
-          logger.error(utils.formatRequest(response.statusText, response, response.data));
+        } else if (resp.statusCode != 201) {
+          logger.error(utils.formatRequest(err, resp, body));
           if (build) {
             reject(`${Constants.userMessages.BUILD_FAILED} Error: ${build.message}`);
           } else {

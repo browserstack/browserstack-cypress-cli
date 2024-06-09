@@ -37,6 +37,11 @@ module.exports = function info(args, rawArgs) {
           'User-Agent': utils.getUserAgent(),
         },
       };
+
+      if (Constants.turboScaleObj.enabled) {
+        options.url = `${config.turboScaleBuildsUrl}/${buildId}`;
+      }
+
       let message = null;
       let messageType = null;
       let errorCode = null;

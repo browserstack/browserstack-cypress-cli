@@ -24,7 +24,11 @@ config.packageFileName = "bstackPackages.tar.gz";
 config.packageDirName = "tmpBstackPackages";
 config.retries = 5;
 config.networkErrorExitCode = 2;
-config.compiledConfigJsDirName = 'tmpBstackCompiledJs'
-config.configJsonFileName = 'tmpCypressConfig.json'
+config.compiledConfigJsDirName = 'tmpBstackCompiledJs';
+config.configJsonFileName = 'tmpCypressConfig.json';
+
+// turboScale
+config.turboScaleMd5Sum = `${config.turboScaleUrl}/md5sumcheck`;
+config.turboScaleBuildsUrl = `${config.turboScaleUrl}/builds`;
 
 module.exports = config;

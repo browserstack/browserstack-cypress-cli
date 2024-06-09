@@ -13,9 +13,6 @@ const crypto = require('crypto'),
 
 const checkSpecsMd5 = (runSettings, args, instrumentBlocks) => {
   return new Promise(function (resolve, reject) {
-    if (args["force-upload"]) {
-      return resolve("force-upload");
-    }
     let cypressFolderPath = undefined;
     if (runSettings.home_directory) {
       cypressFolderPath = runSettings.home_directory;
@@ -121,6 +118,10 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
         body: data
       };
 
+      if (Constants.turboScaleObj.enabled) {
+        options.url = config.turboScaleMd5Sum;
+      }
+
       instrumentBlocks.markBlockStart("checkAlreadyUploaded.railsCheck");
       try {
         const response = await axios.post(options.url, options.body, {
@@ -167,4 +168,8 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
   });
 };
 
-exports.checkUploadedMd5 = checkUploadedMd5;
+module.exports = {
+  checkSpecsMd5,
+  checkPackageMd5,
+  checkUploadedMd5
+};

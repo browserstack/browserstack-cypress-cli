@@ -72,6 +72,8 @@ const userMessages = {
   UPLOADING_NPM_PACKAGES_SUCCESS: "Uploaded node_modules successfully",
   SKIP_UPLOADING_TESTS:
     "Skipping zip upload since BrowserStack already has your test suite that has not changed since the last run.",
+  SKIP_NPM_INSTALL:
+    "Skipping NPM Install as the enforce_settings has been passed.",
   SKIP_UPLOADING_NPM_PACKAGES:
     "Skipping the upload of node_modules since BrowserStack has already cached your npm dependencies that have not changed since the last run.",
   LOCAL_TRUE: "you will now be able to test localhost / private URLs",
@@ -85,6 +87,8 @@ const userMessages = {
     "Your build will run using Cypress <actualVersion> instead of Cypress <preferredVersion>.<frameworkUpgradeMessage> Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions",
   LOCAL_START_FAILED: "Local Testing setup failed.",
   LOCAL_STOP_FAILED: "Local Binary stop failed.",
+  INVALID_TIMEZONE:
+    'The timezone specified is invalid. Refer to our documentation page https://www.browserstack.com/docs/automate/cypress/configure-timezones for the supported time zones.',
   INVALID_LOCAL_MODE_WARNING:
     'Invalid value specified for local_mode. local_mode: ("always-on" | "on-demand"). For more info, check out https://www.browserstack.com/docs/automate/cypress/cli-reference',
   LOCAL_BINARY_ALREADY_RUNNING:
@@ -92,7 +96,9 @@ const userMessages = {
   SPEC_LIMIT_WARNING:
     "You might not see all your results on the dashboard because of high spec count, please consider reducing the number of spec files in this folder.",
   DOWNLOAD_BUILD_ARTIFACTS_FAILED:
-    "Downloading build artifacts for the build <build-id> failed for <machine-count> machines.",
+    "Downloading build artifact(s) for the build <build-id> failed for <machine-count> machines.",
+  DOWNLOAD_BUILD_ARTIFACTS_NOT_FOUND:
+    "Build artifact(s) for the session <session-id> was either not generated or not uploaded.",
   ASYNC_DOWNLOADS:
     "Test artifacts as specified under 'downloads' can be downloaded after the build has completed its run, using 'browserstack-cypress generate-downloads <build-id>'",
   DOWNLOAD_BUILD_ARTIFACTS_SUCCESS:
@@ -115,7 +121,9 @@ const userMessages = {
   NO_CONNECTION_WHILE_UPDATING_UPLOAD_PROGRESS_BAR:
     "Unable to determine zip upload progress due to undefined/null connection request",
   CYPRESS_PORT_WARNING:
-    "The requested port number <x> is ignored. The default BrowserStack port will be used for this execution"
+    "The requested port number <x> is ignored. The default BrowserStack port will be used for this execution",
+  CYPRESS_INTERACTIVE_SESSION_CONFLICT_VALUES:
+    "Conflicting values (True & False) were found for the interactive_debugging capability. Please resolve this issue to proceed further."
 };
 
 const validationMessages = {
@@ -128,8 +136,10 @@ const validationMessages = {
     "cypress_proj_dir is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/sample-tutorial to learn more.",
   EMPTY_CYPRESS_CONFIG_FILE:
     "cypress_config_file is not set in run_settings. See https://www.browserstack.com/docs/automate/cypress/configuration-file to learn more.",
+  EMPTY_SPECS_IN_BROWSERSTACK_JSON:
+    "specs is required when enforce_settings is true in run_settings of browserstack.json",
   VALIDATED: "browserstack.json file is validated",
-  NOT_VALID: "browerstack.json is not valid",
+  NOT_VALID: "browserstack.json is not valid",
   NOT_VALID_JSON: "browerstack.json is not a valid json",
   INVALID_EXTENSION: "Invalid files, please remove these files and try again.",
   INVALID_PARALLELS_CONFIGURATION:
@@ -320,7 +330,8 @@ const allowedFileTypes = [
   "pfx",
   "cfr",
   "ico",
-  "html"
+  "html",
+  "json5"
 ];
 
 const filesToIgnoreWhileUploading = [
@@ -430,6 +441,16 @@ const CYPRESS_CONFIG_FILE_NAMES = Object.keys(CYPRESS_CONFIG_FILE_MAPPING);
 
 const CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS = ['js', 'ts', 'cjs', 'mjs']
 
+// Maximum size of VCS info which is allowed
+const MAX_GIT_META_DATA_SIZE_IN_BYTES = 64 * 1024;
+
+/* The value to be appended at the end if git metadata is larger than
+MAX_GIT_META_DATA_SIZE_IN_BYTES
+*/
+const GIT_META_DATA_TRUNCATED = '...[TRUNCATED]';
+
+const turboScaleObj = {};
+
 module.exports = Object.freeze({
   syncCLI,
   userMessages,
@@ -442,6 +463,7 @@ module.exports = Object.freeze({
   hashingOptions,
   packageInstallerOptions,
   specFileTypes,
+  turboScaleObj,
   DEFAULT_CYPRESS_SPEC_PATH,
   DEFAULT_CYPRESS_10_SPEC_PATH,
   SPEC_TOTAL_CHAR_LIMIT,
@@ -461,5 +483,7 @@ module.exports = Object.freeze({
   CYPRESS_V10_AND_ABOVE_TYPE,
   CYPRESS_CONFIG_FILE_MAPPING,
   CYPRESS_CONFIG_FILE_NAMES,
-  CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS
+  CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS,
+  MAX_GIT_META_DATA_SIZE_IN_BYTES,
+  GIT_META_DATA_TRUNCATED
 });

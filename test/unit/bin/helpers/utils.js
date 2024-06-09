@@ -21,9 +21,11 @@ const utils = require('../../../../bin/helpers/utils'),
   fileHelpers = require('../../../../bin/helpers/fileHelpers'),
   testObjects = require('../../support/fixtures/testObjects'),
   syncLogger = require('../../../../bin/helpers/logger').syncCliLogger,
-  Contants = require('../../../../bin/helpers/constants');
+  Contants = require('../../../../bin/helpers/constants'),
+  o11yHelpers = require('../../../../bin/testObservability/helper/helper');
 const browserstack = require('browserstack-local');
 const { CYPRESS_V10_AND_ABOVE_TYPE, CYPRESS_V9_AND_OLDER_TYPE } = require('../../../../bin/helpers/constants');
+const { winstonLogger, syncCliLogger } = require('../../../../bin/helpers/logger');
 chai.use(chaiAsPromised);
 logger.transports['console.info'].silent = true;
 
@@ -188,6 +190,20 @@ describe('utils', () => {
       expect(utils.isUndefined('1.234')).to.be.equal(false);
       expect(utils.isUndefined(100)).to.be.equal(false);
       expect(utils.isUndefined(-1)).to.be.equal(false);
+    });
+  });
+
+  describe('isNotUndefined', () => {
+    it('should return false for a undefined value', () => {
+      expect(utils.isNotUndefined(undefined)).to.be.equal(false);
+      expect(utils.isNotUndefined(null)).to.be.equal(false);
+    });
+
+    it('should return true for a defined value', () => {
+      expect(utils.isNotUndefined(1.234)).to.be.equal(true);
+      expect(utils.isNotUndefined('1.234')).to.be.equal(true);
+      expect(utils.isNotUndefined(100)).to.be.equal(true);
+      expect(utils.isNotUndefined(-1)).to.be.equal(true);
     });
   });
 
@@ -2705,6 +2721,10 @@ describe('utils', () => {
       expect(utils.sanitizeSpecsPattern('pattern3')).to.eq('pattern3');
     });
 
+    it('should not wrap pattern around {} when input already has {}', () => {
+      expect(utils.sanitizeSpecsPattern('pattern/{folderA,folderB}/*.spec.ts')).to.eq('pattern/{folderA,folderB}/*.spec.ts');
+    });
+
     it('should return undefined when --spec is undefined', () => {
       expect(utils.sanitizeSpecsPattern(undefined)).to.eq(undefined);
     });
@@ -3043,6 +3063,171 @@ describe('utils', () => {
       };
       utils.setConfig(bsConfig, args);
       expect(args.config).to.be.eql(bsConfig.run_settings.config);
+    });
+  });
+
+  describe('setVideoCliConfig', () => {
+    it('the args should be empty if any of videoconfig or bsconfig is undefined', () => {
+      let bsConfig = {
+        run_settings: {},
+      };
+      let videoConfig = {
+      };
+      utils.setVideoCliConfig(bsConfig, videoConfig);
+      expect(undefined).to.be.eql(bsConfig.run_settings.config);
+    });
+    it('the config should have video true if video is passed true', () => {
+      let bsConfig = {
+        run_settings: {},
+      };
+      let videoConfig = {video:true, videoUploadOnPasses:true};
+      let outputConfig = {
+        config: 'video=true,videoUploadOnPasses=true'
+      };
+      utils.setVideoCliConfig(bsConfig, videoConfig);
+      expect(outputConfig.config).to.be.eql(bsConfig.run_settings.config);
+    });
+    it('the config should have config with video false if video is passed false', () => {
+      let bsConfig = {
+        run_settings: {},
+      };
+      let videoConfig = {video:false, videoUploadOnPasses:true};
+      let outputConfig = {
+        config: 'video=false,videoUploadOnPasses=true'
+      };
+      utils.setVideoCliConfig(bsConfig, videoConfig);
+      expect(outputConfig.config).to.be.eql(bsConfig.run_settings.config);
+    });
+  });
+
+
+  describe('setEnforceSettingsConfig', () => {
+    it('the video config should be assigned to bsconfig run_settings config', () => {
+      let bsConfig = {
+        run_settings: { 
+          video_config: { video:true, videoUploadOnPasses:true }, 
+          cypressProjectDir: 'cypressProjectDir', 
+        },
+      };
+      let args = {
+        config: 'video=true,videoUploadOnPasses=true'
+      }
+      utils.setEnforceSettingsConfig(bsConfig, args);
+      expect(args.config).to.be.eql(bsConfig.run_settings.config);
+    });
+    it('the specPattern config should be assigned as array for single spec string to bsconfig run_settings config', () => {
+      let bsConfig = {
+        run_settings: { 
+          specs: 'somerandomspecs', 
+          cypressTestSuiteType: 'CYPRESS_V10_AND_ABOVE_TYPE', 
+          cypressProjectDir: 'cypressProjectDir', 
+        },
+      };
+      let args = {
+        exclude: "",
+        config: 'video=false,videoUploadOnPasses=false,specPattern=somerandomspecs'
+      }
+      utils.setEnforceSettingsConfig(bsConfig, args);
+      expect(args.config).to.be.eql(bsConfig.run_settings.config);
+    });
+    it('the specPattern config should be assigned as array for multiple spec strings to bsconfig run_settings config', () => {
+      let bsConfig = {
+        run_settings: { 
+          specs: 'somerandomspecs1,somerandomspecs2', 
+          cypressTestSuiteType: 'CYPRESS_V10_AND_ABOVE_TYPE', 
+          cypressProjectDir: 'cypressProjectDir', 
+        },
+      };
+      let args = {
+        exclude: "",
+        config: 'video=false,videoUploadOnPasses=false,specPattern=["somerandomspecs1","somerandomspecs2"]'
+      }
+      utils.setEnforceSettingsConfig(bsConfig, args);
+      expect(args.config).to.be.eql(bsConfig.run_settings.config);
+    });
+    it('the specPattern config should not be assigned just on the basis of "," as array for single spec string to bsconfig run_settings config', () => {
+      let bsConfig = {
+        run_settings: { 
+          specs: 'folders/{sample1,sample2}/somerandomspecs', 
+          cypressTestSuiteType: 'CYPRESS_V10_AND_ABOVE_TYPE', 
+          cypressProjectDir: 'cypressProjectDir', 
+        },
+      };
+      let args = {
+        exclude: "",
+        config: 'video=false,videoUploadOnPasses=false,specPattern=["folders/{sample1,sample2}/somerandomspecs"]'
+      }
+      utils.setEnforceSettingsConfig(bsConfig, args);
+      expect(args.config).to.be.eql(bsConfig.run_settings.config);
+    });
+    it('the specPattern config should not be assigned just on the basis of "," as array for multiple spec strings to bsconfig run_settings config', () => {
+      let bsConfig = {
+        run_settings: { 
+          specs: 'folders/{sample1,sample2}/somerandomspecs,folders2/sample3/somerandomspecs2', 
+          cypressTestSuiteType: 'CYPRESS_V10_AND_ABOVE_TYPE',
+          cypressProjectDir: 'cypressProjectDir',
+        },
+      };
+      let args = {
+        exclude: "",
+        config: 'video=false,videoUploadOnPasses=false,specPattern=["folders/{sample1,sample2}/somerandomspecs","folders2/sample3/somerandomspecs2"]'
+      }
+      utils.setEnforceSettingsConfig(bsConfig, args);
+      expect(args.config).to.be.eql(bsConfig.run_settings.config);
+    });
+    it('the testFiles config should be assigned to bsconfig run_settings config', () => {
+      let bsConfig = {
+        run_settings: { specs: 'somerandomspecs', cypressTestSuiteType: 'CYPRESS_V9_AND_OLDER_TYPE' },
+      };
+      let args = {
+        config: 'video=false,videoUploadOnPasses=false',
+        cypressProjectDir: 'cypressProjectDir',
+      }
+      utils.setEnforceSettingsConfig(bsConfig, args);
+      expect(args.config).to.be.eql(bsConfig.run_settings.config);
+    });
+    it('the baseUrl config should be assigned to bsconfig run_settings config', () => {
+      let bsConfig = {
+        run_settings: { 
+          baseUrl: 'http://localhost:8080',
+          cypressProjectDir: 'cypressProjectDir',
+        },
+      };
+      let args = {
+        config: 'video=false,videoUploadOnPasses=false,baseUrl=http://localhost:8080'
+      }
+      utils.setEnforceSettingsConfig(bsConfig, args);
+      expect(args.config).to.be.eql(bsConfig.run_settings.config);
+    });
+  });
+
+  describe('splitStringByCharButIgnoreIfWithinARange', () => {
+    it('should return null if string is not provided', () => {
+      expect(utils.splitStringByCharButIgnoreIfWithinARange()).to.be.eql(null);
+    });
+
+    it('should return null if splitChar is not provided', () => {
+      expect(utils.splitStringByCharButIgnoreIfWithinARange("some")).to.be.eql(null);
+    });
+
+    it('should return splitted string even if leftLimiter and rightLimiter is not provided', () => {
+      expect(utils.splitStringByCharButIgnoreIfWithinARange("some,random,text", ",")).to.be.eql(["some", "random", "text"]);
+    });
+
+    it('should return splitted string even if leftLimiter is provided but rightLimiter is not provided', () => {
+      expect(utils.splitStringByCharButIgnoreIfWithinARange("some,random,{text,here},and,here", ",", "{")).to.be.eql(["some", "random", "{text", "here}", "and", "here"]);
+    });
+
+    it('should return splitted string even if leftLimiter is not provided but rightLimiter is provided', () => {
+      expect(utils.splitStringByCharButIgnoreIfWithinARange("some,random,{text,here},and,here", ",", null, "}")).to.be.eql(["some", "random", "{text", "here}", "and", "here"]);
+    });
+
+    it('should return splitted string and ignore splitting if splitChar is withing the leftLimiter and rightLimiter', () => {
+      expect(utils.splitStringByCharButIgnoreIfWithinARange("some,random,{text,here},and,here", ",", "{", "}")).to.be.eql(["some", "random", "{text,here}", "and", "here"]);
+    });
+
+    it('should return splitted string and ignore splitting if splitChar is withing the leftLimiter and rightLimiter', () => {
+      expect(utils.splitStringByCharButIgnoreIfWithinARange("some,random,{text,here}", ",", "{", "}")).to.be.eql(["some", "random", "{text,here}"]);
     });
   });
 
@@ -3390,6 +3575,72 @@ describe('utils', () => {
     });
   });
 
+  describe('setO11yProcessHooks', () => {
+    it('should handle multiple calls', (done) => {
+      let buildId = null;
+      let bsConfig = testObjects.sampleBsConfig;
+      let bsLocalStub = sinon.stub();
+      let args= {};
+
+      let printBuildLinkStub = sinon.stub(o11yHelpers, 'printBuildLink').returns(Promise.resolve(true));
+      let processOnSpy = sinon.spy(process, 'on');
+
+      utils.setO11yProcessHooks(buildId, bsConfig, bsLocalStub, args);
+      sinon.assert.calledOnce(processOnSpy);
+      processOnSpy.restore();
+      processOnSpy = sinon.spy(process, 'on');
+      utils.setO11yProcessHooks('build_id', bsConfig, bsLocalStub, args);
+      sinon.assert.notCalled(processOnSpy);
+      processOnSpy.restore();
+      process.on('beforeExit', () => {
+        sinon.assert.calledOnce(printBuildLinkStub);
+        sinon.assert.calledWith(printBuildLinkStub, false);
+        done();
+      });
+      process.emit('beforeExit');
+      printBuildLinkStub.restore();
+      sinon.stub.restore();
+    });
+
+    it('should handle "beforeExit" event, with build id', (done) => {
+      let buildId = 'build_id';
+      let bsConfig = testObjects.sampleBsConfig;
+      let bsLocalStub = sinon.stub();
+      let args= {};
+
+      let printBuildLinkStub = sinon.stub(o11yHelpers, 'printBuildLink').returns(Promise.resolve(true));
+
+      utils.setO11yProcessHooks(buildId, bsConfig, bsLocalStub, args);
+      process.on('beforeExit', () => {
+        sinon.assert.calledOnce(printBuildLinkStub);
+        sinon.assert.calledWith(printBuildLinkStub, false);
+        done();
+      });
+      process.emit('beforeExit');
+      printBuildLinkStub.restore();
+      sinon.stub.restore();
+    });
+
+    it('should handle "beforeExit" event, without build id', (done) => {
+      let buildId = null;
+      let bsConfig = testObjects.sampleBsConfig;
+      let bsLocalStub = sinon.stub();
+      let args= {};
+
+      let printBuildLinkStub = sinon.stub(o11yHelpers, 'printBuildLink').returns(Promise.resolve(true));
+
+      utils.setO11yProcessHooks(buildId, bsConfig, bsLocalStub, args);
+      process.on('beforeExit', () => {
+        sinon.assert.calledOnce(printBuildLinkStub);
+        sinon.assert.calledWith(printBuildLinkStub, true);
+        done();
+      });
+      process.emit('beforeExit');
+      printBuildLinkStub.restore();
+      sinon.stub.restore();
+    });
+  });
+
   describe('fetchZipSize', () => {
     it('should return size in bytes if file is present', () => {
       sinon.stub(fs, 'statSync').returns({size: 123});
@@ -3413,6 +3664,59 @@ describe('utils', () => {
       expect(utils.getVideoConfig({videoUploadOnPasses: false})).to.be.eql({video: true, videoUploadOnPasses: false});
       expect(utils.getVideoConfig({video: false, videoUploadOnPasses: false})).to.be.eql({video: false, videoUploadOnPasses: false});
     });
+
+    it('should add default video config in cli config only for cyp 13', () => {
+      let bsConfig = {
+        run_settings: {cypress_version: '13.latest'},
+      };
+      let outputConfig = 'video=true,videoUploadOnPasses=true';
+      utils.getVideoConfig({}, bsConfig);
+      expect(outputConfig).to.be.eql(bsConfig.run_settings.config);
+    });
+
+    it('should not add default video config in cli config only for cyp 12 or below', () => {
+      let bsConfig = {
+        run_settings: {cypress_version: '12.latest'},
+      };
+      utils.getVideoConfig({}, bsConfig);
+      expect(undefined).to.be.eql(bsConfig.run_settings.config);
+    });
+
+    it('should not add bstack json video config in cli config if none in cypress config for cyp 13', () => {
+      let bsConfig = {
+        run_settings: {cypress_version: '13.latest', video: true, videoUploadOnPasses: false}
+      };
+      let cypressConfig = {};
+      let outputConfig = 'video=true,videoUploadOnPasses=true';
+      utils.getVideoConfig(cypressConfig, bsConfig);
+      expect(outputConfig).to.be.eql(bsConfig.run_settings.config);
+    });
+
+    it('should add cypress config video config in cli config over bstack json for cyp 13', () => {
+      let bsConfig = {
+        run_settings: {cypress_version: '13.latest'},
+      };
+      let cypressConfig = {video: false};
+      let outputConfig = 'video=false,videoUploadOnPasses=true';
+      utils.getVideoConfig(cypressConfig, bsConfig);
+      expect(outputConfig).to.be.eql(bsConfig.run_settings.config);
+    });    
+
+    it('should return default hash and ignore video config in cypress config if enforce_settings is passed by the user', () => {
+      expect(utils.getVideoConfig({video: false}, {run_settings: {enforce_settings: true}})).to.be.eql({video: true, videoUploadOnPasses: true});
+      expect(utils.getVideoConfig({videoUploadOnPasses: false}, {run_settings: {enforce_settings: true}})).to.be.eql({video: true, videoUploadOnPasses: true});
+      expect(utils.getVideoConfig({video: false, videoUploadOnPasses: false}, {run_settings: {enforce_settings: true}})).to.be.eql({video: true, videoUploadOnPasses: true});
+    });
+
+    it('should return bsconfig value and ignore video config in cypress config if enforce_settings is passed by the user', () => {
+      expect(utils.getVideoConfig({video: true}, {run_settings: {enforce_settings: true, video: false }})).to.be.eql({video: false, videoUploadOnPasses: true});
+      expect(utils.getVideoConfig({videoUploadOnPasses: true}, {run_settings: {enforce_settings: true, videoUploadOnPasses: false}})).to.be.eql({video: true, videoUploadOnPasses: false});
+      expect(utils.getVideoConfig({video: true, videoUploadOnPasses: true}, {run_settings: {enforce_settings: true, video: false, videoUploadOnPasses: false}})).to.be.eql({video: false, videoUploadOnPasses: false});
+      expect(utils.getVideoConfig({video: false}, {run_settings: {enforce_settings: true, video: true }})).to.be.eql({video: true, videoUploadOnPasses: true});
+      expect(utils.getVideoConfig({videoUploadOnPasses: false}, {run_settings: {enforce_settings: true, videoUploadOnPasses: true}})).to.be.eql({video: true, videoUploadOnPasses: true});
+      expect(utils.getVideoConfig({video: false, videoUploadOnPasses: false}, {run_settings: {enforce_settings: true, video: true, videoUploadOnPasses: true}})).to.be.eql({video: true, videoUploadOnPasses: true});
+    });
+
   });
 
   describe('setNetworkLogs', () => {
@@ -3421,7 +3725,7 @@ describe('utils', () => {
         run_settings: { networkLogs: true }
       };
       let expectResult = {
-        run_settings: { networkLogs: 'true' }
+        run_settings: { networkLogs: 'true', network_logs: 'true', networkLogsOptions: null, network_logs_options: null }
       }
       utils.setNetworkLogs(bsConfig);
       expect(bsConfig).to.be.eql(expectResult);
@@ -3432,7 +3736,7 @@ describe('utils', () => {
         run_settings: { networkLogs: "true" }
       };
       let expectResult = {
-        run_settings: { networkLogs: "true" }
+        run_settings: { networkLogs: "true", network_logs: 'true', networkLogsOptions: null, network_logs_options: null }
       }
       utils.setNetworkLogs(bsConfig);
       expect(bsConfig).to.be.eql(expectResult);
@@ -3443,7 +3747,7 @@ describe('utils', () => {
         run_settings: { networkLogs: "abc" }
       };
       let expectResult = {
-        run_settings: { networkLogs: "false" }
+        run_settings: { networkLogs: "false", network_logs: 'false', networkLogsOptions: null, network_logs_options: null }
       }
       utils.setNetworkLogs(bsConfig);
       expect(bsConfig).to.be.eql(expectResult);
@@ -3454,7 +3758,105 @@ describe('utils', () => {
         run_settings: { }
       };
       let expectResult = {
-        run_settings: { networkLogs: "false" }
+        run_settings: { networkLogs: "false", network_logs: 'false', networkLogsOptions: null, network_logs_options: null }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return true if networkLogsOptions.captureContent is passed as boolean true', () => {
+      let bsConfig = {
+        run_settings: { networkLogs: true, networkLogsOptions: {captureContent: true} }
+      };
+      let expectResult = {
+        run_settings: { networkLogs: 'true', network_logs: 'true', networkLogsOptions: {capture_content: 'true'}, network_logs_options: {capture_content: 'true'} }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return true if networkLogsOptions.captureContent is passed as string true', () => {
+      let bsConfig = {
+        run_settings: { networkLogs: true, networkLogsOptions: {captureContent: 'true'} }
+      };
+      let expectResult = {
+        run_settings: { networkLogs: 'true', network_logs: 'true', networkLogsOptions: {capture_content: 'true'}, network_logs_options: {capture_content: 'true'} }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return false if networkLogsOptions.captureContent is passed as any other non true value', () => {
+      let bsConfig = {
+        run_settings: { networkLogs: true, networkLogsOptions: {captureContent: 'abc'} }
+      };
+      let expectResult = {
+        run_settings: { networkLogs: 'true', network_logs: 'true', networkLogsOptions: {capture_content: 'false'}, network_logs_options: {capture_content: 'false'} }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return null if networkLogsOptions.captureContent is not passed', () => {
+      let bsConfig = {
+        run_settings: {networkLogs: true,  }
+      };
+      let expectResult = {
+        run_settings: { networkLogs: 'true', network_logs: 'true', networkLogsOptions: null, network_logs_options: null  }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+    it('should return null if networkLogs is false', () => {
+      let bsConfig = {
+        run_settings: { networkLogs: false, networkLogsOptions: {captureContent: true} }
+      };
+      let expectResult = {
+        run_settings: { networkLogs: 'false', network_logs: 'false', networkLogsOptions: null, network_logs_options: null }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return true if network_logs_options.capture_content is passed as boolean true', () => {
+      let bsConfig = {
+        run_settings: { network_logs: true, network_logs_options: {capture_content: true} }
+      };
+      let expectResult = {
+        run_settings: { network_logs: 'true', networkLogs: 'true', network_logs_options: {capture_content: 'true'}, networkLogsOptions: {capture_content: 'true'} }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return true if network_logs_options.capture_content is passed as string true', () => {
+      let bsConfig = {
+        run_settings: { network_logs: true, network_logs_options: {capture_content: 'true'} }
+      };
+      let expectResult = {
+        run_settings: { network_logs: 'true', networkLogs: 'true', network_logs_options: {capture_content: 'true'}, networkLogsOptions: {capture_content: 'true'} }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return false if network_logs_options.capture_content is passed as any other non true value', () => {
+      let bsConfig = {
+        run_settings: { network_logs: true, network_logs_options: {capture_content: 'abc'} }
+      };
+      let expectResult = {
+        run_settings: { network_logs: 'true', networkLogs: 'true', network_logs_options: {capture_content: 'false'}, networkLogsOptions: {capture_content: 'false'} }
+      }
+      utils.setNetworkLogs(bsConfig);
+      expect(bsConfig).to.be.eql(expectResult);
+    });
+
+    it('should return null if network_logs is false', () => {
+      let bsConfig = {
+        run_settings: { network_logs: false, network_logs_options: {capture_content: 'true'} }
+      };
+      let expectResult = {
+        run_settings: { network_logs: 'false', networkLogs: 'false', networkLogsOptions: null, network_logs_options: null }
       }
       utils.setNetworkLogs(bsConfig);
       expect(bsConfig).to.be.eql(expectResult);
@@ -3718,6 +4120,97 @@ describe('utils', () => {
     });
   });
 
+  describe("setTimezone", () => {
+    let processStub;
+    let loggerStub;
+    let syncCliLoggerStub;
+    beforeEach(() => {
+      processStub = sinon.stub(process, 'exit');
+      loggerStub = sinon.stub(winstonLogger, 'error');
+      syncCliLoggerStub = sinon.stub(syncCliLogger, 'info');
+    });
+
+    afterEach(() => {
+      processStub.restore();
+      loggerStub.restore();
+      syncCliLoggerStub.restore();
+    });
+    it('sets timezone value passed in args', () => {
+      let bsConfig = {
+        run_settings: {
+          timezone: "London"
+        }
+      }
+      let args = {
+        timezone: "New_York"
+      };
+      utils.setTimezone(bsConfig, args);
+      expect(bsConfig.run_settings.timezone).to.eq("New_York");
+    });
+
+    it('sets timezone to null if no value passed in args', () => {
+      let bsConfig = {
+        run_settings: {
+          timezone: "abc"
+        }
+      }
+      let args = {};
+      utils.setTimezone(bsConfig, args);
+      expect(bsConfig.run_settings.timezone).to.eq(undefined);
+    });
+
+    it('sets timezone to null if invalid value passed in args', () => {
+      let bsConfig = {
+        run_settings: {
+          timezone: "abc"
+        }
+      }
+      let args = {
+        timezone: "xyz"
+      };
+      utils.setTimezone(bsConfig, args);
+      expect(bsConfig.run_settings.timezone).to.eq(undefined);
+      sinon.assert.calledOnceWithExactly(loggerStub, "Invalid timezone = xyz");
+      sinon.assert.calledOnce(syncCliLoggerStub);
+      sinon.assert.calledOnceWithExactly(processStub, 1);
+    });
+
+    it('sets timezone to null if invalid value passed in bsConfig', () => {
+      let bsConfig = {
+        run_settings: {
+          timezone: "abc"
+        }
+      }
+      let args = {};
+      utils.setTimezone(bsConfig, args);
+      expect(bsConfig.run_settings.timezone).to.eq(undefined);
+      sinon.assert.calledOnceWithExactly(loggerStub, "Invalid timezone = abc");
+      sinon.assert.calledOnce(syncCliLoggerStub);
+      sinon.assert.calledOnceWithExactly(processStub, 1);
+    });
+
+    it('sets timezone to value in bsConfig and not in args', () => {
+      let bsConfig = {
+        run_settings: {
+          timezone: "London"
+        }
+      }
+      let args = {};
+      utils.setTimezone(bsConfig, args);
+      expect(bsConfig.run_settings.timezone).to.eq("London");
+    });
+
+    it('sets timezone to null if no value passed in args or bsConfig', () => {
+      let bsConfig = {
+        run_settings: {}
+      }
+      let args = {};
+      utils.setTimezone(bsConfig, args);
+      expect(bsConfig.run_settings.timezone).to.eq(undefined);
+    });
+  });
+
+
   describe('#isInteger', () => {
     it('returns true if positive integer', () => {
       expect(utils.isInteger(123)).to.eq(true);
@@ -3838,6 +4331,127 @@ describe('utils', () => {
       expect(utils.getMajorVersion('2.1')).to.be.eql('2');
       expect(utils.getMajorVersion('3')).to.be.eql('3');
       expect(utils.getMajorVersion('4.1')).to.be.eql('4');
+    });
+  });
+
+  describe('#isNonBooleanValue' , () => {
+    it('return true if value passed in empty string', () => {
+      expect(utils.isNonBooleanValue('')).to.be.eql(true);
+    });
+
+    it('return true if value passed is abc(non boolean)', () => {
+      expect(utils.isNonBooleanValue("abc")).to.be.eql(true);
+    });
+
+    it('return false if value passed is false(boolean)', () => {
+      expect(utils.isNonBooleanValue("false")).to.be.eql(false);
+    });
+
+    it('return false if value passed is true(boolean)', () => {
+      expect(utils.isNonBooleanValue(true)).to.be.eql(false);
+    });
+  });
+
+  describe('#isConflictingBooleanValues' , () => {
+    it('return false if value passed is true and true', () => {
+      expect(utils.isConflictingBooleanValues(true, true)).to.be.eql(false);
+    });
+
+    it('return false if value passed is false and "false"', () => {
+      expect(utils.isConflictingBooleanValues(false, "false")).to.be.eql(false);
+    });
+
+    it('return true if value passed is "true" and "false"', () => {
+      expect(utils.isConflictingBooleanValues("true", "false")).to.be.eql(true);
+    });
+
+    it('return true if value passed is true and "false"', () => {
+      expect(utils.isConflictingBooleanValues(true, "false")).to.be.eql(true);
+    });
+
+    it('return false if value passed is false and "true"', () => {
+      expect(utils.isConflictingBooleanValues(false, "true")).to.be.eql(true);
+    });
+
+    it('return false if value passed is false and "false"', () => {
+      expect(utils.isConflictingBooleanValues(false, "false")).to.be.eql(false);
+    });
+  });
+
+  describe('#setInteractiveCapability' , () => {
+    it('should set true if interactive caps is not passed', () => {
+      let bsConfig = {
+        run_settings: {}
+      }
+      let expectedResult = {
+        run_settings: {
+          interactiveDebugging: "true"
+        }
+      }
+      utils.setInteractiveCapability(bsConfig);
+      expect(bsConfig).to.be.eql(expectedResult);
+    });
+
+    it('should set true if interactiveDebugging caps passed is true', () => {
+      let bsConfig = {
+        run_settings: {
+          interactiveDebugging: true
+        }
+      }
+      let expectedResult = {
+        run_settings: {
+          interactiveDebugging: true
+        }
+      }
+      utils.setInteractiveCapability(bsConfig);
+      expect(bsConfig).to.be.eql(expectedResult);
+    });
+
+    it('should set true if interactive_debugging caps passed is true', () => {
+      let bsConfig = {
+        run_settings: {
+          interactive_debugging: true
+        }
+      }
+      let expectedResult = {
+        run_settings: {
+          interactive_debugging: true,
+          interactiveDebugging: true
+        }
+      }
+      utils.setInteractiveCapability(bsConfig);
+      expect(bsConfig).to.be.eql(expectedResult);
+    });
+
+    it('should set false if interactive_debugging caps passed is false', () => {
+      let bsConfig = {
+        run_settings: {
+          interactive_debugging: false
+        }
+      }
+      let expectedResult = {
+        run_settings: {
+          interactive_debugging: false,
+          interactiveDebugging: false
+        }
+      }
+      utils.setInteractiveCapability(bsConfig);
+      expect(bsConfig).to.be.eql(expectedResult);
+    });
+
+    it('should set false if interactiveDebugging caps passed is false', () => {
+      let bsConfig = {
+        run_settings: {
+          interactiveDebugging: false
+        }
+      }
+      let expectedResult = {
+        run_settings: {
+          interactiveDebugging: false
+        }
+      }
+      utils.setInteractiveCapability(bsConfig);
+      expect(bsConfig).to.be.eql(expectedResult);
     });
   });
 

@@ -2,11 +2,11 @@ const axios = require('axios').default;
 
 const fs = require('fs'),
       path = require('path'),
-      unzipper = require('unzipper'),
       logger = require('./logger').winstonLogger,
       utils = require("./utils"),
       Constants = require('./constants'),
-      config = require("./config");
+      config = require("./config"),
+      decompress = require('decompress');
 
 let reportGenerator = async (bsConfig, buildId, args, rawArgs, buildReportData, cb) => {
   let options = {
@@ -153,14 +153,15 @@ function getReportResponse(filePath, fileName, reportJsonUrl) {
 
 const unzipFile = async (filePath, fileName) => {
   return new Promise( async (resolve, reject) => {
-    await unzipper.Open.file(path.join(filePath, fileName))
-      .then(d => d.extract({path: filePath, concurrency: 5}))
-      .catch((err) => {
-        reject(err);
-        process.exitCode = Constants.ERROR_EXIT_CODE;
-      });
+    await decompress(path.join(filePath, fileName), filePath)
+    .then((files) => {
       let message = "Unzipped the json and html successfully."
       resolve(message);
+    })
+    .catch((error) => {
+      reject(error);
+      process.exitCode = Constants.ERROR_EXIT_CODE;
+    });
   });
 }
 

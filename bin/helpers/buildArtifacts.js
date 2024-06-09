@@ -3,8 +3,6 @@
 const fs = require('fs'),
       path = require('path');
 
-const unzipper = require('unzipper');
-
 const logger = require('./logger').winstonLogger,
       utils = require("./utils"),
       Constants = require("./constants"),
@@ -13,12 +11,12 @@ const logger = require('./logger').winstonLogger,
 const { default: axios } = require('axios');
 const HttpsProxyAgent = require('https-proxy-agent');
 const FormData = require('form-data');
-
+const decompress = require('decompress');
 
 let BUILD_ARTIFACTS_TOTAL_COUNT = 0;
 let BUILD_ARTIFACTS_FAIL_COUNT = 0;
 
-const parseAndDownloadArtifacts = async (buildId, data) => {
+const parseAndDownloadArtifacts = async (buildId, data, bsConfig, args, rawArgs, buildReportData) => {
   return new Promise(async (resolve, reject) => {
     let all_promises = [];
     let combs = Object.keys(data);
@@ -31,7 +29,14 @@ const parseAndDownloadArtifacts = async (buildId, data) => {
         let fileName = 'build_artifacts.zip';
         BUILD_ARTIFACTS_TOTAL_COUNT += 1;
         all_promises.push(downloadAndUnzip(filePath, fileName, data[comb][sessionId]).catch((error) => {
-          BUILD_ARTIFACTS_FAIL_COUNT += 1;
+          if (error === Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_NOT_FOUND) {
+            // Don't consider build artifact 404 error as a failure
+            let warningMessage = Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_NOT_FOUND.replace('<session-id>', sessionId);
+            logger.warn(warningMessage);
+            utils.sendUsageReport(bsConfig, args, warningMessage, Constants.messageTypes.ERROR, 'build_artifacts_not_found', buildReportData, rawArgs);
+          } else {
+            BUILD_ARTIFACTS_FAIL_COUNT += 1;
+          }
           // delete malformed zip if present
           let tmpFilePath = path.join(filePath, fileName);
           if(fs.existsSync(tmpFilePath)){
@@ -102,6 +107,9 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
     try {
       const response = await axios.get(url, {responseType: 'stream'});
       if(response.status != 200) {
+        if (response.statusCode === 404) {
+          reject(Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_NOT_FOUND);
+        }
         reject()
       } else {
         //ensure that the user can call `then()` only when the file has
@@ -131,10 +139,13 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
 
 const unzipFile = async (filePath, fileName) => {
   return new Promise( async (resolve, reject) => {
-    await unzipper.Open.file(path.join(filePath, fileName))
-      .then(d => d.extract({path: filePath, concurrency: 5}))
-      .catch((err) => reject(err));
-    resolve();
+    await decompress(path.join(filePath, fileName), filePath)
+    .then((files) => {
+      resolve();
+    })
+    .catch((error) => {
+      reject(error);
+    });
   });
 }
 
