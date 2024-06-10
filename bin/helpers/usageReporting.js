@@ -1,7 +1,6 @@
 'use strict';
 const cp = require("child_process"),
   os = require("os"),
-  request = require("requestretry"),
   fs = require('fs'),
   path = require('path');
 
@@ -10,6 +9,8 @@ const config = require('./config'),
   utils = require('./utils');
 
 const { AUTH_REGEX, REDACTED_AUTH, REDACTED, CLI_ARGS_REGEX, RAW_ARGS_REGEX } = require("./constants");
+const { default: axios } = require("axios");
+const axiosRetry = require("axios-retry");
 const { isTurboScaleSession } = require('../helpers/atsHelper');
 
 function get_version(package_name) {
@@ -241,7 +242,7 @@ function sendTurboscaleErrorLogs(args) {
   });
 }
 
-function send(args) {
+async function send(args) {
   let bsConfig = JSON.parse(JSON.stringify(args.bstack_config));
 
   if (isTurboScaleSession(bsConfig) && args.message_type === 'error') {
@@ -321,24 +322,31 @@ function send(args) {
     json: true,
     maxAttempts: 10, // (default) try 3 times
     retryDelay: 2000, // (default) wait for 2s before trying again
-    retrySrategy: request.RetryStrategies.HTTPOrNetworkError, // (default) retry on 5xx or network errors
   };
 
   fileLogger.info(`Sending ${JSON.stringify(payload)} to ${config.usageReportingUrl}`);
-  request(options, function (error, res, body) {
-    if (error) {
-      //write err response to file
-      fileLogger.error(JSON.stringify(error));
-      return;
+  axiosRetry(axios, 
+    { 
+    retries: 3, 
+    retryDelay: 2000, 
+    retryCondition: (error) => {
+      return (error.response.status === 503 || error.response.status === 500)
     }
-    // write response file
-    let response = {
-      attempts: res.attempts,
-      statusCode: res.statusCode,
-      body: body
-    };
-    fileLogger.info(`${JSON.stringify(response)}`);
   });
+  try {
+    const response = await axios.post(options.url, options.body, {
+      headers: options.headers,
+    });
+    let result = {
+      statusText: response.statusText,
+      statusCode: response.status,
+      body: response.data
+    };
+    fileLogger.info(`${JSON.stringify(result)}`);
+  } catch (error) {
+    fileLogger.error(JSON.stringify(error.response));
+    return;
+  }
 }
 
 module.exports = {

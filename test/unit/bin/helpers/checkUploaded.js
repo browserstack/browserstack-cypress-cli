@@ -1,8 +1,8 @@
 'use strict';
+const { default: axios } = require("axios");
 const chai = require("chai"),
   chaiAsPromised = require("chai-as-promised"),
-  sinon = require("sinon"),
-  request = require("request");
+  sinon = require("sinon");
 
 const logger = require("../../../../bin/helpers/logger").winstonLogger,
   testObjects = require("../../support/fixtures/testObjects");
@@ -37,14 +37,14 @@ describe("checkUploaded", () => {
       }
     });
 
-    it("resolves with zipUrlPresent false due to request error", () => {
-      let requestStub = sandbox
-        .stub(request, "post")
-        .yields(new Error("random error"), null, null);
+    it("resolves with zipUrlPresent false due to axios error", () => {
+      let axiosStub = sandbox
+        .stub(axios, "post")
+        .resolves(new Error("random error"));
 
       const checkUploaded = rewire("../../../../bin/helpers/checkUploaded");
       checkUploaded.__set__({
-        request: { post: requestStub },
+        axios: { post: axiosStub },
         checkSpecsMd5: checkSpecsMd5Stub
       });
       let checkUploadedMd5rewire = checkUploaded.__get__('checkUploadedMd5');
@@ -53,7 +53,7 @@ describe("checkUploaded", () => {
           chai.assert.equal(data.zip_md5sum, 'random_md5sum');
           chai.assert.equal(data.zipUrlPresent, false);
           chai.assert.equal(data.packageUrlPresent, false);
-          sinon.assert.calledOnce(requestStub);
+          sinon.assert.calledOnce(axiosStub);
           sinon.assert.calledOnce(checkSpecsMd5Stub);
         })
         .catch((_error) => {
@@ -62,14 +62,14 @@ describe("checkUploaded", () => {
     });
 
     it("resolves with zipUrlPresent false and packageUrlPresent false due to checkSpecsMd5 error", () => {
-      let requestStub = sandbox
-        .stub(request, "post")
-        .yields(new Error("random error"), null, null);
+      let axiosStub = sandbox
+        .stub(axios, "post")
+        .resolves(new Error("random error"));
       let checkSpecsMd5ErrorStub = sandbox.stub().returns(Promise.reject({message: "test error", stack: "test error stack"}));
 
       const checkUploaded = rewire("../../../../bin/helpers/checkUploaded");
       checkUploaded.__set__({
-        request: { post: requestStub },
+        axios: { post: axiosStub },
         checkSpecsMd5: checkSpecsMd5ErrorStub
       });
       let checkUploadedMd5rewire = checkUploaded.__get__('checkUploadedMd5');
@@ -78,7 +78,7 @@ describe("checkUploaded", () => {
           chai.assert.equal(data.zipUrlPresent, false);
           chai.assert.equal(data.packageUrlPresent, false);
           chai.assert.equal(data.error, "test error stack");
-          sinon.assert.notCalled(requestStub);
+          sinon.assert.notCalled(axiosStub);
           sinon.assert.calledOnce(checkSpecsMd5ErrorStub);
         })
         .catch((_error) => {
@@ -87,13 +87,13 @@ describe("checkUploaded", () => {
     });
 
     it("resolves with zipUrlPresent false and packageUrlPresent false due to parsing error", () => {
-      let requestStub = sandbox
-      .stub(request, "post")
-      .yields(null, { statusCode: 200 }, '{"zipUrl":"bs://random_hashid}');
+      let axiosStub = sandbox
+      .stub(axios, "post")
+      .resolves({ status: 200 , data: '{"zipUrl":"bs://random_hashid}'});
 
       const checkUploaded = rewire("../../../../bin/helpers/checkUploaded");
       checkUploaded.__set__({
-        request: { post: requestStub },
+        axios: { post: axiosStub },
         checkSpecsMd5: checkSpecsMd5Stub
       });
       let checkUploadedMd5rewire = checkUploaded.__get__('checkUploadedMd5');
@@ -102,7 +102,7 @@ describe("checkUploaded", () => {
           chai.assert.equal(data.zipUrlPresent, false);
           chai.assert.equal(data.packageUrlPresent, false);
           chai.assert.equal(data.zip_md5sum, "random_md5sum");
-          sinon.assert.calledOnce(requestStub);
+          sinon.assert.calledOnce(axiosStub);
           sinon.assert.calledOnce(checkSpecsMd5Stub);
         })
         .catch((_error) => {
@@ -111,20 +111,20 @@ describe("checkUploaded", () => {
     });
 
     it("resolves with zipUrlPresent true and zip url", () => {
-      let requestStub = sandbox
-        .stub(request, "post")
-        .yields(null, { statusCode: 200 }, '{"zipUrl":"bs://random_hashid"}');
+      let axiosStub = sandbox
+        .stub(axios, "post")
+        .resolves({ status: 200 , data: {"zipUrl":"bs://random_hashid"} });
 
       const checkUploaded = rewire("../../../../bin/helpers/checkUploaded");
       checkUploaded.__set__({
-        request: { post: requestStub },
+        axios: { post: axiosStub },
         checkSpecsMd5: checkSpecsMd5Stub
       });
       let checkUploadedMd5rewire = checkUploaded.__get__('checkUploadedMd5');
       return checkUploadedMd5rewire(bsConfig, {}, instrumentBlocks)
         .then((data) => {
           chai.assert.deepEqual(data, { zip_md5sum: 'random_md5sum', zipUrlPresent: true, packageUrlPresent: false, zipUrl: 'bs://random_hashid' })
-          sinon.assert.calledOnce(requestStub);
+          sinon.assert.calledOnce(axiosStub);
           sinon.assert.calledOnce(checkSpecsMd5Stub);
         })
         .catch((_error) => {
@@ -133,13 +133,13 @@ describe("checkUploaded", () => {
     });
 
     it("resolves with zipUrlPresent true, packageUrlPresent true, zip url, and packge url", () => {
-      let requestStub = sandbox
-        .stub(request, "post")
-        .yields(null, { statusCode: 200 }, '{"zipUrl":"bs://random_hashid", "npmPackageUrl":"bs://random_hashid2"}');
+      let axiosStub = sandbox
+        .stub(axios, "post")
+        .resolves({ status: 200 , data: {"zipUrl":"bs://random_hashid", "npmPackageUrl":"bs://random_hashid2"}});
 
       const checkUploaded = rewire("../../../../bin/helpers/checkUploaded");
       checkUploaded.__set__({
-        request: { post: requestStub },
+        axios: { post: axiosStub },
         checkSpecsMd5: checkSpecsMd5Stub,
         checkPackageMd5: checkPackageMd5Stub
       });
@@ -148,7 +148,7 @@ describe("checkUploaded", () => {
       return checkUploadedMd5rewire(bsConfig, {}, instrumentBlocks)
         .then((data) => {
           chai.assert.deepEqual(data, { zip_md5sum: 'random_md5sum', npm_package_md5sum: 'random_md5sum', zipUrlPresent: true, packageUrlPresent: true, zipUrl: 'bs://random_hashid', npmPackageUrl: 'bs://random_hashid2' })
-          sinon.assert.calledOnce(requestStub);
+          sinon.assert.calledOnce(axiosStub);
           sinon.assert.calledOnce(checkSpecsMd5Stub);
         })
         .catch((_error) => {
@@ -157,13 +157,13 @@ describe("checkUploaded", () => {
     });
 
     it("resolves with zipUrlPresent false as not found in db", () => {
-      let requestStub = sandbox
-        .stub(request, "post")
-        .yields(null, { statusCode: 404 }, '{"message":"zip_url for md5sum random_md5sum not found."}');
+      let axiosStub = sandbox
+        .stub(axios, "post")
+        .resolves({ status: 404 , data: {"message":"zip_url for md5sum random_md5sum not found."}});
 
       const checkUploaded = rewire("../../../../bin/helpers/checkUploaded");
       checkUploaded.__set__({
-        request: { post: requestStub },
+        axios: { post: axiosStub },
         checkSpecsMd5: checkSpecsMd5Stub,
         checkPackageMd5: checkPackageMd5Stub
       });
@@ -172,7 +172,7 @@ describe("checkUploaded", () => {
       return checkUploadedMd5rewire(bsConfig, {}, instrumentBlocks)
         .then((data) => {
           chai.assert.deepEqual(data, { zip_md5sum: 'random_md5sum', zipUrlPresent: false, packageUrlPresent: false, })
-          sinon.assert.calledOnce(requestStub);
+          sinon.assert.calledOnce(axiosStub);
           sinon.assert.calledOnce(checkSpecsMd5Stub);
         })
         .catch((_error) => {
@@ -181,13 +181,13 @@ describe("checkUploaded", () => {
     });
 
     it("resolves with zipUrlPresent and packageUrlPresent false if force-upload enabled and cache_dependencies disabled", () => {
-      let requestStub = sandbox
-        .stub(request, "post")
-        .yields(null, { statusCode: 404 }, '{"message":"zip_url for md5sum random_md5sum not found."}');
+      let axiosStub = sandbox
+        .stub(axios, "post")
+        .resolves({ status: 404 , data: '{"message":"zip_url for md5sum random_md5sum not found."}'});
 
       const checkUploaded = rewire("../../../../bin/helpers/checkUploaded");
       checkUploaded.__set__({
-        request: { post: requestStub },
+        axios: { post: axiosStub },
         checkSpecsMd5: checkSpecsMd5Stub,
         checkPackageMd5: checkPackageMd5Stub
       });
@@ -196,7 +196,7 @@ describe("checkUploaded", () => {
       return checkUploadedMd5rewire(bsConfig, {"force-upload": true}, instrumentBlocks)
         .then((data) => {
           chai.assert.deepEqual(data, { zipUrlPresent: false, packageUrlPresent: false })
-          sinon.assert.notCalled(requestStub);
+          sinon.assert.notCalled(axiosStub);
           sinon.assert.notCalled(checkSpecsMd5Stub);
         })
         .catch((_error) => {
@@ -205,13 +205,13 @@ describe("checkUploaded", () => {
     });
 
     it("resolves with zipUrlPresent false and packageUrlPresent false if force-upload enabled and cache_dependencies enabled", () => {
-      let requestStub = sandbox
-        .stub(request, "post")
-        .yields(null, { statusCode: 200 }, '{"npmPackageUrl":"bs://random_hashid2"}');
+      let axiosStub = sandbox
+        .stub(axios, "post")
+        .resolves({ status: 200 , data: '{"npmPackageUrl":"bs://random_hashid2"}'});
 
       const checkUploaded = rewire("../../../../bin/helpers/checkUploaded");
       checkUploaded.__set__({
-        request: { post: requestStub },
+        axios: { post: axiosStub },
         checkSpecsMd5: checkSpecsMd5Stub,
         checkPackageMd5: checkPackageMd5Stub
       });
@@ -220,23 +220,22 @@ describe("checkUploaded", () => {
       return checkUploadedMd5rewire(bsConfig, {"force-upload": true}, instrumentBlocks)
         .then((data) => {
           chai.assert.deepEqual(data, { zipUrlPresent: false, packageUrlPresent: false })
-          sinon.assert.notCalled(requestStub);
+          sinon.assert.notCalled(axiosStub);
           sinon.assert.notCalled(checkSpecsMd5Stub);
         })
         .catch((_error) => {
-          console.log(_error)
           chai.assert.fail("Promise error");
         });
     });
 
     it("resolves with zipUrlPresent false and packageUrlPresent false if diabled from rails", () => {
-      let requestStub = sandbox
-        .stub(request, "post")
-        .yields(null, { statusCode: 200 }, '{"disableNpmSuiteCache": true, "disableTestSuiteCache": true }');
+      let axiosStub = sandbox
+        .stub(axios, "post")
+        .resolves( { status: 200 , data: {"disableNpmSuiteCache": true, "disableTestSuiteCache": true }});
 
       const checkUploaded = rewire("../../../../bin/helpers/checkUploaded");
       checkUploaded.__set__({
-        request: { post: requestStub },
+        axios: { post: axiosStub },
         checkSpecsMd5: checkSpecsMd5Stub,
         checkPackageMd5: checkPackageMd5Stub
       });
@@ -245,7 +244,7 @@ describe("checkUploaded", () => {
       return checkUploadedMd5rewire(bsConfig, {}, instrumentBlocks)
         .then((data) => {
           chai.assert.deepEqual(data, { zipUrlPresent: false, packageUrlPresent: false })
-          sinon.assert.calledOnce(requestStub);
+          sinon.assert.calledOnce(axiosStub);
           sinon.assert.calledOnce(checkSpecsMd5Stub);
         })
         .catch((_error) => {
