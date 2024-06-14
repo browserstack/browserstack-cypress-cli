@@ -26,6 +26,7 @@ const usageReporting = require("./usageReporting"),
   { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER } = require('../testObservability/helper/constants');
 
 const request = require('request');
+const { shouldProcessEventForTesthub } = require("../testhub/utils");
 
 exports.validateBstackJson = (bsConfigPath) => {
   return new Promise(function (resolve, reject) {
@@ -1350,7 +1351,7 @@ exports.setEnforceSettingsConfig = (bsConfig) => {
 
 // blindly send other passed configs with run_settings and handle at backend
 exports.setOtherConfigs = (bsConfig, args) => {
-  if(o11yHelpers.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
+  if(shouldProcessEventForTesthub()) {
     bsConfig["run_settings"]["reporter"] = TEST_OBSERVABILITY_REPORTER;
     return;
   }

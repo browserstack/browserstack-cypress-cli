@@ -5,6 +5,10 @@ const browserStackLog = (message) => {
   cy.task('browserstack_log', message);
 }
 
+const sendToReporter = (data) => {
+  cy.task('test_accessibility_data', data);
+}
+
 const commandsToWrap = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scroll', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
 
 const performScan = (win, payloadToSend) =>
@@ -250,8 +254,11 @@ const shouldScanForAccessibility = (attributes) => {
       if (Cypress.env("EXCLUDE_TAGS_FOR_ACCESSIBILITY")) {
         excludeTagArray = Cypress.env("EXCLUDE_TAGS_FOR_ACCESSIBILITY").split(";")
       }
+      browserStackLog("EXCLUDE_TAGS_FOR_ACCESSIBILITY = " + excludeTagArray)
+      browserStackLog("INCLUDE_TAGS_FOR_ACCESSIBILITY = " + includeTagArray)
 
       const fullTestName = attributes.title;
+      browserStackLog("fullTestName = " + fullTestName)
       const excluded = excludeTagArray.some((exclude) => fullTestName.includes(exclude));
       const included = includeTagArray.length === 0 || includeTags.some((include) => fullTestName.includes(include));
       shouldScanTestForAccessibility = !excluded && included;
@@ -274,6 +281,7 @@ Cypress.on('command:start', async (command) => {
   const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
 
   let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
+  sendToReporter({[attributes.title]: shouldScanTestForAccessibility})
   if (!shouldScanTestForAccessibility) return;
 
   cy.window().then((win) => {
@@ -284,47 +292,48 @@ Cypress.on('command:start', async (command) => {
 
 afterEach(() => {
   const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
-  cy.window().then(async (win) => {
-    let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
-    if (!shouldScanTestForAccessibility) return cy.wrap({});
+  cy.task('readFileMaybe', 'testDetails.json').then(data => {
+    browserStackLog('FILE CONTENT ::::: ' + data)
+    if (data === null) return;
 
-    cy.wrap(performScan(win), {timeout: 30000}).then(() => {
-      try {
-        let os_data;
-        if (Cypress.env("OS")) {
-          os_data = Cypress.env("OS");
-        } else {
-          os_data = Cypress.platform === 'linux' ? 'mac' : "win"
-        }
-        let filePath = '';
-        if (attributes.invocationDetails !== undefined && attributes.invocationDetails.relativeFile !== undefined) {
-          filePath = attributes.invocationDetails.relativeFile;
-        }
-        const payloadToSend = {
-          "saveResults": shouldScanTestForAccessibility,
-          "testDetails": {
-            "name": attributes.title,
-            "testRunId": '5058', // variable not consumed, shouldn't matter what we send
-            "filePath": filePath,
-            "scopeList": [
-              filePath,
-              attributes.title
-            ]
-          },
-          "platform": {
-            "os_name": os_data,
-            "os_version": Cypress.env("OS_VERSION"),
-            "browser_name": Cypress.browser.name,
-            "browser_version": Cypress.browser.version
+    let testDetails = {}
+    try {
+      testDetails = JSON.parse(data);
+    } catch (err) {
+      browserStackLog('Error while parsing json for testDetails:' + err)
+    }
+    const testId = testDetails[attributes.fullTitle()]
+    browserStackLog('TestId : ' + testId)
+    cy.window().then(async (win) => {
+      let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
+      sendToReporter({[attributes.title]: shouldScanTestForAccessibility})
+      if (!shouldScanTestForAccessibility) return cy.wrap({});
+
+      cy.wrap(performScan(win), {timeout: 30000}).then(() => {
+        try {
+          let os_data;
+          if (Cypress.env("OS")) {
+            os_data = Cypress.env("OS");
+          } else {
+            os_data = Cypress.platform === 'linux' ? 'mac' : "win"
           }
-        };
-        browserStackLog(`Saving accessibility test results`);
-        cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
-          browserStackLog(`Saved accessibility test results`);
-        })
+          let filePath = '';
+          if (attributes.invocationDetails !== undefined && attributes.invocationDetails.relativeFile !== undefined) {
+            filePath = attributes.invocationDetails.relativeFile;
+          }
+          const payloadToSend = {
+            'thTestRunUuid': testId,
+            'thBuildUuid': Cypress.env("BROWSERSTACK_TESTHUB_UUID"),
+            'thJwtToken': Cypress.env('BROWSERSTACK_TESTHUB_JWT')
+          };
+          browserStackLog(`Saving accessibility test results`);
+          cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
+            browserStackLog(`Saved accessibility test results`);
+          })
 
-      } catch (er) {
-      }
+        } catch (er) {
+        }
+      })
     })
   });
 })

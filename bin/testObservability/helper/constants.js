@@ -11,7 +11,8 @@ exports.IPC_EVENTS = {
   SCREENSHOT: 'testObservability:cypressScreenshot',
   COMMAND: 'testObservability:cypressCommand',
   CUCUMBER: 'testObservability:cypressCucumberStep',
-  PLATFORM_DETAILS: 'testObservability:cypressPlatformDetails'
+  PLATFORM_DETAILS: 'testObservability:cypressPlatformDetails',
+  ACCESSIBILITY_DATA: 'accessibility:cypressAccessibilityData'
 };
 
 exports.OBSERVABILITY_ENV_VARS = [
