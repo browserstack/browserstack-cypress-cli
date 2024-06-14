@@ -107,7 +107,7 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
   if(exitCode) process.exit(exitCode);
 }
 
-const nodeRequest = (type, url, data, config) => {
+exports.nodeRequest = (type, url, data, config) => {
   return new Promise(async (resolve, reject) => {
     const options = {...config,...{
       method: type,
@@ -242,7 +242,7 @@ exports.getPackageVersion = (package_, bsConfig = null) => {
   return packageVersion;
 }
 
-const setEnvironmentVariablesForRemoteReporter = (BS_TESTOPS_JWT, BS_TESTOPS_BUILD_HASHED_ID, BS_TESTOPS_ALLOW_SCREENSHOTS, OBSERVABILITY_LAUNCH_SDK_VERSION) => {
+exports.setEnvironmentVariablesForRemoteReporter = (BS_TESTOPS_JWT, BS_TESTOPS_BUILD_HASHED_ID, BS_TESTOPS_ALLOW_SCREENSHOTS, OBSERVABILITY_LAUNCH_SDK_VERSION) => {
   process.env.BS_TESTOPS_JWT = BS_TESTOPS_JWT;
   process.env.BS_TESTOPS_BUILD_HASHED_ID = BS_TESTOPS_BUILD_HASHED_ID;
   process.env.BS_TESTOPS_ALLOW_SCREENSHOTS = BS_TESTOPS_ALLOW_SCREENSHOTS;
@@ -316,7 +316,7 @@ exports.setCrashReportingConfigFromReporter = (credentialsStr, bsConfigPath, cyp
   }
 }
 
-const setCrashReportingConfig = (bsConfig, bsConfigPath) => {
+exports.setCrashReportingConfig = (bsConfig, bsConfigPath) => {
   try {
     const browserstackConfigFile = utils.readBsConfigJSON(bsConfigPath);
     const cypressConfigFile = getCypressConfigFileContent(bsConfig, null);
@@ -334,7 +334,7 @@ const setCrashReportingConfig = (bsConfig, bsConfigPath) => {
 }
 
 exports.launchTestSession = async (user_config, bsConfigPath) => {
-  setCrashReportingConfig(user_config, bsConfigPath);
+  exports.setCrashReportingConfig(user_config, bsConfigPath);
   
   const obsUserName = user_config["auth"]["username"];
   const obsAccessKey = user_config["auth"]["access_key"];
@@ -387,10 +387,10 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
         }
       };
 
-      const response = await nodeRequest('POST','api/v1/builds',data,config);
+      const response = await exports.nodeRequest('POST','api/v1/builds',data,config);
       exports.debug('Build creation successfull!');
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;
-      setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
+      exports.setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
       if(this.isBrowserstackInfra()) helper.setBrowserstackCypressCliDependency(user_config);
     } catch(error) {
       if(!error.errorType) {
@@ -417,7 +417,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
       }
 
       process.env.BS_TESTOPS_BUILD_COMPLETED = false;
-      setEnvironmentVariablesForRemoteReporter(null, null, null);
+      exports.setEnvironmentVariablesForRemoteReporter(null, null, null);
     }
   }
 }
@@ -474,7 +474,7 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
   };
 
   try {
-    const response = await nodeRequest('POST',eventUrl,data,config);
+    const response = await exports.nodeRequest('POST',eventUrl,data,config);
     if(response.data.error) {
       throw({message: response.data.error});
     } else {
@@ -489,6 +489,18 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
     }
     exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - data.length);
   }
+}
+
+const shouldUploadEvent = (eventType) => {
+  isAccessibility = utils.isTrueString(process.env.BROWSERSTACK_TEST_ACCESSIBILITY) || !utils.isUndefined(process.env.ACCESSIBILITY_AUTH);
+  if(!this.isTestObservabilitySession() || isAccessibility) {
+    if (['HookRunStarted', 'HookRunFinished', 'LogCreated', 'BuildUpdate'].includes(eventType)) {
+      return false;
+    }
+    return true;
+  }
+
+  return this.isTestObservabilitySession() || isAccessibility;
 }
 
 const RequestQueueHandler = require('./requestQueueHandler');
@@ -506,9 +518,9 @@ exports.uploadEventData = async (eventData, run=0) => {
     ['BuildUpdate']: 'Build_Update'
   }[eventData.event_type];
 
+  if (!shouldUploadEvent(eventData.event_type)) return;
   if(run === 0 && process.env.BS_TESTOPS_JWT != "null") exports.pending_test_uploads.count += 1;
-  
-  if (process.env.BS_TESTOPS_BUILD_COMPLETED === "true") {
+  if (process.env.BS_TESTOPS_BUILD_COMPLETED === "true" || process.env.ACCESSIBILITY_AUTH) {
     if(process.env.BS_TESTOPS_JWT == "null") {
       exports.debug(`EXCEPTION IN ${log_tag} REQUEST TO TEST OBSERVABILITY : missing authentication token`);
       exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count-1);
@@ -537,7 +549,7 @@ exports.uploadEventData = async (eventData, run=0) => {
       };
   
       try {
-        const response = await nodeRequest('POST',event_api_url,data,config);
+        const response = await exports.nodeRequest('POST',event_api_url,data,config);
         if(response.data.error) {
           throw({message: response.data.error});
         } else {
@@ -626,7 +638,7 @@ exports.shouldReRunObservabilityTests = () => {
 }
 
 exports.stopBuildUpstream = async () => {
-  if (process.env.BS_TESTOPS_BUILD_COMPLETED === "true") {
+  if (process.env.BS_TESTOPS_BUILD_COMPLETED === "true" || process.env.ACCESSIBILITY_AUTH) {
     if(process.env.BS_TESTOPS_JWT == "null" || process.env.BS_TESTOPS_BUILD_HASHED_ID == "null") {
       exports.debug('EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : Missing authentication token');
       return {
@@ -646,7 +658,7 @@ exports.stopBuildUpstream = async () => {
       };
   
       try {
-        const response = await nodeRequest('PUT',`api/v1/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}/stop`,data,config);
+        const response = await exports.nodeRequest('PUT',`api/v1/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}/stop`,data,config);
         if(response.data && response.data.error) {
           throw({message: response.data.error});
         } else {

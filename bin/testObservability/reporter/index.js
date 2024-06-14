@@ -61,6 +61,7 @@ const {
 } = require('../helper/helper');
 
 const { consoleHolder } = require('../helper/constants');
+const { shouldProcessEventForTesthub, appendTestHubParams } = require('../../testhub/utils');
 
 // this reporter outputs test results, indenting two spaces per suite
 class MyReporter {
@@ -76,6 +77,7 @@ class MyReporter {
     this.platformDetailsMap = {};
     this.runStatusMarkedHash = {};
     this.haveSentBuildUpdate = false;
+    this.accessibilityScanInfo = {};
     this.registerListeners();
     setCrashReportingConfigFromReporter(null, process.env.OBS_CRASH_REPORTING_BS_CONFIG_PATH, process.env.OBS_CRASH_REPORTING_CYPRESS_CONFIG_PATH);
 
@@ -87,7 +89,7 @@ class MyReporter {
       })
 
       .on(EVENT_HOOK_BEGIN, async (hook) => {
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!hook.hookAnalyticsId) {
             hook.hookAnalyticsId = uuidv4();
           } else if(this.runStatusMarkedHash[hook.hookAnalyticsId]) {
@@ -102,7 +104,7 @@ class MyReporter {
       })
 
       .on(EVENT_HOOK_END, async (hook) => {
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!this.runStatusMarkedHash[hook.hookAnalyticsId]) {
             if(!hook.hookAnalyticsId) {
               /* Hook objects don't maintain uuids in Cypress-Mocha */
@@ -123,7 +125,7 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_PASS, async (test) => {
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
             await this.sendTestRunEvent(test);
@@ -132,7 +134,7 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_FAIL, async (test, err) => {
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if((test.testAnalyticsId && !this.runStatusMarkedHash[test.testAnalyticsId]) || (test.hookAnalyticsId && !this.runStatusMarkedHash[test.hookAnalyticsId])) {
             if(test.testAnalyticsId) {
               this.runStatusMarkedHash[test.testAnalyticsId] = true;
@@ -146,7 +148,7 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_PENDING, async (test) => {
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             this.runStatusMarkedHash[test.testAnalyticsId] = true;
@@ -157,14 +159,14 @@ class MyReporter {
 
       .on(EVENT_TEST_BEGIN, async (test) => {
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           await this.testStarted(test);
         }
       })
 
       .on(EVENT_TEST_END, async (test) => {
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
             await this.sendTestRunEvent(test);
@@ -174,7 +176,7 @@ class MyReporter {
       
       .once(EVENT_RUN_END, async () => {
         try {
-          if(this.testObservability == true) {
+          if(shouldProcessEventForTesthub()) {
             const hookSkippedTests = getHookSkippedTests(this.runner.suite);
             for(const test of hookSkippedTests) {
               if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
@@ -199,6 +201,7 @@ class MyReporter {
         server.on(IPC_EVENTS.COMMAND, this.cypressCommandListener.bind(this));
         server.on(IPC_EVENTS.CUCUMBER, this.cypressCucumberStepListener.bind(this));
         server.on(IPC_EVENTS.PLATFORM_DETAILS, this.cypressPlatformDetailsListener.bind(this));
+        server.on(IPC_EVENTS.ACCESSIBILITY_DATA, this.cypressAccessibilityDataListener.bind(this));
       },
       (server) => {
         server.off(IPC_EVENTS.CONFIG, '*');
@@ -318,6 +321,9 @@ class MyReporter {
           steps: []
         }
       };
+
+      this.persistTestId(testData, eventType)
+      appendTestHubParams(testData, eventType, this.accessibilityScanInfo)
 
       if(eventType.match(/TestRunFinished/) || eventType.match(/TestRunSkipped/)) {
         testData['meta'].steps = JSON.parse(JSON.stringify(this.currentTestCucumberSteps));
@@ -558,6 +564,25 @@ class MyReporter {
       if(testTitle) this.platformDetailsMap[process.pid][testTitle] = { browser, platform };
     }
     this.currentCypressVersion = cypressVersion;
+  }
+
+  cypressAccessibilityDataListener = async(accessibilityData) => {
+    this.accessibilityScanInfo = {...this.accessibilityScanInfo, ...accessibilityData}
+  }
+
+  persistTestId = (testData, eventType) => {
+    if (!eventType.match(/TestRun/)) {return}
+
+    const fileName = 'testDetails.json'
+    let testDetails = {};
+    try {
+      if(fs.existsSync(fileName)) {
+        testDetails = JSON.parse(fs.readFileSync(fileName).toString())
+      }
+      testDetails[testData.identifier] = testData.uuid
+      fs.writeFileSync(fileName, JSON.stringify(testDetails))
+      consoleHolder.log('FILE WRITTEN ::::::::: ' + JSON.stringify(testDetails))
+    } catch (err) {}
   }
 
   getFormattedArgs = (args) => {
