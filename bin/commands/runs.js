@@ -264,7 +264,15 @@ module.exports = function run(args, rawArgs) {
 
             let test_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.fileName));
             let npm_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.packageFileName));
-            let node_modules_size = await utils.fetchFolderSize(path.join(process.cwd(), "node_modules"))            
+            let node_modules_size = await utils.fetchFolderSize(path.join(process.cwd(), "node_modules"));
+
+            if (Constants.turboScaleObj.enabled) {
+              // Note: Calculating md5 here for turboscale force-upload so that we don't need to re-calculate at hub         
+              let zip_md5sum = await checkUploaded.checkSpecsMd5(bsConfig.run_settings, args, {markBlockStart, markBlockEnd});
+              let npm_package_md5sum = await checkUploaded.checkPackageMd5(bsConfig.run_settings);
+              Object.assign(md5data, { npm_package_md5sum });
+              Object.assign(md5data, { zip_md5sum });
+            }
             
             //Package diff
             let isPackageDiff = false;
@@ -295,7 +303,7 @@ module.exports = function run(args, rawArgs) {
               if ( !utils.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) ) {
                 markBlockStart('setEnforceSettingsConfig');
                 logger.debug('Started setting the configs');
-                utils.setEnforceSettingsConfig(bsConfig);
+                utils.setEnforceSettingsConfig(bsConfig, args);
                 logger.debug('Completed setting the configs');
                 markBlockEnd('setEnforceSettingsConfig');
               }

@@ -1164,7 +1164,7 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
 };
 
 exports.sanitizeSpecsPattern = (pattern) => {
-  return pattern && pattern.split(",").length > 1 ? "{" + pattern + "}" : pattern;
+  return pattern && !(pattern.includes("{") && pattern.includes("}")) && pattern.split(",").length > 1 ? "{" + pattern + "}" : pattern;
 }
 
 exports.generateUniqueHash = () => {
@@ -1218,12 +1218,57 @@ exports.getNetworkErrorMessage = (dashboard_url) => {
 }
 
 exports.setNetworkLogs = (bsConfig) => {
-  if(bsConfig.run_settings.networkLogs == 'true' || bsConfig.run_settings.networkLogs == true) {
+  let capture_content = null
+  if(
+    (bsConfig.run_settings.networkLogs == 'true' || bsConfig.run_settings.networkLogs == true)
+    || (bsConfig.run_settings.network_logs == 'true' || bsConfig.run_settings.network_logs == true)
+  ) {
     bsConfig.run_settings.networkLogs = 'true'
+    bsConfig.run_settings.network_logs = 'true'
+    if (
+      this.isNotUndefined(bsConfig.run_settings.networkLogsOptions)
+      && typeof(bsConfig.run_settings.networkLogsOptions) === "object"
+    ){
+      if (
+        bsConfig.run_settings.networkLogsOptions.captureContent == 'true'
+        || bsConfig.run_settings.networkLogsOptions.captureContent == true
+        || bsConfig.run_settings.networkLogsOptions.capture_content == 'true'
+        || bsConfig.run_settings.networkLogsOptions.capture_content == true
+      ) {
+        capture_content = 'true'
+      } else {
+        capture_content = 'false'
+      }
+      bsConfig.run_settings.networkLogsOptions = {capture_content}
+      bsConfig.run_settings.network_logs_options = {capture_content}
+    } else if (
+      this.isNotUndefined(bsConfig.run_settings.network_logs_options)
+      && typeof(bsConfig.run_settings.network_logs_options) === "object"
+    ) {
+      if (
+        bsConfig.run_settings.network_logs_options.captureContent == 'true'
+        || bsConfig.run_settings.network_logs_options.captureContent == true
+        || bsConfig.run_settings.network_logs_options.capture_content == 'true'
+        || bsConfig.run_settings.network_logs_options.capture_content == true
+      ){
+        capture_content = 'true'
+        } else {
+          capture_content = 'false'
+        }
+        bsConfig.run_settings.networkLogsOptions = {capture_content}
+        bsConfig.run_settings.network_logs_options = {capture_content}
+    } else {
+      bsConfig.run_settings.networkLogsOptions = null
+      bsConfig.run_settings.network_logs_options = null
+    }
   } else {
     bsConfig.run_settings.networkLogs = 'false'
+    bsConfig.run_settings.network_logs = 'false'
+    bsConfig.run_settings.networkLogsOptions = null
+    bsConfig.run_settings.network_logs_options = null
   }
-  logger.debug(`Networks logs value: ${bsConfig.run_settings.networkLogs}`);
+  logger.debug(`Networks logs value: ${bsConfig.run_settings.network_logs}`);
+  logger.debug(`Networks logs options value: ${JSON.stringify(bsConfig.run_settings.network_logs_options)}`);
 }
 
 exports.versionChangedMessage = (preferredVersion, actualVersion, frameworkUpgradeMessage = '') => {
@@ -1320,7 +1365,7 @@ exports.setVideoCliConfig = (bsConfig, videoConfig) => {
 }
 
 // set configs if enforce_settings is passed
-exports.setEnforceSettingsConfig = (bsConfig) => {
+exports.setEnforceSettingsConfig = (bsConfig, args) => {
   if ( this.isUndefined(bsConfig) || this.isUndefined(bsConfig.run_settings) ) return;
   let config_args = (bsConfig && bsConfig.run_settings && bsConfig.run_settings.config) ? bsConfig.run_settings.config : undefined;
   if ( this.isUndefined(config_args) || !config_args.includes("video") ) {
@@ -1338,15 +1383,85 @@ exports.setEnforceSettingsConfig = (bsConfig) => {
   if( this.isNotUndefined(bsConfig.run_settings.specs) && bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE && (this.isUndefined(config_args) || !config_args.includes("specPattern"))  ) {
     // doing this only for cypress 10 and above as --spec is given precedence for cypress 9.
     let specConfigs = bsConfig.run_settings.specs;
-    // if multiple specs are passed, convert it into an array.
-    if(specConfigs && specConfigs.includes(',')) {
-      specConfigs = JSON.stringify(specConfigs.split(','));
+    let spec_pattern_args = "";
+
+    if (specConfigs && specConfigs.includes('{') && specConfigs.includes('}')) {
+      if (specConfigs && !Array.isArray(specConfigs)) {
+        if (specConfigs.includes(',')) {
+          specConfigs = this.splitStringByCharButIgnoreIfWithinARange(specConfigs, ',', '{', '}');
+        } else {
+          specConfigs = [specConfigs];
+        }
+      }
+      let ignoreFiles = args.exclude || bsConfig.run_settings.exclude
+      let specFilesMatched = [];
+      specConfigs.forEach(specPattern => {
+        specFilesMatched.push(
+          ...glob.sync(specPattern, {
+            cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles
+          })
+        );
+      });
+      logger.debug(`${specFilesMatched && specFilesMatched.length > 0 ? specFilesMatched.length : 0} spec files found with the provided specPattern for enforce_settings`);
+      // If spec files were found then lets we'll load the matched spec files
+      // If spec files were not found then we'll let cypress decide the loading of spec files
+      spec_pattern_args = `specPattern=${JSON.stringify(specFilesMatched && specFilesMatched.length > 0 ? specFilesMatched : specConfigs)}`;
+    } else {
+      // if multiple specs are passed, convert it into an array.
+      if(specConfigs && specConfigs.includes(',')) {
+        specConfigs = JSON.stringify(specConfigs.split(','));
+      }
+      spec_pattern_args = `specPattern=${specConfigs}`;
     }
-    let spec_pattern_args = `specPattern=${specConfigs}`;
     config_args = this.isUndefined(config_args) ? spec_pattern_args : config_args + ',' + spec_pattern_args;
   }
   if ( this.isNotUndefined(config_args) ) bsConfig["run_settings"]["config"] = config_args;
   logger.debug(`Setting conifg_args for enforce_settings to ${config_args}`);
+}
+
+/**
+ * Splits a string by a specified splitChar.
+ * If leftLimiter and rightLimiter are specified then string won't be splitted if the splitChar is within the range
+ * 
+ * @param {String} str - the string that needs to be splitted
+ * @param {String} splitChar - the split string/char from which the string will be splited
+ * @param {String} [leftLimiter] - the starting string/char of the range
+ * @param {String} [rightLimiter] - the ending string/char of the range
+ * 
+ * @example Example usage of splitStringByCharButIgnoreIfWithinARange.
+ * // returns ["folder/A/B", "folder/{C,D}/E"]
+ * utils.splitStringByCharButIgnoreIfWithinARange("folder/A/B,folder/{C,D}/E", ",", "{", "}");
+ * @returns String[] | null
+ */
+exports.splitStringByCharButIgnoreIfWithinARange = (str, splitChar, leftLimiter, rightLimiter) => {
+  if (typeof(str) !== 'string' || this.isUndefined(splitChar)) return null;
+
+  if (this.isUndefined(leftLimiter) || this.isUndefined(rightLimiter)) return str.split(splitChar);
+
+  let result = [];
+  let buffer = '';
+  let openBraceCount = 0;
+
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] === leftLimiter) {
+        openBraceCount++;
+    } else if (str[i] === rightLimiter) {
+        openBraceCount--;
+    }
+
+    if (str[i] === splitChar && openBraceCount === 0) {
+        result.push(buffer);
+        buffer = '';
+    } else {
+        buffer += str[i];
+    }
+  }
+
+  if (buffer !== '') {
+    result.push(buffer);
+  }
+
+  return result;
 }
 
 // blindly send other passed configs with run_settings and handle at backend
