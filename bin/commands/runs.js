@@ -23,22 +23,22 @@ const archiver = require("../helpers/archiver"),
   packageDiff = require('../helpers/package-diff');
 const { getStackTraceUrl } = require('../helpers/sync/syncSpecsLogs');
 
-const { 
-  launchTestSession, 
-  setEventListeners,
-  setTestObservabilityFlags, 
-  runCypressTestsLocally, 
-  printBuildLink
-} = require('../testObservability/helper/helper');
+// const { 
+//   launchTestSession, 
+//   setEventListeners,
+//   setTestObservabilityFlags, 
+//   runCypressTestsLocally, 
+//   printBuildLink
+// } = require('../testObservability/helper/helper');
 
 
-const { 
-  createAccessibilityTestRun,
-  setAccessibilityEventListeners,
-  checkAccessibilityPlatform,
-  supportFileCleanup
-} = require('../accessibility-automation/helper');
-const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
+// const { 
+//   createAccessibilityTestRun,
+//   setAccessibilityEventListeners,
+//   checkAccessibilityPlatform,
+//   supportFileCleanup
+// } = require('../accessibility-automation/helper');
+// const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
 
 module.exports = function run(args, rawArgs) {
 
@@ -69,11 +69,11 @@ module.exports = function run(args, rawArgs) {
     /* 
       Set testObservability & browserstackAutomation flags
     */
-    const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
-    const checkAccessibility = checkAccessibilityPlatform(bsConfig);
-    const isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibility;
-    const turboScaleSession = isTurboScaleSession(bsConfig);
-    Constants.turboScaleObj.enabled = turboScaleSession;
+    // const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
+    // const checkAccessibility = checkAccessibilityPlatform(bsConfig);
+    // const isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibility;
+    // const turboScaleSession = isTurboScaleSession(bsConfig);
+    // Constants.turboScaleObj.enabled = turboScaleSession;
 
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
@@ -85,24 +85,24 @@ module.exports = function run(args, rawArgs) {
     // accept the access key from command line or env variable if provided
     utils.setAccessKey(bsConfig, args);
 
-    let buildReportData = (turboScaleSession || !isBrowserstackInfra) ? null : await getInitialDetails(bsConfig, args, rawArgs);
+    let buildReportData = await getInitialDetails(bsConfig, args, rawArgs);
 
     // accept the build name from command line if provided
     utils.setBuildName(bsConfig, args);
 
-    if(isBrowserstackInfra) {
-      // set cypress test suite type
-      utils.setCypressTestSuiteType(bsConfig);
+    // if(isBrowserstackInfra) {
+    //   // set cypress test suite type
+    //   utils.setCypressTestSuiteType(bsConfig);
 
-      // set cypress geo location
-      utils.setGeolocation(bsConfig, args);
+    //   // set cypress geo location
+    //   utils.setGeolocation(bsConfig, args);
 
-      // set timezone
-      utils.setTimezone(bsConfig, args);
+    //   // set timezone
+    //   utils.setTimezone(bsConfig, args);
 
-      // set spec timeout
-      utils.setSpecTimeout(bsConfig, args);
-    }
+    //   // set spec timeout
+    //   utils.setSpecTimeout(bsConfig, args);
+    // }
     
     // accept the specs list from command line if provided
     utils.setUserSpecs(bsConfig, args);
@@ -116,103 +116,103 @@ module.exports = function run(args, rawArgs) {
     /* 
       Send build start to Observability
     */
-    if(isTestObservabilitySession) {
-      await launchTestSession(bsConfig, bsConfigPath);
-      utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
-    }
+    // if(isTestObservabilitySession) {
+    //   await launchTestSession(bsConfig, bsConfigPath);
+    //   utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
+    // }
     
     // accept the system env list from bsconf and set it
     utils.setSystemEnvs(bsConfig);
 
-    if(isBrowserstackInfra) {
-      //accept the local from env variable if provided
-      utils.setLocal(bsConfig, args);
+    // if(isBrowserstackInfra) {
+    //   //accept the local from env variable if provided
+    //   utils.setLocal(bsConfig, args);
 
-      //set network logs
-      utils.setNetworkLogs(bsConfig);
+    //   //set network logs
+    //   utils.setNetworkLogs(bsConfig);
 
-      // set Local Mode (on-demand/ always-on)
-      utils.setLocalMode(bsConfig, args);
+    //   // set Local Mode (on-demand/ always-on)
+    //   utils.setLocalMode(bsConfig, args);
 
-      //accept the local identifier from env variable if provided
-      utils.setLocalIdentifier(bsConfig, args);
+    //   //accept the local identifier from env variable if provided
+    //   utils.setLocalIdentifier(bsConfig, args);
 
-      // set Local Config File
-      utils.setLocalConfigFile(bsConfig, args);
+    //   // set Local Config File
+    //   utils.setLocalConfigFile(bsConfig, args);
 
-      // run test in headed mode
-      utils.setHeaded(bsConfig, args);
+    //   // run test in headed mode
+    //   utils.setHeaded(bsConfig, args);
 
-      // set the no-wrap
-      utils.setNoWrap(bsConfig, args);
+    //   // set the no-wrap
+    //   utils.setNoWrap(bsConfig, args);
 
-      // add cypress dependency if missing
-      utils.setCypressNpmDependency(bsConfig);
+    //   // add cypress dependency if missing
+    //   utils.setCypressNpmDependency(bsConfig);
 
-      if (isAccessibilitySession && isBrowserstackInfra) {
-        await createAccessibilityTestRun(bsConfig);
-      }
+      // if (isAccessibilitySession && isBrowserstackInfra) {
+      //   await createAccessibilityTestRun(bsConfig);
+      // }
 
-      if (turboScaleSession) {
-        // Local is only required in case user is running on trial grid and wants to access private website.
-        // Even then, it will be spawned separately via browserstack-cli ats connect-grid command and not via browserstack-cypress-cli
-        // Hence whenever running on ATS, need to make local as false
-        bsConfig.connection_settings.local = false;
+    //   if (turboScaleSession) {
+    //     // Local is only required in case user is running on trial grid and wants to access private website.
+    //     // Even then, it will be spawned separately via browserstack-cli ats connect-grid command and not via browserstack-cypress-cli
+    //     // Hence whenever running on ATS, need to make local as false
+    //     bsConfig.connection_settings.local = false;
 
-        const gridDetails = await getTurboScaleGridDetails(bsConfig, args, rawArgs);
+    //     const gridDetails = await getTurboScaleGridDetails(bsConfig, args, rawArgs);
 
-        if (gridDetails && Object.keys(gridDetails).length > 0) {
-          Constants.turboScaleObj.gridDetails = gridDetails;
-          Constants.turboScaleObj.gridUrl = gridDetails.cypressUrl;
-          Constants.turboScaleObj.uploadUrl = gridDetails.cypressUrl + '/upload';
-          Constants.turboScaleObj.buildUrl = gridDetails.cypressUrl + '/build';
+    //     if (gridDetails && Object.keys(gridDetails).length > 0) {
+    //       Constants.turboScaleObj.gridDetails = gridDetails;
+    //       Constants.turboScaleObj.gridUrl = gridDetails.cypressUrl;
+    //       Constants.turboScaleObj.uploadUrl = gridDetails.cypressUrl + '/upload';
+    //       Constants.turboScaleObj.buildUrl = gridDetails.cypressUrl + '/build';
 
-          logger.debug(`Automate TurboScale Grid URL set to ${gridDetails.url}`);
+    //       logger.debug(`Automate TurboScale Grid URL set to ${gridDetails.url}`);
 
-          patchCypressConfigFileContent(bsConfig);
-        } else {
-          process.exitCode = Constants.ERROR_EXIT_CODE;
-          return;
-        }
-      }
-    }
+    //       patchCypressConfigFileContent(bsConfig);
+    //     } else {
+    //       process.exitCode = Constants.ERROR_EXIT_CODE;
+    //       return;
+    //     }
+    //   }
+    // }
 
-    const { packagesInstalled } = !isBrowserstackInfra ? false : await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd});
+    const { packagesInstalled } = await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd});
 
-    if(isBrowserstackInfra) {
-      // set node version
-      utils.setNodeVersion(bsConfig, args);
+    // if(isBrowserstackInfra) {
+    //   // set node version
+    //   utils.setNodeVersion(bsConfig, args);
 
-      //set browsers
-      await utils.setBrowsers(bsConfig, args);
+    //   //set browsers
+    //   await utils.setBrowsers(bsConfig, args);
 
-      //set config (--config)
-      utils.setConfig(bsConfig, args);
+    //   //set config (--config)
+    //   utils.setConfig(bsConfig, args);
 
-      // set sync/async mode (--async/--sync)
-      utils.setCLIMode(bsConfig, args);
+    //   // set sync/async mode (--async/--sync)
+    //   utils.setCLIMode(bsConfig, args);
 
-      // set other cypress configs e.g. reporter and reporter-options
-      utils.setOtherConfigs(bsConfig, args);
-    }
+    //   // set other cypress configs e.g. reporter and reporter-options
+    //   utils.setOtherConfigs(bsConfig, args);
+    // }
 
     markBlockEnd('setConfig');
     logger.debug("Completed setting the configs");
 
-    if(!isBrowserstackInfra) {
-      return runCypressTestsLocally(bsConfig, args, rawArgs);
-    }
+    // if(!isBrowserstackInfra) {
+    //   return runCypressTestsLocally(bsConfig, args, rawArgs);
+    // }
 
     // Validate browserstack.json values and parallels specified via arguments
     markBlockStart('validateConfig');
     logger.debug("Started configs validation");
     return capabilityHelper.validate(bsConfig, args).then(function (cypressConfigFile) {
-      if(process.env.BROWSERSTACK_TEST_ACCESSIBILITY) {
-        setAccessibilityEventListeners(bsConfig);
-      }
-      if(process.env.BS_TESTOPS_BUILD_COMPLETED) {
+      // if(process.env.BROWSERSTACK_TEST_ACCESSIBILITY) {
+      //   setAccessibilityEventListeners(bsConfig);
+      // }
+      // if(process.env.BS_TESTOPS_BUILD_COMPLETED) {
         // setEventListeners(bsConfig);
-      }
+      // }
       markBlockEnd('validateConfig');
       logger.debug("Completed configs validation");
       markBlockStart('preArchiveSteps');
@@ -290,13 +290,13 @@ module.exports = function run(args, rawArgs) {
               markBlockEnd('zip.zipUpload');
               markBlockEnd('zip');
 
-              if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
-                supportFileCleanup();
-              }
+              // if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
+              //   supportFileCleanup();
+              // }
 
-              if (turboScaleSession) {
-                atsFileCleanup(bsConfig);
-              }
+              // if (turboScaleSession) {
+              //   atsFileCleanup(bsConfig);
+              // }
 
               // Set config args for enforce_settings
               if ( !utils.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) ) {
@@ -322,9 +322,9 @@ module.exports = function run(args, rawArgs) {
                 markBlockEnd('createBuild');
                 markBlockEnd('total');
                 utils.setProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
-                if(isTestObservabilitySession) {
-                  utils.setO11yProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
-                }
+                // if(isTestObservabilitySession) {
+                //   utils.setO11yProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
+                // }
                 let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
                 let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
                 buildReportData = { 'build_id': data.build_id, 'parallels': userSpecifiedParallels, ...buildReportData }
@@ -399,7 +399,7 @@ module.exports = function run(args, rawArgs) {
                 logger.info(dashboardLink);
                 if(!args.sync) {
                   logger.info(Constants.userMessages.EXIT_SYNC_CLI_MESSAGE.replace("<build-id>",data.build_id));
-                  printBuildLink(false);
+                  // printBuildLink(false);
                 }
                 let dataToSend = {
                   time_components: getTimeComponents(),
