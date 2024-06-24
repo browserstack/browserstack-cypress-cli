@@ -29,8 +29,6 @@
     "mocha": "^10.2.0",
     "mkdirp": "1.0.4",
     "node-ipc": "9.1.1",
-    "request": "2.88.2",
-    "requestretry": "7.1.0",
     "table": "5.4.6",
     "update-notifier": "5.1.0",
     "uuid": "8.3.2",
