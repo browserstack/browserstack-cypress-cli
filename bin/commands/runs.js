@@ -72,7 +72,7 @@ module.exports = function run(args, rawArgs) {
     // const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
     // const checkAccessibility = checkAccessibilityPlatform(bsConfig);
     // const isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibility;
-    // const turboScaleSession = isTurboScaleSession(bsConfig);
+    const turboScaleSession = false;
     // Constants.turboScaleObj.enabled = turboScaleSession;
 
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
