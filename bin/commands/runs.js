@@ -50,7 +50,6 @@ module.exports = function run(args, rawArgs) {
     utils.setCypressConfigFilename(bsConfig, args);
     
     const turboScaleSession = false;
-    // Constants.turboScaleObj.enabled = turboScaleSession;
 
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
@@ -62,10 +61,25 @@ module.exports = function run(args, rawArgs) {
     // accept the access key from command line or env variable if provided
     utils.setAccessKey(bsConfig, args);
 
+    const isBrowserstackInfra = true
     let buildReportData = await getInitialDetails(bsConfig, args, rawArgs);
 
     // accept the build name from command line if provided
     utils.setBuildName(bsConfig, args);
+
+    if(isBrowserstackInfra) {
+      // set cypress test suite type
+      utils.setCypressTestSuiteType(bsConfig);
+
+      // set cypress geo location
+      utils.setGeolocation(bsConfig, args);
+
+      // set timezone
+      utils.setTimezone(bsConfig, args);
+
+      // set spec timeout
+      utils.setSpecTimeout(bsConfig, args);
+    }
 
     
     // accept the specs list from command line if provided
@@ -80,7 +94,50 @@ module.exports = function run(args, rawArgs) {
     // accept the system env list from bsconf and set it
     utils.setSystemEnvs(bsConfig);
 
+    if(isBrowserstackInfra) {
+      //accept the local from env variable if provided
+      utils.setLocal(bsConfig, args);
+
+      //set network logs
+      utils.setNetworkLogs(bsConfig);
+
+      // set Local Mode (on-demand/ always-on)
+      utils.setLocalMode(bsConfig, args);
+
+      //accept the local identifier from env variable if provided
+      utils.setLocalIdentifier(bsConfig, args);
+
+      // set Local Config File
+      utils.setLocalConfigFile(bsConfig, args);
+
+      // run test in headed mode
+      utils.setHeaded(bsConfig, args);
+
+      // set the no-wrap
+      utils.setNoWrap(bsConfig, args);
+
+      // add cypress dependency if missing
+      utils.setCypressNpmDependency(bsConfig);
+    }
+
     const { packagesInstalled } = await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd});
+
+    if(isBrowserstackInfra) {
+      // set node version
+      utils.setNodeVersion(bsConfig, args);
+
+      //set browsers
+      await utils.setBrowsers(bsConfig, args);
+
+      //set config (--config)
+      utils.setConfig(bsConfig, args);
+
+      // set sync/async mode (--async/--sync)
+      utils.setCLIMode(bsConfig, args);
+
+      // set other cypress configs e.g. reporter and reporter-options
+      utils.setOtherConfigs(bsConfig, args);
+    }
 
     markBlockEnd('setConfig');
     logger.debug("Completed setting the configs");
