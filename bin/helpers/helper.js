@@ -6,7 +6,6 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const https = require('https');
-const request = require('request');
 const gitLastCommit = require('git-last-commit');
 const { v4: uuidv4 } = require('uuid');
 const os = require('os');
