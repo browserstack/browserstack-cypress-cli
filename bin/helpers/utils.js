@@ -22,8 +22,6 @@ const usageReporting = require("./usageReporting"),
   config = require("../helpers/config"),
   pkg = require('../../package.json'),
   transports = require('./logger').transports
-  // o11yHelpers = require('../testObservability/helper/helper'),
-  // { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER } = require('../testObservability/helper/constants');
 
 const { default: axios } = require("axios");
 
@@ -481,10 +479,6 @@ exports.setNodeVersion = (bsConfig, args) => {
 // specs can be passed via command line args as a string
 // command line args takes precedence over config
 exports.setUserSpecs = (bsConfig, args) => {
-  // if(o11yHelpers.isBrowserstackInfra() && o11yHelpers.isTestObservabilitySession() && o11yHelpers.shouldReRunObservabilityTests()) {
-  //   bsConfig.run_settings.specs = process.env.BROWSERSTACK_RERUN_TESTS;
-  //   return;
-  // }
   
   let bsConfigSpecs = bsConfig.run_settings.specs;
 
@@ -576,19 +570,6 @@ exports.setSystemEnvs = (bsConfig) => {
   } catch (error) {
    logger.error(`Error in adding accessibility configs ${error}`)
   }
-
-  // try {
-  //   OBSERVABILITY_ENV_VARS.forEach(key => {
-  //     envKeys[key] = process.env[key];
-  //   });
-  
-  //   let gitConfigPath = o11yHelpers.findGitConfig(process.cwd());
-  //   if(!o11yHelpers.isBrowserstackInfra()) process.env.OBSERVABILITY_GIT_CONFIG_PATH_LOCAL = gitConfigPath;
-  //   if(gitConfigPath) {
-  //     const relativePathFromGitConfig = path.relative(gitConfigPath, process.cwd());
-  //     envKeys["OBSERVABILITY_GIT_CONFIG_PATH"] = relativePathFromGitConfig ? relativePathFromGitConfig : 'DEFAULT';
-  //   }
-  // } catch(e){}
 
   if (Object.keys(envKeys).length === 0) {
     bsConfig.run_settings.system_env_vars = null;
@@ -1211,11 +1192,6 @@ exports.handleSyncExit = (exitCode, dashboard_url) => {
     syncCliLogger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
     syncCliLogger.info(dashboard_url);
   }
-  // if(o11yHelpers.isTestObservabilitySession()) {
-  //   o11yHelpers.printBuildLink(true, exitCode);
-  // } else {
-  //   process.exit(exitCode);
-  // }
   process.exit(exitCode);
 }
 
@@ -1475,10 +1451,6 @@ exports.splitStringByCharButIgnoreIfWithinARange = (str, splitChar, leftLimiter,
 
 // blindly send other passed configs with run_settings and handle at backend
 exports.setOtherConfigs = (bsConfig, args) => {
-  // if(o11yHelpers.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
-  //   bsConfig["run_settings"]["reporter"] = TEST_OBSERVABILITY_REPORTER;
-  //   return;
-  // }
 
   /* Non Observability use-case */
   if (!this.isUndefined(args.reporter)) {
@@ -1644,21 +1616,6 @@ exports.setProcessHooks = (buildId, bsConfig, bsLocal, args, buildReportData) =>
   process.on('uncaughtException', processExitHandler.bind(this, bindData));
 }
 
-// exports.setO11yProcessHooks = (() => {
-//   let bindData = {};
-//   let handlerAdded = false;
-//   return (buildId, bsConfig, bsLocal, args, buildReportData) => {
-//     bindData.buildId = buildId;
-//     bindData.bsConfig = bsConfig;
-//     bindData.bsLocal = bsLocal;
-//     bindData.args = args;
-//     bindData.buildReportData = buildReportData;
-//     if (handlerAdded) return;
-//     handlerAdded = true;
-//     process.on('beforeExit', processO11yExitHandler.bind(this, bindData));
-//   }
-// })()
-
 async function processExitHandler(exitData){
   logger.warn(Constants.userMessages.PROCESS_KILL_MESSAGE);
   await this.stopBrowserStackBuild(exitData.bsConfig, exitData.args, exitData.buildId, null, exitData.buildReportData);
@@ -1667,13 +1624,6 @@ async function processExitHandler(exitData){
   process.exit(0);
 }
 
-// async function processO11yExitHandler(exitData){
-//   if (exitData.buildId) {
-//     await o11yHelpers.printBuildLink(false);
-//   } else {
-//     await o11yHelpers.printBuildLink(true);
-//   }
-// }
 
 exports.fetchZipSize = (fileName) => {
   try {
