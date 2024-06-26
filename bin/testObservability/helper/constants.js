@@ -1,3 +1,5 @@
+const path = require('path');
+
 exports.consoleHolder = Object.assign({},console);
 exports.BATCH_SIZE = 1000;
 exports.BATCH_INTERVAL = 2000;
@@ -28,3 +30,5 @@ exports.OBSERVABILITY_ENV_VARS = [
 ];
 
 exports.TEST_OBSERVABILITY_REPORTER = 'browserstack-cypress-cli/bin/testObservability/reporter';
+
+exports.TEST_OBSERVABILITY_REPORTER_LOCAL = path.join(__dirname, '..', 'reporter');

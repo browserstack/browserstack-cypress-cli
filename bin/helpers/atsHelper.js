@@ -13,7 +13,7 @@ exports.isTurboScaleSession = (bsConfig) => {
     return true;
   }
 
-  if (bsConfig.run_settings && bsConfig.run_settings.turboScale) {
+  if (utils.isNotUndefined(bsConfig) && bsConfig.run_settings && bsConfig.run_settings.turboScale) {
     return true;
   }
 
@@ -93,6 +93,7 @@ exports.patchCypressConfigFileContent = (bsConfig) => {
       if (originalFunction !== null && originalFunction !== undefined) {
         originalFunction(bstackOn, config);
       }
+      return config;
     }
     `
 

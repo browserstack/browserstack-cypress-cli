@@ -16,7 +16,9 @@ const gitconfig = require('gitconfiglocal');
 const { spawn, execSync } = require('child_process');
 const glob = require('glob');
 const pGitconfig = promisify(gitconfig);
+const { readCypressConfigFile } = require('./readCypressConfigUtil');
 const CrashReporter = require('../testObservability/crashReporter');
+const { MAX_GIT_META_DATA_SIZE_IN_BYTES, GIT_META_DATA_TRUNCATED } = require('./constants')
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
@@ -118,7 +120,7 @@ exports.getGitMetaData = () => {
 
             const { remote } = await pGitconfig(info.commonGitDir);
             const remotes = Object.keys(remote).map(remoteName =>  ({name: remoteName, url: remote[remoteName]['url']}));
-            resolve({
+            let gitMetaData = {
               "name": "git",
               "sha": info["sha"],
               "short_sha": info["abbreviatedSha"],
@@ -135,7 +137,11 @@ exports.getGitMetaData = () => {
               "last_tag": info["lastTag"],
               "commits_since_last_tag": info["commitsSinceLastTag"],
               "remotes": remotes
-            });
+            };
+
+            gitMetaData = exports.checkAndTruncateVCSInfo(gitMetaData);
+
+            resolve(gitMetaData);
           } catch(e) {
             exports.debug(`Exception in populating Git Metadata with error : ${e}`, true, e);
             logger.debug(`Exception in populating Git Metadata with error : ${e}`, true, e);
@@ -145,7 +151,7 @@ exports.getGitMetaData = () => {
       } else {
         const { remote } = await pGitconfig(info.commonGitDir);
         const remotes = Object.keys(remote).map(remoteName =>  ({name: remoteName, url: remote[remoteName]['url']}));
-        resolve({
+        let gitMetaData = {
           "name": "git",
           "sha": info["sha"],
           "short_sha": info["abbreviatedSha"],
@@ -162,7 +168,11 @@ exports.getGitMetaData = () => {
           "last_tag": info["lastTag"],
           "commits_since_last_tag": info["commitsSinceLastTag"],
           "remotes": remotes
-        });
+        };
+
+        gitMetaData = exports.checkAndTruncateVCSInfo(gitMetaData);
+
+        resolve(gitMetaData);
       }
     } catch(err) {
       exports.debug(`Exception in populating Git metadata with error : ${err}`, true, err);
@@ -267,16 +277,26 @@ exports.getCiInfo = () => {
   return null;
 }
 
-exports.getBuildDetails = (bsConfig) => {
+exports.getBuildDetails = (bsConfig, isO11y = false) => {
+  const isTestObservabilityOptionsPresent = isO11y && !utils.isUndefined(bsConfig["testObservabilityOptions"]);
+
   let buildName = '',
       projectName = '',
       buildDescription = '',
       buildTags = [];
-  
+
   /* Pick from environment variables */
   buildName = process.env.BROWSERSTACK_BUILD_NAME || buildName;
   projectName = process.env.BROWSERSTACK_PROJECT_NAME || projectName;
-  
+
+  /* Pick from testObservabilityOptions */
+  if(isTestObservabilityOptionsPresent) {
+    buildName = buildName || bsConfig["testObservabilityOptions"]["buildName"];
+    projectName = projectName || bsConfig["testObservabilityOptions"]["projectName"];
+    if(!utils.isUndefined(bsConfig["testObservabilityOptions"]["buildTag"])) buildTags = [...buildTags, ...bsConfig["testObservabilityOptions"]["buildTag"]];
+    buildDescription = buildDescription || bsConfig["testObservabilityOptions"]["buildDescription"];
+  }
+
   /* Pick from run settings */
   buildName = buildName || bsConfig["run_settings"]["build_name"];
   projectName = projectName || bsConfig["run_settings"]["project_name"];
@@ -303,3 +323,121 @@ exports.setBrowserstackCypressCliDependency = (bsConfig) => {
     }
   }
 }
+
+exports.deleteSupportFileOrDir = (fileOrDirPath) => {
+  try {
+    // Sanitize the input to remove any characters that could be used for directory traversal
+    const sanitizedPath = fileOrDirPath.replace(/(\.\.\/|\.\/|\/\/)/g, '');
+    const resolvedPath = path.resolve(sanitizedPath);
+    if (fs.existsSync(resolvedPath)) {
+      if (fs.lstatSync(resolvedPath).isDirectory()) {
+        fs.readdirSync(resolvedPath).forEach((file) => {
+          const sanitizedFile = file.replace(/(\.\.\/|\.\/|\/\/)/g, '');
+          const currentPath = path.join(resolvedPath, sanitizedFile);
+          fs.unlinkSync(currentPath);
+        });
+        fs.rmdirSync(resolvedPath);
+      } else {
+        fs.unlinkSync(resolvedPath);
+      }
+    }
+  } catch(err) {}
+}
+
+exports.getSupportFiles = (bsConfig, isA11y) => {
+  let extension = null;
+  try {
+    extension = bsConfig.run_settings.cypress_config_file.split('.').pop();
+  } catch (err) {}
+  let supportFile = '/**/cypress/support/**/*.{js,ts}';
+  let cleanupParams = {};
+  let userSupportFile = null;
+  try {
+    const completeCypressConfigFile = readCypressConfigFile(bsConfig)
+    let cypressConfigFile = {};
+    if (!utils.isUndefined(completeCypressConfigFile)) {
+      cypressConfigFile = !utils.isUndefined(completeCypressConfigFile.default) ? completeCypressConfigFile.default : completeCypressConfigFile
+    }
+    userSupportFile = cypressConfigFile.e2e?.supportFile !== null ? cypressConfigFile.e2e?.supportFile : cypressConfigFile.component?.supportFile !== null ? cypressConfigFile.component?.supportFile : cypressConfigFile.supportFile;
+    if(userSupportFile == false && extension) {
+      const supportFolderPath = path.join(process.cwd(), 'cypress', 'support');
+      if (!fs.existsSync(supportFolderPath)) {
+        fs.mkdirSync(supportFolderPath);
+        cleanupParams.deleteSupportDir = true;
+      }
+      const sanitizedExtension = extension.replace(/(\.\.\/|\.\/|\/\/)/g, '');
+      const supportFilePath = path.join(supportFolderPath, `tmpBstackSupportFile.${sanitizedExtension}`);
+      fs.writeFileSync(supportFilePath, "");
+      supportFile = `/cypress/support/tmpBstackSupportFile.${sanitizedExtension}`;
+      const currEnvVars = bsConfig.run_settings.system_env_vars;
+      const supportFileEnv = `CYPRESS_SUPPORT_FILE=${supportFile.substring(1)}`;
+      if(!currEnvVars) {
+        bsConfig.run_settings.system_env_vars = [supportFileEnv];
+      } else {
+        bsConfig.run_settings.system_env_vars = [...currEnvVars, supportFileEnv];
+      }
+      cleanupParams.deleteSupportFile = true;
+    } else if(typeof userSupportFile == 'string') {
+      if (userSupportFile.startsWith('${') && userSupportFile.endsWith('}')) {
+        /* Template strings to reference environment variables */
+        const envVar = userSupportFile.substring(2, userSupportFile.length - 1);
+        supportFile = process.env[envVar];
+      } else {
+        /* Single file / glob pattern */
+        supportFile = userSupportFile;
+      }
+    } else if(Array.isArray(userSupportFile)) {
+      supportFile = userSupportFile[0];
+    }
+  } catch (err) {}
+  if(supportFile && supportFile[0] != '/') supportFile = '/' + supportFile;
+  return {
+    supportFile,
+    cleanupParams: Object.keys(cleanupParams).length ? cleanupParams : null
+  };
+}
+
+exports.checkAndTruncateVCSInfo = (gitMetaData) => {
+  const gitMetaDataSizeInBytes = exports.getSizeOfJsonObjectInBytes(gitMetaData);
+
+  if (gitMetaDataSizeInBytes && gitMetaDataSizeInBytes > MAX_GIT_META_DATA_SIZE_IN_BYTES) {
+    const truncateSize = gitMetaDataSizeInBytes - MAX_GIT_META_DATA_SIZE_IN_BYTES;
+    gitMetaData.commit_message = exports.truncateString(gitMetaData.commit_message, truncateSize);
+    logger.info(`The commit has been truncated. Size of commit after truncation is ${ exports.getSizeOfJsonObjectInBytes(gitMetaData) / 1024} KB`);
+  }
+
+  return gitMetaData;
+};
+
+exports.getSizeOfJsonObjectInBytes = (jsonData) => {
+  try {
+    if (jsonData && jsonData instanceof Object) {
+      const buffer = Buffer.from(JSON.stringify(jsonData));
+
+      return buffer.length;
+    }
+  } catch (error) {
+    logger.debug(`Something went wrong while calculating size of JSON object: ${error}`);
+  }
+
+  return -1;
+};
+
+exports.truncateString = (field, truncateSizeInBytes) => {
+  try {
+    const bufferSizeInBytes = Buffer.from(GIT_META_DATA_TRUNCATED).length;
+
+    const fieldBufferObj = Buffer.from(field);
+    const lenOfFieldBufferObj = fieldBufferObj.length;
+    const finalLen = Math.ceil(lenOfFieldBufferObj - truncateSizeInBytes - bufferSizeInBytes);
+    if (finalLen > 0) {
+      const truncatedString = fieldBufferObj.subarray(0, finalLen).toString() + GIT_META_DATA_TRUNCATED;
+
+      return truncatedString;
+    }
+  } catch (error) {
+    logger.debug(`Error while truncating field, nothing was truncated here: ${error}`);
+  }
+
+  return field;
+};
