@@ -535,6 +535,7 @@ module.exports = function run(args, rawArgs) {
         pkg,
         updateCheckInterval: 1000 * 60 * 60 * 24 * 7,
       });
+
       // Checks for update on first run.
       // Set lastUpdateCheck to 0 to spawn the check update process as notifier sets this to Date.now() for preventing
       // the check untill one interval period. It runs once.
