@@ -18,7 +18,6 @@ const archiver = require("../helpers/archiver"),
   {initTimeComponents, instrumentEventTime, markBlockStart, markBlockEnd, getTimeComponents} = require('../helpers/timeComponents'),
   downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts,
   downloadBuildStacktrace = require('../helpers/downloadBuildStacktrace').downloadBuildStacktrace,
-  updateNotifier = require('update-notifier'),
   pkg = require('../../package.json'),
   packageDiff = require('../helpers/package-diff');
 const { getStackTraceUrl } = require('../helpers/sync/syncSpecsLogs');
@@ -531,23 +530,27 @@ module.exports = function run(args, rawArgs) {
     utils.sendUsageReport(bsJsonData, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), null, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;
   }).finally(function(){
-    const notifier = updateNotifier({
-      pkg,
-      updateCheckInterval: 1000 * 60 * 60 * 24 * 7,
+    import('update-notifier').then(({ default: updateNotifier } ) => {
+      const notifier = updateNotifier({
+        pkg,
+        updateCheckInterval: 1000 * 60 * 60 * 24 * 7,
+      });
+
+      // Checks for update on first run.
+      // Set lastUpdateCheck to 0 to spawn the check update process as notifier sets this to Date.now() for preventing
+      // the check untill one interval period. It runs once.
+      if (!notifier.disabled && Date.now() - notifier.config.get('lastUpdateCheck') < 50) {
+        notifier.config.set('lastUpdateCheck', 0);
+        notifier.check();
+      }
+
+      // Set the config update as notifier clears this after reading.
+      if (notifier.update && notifier.update.current !== notifier.update.latest) {
+        notifier.config.set('update', notifier.update);
+        notifier.notify({isGlobal: true});
+      }
+    }).catch((error) => {
+      logger.debug('Got error loading update-notifier: ', error);
     });
-
-    // Checks for update on first run.
-    // Set lastUpdateCheck to 0 to spawn the check update process as notifier sets this to Date.now() for preventing
-    // the check untill one interval period. It runs once.
-    if (!notifier.disabled && Date.now() - notifier.config.get('lastUpdateCheck') < 50) {
-      notifier.config.set('lastUpdateCheck', 0);
-      notifier.check();
-    }
-
-    // Set the config update as notifier clears this after reading.
-    if (notifier.update && notifier.update.current !== notifier.update.latest) {
-      notifier.config.set('update', notifier.update);
-      notifier.notify({isGlobal: true});
-    }
   });
 }
