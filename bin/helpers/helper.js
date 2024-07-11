@@ -181,6 +181,17 @@ exports.getGitMetaData = () => {
     }
   })
 }
+
+exports.getHostInfo = () => {
+  return {
+    hostname: os.hostname(),
+    platform: os.platform(),
+    type: os.type(),
+    version: os.version(),
+    arch: os.arch()
+  }
+}
+
 exports.getCiInfo = () => {
   var env = process.env;
   // Jenkins
@@ -318,7 +329,7 @@ exports.setBrowserstackCypressCliDependency = (bsConfig) => {
     typeof runSettings.npm_dependencies === 'object') {
     if (!("browserstack-cypress-cli" in runSettings.npm_dependencies)) {
       logger.warn("Missing browserstack-cypress-cli not found in npm_dependencies");        
-      runSettings.npm_dependencies['browserstack-cypress-cli'] = this.getAgentVersion() || "latest";
+      runSettings.npm_dependencies['browserstack-cypress-cli'] = "/Users/saurav/Home/Browserstack/Automate/cypress_cli_main/browserstack-cypress-cli/browserstack-cypress-cli-1.29.1.tgz";
       logger.warn(`Adding browserstack-cypress-cli version ${runSettings.npm_dependencies['browserstack-cypress-cli']} in npm_dependencies`);
     }
   }
