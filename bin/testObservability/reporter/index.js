@@ -3,7 +3,7 @@
 const util = require('util');
 const fs = require('fs');
 const path = require('path');
-const { requireModule } = require('../helper/helper');
+const { requireModule, nodeRequestForLogs } = require('../helper/helper');
 const Base = requireModule('mocha/lib/reporters/base.js'),
       utils = requireModule('mocha/lib/utils.js');
 const color = Base.color;
@@ -318,6 +318,8 @@ class MyReporter {
           steps: []
         }
       };
+
+      await nodeRequestForLogs(`${eventType} for uuid: ${testData.uuid}`);
 
       if(eventType.match(/TestRunFinished/) || eventType.match(/TestRunSkipped/)) {
         testData['meta'].steps = JSON.parse(JSON.stringify(this.currentTestCucumberSteps));

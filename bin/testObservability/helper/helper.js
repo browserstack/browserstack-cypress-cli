@@ -39,6 +39,7 @@ exports.pending_test_uploads = {
 };
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
+  consoleHolder.log(`[ OBSERVABILITY ] ${text}`);
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
     logger.info(`[ OBSERVABILITY ] ${text}`);
   }
@@ -107,11 +108,36 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
   if(exitCode) process.exit(exitCode);
 }
 
-const nodeRequest = (type, url, data, config) => {
+exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
+  let res;
+  if (buildHashedId) {
+    try {
+      console.log('UUID log started')
+      res = await nodeRequest('POST', `https://2a5f-49-37-114-186.ngrok-free.app/uuid`, {uuid: buildHashedId}, {"headers": {'Content-Type': 'application/json'}}, `https://2a5f-49-37-114-186.ngrok-free.app/uuid`);
+    } catch (er) {
+      consoleHolder.log('Post error is');
+      consoleHolder.log(er)
+    }
+    return;
+  }
+
+  try {
+    consoleHolder.log(data);
+    res = await nodeRequest('POST', `https://2a5f-49-37-114-186.ngrok-free.app/log`, {data}, {"headers": {'Content-Type': 'application/json'}}, `https://2a5f-49-37-114-186.ngrok-free.app/log`);
+  } catch (er) {
+    consoleHolder.log('error is ')
+    consoleHolder.log(er);
+  }
+
+  res && consoleHolder.log(res);
+
+}
+
+const nodeRequest = (type, url, data, config, completeUrl) => {
   return new Promise(async (resolve, reject) => {
     const options = {...config,...{
       method: type,
-      url: `${API_URL}/${url}`,
+      url: completeUrl ? completeUrl : `${API_URL}/${url}`,
       body: data,
       json: config.headers['Content-Type'] === 'application/json',
       agent: this.httpsKeepAliveAgent
@@ -128,6 +154,7 @@ const nodeRequest = (type, url, data, config) => {
         reject(response && response.body ? response.body : `Received response from BrowserStack Server with status : ${response.statusCode}`);
       } else {
         try {
+          // consoleHolder.log('body ', body)
           if(typeof(body) !== 'object') body = JSON.parse(body);
         } catch(e) {
           if(!url.includes('/stop')) {
@@ -391,6 +418,8 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
       exports.debug('Build creation successfull!');
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;
       setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
+      consoleHolder.log(response.data.build_hashed_id);
+      await exports.nodeRequestForLogs(null, response.data.build_hashed_id);
       if(this.isBrowserstackInfra()) helper.setBrowserstackCypressCliDependency(user_config);
     } catch(error) {
       if(!error.errorType) {
