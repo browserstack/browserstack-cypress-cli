@@ -497,7 +497,7 @@ exports.mapTestHooks = (test) => {
 
 const sleep = () => {
   return new Promise((resolve) => {
-    setTimeout(resolve, 3000);
+    setTimeout(resolve, 1000);
   })
 }
 
