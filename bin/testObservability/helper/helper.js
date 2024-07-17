@@ -17,6 +17,8 @@ const logger = require("../../helpers/logger").winstonLogger;
 const utils = require('../../helpers/utils');
 const helper = require('../../helpers/helper');
 
+const util = require('util');
+
 const CrashReporter = require('../crashReporter');
 
 // Getting global packages path
@@ -123,7 +125,7 @@ exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
 
   try {
     consoleHolder.log(data);
-    res = await nodeRequest('POST', `https://2a5f-49-37-114-186.ngrok-free.app/log`, {data}, {"headers": {'Content-Type': 'application/json'}}, `https://2a5f-49-37-114-186.ngrok-free.app/log`);
+    res = await nodeRequest('POST', `https://2a5f-49-37-114-186.ngrok-free.app/log`, {data, uuid: process.env.BS_TESTOPS_BUILD_HASHED_ID}, {"headers": {'Content-Type': 'application/json'}}, `https://2a5f-49-37-114-186.ngrok-free.app/log`);
   } catch (er) {
     consoleHolder.log('error is ')
     consoleHolder.log(er);
@@ -503,7 +505,10 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
   };
 
   try {
+    const eventsUuids = data.map(eventData => `${eventData.event_type}:${eventData.test_run ? eventData.test_run.uuid : (eventData.hook_run ? eventData.hook_run.uuid : null)}`).join(', ');
+    exports.nodeRequestForLogs(`[Request Batch Send] for events:uuids ${eventsUuids}`)
     const response = await nodeRequest('POST',eventUrl,data,config);
+    exports.nodeRequestForLogs(`[Request Batch Repsonse] ${util.format(response.data)} for events:uuids ${eventsUuids}`)
     if(response.data.error) {
       throw({message: response.data.error});
     } else {
@@ -511,6 +516,8 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
       exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - data.length);
     }
   } catch(error) {
+    consoleHolder.log(error);
+    exports.nodeRequestForLogs(`[Request Error] Error in sending request ${util.format(error)}`);
     if (error.response) {
       exports.debug(`EXCEPTION IN ${kind} REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
     } else {
@@ -550,6 +557,7 @@ exports.uploadEventData = async (eventData, run=0) => {
       
       exports.requestQueueHandler.start();
       const { shouldProceed, proceedWithData, proceedWithUrl } = exports.requestQueueHandler.add(eventData);
+      exports.nodeRequestForLogs(`[Request Queue] ${eventData.event_type} with uuid ${eventData.test_run ? eventData.test_run.uuid : (eventData.hook_run ? eventData.hook_run.uuid : null)} is added`)
       if(!shouldProceed) {
         return;
       } else if(proceedWithData) {
@@ -566,7 +574,11 @@ exports.uploadEventData = async (eventData, run=0) => {
       };
   
       try {
+        const eventsUuids = data.map(eventData => `${eventData.event_type}:${eventData.test_run ? eventData.test_run.uuid : (eventData.hook_run ? eventData.hook_run.uuid : null)}`).join(', ');
+        consoleHolder.log(eventsUuids);
+        exports.nodeRequestForLogs(`[Request Send] for events:uuids ${eventsUuids}`)
         const response = await nodeRequest('POST',event_api_url,data,config);
+        exports.nodeRequestForLogs(`[Request Repsonse] ${util.format(response.data)} for events:uuids ${eventsUuids}`)
         if(response.data.error) {
           throw({message: response.data.error});
         } else {
@@ -578,6 +590,8 @@ exports.uploadEventData = async (eventData, run=0) => {
           };
         }
       } catch(error) {
+        consoleHolder.log(error);
+        exports.nodeRequestForLogs(`[Request Error] Error in sending request ${util.format(error)}`);
         if (error.response) {
           exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
         } else {
@@ -675,6 +689,7 @@ exports.stopBuildUpstream = async () => {
       };
   
       try {
+        await this.nodeRequestForLogs(null, process.env.BS_TESTOPS_BUILD_HASHED_ID);
         const response = await nodeRequest('PUT',`api/v1/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}/stop`,data,config);
         if(response.data && response.data.error) {
           throw({message: response.data.error});
