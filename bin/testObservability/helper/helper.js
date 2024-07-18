@@ -512,7 +512,7 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
 
   try {
     const eventsUuids = data.map(eventData => `${eventData.event_type}:${eventData.test_run ? eventData.test_run.uuid : (eventData.hook_run ? eventData.hook_run.uuid : null)}`).join(', ');
-    await sleep();
+    // await sleep();
     exports.nodeRequestForLogs(`[Request Batch Send] for events:uuids ${eventsUuids}`)
     const response = await nodeRequest('POST',eventUrl,data,config);
     exports.nodeRequestForLogs(`[Request Batch Repsonse] ${util.format(response.data)} for events:uuids ${eventsUuids}`)
