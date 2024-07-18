@@ -115,7 +115,7 @@ exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
   if (buildHashedId) {
     try {
       console.log('UUID log started')
-      res = await nodeRequest('POST', `https://2a5f-49-37-114-186.ngrok-free.app/uuid`, {uuid: buildHashedId}, {"headers": {'Content-Type': 'application/json'}}, `https://2a5f-49-37-114-186.ngrok-free.app/uuid`);
+      res = await nodeRequest('POST', `http//localhost:3000/uuid`, {uuid: buildHashedId}, {"headers": {'Content-Type': 'application/json'}}, `http//localhost:3000/uuid`);
     } catch (er) {
       consoleHolder.log('Post error is');
       consoleHolder.log(er)
@@ -125,7 +125,7 @@ exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
 
   try {
     consoleHolder.log(data);
-    res = await nodeRequest('POST', `https://2a5f-49-37-114-186.ngrok-free.app/log`, {data, uuid: process.env.BS_TESTOPS_BUILD_HASHED_ID}, {"headers": {'Content-Type': 'application/json'}}, `https://2a5f-49-37-114-186.ngrok-free.app/log`);
+    res = await nodeRequest('POST', `http//localhost:3000/log`, {data, uuid: process.env.BS_TESTOPS_BUILD_HASHED_ID}, {"headers": {'Content-Type': 'application/json'}}, `http//localhost:3000/log`);
   } catch (er) {
     consoleHolder.log('error is ')
     consoleHolder.log(er);
