@@ -115,7 +115,7 @@ exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
   if (buildHashedId) {
     try {
       console.log('UUID log started')
-      res = await nodeRequest('POST', `http://localhost:3000/uuid`, {uuid: buildHashedId}, {"headers": {'Content-Type': 'application/json'}}, `http://localhost:3000/uuid`);
+      res = await nodeRequest('POST', `https://moody-hotels-buy.loca.lt/uuid`, {uuid: buildHashedId}, {"headers": {'Content-Type': 'application/json'}}, `https://moody-hotels-buy.loca.lt/uuid`, false);
     } catch (er) {
       consoleHolder.log('Post error is');
       consoleHolder.log(er)
@@ -125,7 +125,7 @@ exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
 
   try {
     consoleHolder.log(data);
-    res = await nodeRequest('POST', `http://localhost:3000/log`, {data, uuid: process.env.BS_TESTOPS_BUILD_HASHED_ID}, {"headers": {'Content-Type': 'application/json'}}, `http://localhost:3000/log`);
+    res = await nodeRequest('POST', `https://moody-hotels-buy.loca.lt/log`, {data, uuid: process.env.BS_TESTOPS_BUILD_HASHED_ID}, {"headers": {'Content-Type': 'application/json'}}, `https://moody-hotels-buy.loca.lt/log`, false);
   } catch (er) {
     consoleHolder.log('error is ')
     consoleHolder.log(er);
@@ -135,15 +135,18 @@ exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
 
 }
 
-const nodeRequest = (type, url, data, config, completeUrl) => {
+const nodeRequest = (type, url, data, config, completeUrl, agent = true) => {
   return new Promise(async (resolve, reject) => {
     const options = {...config,...{
       method: type,
       url: completeUrl ? completeUrl : `${API_URL}/${url}`,
       body: data,
       json: config.headers['Content-Type'] === 'application/json',
-      agent: this.httpsKeepAliveAgent
     }};
+
+    if (agent) {
+      options.agent = this.httpsKeepAliveAgent;
+    }
 
     if(url === exports.requestQueueHandler.screenshotEventUrl) {
       options.agent = httpsScreenshotsKeepAliveAgent;
