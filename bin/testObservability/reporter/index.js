@@ -123,6 +123,7 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_PASS, async (test) => {
+        await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_PASS`);
         if(this.testObservability == true) {
           await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_PASS for uuid: ${test.testAnalyticsId}`);
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
@@ -133,6 +134,7 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_FAIL, async (test, err) => {
+        await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_FAIL`);
         if(this.testObservability == true) {
           await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_FAIL for uuid: ${test.testAnalyticsId}`);
           if((test.testAnalyticsId && !this.runStatusMarkedHash[test.testAnalyticsId]) || (test.hookAnalyticsId && !this.runStatusMarkedHash[test.hookAnalyticsId])) {
@@ -148,6 +150,7 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_PENDING, async (test) => {
+        await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_PENDING`);
         if(this.testObservability == true) {
           if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
           await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_PENDING for uuid: ${test.testAnalyticsId}`);
@@ -159,6 +162,8 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_BEGIN, async (test) => {
+        await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_BEGIN`);
+        await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
           await this.testStarted(test);
@@ -166,6 +171,8 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_END, async (test) => {
+        await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_END`);
+        await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
