@@ -124,6 +124,7 @@ class MyReporter {
 
       .on(EVENT_TEST_PASS, async (test) => {
         if(this.testObservability == true) {
+          await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_PASS for uuid: ${test.testAnalyticsId}`);
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
             await this.sendTestRunEvent(test);
@@ -133,6 +134,7 @@ class MyReporter {
 
       .on(EVENT_TEST_FAIL, async (test, err) => {
         if(this.testObservability == true) {
+          await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_FAIL for uuid: ${test.testAnalyticsId}`);
           if((test.testAnalyticsId && !this.runStatusMarkedHash[test.testAnalyticsId]) || (test.hookAnalyticsId && !this.runStatusMarkedHash[test.hookAnalyticsId])) {
             if(test.testAnalyticsId) {
               this.runStatusMarkedHash[test.testAnalyticsId] = true;
@@ -148,6 +150,7 @@ class MyReporter {
       .on(EVENT_TEST_PENDING, async (test) => {
         if(this.testObservability == true) {
           if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
+          await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_PENDING for uuid: ${test.testAnalyticsId}`);
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             this.runStatusMarkedHash[test.testAnalyticsId] = true;
             await this.sendTestRunEvent(test,undefined,false,"TestRunSkipped");
@@ -214,6 +217,7 @@ class MyReporter {
       this.current_test = test;
       test.retryOf = null;
       test.testAnalyticsId = uuidv4();
+      await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
       test.started_at = (new Date()).toISOString();
       test.test_started_at = test.started_at;
       if(test._currentRetry > 0 && lastTest && lastTest.title == test.title) {
