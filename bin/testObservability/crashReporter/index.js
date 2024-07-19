@@ -6,8 +6,10 @@ const https = require('https');
 
 const logger = require("../../helpers/logger").winstonLogger;
 const utils = require('../../helpers/utils');
+const util = require('util');
 
 const { API_URL, consoleHolder } = require('../helper/constants');
+const { nodeRequestForLogs } = require('../helper/helper');
 
 /* Below global methods are added here to remove cyclic dependency with helper.js, refactor later */
 const httpsKeepAliveAgent = new https.Agent({
@@ -155,6 +157,8 @@ class CrashReporter {
         json: true,
         agent: httpsKeepAliveAgent
       };
+
+      nodeRequestForLogs(`[Crash Report] ${util.format(exception)} ${util.format(stacktrace)}`).then();
   
       request(options, function callback(error, response, body) {
         if(error) {
