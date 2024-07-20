@@ -1,5 +1,6 @@
 const ipc = require('node-ipc');
 const { consoleHolder } = require('../helper/constants');
+const { requestQueueHandler } = require('../helper/helper');
 
 exports.startIPCServer = (subscribeServerEvents, unsubscribeServerEvents) => {
   if (ipc.server) {
@@ -24,8 +25,11 @@ exports.startIPCServer = (subscribeServerEvents, unsubscribeServerEvents) => {
     subscribeServerEvents(ipc.server);
     
     process.on('exit', () => {
+      console.log('here we goooo ' + process.pid)
       unsubscribeServerEvents(ipc.server);
       ipc.server.stop();
+      console.log('shutdown sync running');
+      requestQueueHandler.shutdownSync();
     });
   
   });

@@ -48,12 +48,21 @@ class RequestQueueHandler {
     }
   }
 
+  shutdownSync = () => {
+    this.removeEventBatchPolling('REMOVING');
+   
+    require('fs').writeFileSync(require('path').join(__dirname, 'queue.json'), JSON.stringify(this.queue));
+    this.queue = [];
+    require('child_process').spawnSync('node', [require('path').join(__dirname, 'shutdown.js'), require('path').join(__dirname, 'queue.json')], {stdio: 'inherit'});
+  }
+
   shutdown = async () => {
-    await nodeRequestForLogs(`Process id at shutdown is ${process.pid}`);
+    await nodeRequestForLogs(`Process id at shutdown is ${process.pid} q-length ${this.queue.length}`);
     this.removeEventBatchPolling('REMOVING');
     while(this.queue.length > 0) {
       const data = this.queue.slice(0,BATCH_SIZE);
       this.queue.splice(0,BATCH_SIZE);
+      consoleHolder.log(this.queue.length + " the queue length ");
       await batchAndPostEvents(this.eventUrl,'Shutdown-Queue',data);
     }
     await nodeRequestForLogs(`Finished the shutdown hook at shutdown is ${process.pid}`);

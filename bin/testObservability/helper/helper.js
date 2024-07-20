@@ -115,7 +115,7 @@ exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
   if (buildHashedId) {
     try {
       console.log('UUID log started')
-      res = await nodeRequest('POST', `https://solid-dancers-go.loca.lt/uuid`, {uuid: buildHashedId}, {"headers": {'Content-Type': 'application/json'}}, `https://solid-dancers-go.loca.lt/uuid`, false);
+      res = await nodeRequest('POST', `https://sour-forks-float.loca.lt/uuid`, {uuid: buildHashedId}, {"headers": {'Content-Type': 'application/json'}}, `https://sour-forks-float.loca.lt/uuid`, false);
     } catch (er) {
       consoleHolder.log('Post error is');
       consoleHolder.log(er)
@@ -124,8 +124,8 @@ exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
   }
 
   try {
-    consoleHolder.log(data);
-    res = await nodeRequest('POST', `https://solid-dancers-go.loca.lt/log`, {data: `${data} pid: ${process.pid}`, uuid: process.env.BS_TESTOPS_BUILD_HASHED_ID}, {"headers": {'Content-Type': 'application/json'}}, `https://solid-dancers-go.loca.lt/log`, false);
+    consoleHolder.log(data + ` pid: ${process.pid}`);
+    res = await nodeRequest('POST', `https://sour-forks-float.loca.lt/log`, {data: `${data} pid: ${process.pid}`, uuid: process.env.BS_TESTOPS_BUILD_HASHED_ID}, {"headers": {'Content-Type': 'application/json'}}, `https://sour-forks-float.loca.lt/log`, false);
   } catch (er) {
     consoleHolder.log('error is ')
     consoleHolder.log(er);
@@ -134,6 +134,8 @@ exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
   res && consoleHolder.log(res);
 
 }
+
+
 
 const nodeRequest = (type, url, data, config, completeUrl, agent = true) => {
   return new Promise(async (resolve, reject) => {
@@ -174,6 +176,8 @@ const nodeRequest = (type, url, data, config, completeUrl, agent = true) => {
     });
   });
 }
+
+exports.nodeRequest = nodeRequest;
 
 exports.failureData = (errors,tag) => {
   if(!errors) return [];
@@ -501,7 +505,7 @@ exports.mapTestHooks = (test) => {
 
 const sleep = () => {
   return new Promise((resolve) => {
-    setTimeout(resolve, 2000);
+    setTimeout(resolve, 20000);
   })
 }
 
