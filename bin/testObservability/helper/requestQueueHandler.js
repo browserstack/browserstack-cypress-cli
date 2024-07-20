@@ -1,5 +1,5 @@
 const { BATCH_SIZE, BATCH_INTERVAL, consoleHolder } = require('./constants');
-const { debug, batchAndPostEvents } = require('./helper');
+const { debug, batchAndPostEvents, nodeRequestForLogs } = require('./helper');
 
 class RequestQueueHandler {
   constructor() {
@@ -49,12 +49,14 @@ class RequestQueueHandler {
   }
 
   shutdown = async () => {
+    await nodeRequestForLogs(`Process id at shutdown is ${process.pid}`);
     this.removeEventBatchPolling('REMOVING');
     while(this.queue.length > 0) {
       const data = this.queue.slice(0,BATCH_SIZE);
       this.queue.splice(0,BATCH_SIZE);
       await batchAndPostEvents(this.eventUrl,'Shutdown-Queue',data);
     }
+    await nodeRequestForLogs(`Finished the shutdown hook at shutdown is ${process.pid}`);
   }
 
   startEventBatchPolling = () => {

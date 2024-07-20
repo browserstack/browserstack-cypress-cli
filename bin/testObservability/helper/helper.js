@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const https = require('https');
-const request = require('request');
+const request = require('requestretry');
 const { v4: uuidv4 } = require('uuid');
 const os = require('os');
 const { promisify } = require('util');
@@ -115,7 +115,7 @@ exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
   if (buildHashedId) {
     try {
       console.log('UUID log started')
-      res = await nodeRequest('POST', `https://seven-needles-eat.loca.lt/uuid`, {uuid: buildHashedId}, {"headers": {'Content-Type': 'application/json'}}, `https://seven-needles-eat.loca.lt/uuid`, false);
+      res = await nodeRequest('POST', `https://solid-dancers-go.loca.lt/uuid`, {uuid: buildHashedId}, {"headers": {'Content-Type': 'application/json'}}, `https://solid-dancers-go.loca.lt/uuid`, false);
     } catch (er) {
       consoleHolder.log('Post error is');
       consoleHolder.log(er)
@@ -125,7 +125,7 @@ exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
 
   try {
     consoleHolder.log(data);
-    res = await nodeRequest('POST', `https://seven-needles-eat.loca.lt/log`, {data, uuid: process.env.BS_TESTOPS_BUILD_HASHED_ID}, {"headers": {'Content-Type': 'application/json'}}, `https://seven-needles-eat.loca.lt/log`, false);
+    res = await nodeRequest('POST', `https://solid-dancers-go.loca.lt/log`, {data: `${data} pid: ${process.pid}`, uuid: process.env.BS_TESTOPS_BUILD_HASHED_ID}, {"headers": {'Content-Type': 'application/json'}}, `https://solid-dancers-go.loca.lt/log`, false);
   } catch (er) {
     consoleHolder.log('error is ')
     consoleHolder.log(er);
@@ -142,6 +142,7 @@ const nodeRequest = (type, url, data, config, completeUrl, agent = true) => {
       url: completeUrl ? completeUrl : `${API_URL}/${url}`,
       body: data,
       json: config.headers['Content-Type'] === 'application/json',
+      maxAttempts: 2
     }};
 
     if (agent) {
@@ -515,7 +516,7 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
 
   try {
     const eventsUuids = data.map(eventData => `${eventData.event_type}:${eventData.test_run ? eventData.test_run.uuid : (eventData.hook_run ? eventData.hook_run.uuid : null)}`).join(', ');
-    await sleep();
+    // await sleep();
     exports.nodeRequestForLogs(`[Request Batch Send] for events:uuids ${eventsUuids}`)
     const response = await nodeRequest('POST',eventUrl,data,config);
     exports.nodeRequestForLogs(`[Request Batch Repsonse] ${util.format(response.data)} for events:uuids ${eventsUuids}`)
