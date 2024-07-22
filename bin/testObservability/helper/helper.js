@@ -131,8 +131,7 @@ const nodeRequest = (type, url, data, config) => {
       } else if(response.statusCode != 200) {
         reject(response && response.body ? response.body : `Received response from BrowserStack Server with status : ${response.statusCode}`);
       } else {
-        try {
-          // consoleHolder.log('body ', body)
+        try {          
           if(typeof(body) !== 'object') body = JSON.parse(body);
         } catch(e) {
           if(!url.includes('/stop')) {
