@@ -315,10 +315,11 @@ exports.getBuildDetails = (bsConfig, isO11y = false) => {
 exports.setBrowserstackCypressCliDependency = (bsConfig) => {
   const runSettings = bsConfig.run_settings;
   if (runSettings.npm_dependencies !== undefined && 
+    Object.keys(runSettings.npm_dependencies).length !== 0 &&
     typeof runSettings.npm_dependencies === 'object') {
     if (!("browserstack-cypress-cli" in runSettings.npm_dependencies)) {
       logger.warn("Missing browserstack-cypress-cli not found in npm_dependencies");        
-      runSettings.npm_dependencies['browserstack-cypress-cli'] = this.getAgentVersion() || "latest";
+      runSettings.npm_dependencies['browserstack-cypress-cli'] = path.resolve(__dirname, '..', '..', '..', 'browserstack-cypress-cli', `browserstack-cypress-cli-${exports.getAgentVersion()}.tgz`);
       logger.warn(`Adding browserstack-cypress-cli version ${runSettings.npm_dependencies['browserstack-cypress-cli']} in npm_dependencies`);
     }
   }
