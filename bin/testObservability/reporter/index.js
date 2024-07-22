@@ -3,7 +3,7 @@
 const util = require('util');
 const fs = require('fs');
 const path = require('path');
-const { requireModule, nodeRequestForLogs } = require('../helper/helper');
+const { requireModule } = require('../helper/helper');
 const Base = requireModule('mocha/lib/reporters/base.js'),
       utils = requireModule('mocha/lib/utils.js');
 const color = Base.color;
@@ -125,9 +125,7 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_PASS, async (test) => {
-        await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_PASS`);
         if(this.testObservability == true) {
-          await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_PASS for uuid: ${test.testAnalyticsId}`);
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
             await this.sendTestRunEvent(test);
@@ -136,9 +134,7 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_FAIL, async (test, err) => {
-        await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_FAIL`);
         if(this.testObservability == true) {
-          await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_FAIL for uuid: ${test.testAnalyticsId}`);
           if((test.testAnalyticsId && !this.runStatusMarkedHash[test.testAnalyticsId]) || (test.hookAnalyticsId && !this.runStatusMarkedHash[test.hookAnalyticsId])) {
             if(test.testAnalyticsId) {
               this.runStatusMarkedHash[test.testAnalyticsId] = true;
@@ -152,10 +148,8 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_PENDING, async (test) => {
-        await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_PENDING`);
         if(this.testObservability == true) {
           if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
-          await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_PENDING for uuid: ${test.testAnalyticsId}`);
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             this.runStatusMarkedHash[test.testAnalyticsId] = true;
             await this.sendTestRunEvent(test,undefined,false,"TestRunSkipped");
@@ -164,8 +158,6 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_BEGIN, async (test) => {
-        await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_BEGIN`);
-        await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
           await this.testStarted(test);
@@ -173,8 +165,6 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_END, async (test) => {
-        await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_END`);
-        await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
@@ -225,8 +215,7 @@ class MyReporter {
       const lastTest = this.current_test;
       this.current_test = test;
       test.retryOf = null;
-      test.testAnalyticsId = uuidv4();
-      await nodeRequestForLogs(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
+      test.testAnalyticsId = uuidv4()
       test.started_at = (new Date()).toISOString();
       test.test_started_at = test.started_at;
       if(test._currentRetry > 0 && lastTest && lastTest.title == test.title) {
@@ -331,8 +320,6 @@ class MyReporter {
           steps: []
         }
       };
-
-      await nodeRequestForLogs(`${eventType} for uuid: ${testData.uuid}`);
 
       if(eventType.match(/TestRunFinished/) || eventType.match(/TestRunSkipped/)) {
         testData['meta'].steps = JSON.parse(JSON.stringify(this.currentTestCucumberSteps));
