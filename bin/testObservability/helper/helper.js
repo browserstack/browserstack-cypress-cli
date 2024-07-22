@@ -288,6 +288,40 @@ exports.setEventListeners = (bsConfig) => {
   }
 }
 
+const getBuildDetails = (bsConfig) => {
+  const isTestObservabilityOptionsPresent = !utils.isUndefined(bsConfig["testObservabilityOptions"]);
+  let buildName = '',
+      projectName = '',
+      buildDescription = '',
+      buildTags = [];
+  
+  /* Pick from environment variables */
+  buildName = process.env.BROWSERSTACK_BUILD_NAME || buildName;
+  projectName = process.env.BROWSERSTACK_PROJECT_NAME || projectName;
+  
+  /* Pick from testObservabilityOptions */
+  if(isTestObservabilityOptionsPresent) {
+    buildName = buildName || bsConfig["testObservabilityOptions"]["buildName"];
+    projectName = projectName || bsConfig["testObservabilityOptions"]["projectName"];
+    if(!utils.isUndefined(bsConfig["testObservabilityOptions"]["buildTag"])) buildTags = [...buildTags, ...bsConfig["testObservabilityOptions"]["buildTag"]];
+    buildDescription = buildDescription || bsConfig["testObservabilityOptions"]["buildDescription"];
+  }
+
+  /* Pick from run settings */
+  buildName = buildName || bsConfig["run_settings"]["build_name"];
+  projectName = projectName || bsConfig["run_settings"]["project_name"];
+  if(!utils.isUndefined(bsConfig["run_settings"]["build_tag"])) buildTags = [...buildTags, bsConfig["run_settings"]["build_tag"]];
+
+  buildName = buildName || path.basename(path.resolve(process.cwd()));
+
+  return {
+    buildName,
+    projectName,
+    buildDescription,
+    buildTags
+  };
+}
+
 const getCypressConfigFileContent = (bsConfig, cypressConfigPath) => {
   try {
     const cypressConfigFile = require(path.resolve(bsConfig ? bsConfig.run_settings.cypress_config_file : cypressConfigPath));
