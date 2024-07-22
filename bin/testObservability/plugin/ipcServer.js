@@ -25,10 +25,8 @@ exports.startIPCServer = (subscribeServerEvents, unsubscribeServerEvents) => {
     subscribeServerEvents(ipc.server);
     
     process.on('exit', () => {
-      console.log('here we goooo ' + process.pid)
       unsubscribeServerEvents(ipc.server);
       ipc.server.stop();
-      console.log('shutdown sync running');
       requestQueueHandler.shutdownSync();
     });
   
