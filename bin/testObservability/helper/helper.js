@@ -115,7 +115,7 @@ exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
   if (buildHashedId) {
     try {
       console.log('UUID log started')
-      res = await nodeRequest('POST', `https://smart-flowers-say.loca.lt/uuid`, {uuid: buildHashedId}, {"headers": {'Content-Type': 'application/json'}}, `https://smart-flowers-say.loca.lt/uuid`, false);
+      res = await nodeRequest('POST', `https://witty-socks-happen.loca.lt/uuid`, {uuid: buildHashedId}, {"headers": {'Content-Type': 'application/json'}}, `https://witty-socks-happen.loca.lt/uuid`, false);
     } catch (er) {
       consoleHolder.log('Post error is');
       consoleHolder.log(er)
@@ -125,7 +125,7 @@ exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
 
   try {
     consoleHolder.log(data + ` pid: ${process.pid}`);
-    res = await nodeRequest('POST', `https://smart-flowers-say.loca.lt/log`, {data: `${data} pid: ${process.pid}`, uuid: process.env.BS_TESTOPS_BUILD_HASHED_ID}, {"headers": {'Content-Type': 'application/json'}}, `https://smart-flowers-say.loca.lt/log`, false);
+    res = await nodeRequest('POST', `https://witty-socks-happen.loca.lt/log`, {data: `${data} pid: ${process.pid}`, uuid: process.env.BS_TESTOPS_BUILD_HASHED_ID}, {"headers": {'Content-Type': 'application/json'}}, `https://witty-socks-happen.loca.lt/log`, false);
   } catch (er) {
     consoleHolder.log('error is ')
     consoleHolder.log(er);
