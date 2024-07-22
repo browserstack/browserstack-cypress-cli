@@ -6,7 +6,6 @@ const https = require('https');
 
 const logger = require("../../helpers/logger").winstonLogger;
 const utils = require('../../helpers/utils');
-const util = require('util');
 
 const { API_URL, consoleHolder } = require('../helper/constants');
 
