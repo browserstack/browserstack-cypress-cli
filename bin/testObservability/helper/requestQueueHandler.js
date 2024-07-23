@@ -57,7 +57,7 @@ class RequestQueueHandler {
    
     fs.writeFileSync(path.join(__dirname, PENDING_QUEUES_FILE), JSON.stringify(this.queue));
     this.queue = [];
-    cp.spawnSync('node', [path.join(__dirname, 'cleanupQueueSync.js'), path.join(__dirname, PENDING_QUEUS_FILE)], {stdio: 'inherit'});
+    cp.spawnSync('node', [path.join(__dirname, 'cleanupQueueSync.js'), path.join(__dirname, PENDING_QUEUES_FILE)], {stdio: 'inherit'});
     fs.unlinkSync(path.join(__dirname, PENDING_QUEUES_FILE));
   }
 

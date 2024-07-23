@@ -15,8 +15,6 @@ const { v4: uuidv4 } = require('uuid');
 const { IPC_EVENTS } = require('../helper/constants');
 const { startIPCServer } = require('../plugin/ipcServer');
 
-const ipc = require('node-ipc');
-
 const HOOK_TYPES_MAP = {
   "before all": "BEFORE_ALL",
   "after all": "AFTER_ALL",
@@ -200,7 +198,6 @@ class MyReporter {
         server.on(IPC_EVENTS.COMMAND, this.cypressCommandListener.bind(this));
         server.on(IPC_EVENTS.CUCUMBER, this.cypressCucumberStepListener.bind(this));
         server.on(IPC_EVENTS.PLATFORM_DETAILS, this.cypressPlatformDetailsListener.bind(this));
-        this.ipcServer = server;
       },
       (server) => {
         server.off(IPC_EVENTS.CONFIG, '*');
