@@ -27,6 +27,8 @@ exports.startIPCServer = (subscribeServerEvents, unsubscribeServerEvents) => {
     process.on('exit', () => {
       unsubscribeServerEvents(ipc.server);
       ipc.server.stop();
+      // Cleaning up all remaining event in request queue handler. Any synchronous operations
+      // on exit handler will block the process
       requestQueueHandler.shutdownSync();
     });
   

@@ -1,3 +1,7 @@
+/**
+ * Sending all the remaining queues for synchronous manner
+ */
+
 const RequestQueueHandler = require('./requestQueueHandler');
 
 const shutdown = async () => {
