@@ -17,8 +17,6 @@ const logger = require("../../helpers/logger").winstonLogger;
 const utils = require('../../helpers/utils');
 const helper = require('../../helpers/helper');
 
-const util = require('util');
-
 const CrashReporter = require('../crashReporter');
 
 // Getting global packages path
@@ -130,7 +128,7 @@ const nodeRequest = (type, url, data, config) => {
       } else if(response.statusCode != 200) {
         reject(response && response.body ? response.body : `Received response from BrowserStack Server with status : ${response.statusCode}`);
       } else {
-        try {          
+        try {
           if(typeof(body) !== 'object') body = JSON.parse(body);
         } catch(e) {
           if(!url.includes('/stop')) {
