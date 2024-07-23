@@ -145,8 +145,6 @@ const nodeRequest = (type, url, data, config) => {
   });
 }
 
-exports.nodeRequest = nodeRequest;
-
 exports.failureData = (errors,tag) => {
   if(!errors) return [];
   try {

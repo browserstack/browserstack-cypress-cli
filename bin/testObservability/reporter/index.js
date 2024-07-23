@@ -212,7 +212,7 @@ class MyReporter {
       const lastTest = this.current_test;
       this.current_test = test;
       test.retryOf = null;
-      test.testAnalyticsId = uuidv4()
+      test.testAnalyticsId = uuidv4();
       test.started_at = (new Date()).toISOString();
       test.test_started_at = test.started_at;
       if(test._currentRetry > 0 && lastTest && lastTest.title == test.title) {
