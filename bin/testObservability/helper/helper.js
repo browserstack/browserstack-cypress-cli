@@ -41,7 +41,6 @@ exports.pending_test_uploads = {
 };
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
-  consoleHolder.log(`[ OBSERVABILITY ] ${text}`);
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
     logger.info(`[ OBSERVABILITY ] ${text}`);
   }
@@ -397,7 +396,6 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
       exports.debug('Build creation successfull!');
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;
       setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
-      consoleHolder.log(response.data.build_hashed_id);
       if(this.isBrowserstackInfra()) helper.setBrowserstackCypressCliDependency(user_config);
     } catch(error) {
       if(!error.errorType) {

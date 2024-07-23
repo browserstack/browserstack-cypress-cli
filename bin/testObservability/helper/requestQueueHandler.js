@@ -1,4 +1,7 @@
-const { BATCH_SIZE, BATCH_INTERVAL, consoleHolder } = require('./constants');
+const fs = require('fs');
+const cp = require('child_process');
+
+const { BATCH_SIZE, BATCH_INTERVAL, consoleHolder, PENDING_QUEUS_FILE } = require('./constants');
 const { debug, batchAndPostEvents } = require('./helper');
 
 class RequestQueueHandler {
@@ -51,9 +54,9 @@ class RequestQueueHandler {
   shutdownSync = () => {
     this.removeEventBatchPolling('REMOVING');
    
-    require('fs').writeFileSync(require('path').join(__dirname, 'queue.json'), JSON.stringify(this.queue));
+    fs.writeFileSync(require('path').join(__dirname, PENDING_QUEUS_FILE), JSON.stringify(this.queue));
     this.queue = [];
-    require('child_process').spawnSync('node', [require('path').join(__dirname, 'shutdown.js'), require('path').join(__dirname, 'queue.json')], {stdio: 'inherit'});
+    cp.spawnSync('node', [require('path').join(__dirname, 'cleanupQueueSync.js'), require('path').join(__dirname, PENDING_QUEUS_FILE)], {stdio: 'inherit'});
   }
 
   shutdown = async () => {
@@ -61,7 +64,6 @@ class RequestQueueHandler {
     while(this.queue.length > 0) {
       const data = this.queue.slice(0,BATCH_SIZE);
       this.queue.splice(0,BATCH_SIZE);
-      consoleHolder.log(this.queue.length + " the queue length ");
       await batchAndPostEvents(this.eventUrl,'Shutdown-Queue',data);
     }
   }
