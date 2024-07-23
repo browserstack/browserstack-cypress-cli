@@ -2,8 +2,8 @@ const fs = require('fs');
 const cp = require('child_process');
 const path = require('path');
 
-const { BATCH_SIZE, BATCH_INTERVAL, consoleHolder, PENDING_QUEUS_FILE } = require('./constants');
-const { debug, batchAndPostEvents } = require('./helper');
+const { BATCH_SIZE, BATCH_INTERVAL, PENDING_QUEUES_FILE } = require('./constants');
+const { batchAndPostEvents } = require('./helper');
 
 class RequestQueueHandler {
   constructor() {
@@ -55,9 +55,10 @@ class RequestQueueHandler {
   shutdownSync = () => {
     this.removeEventBatchPolling('REMOVING');
    
-    fs.writeFileSync(path.join(__dirname, PENDING_QUEUS_FILE), JSON.stringify(this.queue));
+    fs.writeFileSync(path.join(__dirname, PENDING_QUEUES_FILE), JSON.stringify(this.queue));
     this.queue = [];
     cp.spawnSync('node', [path.join(__dirname, 'cleanupQueueSync.js'), path.join(__dirname, PENDING_QUEUS_FILE)], {stdio: 'inherit'});
+    fs.unlinkSync(path.join(__dirname, PENDING_QUEUES_FILE));
   }
 
   shutdown = async () => {
