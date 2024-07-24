@@ -15,6 +15,7 @@ const browserstackAccessibility = (on, config) => {
     },
   })
   on('before:browser:launch', (browser = {}, launchOptions) => {
+    console.log(`\n CAME TO before:browser:launch \n`);
     try {
       if (process.env.ACCESSIBILITY_EXTENSION_PATH !== undefined) {
         if (browser.name !== 'chrome') {
@@ -29,6 +30,7 @@ const browserstackAccessibility = (on, config) => {
           console.log(`Accessibility Automation will not run on legacy headless mode. Switch to new headless mode or avoid using headless mode.`);
           browser_validation = false;
         }
+        console.log(`\n CAME TO before:browser:launch 2 : ${browser_validation} \n`);
         if (browser_validation) {
           const ally_path = path.dirname(process.env.ACCESSIBILITY_EXTENSION_PATH)
           launchOptions.extensions.push(ally_path);
@@ -39,6 +41,7 @@ const browserstackAccessibility = (on, config) => {
     
   })
   config.env.ACCESSIBILITY_EXTENSION_PATH = process.env.ACCESSIBILITY_EXTENSION_PATH
+  console.log(`\n CAME TO before:browser:launch 3 : ${config.env.ACCESSIBILITY_EXTENSION_PATH} \n`);
   config.env.OS_VERSION = process.env.OS_VERSION
   config.env.OS = process.env.OS
 

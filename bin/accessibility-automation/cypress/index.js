@@ -1,7 +1,7 @@
 /* Event listeners + custom commands for Cypress */
 
 const browserStackLog = (message) => {
-  if (!Cypress.env('BROWSERSTACK_LOGS')) return;
+  // if (!Cypress.env('BROWSERSTACK_LOGS')) return;
   cy.task('browserstack_log', message);
 }
 
@@ -231,10 +231,13 @@ const saveTestResults = (win, payloadToSend) =>
   })
 
 const shouldScanForAccessibility = (attributes) => {
+  browserStackLog(`>>> shouldScanForAccessibility : IS_ACCESSIBILITY_EXTENSION_LOADED ${Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED")}`);
   if (Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED") !== "true") return false;
 
   const extensionPath = Cypress.env("ACCESSIBILITY_EXTENSION_PATH");
   const isHeaded = Cypress.browser.isHeaded;
+
+  browserStackLog(`>>> shouldScanForAccessibility : 2 : ${isHeaded} ${extensionPath}`);
 
   if (!isHeaded || (extensionPath === undefined)) return false;
 
@@ -254,6 +257,9 @@ const shouldScanForAccessibility = (attributes) => {
       const fullTestName = attributes.title;
       const excluded = excludeTagArray.some((exclude) => fullTestName.includes(exclude));
       const included = includeTagArray.length === 0 || includeTags.some((include) => fullTestName.includes(include));
+      
+      browserStackLog(`>>> shouldScanForAccessibility : 3 : ${included} ${excluded}`);
+      
       shouldScanTestForAccessibility = !excluded && included;
     } catch (error) {
       browserStackLog("Error while validating test case for accessibility before scanning. Error : ", error);
@@ -283,12 +289,16 @@ Cypress.on('command:start', async (command) => {
 })
 
 afterEach(() => {
+  browserStackLog(">>> afterEach");
   const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
   cy.window().then(async (win) => {
+    browserStackLog(`>>> afterEach : before shouldScanTestForAccessibility`);
     let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
+    browserStackLog(`>>> afterEach : shouldScanTestForAccessibility : ${shouldScanTestForAccessibility}`);
     if (!shouldScanTestForAccessibility) return cy.wrap({});
 
     cy.wrap(performScan(win), {timeout: 30000}).then(() => {
+      browserStackLog(">>> afterEach : cy.wrap()");
       try {
         let os_data;
         if (Cypress.env("OS")) {
@@ -296,10 +306,12 @@ afterEach(() => {
         } else {
           os_data = Cypress.platform === 'linux' ? 'mac' : "win"
         }
+        browserStackLog(">>> afterEach : before filePath");
         let filePath = '';
         if (attributes.invocationDetails !== undefined && attributes.invocationDetails.relativeFile !== undefined) {
           filePath = attributes.invocationDetails.relativeFile;
         }
+        browserStackLog(">>> afterEach : before payloadToSend");
         const payloadToSend = {
           "saveResults": shouldScanTestForAccessibility,
           "testDetails": {
@@ -318,7 +330,7 @@ afterEach(() => {
             "browser_version": Cypress.browser.version
           }
         };
-        browserStackLog(`Saving accessibility test results`);
+        browserStackLog(`Saving accessibility test results : ${payloadToSend}`);
         cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
           browserStackLog(`Saved accessibility test results`);
         })
