@@ -186,7 +186,6 @@ class MyReporter {
         }
 
         await this.uploadTestSteps();
-        await requestQueueHandler.shutdown();
       });
   }
 

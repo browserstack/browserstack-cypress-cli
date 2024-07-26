@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const https = require('https');
-const request = require('request');
+const request = require('requestretry');
 const { v4: uuidv4 } = require('uuid');
 const os = require('os');
 const { promisify } = require('util');
@@ -114,7 +114,8 @@ const nodeRequest = (type, url, data, config) => {
       url: `${API_URL}/${url}`,
       body: data,
       json: config.headers['Content-Type'] === 'application/json',
-      agent: this.httpsKeepAliveAgent
+      agent: this.httpsKeepAliveAgent,
+      maxAttempts: 2
     }};
 
     if(url === exports.requestQueueHandler.screenshotEventUrl) {
