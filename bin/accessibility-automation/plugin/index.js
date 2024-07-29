@@ -37,7 +37,9 @@ const browserstackAccessibility = (on, config) => {
           return launchOptions
         }
       }
-    } catch(err) {}
+    } catch(err) {
+      console.log(`\n CAME TO before:browser:launch CATCH ERROR : ${err} \n`);
+    }
     
   })
   config.env.ACCESSIBILITY_EXTENSION_PATH = process.env.ACCESSIBILITY_EXTENSION_PATH
