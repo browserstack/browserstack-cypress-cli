@@ -498,6 +498,8 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
     }
   };
 
+  consoleHolder.log(`[CY:DEBUG] [Request Batch]: ${JSON.stringify(eventData)}`)
+
   try {
     const response = await nodeRequest('POST',eventUrl,data,config);
     if(response.data.error) {
@@ -561,7 +563,6 @@ exports.uploadEventData = async (eventData, run=0) => {
         }
       };
 
-      consoleHolder.log(`[CY:DEBUG] [Request Batch]: ${JSON.stringify(eventData)}`)
       
       try {
         const response = await nodeRequest('POST',event_api_url,data,config);
