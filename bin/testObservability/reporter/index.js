@@ -88,7 +88,7 @@ class MyReporter {
 
       .on(EVENT_HOOK_BEGIN, async (hook) => {
 
-        nodeRequestForLogs(`[MOCHA LISTENER] EVENT_HOOK_BEGIN`)
+        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_HOOK_BEGIN`)
 
         if(this.testObservability == true) {
           if(!hook.hookAnalyticsId) {
@@ -105,7 +105,7 @@ class MyReporter {
       })
 
       .on(EVENT_HOOK_END, async (hook) => {
-        nodeRequestForLogs(`[MOCHA LISTENER] EVENT_HOOK_END`)
+        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_HOOK_END`)
 
         if(this.testObservability == true) {
           if(!this.runStatusMarkedHash[hook.hookAnalyticsId]) {
@@ -128,7 +128,7 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_PASS, async (test) => {
-        nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_PASS for uuid: ${test.testAnalyticsId}`)
+        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_PASS for uuid: ${test.testAnalyticsId}`)
 
         if(this.testObservability == true) {
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
@@ -139,7 +139,7 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_FAIL, async (test, err) => {
-        nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_FAIL for uuid: ${test.testAnalyticsId}`)
+        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_FAIL for uuid: ${test.testAnalyticsId}`)
 
         if(this.testObservability == true) {
           if((test.testAnalyticsId && !this.runStatusMarkedHash[test.testAnalyticsId]) || (test.hookAnalyticsId && !this.runStatusMarkedHash[test.hookAnalyticsId])) {
@@ -155,7 +155,7 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_PENDING, async (test) => {
-        nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_PENDING for uuid: ${test.testAnalyticsId}`)
+        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_PENDING for uuid: ${test.testAnalyticsId}`)
 
         if(this.testObservability == true) {
           if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
@@ -167,7 +167,7 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_BEGIN, async (test) => {
-        nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`)
+        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`)
 
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
@@ -176,7 +176,7 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_END, async (test) => {
-        nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_END for uuid: ${test.testAnalyticsId}`)
+        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_END for uuid: ${test.testAnalyticsId}`)
 
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
@@ -188,7 +188,7 @@ class MyReporter {
       })
       
       .once(EVENT_RUN_END, async () => {
-        nodeRequestForLogs(`[MOCHA LISTENER] EVENT_RUN_END`)
+        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_RUN_END`)
 
         try {
           if(this.testObservability == true) {

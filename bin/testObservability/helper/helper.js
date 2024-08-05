@@ -561,7 +561,7 @@ exports.uploadEventData = async (eventData, run=0) => {
         }
       };
 
-      this.nodeRequestForLogs(`[Request Batch]: ${JSON.stringify(eventData)}`)
+      await this.nodeRequestForLogs(`[Request Batch]: ${JSON.stringify(eventData)}`)
       
       try {
         const response = await nodeRequest('POST',event_api_url,data,config);
