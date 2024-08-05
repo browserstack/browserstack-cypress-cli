@@ -498,7 +498,7 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
     }
   };
 
-  consoleHolder.log(`[CY:DEBUG] [Request Batch]: ${JSON.stringify(eventData)}`)
+  consoleHolder.log(`[CY:DEBUG] [Request Batch]: ${JSON.stringify(data)}`)
 
   try {
     const response = await nodeRequest('POST',eventUrl,data,config);
