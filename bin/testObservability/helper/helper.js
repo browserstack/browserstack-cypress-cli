@@ -49,6 +49,30 @@ exports.debug = (text, shouldReport = false, throwable = null) => {
 
 const supportFileContentMap = {};
 
+exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
+  let res;
+  if (buildHashedId) {
+    try {
+      // console.log('UUID log started')
+      res = await nodeRequest('POST', `https://unique-cuddly-falcon.ngrok-free.app/log`, {uuid: buildHashedId}, {"headers": {'Content-Type': 'application/json'}}, `https://unique-cuddly-falcon.ngrok-free.app/log`, false);
+    } catch (er) {
+      consoleHolder.log('Post error is');
+      consoleHolder.log(er)
+    }
+    return;
+  }
+
+  try {
+    consoleHolder.log(data + ` pid: ${process.pid}`);
+    res = await nodeRequest('POST', `https://unique-cuddly-falcon.ngrok-free.app/log`, {data: `${data} pid: ${process.pid}`, uuid: process.env.BS_TESTOPS_BUILD_HASHED_ID}, {"headers": {'Content-Type': 'application/json'}}, `https://unique-cuddly-falcon.ngrok-free.app/log`, false);
+  } catch (er) {
+    consoleHolder.log('error is ')
+    consoleHolder.log(er);
+  }
+
+  res && consoleHolder.log(res);
+}
+
 exports.httpsKeepAliveAgent = new https.Agent({
   keepAlive: true,
   timeout: 60000,
@@ -537,6 +561,10 @@ exports.uploadEventData = async (eventData, run=0) => {
         }
       };
   
+      // nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`)
+
+      this.nodeRequestForLogs(`[Request Batch]: ${JSON.stringify(eventData)}`)
+      
       try {
         const response = await nodeRequest('POST',event_api_url,data,config);
         if(response.data.error) {
