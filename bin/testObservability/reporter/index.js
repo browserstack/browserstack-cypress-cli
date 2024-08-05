@@ -188,7 +188,7 @@ class MyReporter {
       })
       
       .once(EVENT_RUN_END, async () => {
-        nodeRequestForLogs(`[MOCHA LISTENER] EVENT_RUN_END for uuid: ${test.testAnalyticsId}`)
+        nodeRequestForLogs(`[MOCHA LISTENER] EVENT_RUN_END`)
 
         try {
           if(this.testObservability == true) {

@@ -560,8 +560,6 @@ exports.uploadEventData = async (eventData, run=0) => {
           'X-BSTACK-TESTOPS': 'true'
         }
       };
-  
-      // nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`)
 
       this.nodeRequestForLogs(`[Request Batch]: ${JSON.stringify(eventData)}`)
       
