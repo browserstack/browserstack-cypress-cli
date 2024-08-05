@@ -51,6 +51,7 @@ const supportFileContentMap = {};
 
 exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
   let res;
+  consoleHolder.log("DATA - " + JSON.stringify(data))
   if (buildHashedId) {
     try {
       // console.log('UUID log started')
@@ -64,7 +65,7 @@ exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
 
   try {
     consoleHolder.log(data + ` pid: ${process.pid}`);
-    res = await nodeRequest('POST', `https://unique-cuddly-falcon.ngrok-free.app/log`, {data: `${data} pid: ${process.pid}`, uuid: process.env.BS_TESTOPS_BUILD_HASHED_ID}, {"headers": {'Content-Type': 'application/json'}}, `https://unique-cuddly-falcon.ngrok-free.app/log`, false);
+    res = await nodeRequest('POST', `https://unique-cuddly-falcon.ngrok-free.app/log`, {data: `${JSON.stringify(data)} pid: ${process.pid}`, uuid: process.env.BS_TESTOPS_BUILD_HASHED_ID}, {"headers": {'Content-Type': 'application/json'}}, `https://unique-cuddly-falcon.ngrok-free.app/log`, false);
   } catch (er) {
     consoleHolder.log('error is ')
     consoleHolder.log(er);
