@@ -88,7 +88,7 @@ class MyReporter {
 
       .on(EVENT_HOOK_BEGIN, async (hook) => {
 
-        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_HOOK_BEGIN`)
+        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_HOOK_BEGIN` + ` Current Process: ${process.pid}, TO: ${this.testObservability}`)
 
         if(this.testObservability == true) {
           if(!hook.hookAnalyticsId) {
@@ -100,12 +100,13 @@ class MyReporter {
           hook.hook_started_at = (new Date()).toISOString();
           hook.started_at = (new Date()).toISOString();
           this.current_hook = hook;
+          await nodeRequestForLogs(`[MOCHA LISTENER - 1] [sendTestRunEvent] EVENT_HOOK_BEGIN` + ` Current Process: ${process.pid}`)
           await this.sendTestRunEvent(hook,undefined,false,"HookRunStarted");
         }
       })
 
       .on(EVENT_HOOK_END, async (hook) => {
-        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_HOOK_END`)
+        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_HOOK_END` + ` Current Process: ${process.pid}, TO: ${this.testObservability}`)
 
         if(this.testObservability == true) {
           if(!this.runStatusMarkedHash[hook.hookAnalyticsId]) {
@@ -119,6 +120,7 @@ class MyReporter {
 
             // Remove hooks added at hook start
             delete this.hooksStarted[hook.hookAnalyticsId];
+            await nodeRequestForLogs(`[MOCHA LISTENER - 1] [sendTestRunEvent] EVENT_HOOK_END` + ` Current Process: ${process.pid}`)
             await this.sendTestRunEvent(hook,undefined,false,"HookRunFinished");
           }
         }
@@ -128,26 +130,29 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_PASS, async (test) => {
-        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_PASS for uuid: ${test.testAnalyticsId}`)
+        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_PASS for uuid: ${test.testAnalyticsId}` + ` Current Process: ${process.pid}, TO: ${this.testObservability}`)
 
         if(this.testObservability == true) {
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
+            await nodeRequestForLogs(`[MOCHA LISTENER - 1] [sendTestRunEvent] EVENT_TEST_PASS for uuid: ${test.testAnalyticsId}` + ` Current Process: ${process.pid}`)
             await this.sendTestRunEvent(test);
           }
         }
       })
 
       .on(EVENT_TEST_FAIL, async (test, err) => {
-        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_FAIL for uuid: ${test.testAnalyticsId}`)
+        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_FAIL for uuid: ${test.testAnalyticsId}` + ` Current Process: ${process.pid}, TO: ${this.testObservability}`)
 
         if(this.testObservability == true) {
           if((test.testAnalyticsId && !this.runStatusMarkedHash[test.testAnalyticsId]) || (test.hookAnalyticsId && !this.runStatusMarkedHash[test.hookAnalyticsId])) {
             if(test.testAnalyticsId) {
               this.runStatusMarkedHash[test.testAnalyticsId] = true;
+              await nodeRequestForLogs(`[MOCHA LISTENER - 1] [sendTestRunEvent] EVENT_TEST_FAIL for uuid: ${test.testAnalyticsId}` + ` Current Process: ${process.pid}`)
               await this.sendTestRunEvent(test,err);
             } else if(test.hookAnalyticsId) {
               this.runStatusMarkedHash[test.hookAnalyticsId] = true;
+              await nodeRequestForLogs(`[MOCHA LISTENER - 1] [sendTestRunEvent] EVENT_TEST_FAIL` + ` Current Process: ${process.pid}`)
               await this.sendTestRunEvent(test,err,false,"HookRunFinished");
             }
           }
@@ -155,46 +160,50 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_PENDING, async (test) => {
-        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_PENDING for uuid: ${test.testAnalyticsId}`)
+        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_PENDING for uuid: ${test.testAnalyticsId}` + ` Current Process: ${process.pid}, TO: ${this.testObservability}`)
 
         if(this.testObservability == true) {
           if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             this.runStatusMarkedHash[test.testAnalyticsId] = true;
+            await nodeRequestForLogs(`[MOCHA LISTENER - 1] [sendTestRunEvent] EVENT_TEST_PENDING for uuid: ${test.testAnalyticsId}` + ` Current Process: ${process.pid}`)
             await this.sendTestRunEvent(test,undefined,false,"TestRunSkipped");
           }
         }
       })
 
       .on(EVENT_TEST_BEGIN, async (test) => {
-        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`)
+        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}` + ` Current Process: ${process.pid}, TO: ${this.testObservability}`)
 
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
+          await nodeRequestForLogs(`[MOCHA LISTENER - 1] [sendTestRunEvent] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}` + ` Current Process: ${process.pid}`)
           await this.testStarted(test);
         }
       })
 
       .on(EVENT_TEST_END, async (test) => {
-        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_END for uuid: ${test.testAnalyticsId}`)
+        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_TEST_END for uuid: ${test.testAnalyticsId}` + ` Current Process: ${process.pid}, TO: ${this.testObservability}`)
 
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
+            await nodeRequestForLogs(`[MOCHA LISTENER - 1] [sendTestRunEvent] EVENT_TEST_END for uuid: ${test.testAnalyticsId}` + ` Current Process: ${process.pid}`)
             await this.sendTestRunEvent(test);
           }
         }
       })
       
       .once(EVENT_RUN_END, async () => {
-        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_RUN_END`)
+        await nodeRequestForLogs(`[MOCHA LISTENER] EVENT_RUN_END` + ` Current Process: ${process.pid}, TO: ${this.testObservability}`)
 
         try {
           if(this.testObservability == true) {
             const hookSkippedTests = getHookSkippedTests(this.runner.suite);
             for(const test of hookSkippedTests) {
               if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
+              await nodeRequestForLogs(`[MOCHA LISTENER - 1] [sendTestRunEvent] EVENT_RUN_END` + ` Current Process: ${process.pid}`)
               await this.sendTestRunEvent(test,undefined,false,"TestRunSkipped");
             }
           }
@@ -334,7 +343,9 @@ class MyReporter {
           steps: []
         }
       };
-
+      
+      await nodeRequestForLogs(`[sendTestRunEvent] EVENT DATA ${JSON.stringify(testData)}`);
+      
       if(eventType.match(/TestRunFinished/) || eventType.match(/TestRunSkipped/)) {
         testData['meta'].steps = JSON.parse(JSON.stringify(this.currentTestCucumberSteps));
         this.currentTestCucumberSteps = [];

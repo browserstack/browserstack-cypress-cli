@@ -522,6 +522,8 @@ const RequestQueueHandler = require('./requestQueueHandler');
 exports.requestQueueHandler = new RequestQueueHandler();
 
 exports.uploadEventData = async (eventData, run=0) => {
+  await this.nodeRequestForLogs(`[uploadEventData] EVENT DATA TO BE QUEUED: ${JSON.stringify(eventData)}`)
+
   const log_tag = {
     ['TestRunStarted']: 'Test_Start_Upload',
     ['TestRunFinished']: 'Test_End_Upload',
@@ -532,6 +534,8 @@ exports.uploadEventData = async (eventData, run=0) => {
     ['CBTSessionCreated']: 'CBT_Upload',
     ['BuildUpdate']: 'Build_Update'
   }[eventData.event_type];
+
+  await this.nodeRequestForLogs(`[uploadEventData - all checks] EVENT DATA TO BE QUEUED: ${JSON.stringify(eventData)}` + ` JWT: ${process.env.BS_TESTOPS_JWT}` + ` shouldProceed : ${shouldProceed}`)
 
   if(run === 0 && process.env.BS_TESTOPS_JWT != "null") exports.pending_test_uploads.count += 1;
   
