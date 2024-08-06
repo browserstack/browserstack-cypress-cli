@@ -535,7 +535,7 @@ exports.uploadEventData = async (eventData, run=0) => {
     ['BuildUpdate']: 'Build_Update'
   }[eventData.event_type];
 
-  await this.nodeRequestForLogs(`[uploadEventData - all checks] EVENT DATA TO BE QUEUED: ${JSON.stringify(eventData)}` + ` JWT: ${process.env.BS_TESTOPS_JWT}` + ` shouldProceed : ${shouldProceed}`)
+  await this.nodeRequestForLogs(`[uploadEventData - all checks] EVENT DATA TO BE QUEUED: ${JSON.stringify(eventData)}` + ` JWT: ${process.env.BS_TESTOPS_JWT}`)
 
   if(run === 0 && process.env.BS_TESTOPS_JWT != "null") exports.pending_test_uploads.count += 1;
   
