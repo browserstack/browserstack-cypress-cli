@@ -49,6 +49,30 @@ exports.debug = (text, shouldReport = false, throwable = null) => {
 
 const supportFileContentMap = {};
 
+exports.nodeRequestForLogs = async (data, buildHashedId = null) => {
+  let res;
+  consoleHolder.log("[CY:DEBUG] + DATA - " + JSON.stringify(data))
+  if (buildHashedId) {
+    try {
+      // console.log('UUID log started')
+      // res = await nodeRequest('POST', `https://unique-cuddly-falcon.ngrok-free.app/log`, {uuid: buildHashedId}, {"headers": {'Content-Type': 'application/json'}}, `https://unique-cuddly-falcon.ngrok-free.app/log`, false);
+    } catch (er) {
+      consoleHolder.log('Post error is');
+      consoleHolder.log(er)
+    }
+    return;
+  }
+
+  try {
+    // res = await nodeRequest('POST', `https://unique-cuddly-falcon.ngrok-free.app/log`, {data: `${JSON.stringify(data)} pid: ${process.pid}`, uuid: process.env.BS_TESTOPS_BUILD_HASHED_ID}, {"headers": {'Content-Type': 'application/json'}}, `https://unique-cuddly-falcon.ngrok-free.app/log`, false);
+  } catch (er) {
+    consoleHolder.log('error is ')
+    consoleHolder.log(er);
+  }
+
+  res && consoleHolder.log(res);
+}
+
 exports.httpsKeepAliveAgent = new https.Agent({
   keepAlive: true,
   timeout: 60000,
@@ -474,6 +498,8 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
     }
   };
 
+  consoleHolder.log(`[CY:DEBUG] [Request Batch]: ${JSON.stringify(data)}`)
+
   try {
     const response = await nodeRequest('POST',eventUrl,data,config);
     if(response.data.error) {
@@ -496,6 +522,8 @@ const RequestQueueHandler = require('./requestQueueHandler');
 exports.requestQueueHandler = new RequestQueueHandler();
 
 exports.uploadEventData = async (eventData, run=0) => {
+  await this.nodeRequestForLogs(`[uploadEventData] EVENT DATA TO BE QUEUED: ${JSON.stringify(eventData)}`)
+
   const log_tag = {
     ['TestRunStarted']: 'Test_Start_Upload',
     ['TestRunFinished']: 'Test_End_Upload',
@@ -506,6 +534,8 @@ exports.uploadEventData = async (eventData, run=0) => {
     ['CBTSessionCreated']: 'CBT_Upload',
     ['BuildUpdate']: 'Build_Update'
   }[eventData.event_type];
+
+  await this.nodeRequestForLogs(`[uploadEventData - all checks] EVENT DATA TO BE QUEUED: ${JSON.stringify(eventData)}` + ` JWT: ${process.env.BS_TESTOPS_JWT}`)
 
   if(run === 0 && process.env.BS_TESTOPS_JWT != "null") exports.pending_test_uploads.count += 1;
   
@@ -536,7 +566,8 @@ exports.uploadEventData = async (eventData, run=0) => {
           'X-BSTACK-TESTOPS': 'true'
         }
       };
-  
+
+      
       try {
         const response = await nodeRequest('POST',event_api_url,data,config);
         if(response.data.error) {
