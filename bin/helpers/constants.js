@@ -271,6 +271,10 @@ const cliMessages = {
   },
 };
 
+const debugMessages = {
+  BUILD_ARTIFACTS_UNZIP_FAILURE: "Failed to unzip build artifacts",
+};
+
 const messageTypes = {
   SUCCESS: "success",
   ERROR: "error",
@@ -455,6 +459,7 @@ module.exports = Object.freeze({
   syncCLI,
   userMessages,
   cliMessages,
+  debugMessages,
   validationMessages,
   messageTypes,
   allowedFileTypes,

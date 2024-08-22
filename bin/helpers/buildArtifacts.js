@@ -10,7 +10,7 @@ const logger = require('./logger').winstonLogger,
 
 const request = require('request');
 const decompress = require('decompress');
-
+const unzipper = require("unzipper");
 
 let BUILD_ARTIFACTS_TOTAL_COUNT = 0;
 let BUILD_ARTIFACTS_FAIL_COUNT = 0;
@@ -136,13 +136,25 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
 
 const unzipFile = async (filePath, fileName) => {
   return new Promise( async (resolve, reject) => {
-    await decompress(path.join(filePath, fileName), filePath)
-    .then((files) => {
+    try {
+      await decompress(path.join(filePath, fileName), filePath)
       resolve();
-    })
-    .catch((error) => {
-      reject(error);
-    });
+    } catch (error) {
+      logger.debug(`Error unzipping with decompress: ${error}, trying with unzipper.`);
+      try {
+        fs.createReadStream(path.join(filePath, fileName))
+          .pipe(unzipper.Extract({ path: filePath }))
+          .on("close", () => {
+            resolve();
+          })
+          .on("error", (err) => {
+            reject(err);
+          });
+      } catch (unzipperError) {
+        logger.debug(`Unzip unsuccessful with unzipper`);
+      }
+      reject(Constants.debugMessages.BUILD_ARTIFACTS_UNZIP_FAILURE);
+    }
   });
 }
 
