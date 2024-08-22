@@ -121,13 +121,15 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
           reject(err);
         });
         writer.on('close', async () => {
-          if (!error) {
-            await unzipFile(filePath, fileName);
-            fs.unlinkSync(tmpFilePath);
-            resolve(true);
+          try {
+            if (!error) {
+              await unzipFile(filePath, fileName);
+              fs.unlinkSync(tmpFilePath);
+            }
+          } catch (error) {
+            reject(error);
           }
-          //no need to call the reject here, as it will have been called in the
-          //'error' stream;
+          resolve(true);
         });
       }
     });
