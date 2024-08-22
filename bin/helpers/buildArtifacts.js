@@ -137,10 +137,10 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
 const unzipFile = async (filePath, fileName) => {
   return new Promise( async (resolve, reject) => {
     try {
-      await decompress(path.join(filePath, fileName), filePath)
+      await decompress(path.join(filePath, fileName), filePath);
       resolve();
     } catch (error) {
-      logger.debug(`Error unzipping with decompress: ${error}, trying with unzipper.`);
+      logger.debug(`Error unzipping with decompress, trying with unzipper. Stacktrace: ${error}.`);
       try {
         fs.createReadStream(path.join(filePath, fileName))
           .pipe(unzipper.Extract({ path: filePath }))
@@ -151,9 +151,9 @@ const unzipFile = async (filePath, fileName) => {
             reject(err);
           });
       } catch (unzipperError) {
-        logger.debug(`Unzip unsuccessful with unzipper`);
+        logger.debug(`Unzipper package error: ${unzipperError}`);
+        reject(Constants.debugMessages.BUILD_ARTIFACTS_UNZIP_FAILURE);
       }
-      reject(Constants.debugMessages.BUILD_ARTIFACTS_UNZIP_FAILURE);
     }
   });
 }
