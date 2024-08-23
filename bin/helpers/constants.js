@@ -123,7 +123,8 @@ const userMessages = {
   CYPRESS_PORT_WARNING:
     "The requested port number <x> is ignored. The default BrowserStack port will be used for this execution",
   CYPRESS_INTERACTIVE_SESSION_CONFLICT_VALUES:
-    "Conflicting values (True & False) were found for the interactive_debugging capability. Please resolve this issue to proceed further."
+    "Conflicting values (True & False) were found for the interactive_debugging capability. Please resolve this issue to proceed further.",
+  BUILD_ARTIFACTS_UNZIP_FAILURE: "Failed to unzip build artifacts.",
 };
 
 const validationMessages = {
@@ -269,10 +270,6 @@ const cliMessages = {
   GENERATE_DOWNLOADS: {
     INFO: "Downloads the build artifacts",
   },
-};
-
-const debugMessages = {
-  BUILD_ARTIFACTS_UNZIP_FAILURE: "Failed to unzip build artifacts",
 };
 
 const messageTypes = {
@@ -459,7 +456,6 @@ module.exports = Object.freeze({
   syncCLI,
   userMessages,
   cliMessages,
-  debugMessages,
   validationMessages,
   messageTypes,
   allowedFileTypes,

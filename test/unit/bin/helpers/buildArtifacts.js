@@ -4,15 +4,7 @@ const chai = require("chai"),
   sinon = require('sinon'),
   rewire = require('rewire');
 
-const fs = require('fs'),
-      path = require('path'),
-      request = require('request'),
-      unzipper = require("unzipper"),
-      decompress = require('decompress');
-      Constants = require("../../../../bin/helpers/constants"),
-      logger = require("../../../../bin/helpers/logger").winstonLogger,
-      testObjects = require("../../support/fixtures/testObjects"),
-      formatRequest = require("../../../../bin/helpers/utils").formatRequest;
+const logger = require("../../../../bin/helpers/logger").winstonLogger;
 
 chai.use(chaiAsPromised);
 logger.transports["console.info"].silent = true;
@@ -41,7 +33,7 @@ describe('unzipFile', () => {
     pathJoinStub = sinon.stub().returns(`${filePath}/${fileName}`);
 
     Constants = {
-      debugMessages: {
+      userMessages: {
         BUILD_ARTIFACTS_UNZIP_FAILURE: 'Unzip failed',
       },
     };

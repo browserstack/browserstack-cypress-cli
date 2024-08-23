@@ -154,7 +154,7 @@ const unzipFile = async (filePath, fileName) => {
           });
       } catch (unzipperError) {
         logger.debug(`Unzipper package error: ${unzipperError}`);
-        reject(Constants.debugMessages.BUILD_ARTIFACTS_UNZIP_FAILURE);
+        reject(Constants.userMessages.BUILD_ARTIFACTS_UNZIP_FAILURE);
       }
     }
   });
