@@ -10,7 +10,7 @@ const logger = require('./logger').winstonLogger,
 
 const request = require('request');
 const decompress = require('decompress');
-
+const unzipper = require("unzipper");
 
 let BUILD_ARTIFACTS_TOTAL_COUNT = 0;
 let BUILD_ARTIFACTS_FAIL_COUNT = 0;
@@ -121,13 +121,15 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
           reject(err);
         });
         writer.on('close', async () => {
-          if (!error) {
-            await unzipFile(filePath, fileName);
-            fs.unlinkSync(tmpFilePath);
-            resolve(true);
+          try {
+            if (!error) {
+              await unzipFile(filePath, fileName);
+              fs.unlinkSync(tmpFilePath);
+            }
+          } catch (error) {
+            reject(error);
           }
-          //no need to call the reject here, as it will have been called in the
-          //'error' stream;
+          resolve(true);
         });
       }
     });
@@ -136,13 +138,25 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
 
 const unzipFile = async (filePath, fileName) => {
   return new Promise( async (resolve, reject) => {
-    await decompress(path.join(filePath, fileName), filePath)
-    .then((files) => {
+    try {
+      await decompress(path.join(filePath, fileName), filePath);
       resolve();
-    })
-    .catch((error) => {
-      reject(error);
-    });
+    } catch (error) {
+      logger.debug(`Error unzipping with decompress, trying with unzipper. Stacktrace: ${error}.`);
+      try {
+        fs.createReadStream(path.join(filePath, fileName))
+          .pipe(unzipper.Extract({ path: filePath }))
+          .on("close", () => {
+            resolve();
+          })
+          .on("error", (err) => {
+            reject(err);
+          });
+      } catch (unzipperError) {
+        logger.debug(`Unzipper package error: ${unzipperError}`);
+        reject(Constants.userMessages.BUILD_ARTIFACTS_UNZIP_FAILURE);
+      }
+    }
   });
 }
 
