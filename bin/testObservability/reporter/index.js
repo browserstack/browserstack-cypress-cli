@@ -88,6 +88,7 @@ class MyReporter {
       })
 
       .on(EVENT_HOOK_BEGIN, async (hook) => {
+        debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_BEGIN`);
         if(this.testObservability == true) {
           if(!hook.hookAnalyticsId) {
             hook.hookAnalyticsId = uuidv4();
@@ -95,6 +96,7 @@ class MyReporter {
             delete this.runStatusMarkedHash[hook.hookAnalyticsId];
             hook.hookAnalyticsId = uuidv4();
           }
+          debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_BEGIN for uuid: ${hook.hookAnalyticsId}`);
           hook.hook_started_at = (new Date()).toISOString();
           hook.started_at = (new Date()).toISOString();
           this.current_hook = hook;
@@ -103,6 +105,7 @@ class MyReporter {
       })
 
       .on(EVENT_HOOK_END, async (hook) => {
+        debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_END`);
         if(this.testObservability == true) {
           if(!this.runStatusMarkedHash[hook.hookAnalyticsId]) {
             if(!hook.hookAnalyticsId) {
@@ -115,6 +118,9 @@ class MyReporter {
 
             // Remove hooks added at hook start
             delete this.hooksStarted[hook.hookAnalyticsId];
+
+            debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_END for uuid: ${hook.hookAnalyticsId}`);
+
             await this.sendTestRunEvent(hook,undefined,false,"HookRunFinished");
           }
         }
@@ -185,10 +191,12 @@ class MyReporter {
       
       .once(EVENT_RUN_END, async () => {
         try {
+          debugOnConsole(`[MOCHA EVENT] EVENT_RUN_END`);
           if(this.testObservability == true) {
             const hookSkippedTests = getHookSkippedTests(this.runner.suite);
             for(const test of hookSkippedTests) {
               if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
+              debugOnConsole(`[MOCHA EVENT] EVENT_RUN_END TestRunSkipped for uuid: ${test.testAnalyticsId}`);
               await this.sendTestRunEvent(test,undefined,false,"TestRunSkipped");
             }
           }
@@ -390,6 +398,7 @@ class MyReporter {
           mapTestHooks(test);
         }
       } catch(e) {
+        debugOnConsole(`Exception in processing hook data for event ${eventType} with error : ${e}`);
         debug(`Exception in processing hook data for event ${eventType} with error : ${e}`, true, e);
       }
 
@@ -486,6 +495,7 @@ class MyReporter {
         this.hooksStarted = {};
       }
     } catch(error) {
+      debugOnConsole(`Exception in populating test data for event ${eventType} with error : ${error}`);
       debug(`Exception in populating test data for event ${eventType} with error : ${error}`, true, error);
     }
   }

@@ -509,6 +509,7 @@ const RequestQueueHandler = require('./requestQueueHandler');
 exports.requestQueueHandler = new RequestQueueHandler();
 
 exports.uploadEventData = async (eventData, run=0) => {
+  exports.debugOnConsole(`[uploadEventData] ${eventData.event_type}`);
   const log_tag = {
     ['TestRunStarted']: 'Test_Start_Upload',
     ['TestRunFinished']: 'Test_End_Upload',
