@@ -57,7 +57,8 @@ const {
   getOSDetailsFromSystem,
   findGitConfig,
   getFileSeparatorData,
-  setCrashReportingConfigFromReporter
+  setCrashReportingConfigFromReporter,
+  debugOnConsole
 } = require('../helper/helper');
 
 const { consoleHolder } = require('../helper/constants');
@@ -87,6 +88,7 @@ class MyReporter {
       })
 
       .on(EVENT_HOOK_BEGIN, async (hook) => {
+        debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_BEGIN`);
         if(this.testObservability == true) {
           if(!hook.hookAnalyticsId) {
             hook.hookAnalyticsId = uuidv4();
@@ -94,6 +96,7 @@ class MyReporter {
             delete this.runStatusMarkedHash[hook.hookAnalyticsId];
             hook.hookAnalyticsId = uuidv4();
           }
+          debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_BEGIN for uuid: ${hook.hookAnalyticsId}`);
           hook.hook_started_at = (new Date()).toISOString();
           hook.started_at = (new Date()).toISOString();
           this.current_hook = hook;
@@ -102,6 +105,7 @@ class MyReporter {
       })
 
       .on(EVENT_HOOK_END, async (hook) => {
+        debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_END`);
         if(this.testObservability == true) {
           if(!this.runStatusMarkedHash[hook.hookAnalyticsId]) {
             if(!hook.hookAnalyticsId) {
@@ -114,6 +118,9 @@ class MyReporter {
 
             // Remove hooks added at hook start
             delete this.hooksStarted[hook.hookAnalyticsId];
+
+            debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_END for uuid: ${hook.hookAnalyticsId}`);
+
             await this.sendTestRunEvent(hook,undefined,false,"HookRunFinished");
           }
         }
@@ -123,7 +130,9 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_PASS, async (test) => {
+        debugOnConsole(`[MOCHA EVENT] EVENT_TEST_PASS`);
         if(this.testObservability == true) {
+          debugOnConsole(`[MOCHA EVENT] EVENT_TEST_PASS for uuid: ${test.testAnalyticsId}`);
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
             await this.sendTestRunEvent(test);
@@ -132,7 +141,9 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_FAIL, async (test, err) => {
+        debugOnConsole(`[MOCHA EVENT] EVENT_TEST_FAIL`);
         if(this.testObservability == true) {
+          debugOnConsole(`[MOCHA EVENT] EVENT_TEST_FAIL for uuid: ${test.testAnalyticsId}`);
           if((test.testAnalyticsId && !this.runStatusMarkedHash[test.testAnalyticsId]) || (test.hookAnalyticsId && !this.runStatusMarkedHash[test.hookAnalyticsId])) {
             if(test.testAnalyticsId) {
               this.runStatusMarkedHash[test.testAnalyticsId] = true;
@@ -146,8 +157,10 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_PENDING, async (test) => {
+        debugOnConsole(`[MOCHA EVENT] EVENT_TEST_PENDING`);
         if(this.testObservability == true) {
           if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
+          debugOnConsole(`[MOCHA EVENT] EVENT_TEST_PENDING for uuid: ${test.testAnalyticsId}`);
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             this.runStatusMarkedHash[test.testAnalyticsId] = true;
             await this.sendTestRunEvent(test,undefined,false,"TestRunSkipped");
@@ -156,6 +169,8 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_BEGIN, async (test) => {
+        debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN`);
+        debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
           await this.testStarted(test);
@@ -163,6 +178,8 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_END, async (test) => {
+        debugOnConsole(`[MOCHA EVENT] EVENT_TEST_END`);
+        debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
@@ -174,10 +191,12 @@ class MyReporter {
       
       .once(EVENT_RUN_END, async () => {
         try {
+          debugOnConsole(`[MOCHA EVENT] EVENT_RUN_END`);
           if(this.testObservability == true) {
             const hookSkippedTests = getHookSkippedTests(this.runner.suite);
             for(const test of hookSkippedTests) {
               if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
+              debugOnConsole(`[MOCHA EVENT] EVENT_RUN_END TestRunSkipped for uuid: ${test.testAnalyticsId}`);
               await this.sendTestRunEvent(test,undefined,false,"TestRunSkipped");
             }
           }
@@ -318,6 +337,8 @@ class MyReporter {
         }
       };
 
+      debugOnConsole(`${eventType} for uuid: ${testData.uuid}`);
+
       if(eventType.match(/TestRunFinished/) || eventType.match(/TestRunSkipped/)) {
         testData['meta'].steps = JSON.parse(JSON.stringify(this.currentTestCucumberSteps));
         this.currentTestCucumberSteps = [];
@@ -377,6 +398,7 @@ class MyReporter {
           mapTestHooks(test);
         }
       } catch(e) {
+        debugOnConsole(`Exception in processing hook data for event ${eventType} with error : ${e}`);
         debug(`Exception in processing hook data for event ${eventType} with error : ${e}`, true, e);
       }
 
@@ -473,6 +495,7 @@ class MyReporter {
         this.hooksStarted = {};
       }
     } catch(error) {
+      debugOnConsole(`Exception in populating test data for event ${eventType} with error : ${error}`);
       debug(`Exception in populating test data for event ${eventType} with error : ${error}`, true, error);
     }
   }
