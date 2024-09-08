@@ -441,3 +441,7 @@ exports.truncateString = (field, truncateSizeInBytes) => {
 
   return field;
 };
+
+exports.combineMacWinNpmDependencies = (runSettings) => {
+  return Object.assign({}, runSettings.npm_dependencies, runSettings.win_npm_dependencies || {}, runSettings.mac_npm_dependencies || {})
+};
