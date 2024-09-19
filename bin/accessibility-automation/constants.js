@@ -1,1 +1,1 @@
-exports.API_URL = 'https://accessibility.browserstack.com/api';
+exports.API_URL = 'https://accessibility-qa.bsstag.com/api';
