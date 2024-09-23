@@ -54,7 +54,7 @@ getPackageVersion = (package_, bsConfig = null) => {
   /* Try to find version from module path */
   try {
     packages[package_] = this.requireModule(`${package_}/package.json`).version;
-    logger.info(`Getting ${package_} package version from module path = ${packages[package_]}`);
+    logger.info(`INSIDE getPackageVersion in O11y crash reporter Getting ${package_} package version from module path = ${packages[package_]}`);
     packageVersion = packages[package_];
   } catch(e) {
     debug(`Unable to find package ${package_} at module path with error ${e}`);
@@ -68,7 +68,7 @@ getPackageVersion = (package_, bsConfig = null) => {
       typeof runSettings.npm_dependencies === 'object') {
       if (package_ in runSettings.npm_dependencies) {
         packages[package_] = runSettings.npm_dependencies[package_];
-        logger.info(`Getting ${package_} package version from browserstack.json = ${packages[package_]}`);
+        logger.info(`INSIDE getPackageVersion in O11y crash reporter Getting ${package_} package version from browserstack.json = ${packages[package_]}`);
         packageVersion = packages[package_];
       }
     }

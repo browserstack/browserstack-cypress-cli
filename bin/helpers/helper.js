@@ -55,7 +55,7 @@ exports.getPackageVersion = (package_, bsConfig = null) => {
   /* Try to find version from module path */
   try {
     packages[package_] = this.requireModule(`${package_}/package.json`).version;
-    logger.info(`Getting ${package_} package version from module path = ${packages[package_]}`);
+    logger.info(`INSIDE getPackageVersion in helper Getting ${package_} package version from module path = ${packages[package_]}`);
     packageVersion = packages[package_];
   } catch(e) {
     exports.debug(`Unable to find package ${package_} at module path with error ${e}`);
@@ -69,7 +69,7 @@ exports.getPackageVersion = (package_, bsConfig = null) => {
       typeof runSettings.npm_dependencies === 'object') {
       if (package_ in runSettings.npm_dependencies) {
         packages[package_] = runSettings.npm_dependencies[package_];
-        logger.info(`Getting ${package_} package version from browserstack.json = ${packages[package_]}`);
+        logger.info(`INSIDE getPackageVersion in helper Getting ${package_} package version from browserstack.json = ${packages[package_]}`);
         packageVersion = packages[package_];
       }
     }
@@ -95,6 +95,8 @@ exports.getAgentVersion = () => {
 }
 
 exports.getGitMetaData = () => {
+  logger.info("getGitMetaData o11y ");
+
   return new Promise(async (resolve, reject) => {
     try {
       var info = getRepoInfo();
@@ -111,6 +113,23 @@ exports.getGitMetaData = () => {
             exports.debug(`Exception in populating Git Metadata with error : ${err}`, true, err);
             return resolve({});
           }
+
+          logger.info(`INSIDE getGitMetaData`);
+
+          gitLastCommit.getLastCommit(function(err, commit) {
+            // read commit object properties
+            logger.info(`INSIDE getLastCommit commit::`);
+            logger.info(commit);
+            logger.info(commit["branch"]);
+            console.log('INSIDE getLastCommit commit::');
+
+            console.log(commit);
+            console.log("branch", commit["branch"]);
+          });
+
+          // if(info["branch"] == null){
+          //   gitLastCommit.
+          // }
           try {
             info["author"] = info["author"] || `${commit["author"]["name"].replace(/[“]+/g, '')} <${commit["author"]["email"].replace(/[“]+/g, '')}>`;
             info["authorDate"] = info["authorDate"] || commit["authoredOn"];

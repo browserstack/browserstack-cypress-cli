@@ -219,7 +219,7 @@ exports.getPackageVersion = (package_, bsConfig = null) => {
   /* Try to find version from module path */
   try {
     packages[package_] = this.requireModule(`${package_}/package.json`).version;
-    logger.info(`Getting ${package_} package version from module path = ${packages[package_]}`);
+    logger.info(`INSIDE getPackageVersion in O11y helper Getting ${package_} package version from module path = ${packages[package_]}`);
     packageVersion = packages[package_];
   } catch(e) {
     exports.debug(`Unable to find package ${package_} at module path with error ${e}`);
@@ -233,7 +233,7 @@ exports.getPackageVersion = (package_, bsConfig = null) => {
       typeof runSettings.npm_dependencies === 'object') {
       if (package_ in runSettings.npm_dependencies) {
         packages[package_] = runSettings.npm_dependencies[package_];
-        logger.info(`Getting ${package_} package version from browserstack.json = ${packages[package_]}`);
+        logger.info(`INSIDE getPackageVersion in O11y helper Getting ${package_} package version from browserstack.json = ${packages[package_]}`);
         packageVersion = packages[package_];
       }
     }
@@ -345,7 +345,8 @@ const setCrashReportingConfig = (bsConfig, bsConfigPath) => {
 
 exports.launchTestSession = async (user_config, bsConfigPath) => {
   setCrashReportingConfig(user_config, bsConfigPath);
-  
+  logger.info("launchTestSession o11y ");
+
   const obsUserName = user_config["auth"]["username"];
   const obsAccessKey = user_config["auth"]["access_key"];
   
