@@ -12,6 +12,8 @@
   cliUtils = require("./utils"),
   util = require('util');
 
+const { combineMacWinNpmDependencies } = require("./helper");
+
 let nodeProcess;
 
 const setupPackageFolder = (runSettings, directoryPath) => {
@@ -29,9 +31,10 @@ const setupPackageFolder = (runSettings, directoryPath) => {
           Object.assign(packageJSON, runSettings.package_config_options);
         }
 
+        // Combine win and mac specific dependencies if present
         if (typeof runSettings.npm_dependencies === 'object') {
           Object.assign(packageJSON, {
-            devDependencies: runSettings.npm_dependencies,
+            devDependencies: combineMacWinNpmDependencies(runSettings),
           });
         }
 
