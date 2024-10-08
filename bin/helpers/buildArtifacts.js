@@ -114,6 +114,7 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
           reject(Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_NOT_FOUND);
         }
         const errorMsg = `Non 200 status code, got status code: ${response.statusCode}`;
+        logger.debug(`${errorMsg} with response: ${response.message}`);
         reject(errorMsg);
       } else {
         //ensure that the user can call `then()` only when the file has
