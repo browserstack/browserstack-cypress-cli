@@ -35,6 +35,9 @@ const parseAndDownloadArtifacts = async (buildId, data, bsConfig, args, rawArgs,
             utils.sendUsageReport(bsConfig, args, warningMessage, Constants.messageTypes.ERROR, 'build_artifacts_not_found', buildReportData, rawArgs);
           } else {
             BUILD_ARTIFACTS_FAIL_COUNT += 1;
+            const errorMsg = `Error downloading build artifacts for ${sessionId} with error: ${error}`;
+            logger.debug(errorMsg);
+            utils.sendUsageReport(bsConfig, args, errorMsg, Constants.messageTypes.ERROR, 'build_artifacts_parse_error', buildReportData, rawArgs);
           }
           // delete malformed zip if present
           let tmpFilePath = path.join(filePath, fileName);
@@ -102,6 +105,7 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
   let tmpFilePath = path.join(filePath, fileName);
   const writer = fs.createWriteStream(tmpFilePath);
 
+  logger.debug(`Downloading build artifact for: ${filePath}`)
   return new Promise(async (resolve, reject) => {
     request.get(url).on('response', function(response) {
 
@@ -109,7 +113,8 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
         if (response.statusCode === 404) {
           reject(Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_NOT_FOUND);
         }
-        reject();
+        const errorMsg = `Non 200 status code, got status code: ${response.statusCode}`;
+        reject(errorMsg);
       } else {
         //ensure that the user can call `then()` only when the file has
         //been downloaded entirely.
