@@ -19,6 +19,10 @@ let reportGenerator = (bsConfig, buildId, args, rawArgs, buildReportData, cb) =>
     },
   };
 
+  if (Constants.turboScaleObj.enabled) {
+    options.url = `${config.turboScaleBuildsUrl}/${buildId}/custom_report`;
+  }
+  
   logger.debug('Started fetching the build json and html reports.');
 
   return request.get(options, async function (err, resp, body) {
