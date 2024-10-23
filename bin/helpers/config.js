@@ -29,6 +29,6 @@ config.configJsonFileName = 'tmpCypressConfig.json';
 
 // turboScale
 config.turboScaleMd5Sum = `${config.turboScaleUrl}/md5sumcheck`;
-config.turboScaleBuildsUrl = `${config.turboScaleAPIUrl}/builds`;
+config.turboScaleBuildsUrl = `${config.turboScaleUrl}/builds`;
 
 module.exports = config;
