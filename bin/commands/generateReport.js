@@ -6,7 +6,7 @@ const logger = require("../helpers/logger").winstonLogger,
       reporterHTML = require('../helpers/reporterHTML'),
       getInitialDetails = require('../helpers/getInitialDetails').getInitialDetails;
 const { isTurboScaleSession } = require('../helpers/atsHelper');
-      
+
 module.exports = function generateReport(args, rawArgs) {
   let bsConfigPath = utils.getConfigPath(args.cf);
   let reportGenerator = reporterHTML.reportGenerator;
