@@ -326,6 +326,9 @@ module.exports = function run(args, rawArgs) {
                 }
                 let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
                 let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
+                if (turboScaleSession) {
+                  dashboardLink = `${Constants.userMessages.VISIT_ATS_DASHBOARD} ${data.dashboard_url}`;
+                }
                 buildReportData = { 'build_id': data.build_id, 'parallels': userSpecifiedParallels, ...buildReportData }
                 utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
                 if ((utils.isUndefined(bsConfig.run_settings.parallels) && utils.isUndefined(args.parallels)) || (!utils.isUndefined(bsConfig.run_settings.parallels) && bsConfig.run_settings.parallels == Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE)) {
@@ -388,6 +391,8 @@ module.exports = function run(args, rawArgs) {
                         logger.info(Constants.userMessages.BUILD_FAILED_ERROR)
                         process.exitCode = Constants.BUILD_FAILED_EXIT_CODE;
                       });
+                    } else {
+                      utils.handleSyncExit(exitCode, data.dashboard_url);
                     }
                   });
                 } else if (utils.nonEmptyArray(bsConfig.run_settings.downloads && !turboScaleSession)) {
