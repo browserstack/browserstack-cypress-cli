@@ -6,6 +6,7 @@ const fs = require('fs'),
       Constants = require('./constants'),
       config = require("./config"),
       decompress = require('decompress');
+const { isTurboScaleSession } = require('../helpers/atsHelper');
 
 let reportGenerator = (bsConfig, buildId, args, rawArgs, buildReportData, cb) => {
   let options = {
@@ -19,6 +20,10 @@ let reportGenerator = (bsConfig, buildId, args, rawArgs, buildReportData, cb) =>
     },
   };
 
+  if (isTurboScaleSession(bsConfig)) {
+    options.url = `${config.turboScaleBuildsUrl}/${buildId}/custom_report`;
+  }
+  
   logger.debug('Started fetching the build json and html reports.');
 
   return request.get(options, async function (err, resp, body) {
