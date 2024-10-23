@@ -4,6 +4,6 @@
   "dashboardUrl": "https://automate.browserstack.com/dashboard/v2/builds/",
   "usageReportingUrl": "https://eds.browserstack.com:443/send_event_cy_internal",
   "localTestingListUrl": "https://www.browserstack.com/local/v1/list",
-  "turboScaleUrl": "http://grid-api-devhst.bsstag.com/packages/cypress",
-  "turboScaleAPIUrl": "http://grid-api-devhst.bsstag.com/automate-turboscale/v1"
+  "turboScaleUrl": "https://grid.browserstack.com/packages/cypress",
+  "turboScaleAPIUrl": "https://api.browserstack.com/automate-turboscale/v1"
 }
