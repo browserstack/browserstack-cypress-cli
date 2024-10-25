@@ -131,8 +131,8 @@ const caps = (bsConfig, zip) => {
       obj.run_settings = JSON.stringify(bsConfig.run_settings);
     }
 
-    obj.cypress_cli_version = Utils.getUserAgent();
-    logger.info(`Cypress CLI User Agent: ${obj.cypress_cli_version}`);
+    obj.cypress_cli_user_agent = Utils.getUserAgent();
+    logger.info(`Cypress CLI User Agent: ${obj.cypress_cli_user_agent}`);
 
     if(obj.parallels === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE) obj.parallels = undefined
 
