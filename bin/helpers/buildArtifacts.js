@@ -12,6 +12,7 @@ const { default: axios } = require('axios');
 const HttpsProxyAgent = require('https-proxy-agent');
 const FormData = require('form-data');
 const decompress = require('decompress');
+const unzipper = require("unzipper");
 
 let BUILD_ARTIFACTS_TOTAL_COUNT = 0;
 let BUILD_ARTIFACTS_FAIL_COUNT = 0;
@@ -36,6 +37,9 @@ const parseAndDownloadArtifacts = async (buildId, data, bsConfig, args, rawArgs,
             utils.sendUsageReport(bsConfig, args, warningMessage, Constants.messageTypes.ERROR, 'build_artifacts_not_found', buildReportData, rawArgs);
           } else {
             BUILD_ARTIFACTS_FAIL_COUNT += 1;
+            const errorMsg = `Error downloading build artifacts for ${sessionId} with error: ${error}`;
+            logger.debug(errorMsg);
+            utils.sendUsageReport(bsConfig, args, errorMsg, Constants.messageTypes.ERROR, 'build_artifacts_parse_error', buildReportData, rawArgs);
           }
           // delete malformed zip if present
           let tmpFilePath = path.join(filePath, fileName);
@@ -103,6 +107,7 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
   let tmpFilePath = path.join(filePath, fileName);
   const writer = fs.createWriteStream(tmpFilePath);
 
+  logger.debug(`Downloading build artifact for: ${filePath}`)
   return new Promise(async (resolve, reject) => {
     try {
       const response = await axios.get(url, {responseType: 'stream'});
@@ -110,7 +115,8 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
         if (response.statusCode === 404) {
           reject(Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_NOT_FOUND);
         }
-        reject()
+        const errorMsg = `Non 200 status code, got status code: ${response.statusCode}`;
+        reject(errorMsg);
       } else {
         //ensure that the user can call `then()` only when the file has
         //been downloaded entirely.
@@ -122,13 +128,15 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
           reject(err);
         });
         writer.on('close', async () => {
-          if (!error) {
-            await unzipFile(filePath, fileName);
-            fs.unlinkSync(tmpFilePath);
-            resolve(true);
+          try {
+            if (!error) {
+              await unzipFile(filePath, fileName);
+              fs.unlinkSync(tmpFilePath);
+            }
+          } catch (error) {
+            reject(error);
           }
-          //no need to call the reject here, as it will have been called in the
-          //'error' stream;
+          resolve(true);
         });
       }
     } catch (error) {
@@ -139,13 +147,25 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
 
 const unzipFile = async (filePath, fileName) => {
   return new Promise( async (resolve, reject) => {
-    await decompress(path.join(filePath, fileName), filePath)
-    .then((files) => {
+    try {
+      await decompress(path.join(filePath, fileName), filePath);
       resolve();
-    })
-    .catch((error) => {
-      reject(error);
-    });
+    } catch (error) {
+      logger.debug(`Error unzipping with decompress, trying with unzipper. Stacktrace: ${error}.`);
+      try {
+        fs.createReadStream(path.join(filePath, fileName))
+          .pipe(unzipper.Extract({ path: filePath }))
+          .on("close", () => {
+            resolve();
+          })
+          .on("error", (err) => {
+            reject(err);
+          });
+      } catch (unzipperError) {
+        logger.debug(`Unzipper package error: ${unzipperError}`);
+        reject(Constants.userMessages.BUILD_ARTIFACTS_UNZIP_FAILURE);
+      }
+    }
   });
 }
 

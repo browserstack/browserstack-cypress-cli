@@ -220,6 +220,16 @@ exports.setDefaults = (bsConfig, args) => {
     bsConfig.run_settings.npm_dependencies = {}
   }
 
+  // setting win_npm_dependencies to {} if not present
+  if (bsConfig.run_settings && this.isUndefined(bsConfig.run_settings.win_npm_dependencies)) {
+    bsConfig.run_settings.win_npm_dependencies = {}
+  }
+
+  // setting mac_npm_dependencies to {} if not present
+  if (bsConfig.run_settings && this.isUndefined(bsConfig.run_settings.mac_npm_dependencies)) {
+    bsConfig.run_settings.mac_npm_dependencies = {}
+  }
+
   // setting connection_settings to {} if not present
   if (this.isUndefined(bsConfig.connection_settings)) {
     bsConfig.connection_settings = {};

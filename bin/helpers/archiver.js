@@ -72,9 +72,30 @@ const archiveSpecs = (runSettings, filePath, excludeFiles, md5data) => {
       });
     }
 
+    // Split mac and win configs
+    let macPackageJSON = {};
+    let winPackageJSON = {};
+    Object.assign(macPackageJSON, packageJSON);
+    Object.assign(winPackageJSON, packageJSON);
+
+    if (typeof runSettings.npm_dependencies === 'object') {
+      let macNpmDependencies = Object.assign({}, runSettings.npm_dependencies, runSettings.mac_npm_dependencies || {});
+      let winNpmDependencies = Object.assign({}, runSettings.npm_dependencies, runSettings.win_npm_dependencies || {});
+
+      Object.assign(macPackageJSON, {
+        devDependencies: macNpmDependencies,
+      });
+
+      Object.assign(winPackageJSON, {
+        devDependencies: winNpmDependencies,
+      });
+    }
+
     if (Object.keys(packageJSON).length > 0) {
-      let packageJSONString = JSON.stringify(packageJSON, null, 4);
-      archive.append(packageJSONString, {name: `${cypressAppendFilesZipLocation}browserstack-package.json`});
+      const macPackageJSONString = JSON.stringify(macPackageJSON, null, 4);
+      const winPackageJSONString = JSON.stringify(winPackageJSON, null, 4);
+      archive.append(macPackageJSONString, {name: `${cypressAppendFilesZipLocation}browserstack-mac-package.json`});
+      archive.append(winPackageJSONString, {name: `${cypressAppendFilesZipLocation}browserstack-win-package.json`});
     }
 
     //Create copy of package.json

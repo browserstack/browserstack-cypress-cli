@@ -57,6 +57,7 @@ const userMessages = {
   FAILED_MD5_CHECK:
     "Something went wrong - you can retry running browserstack-cypress with ‘--force-upload’ parameter, or contact BrowserStack Support.",
   VISIT_DASHBOARD: "Visit the Automate dashboard for real-time test reporting:",
+  VISIT_ATS_DASHBOARD: "Visit the Automate TurboScale dashboard for real-time test reporting:",
   CONFLICTING_INIT_ARGUMENTS:
     "Conflicting arguments given. You can use --path only with a file name, and not with a file path.",
   NO_PARALLELS:
@@ -123,7 +124,8 @@ const userMessages = {
   CYPRESS_PORT_WARNING:
     "The requested port number <x> is ignored. The default BrowserStack port will be used for this execution",
   CYPRESS_INTERACTIVE_SESSION_CONFLICT_VALUES:
-    "Conflicting values (True & False) were found for the interactive_debugging capability. Please resolve this issue to proceed further."
+    "Conflicting values (True & False) were found for the interactive_debugging capability. Please resolve this issue to proceed further.",
+  BUILD_ARTIFACTS_UNZIP_FAILURE: "Failed to unzip build artifacts.",
 };
 
 const validationMessages = {
@@ -342,7 +344,11 @@ const filesToIgnoreWhileUploading = [
   "package.json",
   "**/package.json",
   "browserstack-package.json",
+  "browserstack-mac-package.json",
+  "browserstack-win-package.json",
   "**/browserstack-package.json",
+  "**/browserstack-mac-package.json",
+  "**/browserstack-win-package.json",
   "tests.zip",
   "**/tests.zip",
   "cypress.json",

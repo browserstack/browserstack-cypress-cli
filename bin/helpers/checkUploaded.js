@@ -1,5 +1,6 @@
 'use strict';
 const { default: axios } = require('axios');
+const { combineMacWinNpmDependencies } = require('./helper');
 
 const crypto = require('crypto'),
   Constants = require('./constants'),
@@ -59,7 +60,7 @@ const checkPackageMd5 = (runSettings) => {
 
   if (typeof runSettings.npm_dependencies === 'object') {
     Object.assign(packageJSON, {
-      devDependencies: utils.sortJsonKeys(runSettings.npm_dependencies),
+      devDependencies: utils.sortJsonKeys(combineMacWinNpmDependencies(runSettings)),
     });
   }
 

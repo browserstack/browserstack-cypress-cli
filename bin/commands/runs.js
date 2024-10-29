@@ -18,7 +18,6 @@ const archiver = require("../helpers/archiver"),
   {initTimeComponents, instrumentEventTime, markBlockStart, markBlockEnd, getTimeComponents} = require('../helpers/timeComponents'),
   downloadBuildArtifacts = require('../helpers/buildArtifacts').downloadBuildArtifacts,
   downloadBuildStacktrace = require('../helpers/downloadBuildStacktrace').downloadBuildStacktrace,
-  updateNotifier = require('update-notifier'),
   pkg = require('../../package.json'),
   packageDiff = require('../helpers/package-diff');
 const { getStackTraceUrl } = require('../helpers/sync/syncSpecsLogs');
@@ -249,6 +248,9 @@ module.exports = function run(args, rawArgs) {
                 utils.setProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
                 let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
                 let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
+                if (turboScaleSession) {
+                  dashboardLink = `${Constants.userMessages.VISIT_ATS_DASHBOARD} ${data.dashboard_url}`;
+                }
                 buildReportData = { 'build_id': data.build_id, 'parallels': userSpecifiedParallels, ...buildReportData }
                 utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
                 if ((utils.isUndefined(bsConfig.run_settings.parallels) && utils.isUndefined(args.parallels)) || (!utils.isUndefined(bsConfig.run_settings.parallels) && bsConfig.run_settings.parallels == Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE)) {
@@ -311,6 +313,8 @@ module.exports = function run(args, rawArgs) {
                         logger.info(Constants.userMessages.BUILD_FAILED_ERROR)
                         process.exitCode = Constants.BUILD_FAILED_EXIT_CODE;
                       });
+                    } else {
+                      utils.handleSyncExit(exitCode, data.dashboard_url);
                     }
                   });
                 } else if (utils.nonEmptyArray(bsConfig.run_settings.downloads && !turboScaleSession)) {
@@ -452,23 +456,27 @@ module.exports = function run(args, rawArgs) {
     utils.sendUsageReport(bsJsonData, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), null, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;
   }).finally(function(){
-    const notifier = updateNotifier({
-      pkg,
-      updateCheckInterval: 1000 * 60 * 60 * 24 * 7,
+    import('update-notifier').then(({ default: updateNotifier } ) => {
+      const notifier = updateNotifier({
+        pkg,
+        updateCheckInterval: 1000 * 60 * 60 * 24 * 7,
+      });
+
+      // Checks for update on first run.
+      // Set lastUpdateCheck to 0 to spawn the check update process as notifier sets this to Date.now() for preventing
+      // the check untill one interval period. It runs once.
+      if (!notifier.disabled && Date.now() - notifier.config.get('lastUpdateCheck') < 50) {
+        notifier.config.set('lastUpdateCheck', 0);
+        notifier.check();
+      }
+
+      // Set the config update as notifier clears this after reading.
+      if (notifier.update && notifier.update.current !== notifier.update.latest) {
+        notifier.config.set('update', notifier.update);
+        notifier.notify({isGlobal: true});
+      }
+    }).catch((error) => {
+      logger.debug('Got error loading update-notifier: ', error);
     });
-
-    // Checks for update on first run.
-    // Set lastUpdateCheck to 0 to spawn the check update process as notifier sets this to Date.now() for preventing
-    // the check untill one interval period. It runs once.
-    if (!notifier.disabled && Date.now() - notifier.config.get('lastUpdateCheck') < 50) {
-      notifier.config.set('lastUpdateCheck', 0);
-      notifier.check();
-    }
-
-    // Set the config update as notifier clears this after reading.
-    if (notifier.update && notifier.update.current !== notifier.update.latest) {
-      notifier.config.set('update', notifier.update);
-      notifier.notify({isGlobal: true});
-    }
   });
 }
