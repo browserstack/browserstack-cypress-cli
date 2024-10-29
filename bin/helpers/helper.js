@@ -16,15 +16,11 @@ const { spawn, execSync } = require('child_process');
 const glob = require('glob');
 const pGitconfig = promisify(gitconfig);
 const { readCypressConfigFile } = require('./readCypressConfigUtil');
-const CrashReporter = require('../testObservability/crashReporter');
 const { MAX_GIT_META_DATA_SIZE_IN_BYTES, GIT_META_DATA_TRUNCATED } = require('./constants')
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
     logger.info(`[ OBSERVABILITY ] ${text}`);
-  }
-  if(shouldReport) {
-    CrashReporter.getInstance().uploadCrashReport(text, throwable ? throwable && throwable.stack : null);
   }
 }
 
