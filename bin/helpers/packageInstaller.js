@@ -9,7 +9,10 @@
   { get_version } = require('./usageReporting'),
   process = require('process'),
   { spawn } = require('child_process'),
+  cliUtils = require("./utils"),
   util = require('util');
+
+const { combineMacWinNpmDependencies } = require("./helper");
 
 let nodeProcess;
 
@@ -28,9 +31,10 @@ const setupPackageFolder = (runSettings, directoryPath) => {
           Object.assign(packageJSON, runSettings.package_config_options);
         }
 
+        // Combine win and mac specific dependencies if present
         if (typeof runSettings.npm_dependencies === 'object') {
           Object.assign(packageJSON, {
-            devDependencies: runSettings.npm_dependencies,
+            devDependencies: combineMacWinNpmDependencies(runSettings),
           });
         }
 
@@ -58,7 +62,7 @@ const setupPackageFolder = (runSettings, directoryPath) => {
   })
 };
 
-const packageInstall = (packageDir) => {
+const packageInstall = (packageDir, bsConfig) => {
   return new Promise(function (resolve, reject) {
     const nodeProcessCloseCallback = (code) => {
       if(code == 0) {
@@ -73,6 +77,16 @@ const packageInstall = (packageDir) => {
       logger.error(`Some error occurred while installing packages: %j`, error);
       reject(`Packages were not installed successfully. Error Description ${util.format('%j', error)}`);
     };
+
+    // Moving .npmrc to tmpBstackPackages
+    try {
+      logger.debug(`Copying .npmrc file to temporary package directory`);
+      const npmrcRootPath = path.join(cliUtils.isNotUndefined(bsConfig.run_settings.home_directory) ? path.resolve(bsConfig.run_settings.home_directory) : './', '.npmrc');
+      const npmrcTmpPath = path.join(path.resolve(packageDir), '.npmrc');
+      fs.copyFileSync(npmrcRootPath, npmrcTmpPath);
+    } catch (error) {
+      logger.debug(`Failed copying .npmrc to ${packageDir}: ${error}`)
+    }
 
     let nodeProcess;
     logger.debug(`Fetching npm version and its major version`);
@@ -147,7 +161,7 @@ const packageSetupAndInstaller = (bsConfig, packageDir, instrumentBlocks) => {
       instrumentBlocks.markBlockEnd("packageInstaller.folderSetup");
       instrumentBlocks.markBlockStart("packageInstaller.packageInstall");
       logger.debug("Started installing dependencies specified in browserstack.json");
-      return packageInstall(packageDir);
+      return packageInstall(packageDir, bsConfig);
     }).then((_result) => {
       logger.debug("Completed installing dependencies");
       instrumentBlocks.markBlockEnd("packageInstaller.packageInstall");
