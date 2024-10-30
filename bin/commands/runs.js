@@ -366,9 +366,9 @@ module.exports = function run(args, rawArgs) {
 
                     // download build artifacts
                     if (exitCode != Constants.BUILD_FAILED_EXIT_CODE) {
-                      if (utils.nonEmptyArray(bsConfig.run_settings.downloads) && !turboScaleSession) {
+                      if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
                         logger.debug("Downloading build artifacts");
-                        await downloadBuildArtifacts(bsConfig, data.build_id, args, rawArgs, buildReportData);
+                        await downloadBuildArtifacts(bsConfig, data.build_id, args, rawArgs, buildReportData, turboScaleSession);
                       }
 
                       // Generate custom report!
