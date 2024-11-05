@@ -1,8 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const http = require('http');
 const https = require('https');
-const request = require('requestretry');
 const { v4: uuidv4 } = require('uuid');
 const os = require('os');
 const { promisify } = require('util');
@@ -10,6 +8,7 @@ const gitconfig = require('gitconfiglocal');
 const { spawn, execSync } = require('child_process');
 const glob = require('glob');
 const util = require('util');
+const axios = require('axios');
 
 const { runOptions } = require('../../helpers/runnerArgs')
 

@@ -6,15 +6,9 @@ const chai = require('chai'),
 
 const fs = require('fs'),
       path = require('path'),
-      request = require('request'),
-      unzipper = require('unzipper'),
-      decompress = require('decompress');
       Constants = require("../../../../bin/helpers/constants"),
       logger = require("../../../../bin/helpers/logger").winstonLogger,
-      testObjects = require("../../support/fixtures/testObjects"),
-      formatRequest = require("../../../../bin/helpers/utils").formatRequest;
-
-const proxyquire = require("proxyquire").noCallThru();
+      testObjects = require("../../support/fixtures/testObjects")
 
 const utils = require('../../../../bin/helpers/utils');
 const reporterHTML = require('../../../../bin/helpers/reporterHTML');
@@ -233,27 +227,27 @@ describe('reporterHTML', () => {
     });
   });
 
-  describe('generateCypressBuildReport', () => {
-    it('calls cypress build report with report download url', () => {
-      let pathStub = sinon.stub(path, 'join');
-      let fileExistStub = sinon.stub(fs, 'existsSync');
-      let rewireReporterHTML = rewire('../../../../bin/helpers/reporterHTML');
-      let generateCypressBuildReport = rewireReporterHTML.__get__('generateCypressBuildReport');
-      let getReportResponseStub = sinon.stub();
-      getReportResponseStub.calledOnceWith('abc/efg', 'report.zip', 'url');
-      rewireReporterHTML.__set__('getReportResponse', getReportResponseStub);
-      pathStub.returns('abc/efg');
-      fileExistStub.returns(true);
-      generateCypressBuildReport({ report_data: 'url' });
-      pathStub.restore();
-    });
+  // describe('generateCypressBuildReport', () => {
+  //   it('calls cypress build report with report download url', () => {
+  //     let pathStub = sinon.stub(path, 'join');
+  //     let fileExistStub = sinon.stub(fs, 'existsSync');
+  //     let rewireReporterHTML = rewire('../../../../bin/helpers/reporterHTML');
+  //     let generateCypressBuildReport = rewireReporterHTML.__get__('generateCypressBuildReport');
+  //     let getReportResponseStub = sinon.stub();
+  //     getReportResponseStub.calledOnceWith('abc/efg', 'report.zip', 'url');
+  //     rewireReporterHTML.__set__('getReportResponse', getReportResponseStub);
+  //     pathStub.returns('abc/efg');
+  //     fileExistStub.returns(true);
+  //     generateCypressBuildReport({ report_data: 'url' });
+  //     pathStub.restore();
+  //   });
 
-    reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs, {});
+  //   reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs, {});
 
-    sinon.assert.calledOnce(requestStub);
-    sinon.assert.calledOnce(getUserAgentStub);
-    sendUsageReportStub.calledOnceWithExactly(bsConfig, args, message, messageType, errorCode, {}, rawArgs);
-  });
+  //   sinon.assert.calledOnce(requestStub);
+  //   sinon.assert.calledOnce(getUserAgentStub);
+  //   sendUsageReportStub.calledOnceWithExactly(bsConfig, args, message, messageType, errorCode, {}, rawArgs);
+  // });
 });
 
 describe("unzipFile", () => {

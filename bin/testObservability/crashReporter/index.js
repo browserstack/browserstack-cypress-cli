@@ -1,158 +1,174 @@
-/* Event listeners + custom commands for Cypress */
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
+const https = require('https');
 
-/* Used to detect Gherkin steps */
-Cypress.on('log:added', (log) => {
-    return () => {
-      return cy.now('task', 'test_observability_step', {
-                log
-              }, {log: false})
+const logger = require("../../helpers/logger").winstonLogger;
+const utils = require('../../helpers/utils');
+
+const { API_URL } = require('../helper/constants');
+
+/* Below global methods are added here to remove cyclic dependency with helper.js, refactor later */
+const httpsKeepAliveAgent = new https.Agent({
+  keepAlive: true,
+  timeout: 60000,
+  maxSockets: 2,
+  maxTotalSockets: 2
+});
+
+const debug = (text) => {
+  if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
+    logger.info(`[ OBSERVABILITY ] ${text}`);
+  }
+}
+
+let packages = {};
+
+exports.requireModule = (module, internal = false) => {
+  let local_path = "";
+  if(process.env["browserStackCwd"]){
+   local_path = path.join(process.env["browserStackCwd"], 'node_modules', module);
+  } else if(internal) {
+    local_path = path.join(process.cwd(), 'node_modules', 'browserstack-cypress-cli', 'node_modules', module);
+  } else {
+    local_path = path.join(process.cwd(), 'node_modules', module);
+  }
+  if(!fs.existsSync(local_path)) {
+    let global_path;
+    if(['jest-runner', 'jest-runtime'].includes(module))
+      global_path = path.join(GLOBAL_MODULE_PATH, 'jest', 'node_modules', module);
+    else
+      global_path = path.join(GLOBAL_MODULE_PATH, module);
+    if(!fs.existsSync(global_path)) {
+      throw new Error(`${module} doesn't exist.`);
     }
-  });
-  
-  Cypress.on('command:start', (command) => {
-    if(!command || !command.attributes) return;
-    if(command.attributes.name == 'log' || (command.attributes.name == 'task' && (command.attributes.args.includes('test_observability_command') || command.attributes.args.includes('test_observability_log')))) {
-      return;
+    return require(global_path);
+  }
+  return require(local_path);
+}
+
+getPackageVersion = (package_, bsConfig = null) => {
+  if(packages[package_]) return packages[package_];
+  let packageVersion;
+  /* Try to find version from module path */
+  try {
+    packages[package_] = this.requireModule(`${package_}/package.json`).version;
+    logger.info(`Getting ${package_} package version from module path = ${packages[package_]}`);
+    packageVersion = packages[package_];
+  } catch(e) {
+    debug(`Unable to find package ${package_} at module path with error ${e}`);
+  }
+
+  /* Read package version from npm_dependencies in browserstack.json file if present */
+  if(utils.isUndefined(packageVersion) && bsConfig && (process.env.BROWSERSTACK_AUTOMATION == "true" || process.env.BROWSERSTACK_AUTOMATION == "1")) {
+    const runSettings = bsConfig.run_settings;
+    if (runSettings && runSettings.npm_dependencies !== undefined && 
+      Object.keys(runSettings.npm_dependencies).length !== 0 &&
+      typeof runSettings.npm_dependencies === 'object') {
+      if (package_ in runSettings.npm_dependencies) {
+        packages[package_] = runSettings.npm_dependencies[package_];
+        logger.info(`Getting ${package_} package version from browserstack.json = ${packages[package_]}`);
+        packageVersion = packages[package_];
+      }
     }
-    /* Send command details */
-    cy.now('task', 'test_observability_command', {
-      type: 'COMMAND_START',
-      command: {
-        attributes: {
-          id: command.attributes.id,
-          name: command.attributes.name,
-          args: command.attributes.args
+  }
+
+  /* Read package version from project's package.json if present */
+  const packageJSONPath = path.join(process.cwd(), 'package.json');
+  if(utils.isUndefined(packageVersion) && fs.existsSync(packageJSONPath)) {
+    const packageJSONContents = require(packageJSONPath);
+    if(packageJSONContents.devDependencies && !utils.isUndefined(packageJSONContents.devDependencies[package_])) packages[package_] = packageJSONContents.devDependencies[package_];
+    if(packageJSONContents.dependencies && !utils.isUndefined(packageJSONContents.dependencies[package_])) packages[package_] = packageJSONContents.dependencies[package_];
+    logger.info(`Getting ${package_} package version from package.json = ${packages[package_]}`);
+    packageVersion = packages[package_];
+  }
+
+  return packageVersion;
+}
+
+getAgentVersion = () => {
+  let _path = path.join(__dirname, '../../../package.json');
+  if(fs.existsSync(_path))
+    return require(_path).version;
+}
+
+class CrashReporter {
+  static instance;
+
+  constructor() {
+  }
+
+  static getInstance() {
+    if (!CrashReporter.instance) {
+      CrashReporter.instance = new CrashReporter();
+    }
+    return CrashReporter.instance;
+  }
+
+  setCredentialsForCrashReportUpload(credentialsStr) {
+    /* User credentials used for reporting crashes */
+    this.credentialsForCrashReportUpload = JSON.parse(credentialsStr);
+  }
+
+  setConfigDetails(credentialsStr, browserstackConfigFile, cypressConfigFile) {
+    /* User test config for build run */
+    this.userConfigForReporting = {
+      framework: 'Cypress',
+      browserstackConfigFile: browserstackConfigFile,
+      cypressConfigFile: cypressConfigFile
+    };
+    this.setCredentialsForCrashReportUpload(credentialsStr);
+  }
+
+  uploadCrashReport(exception, stacktrace) {
+    try {
+      if (!this.credentialsForCrashReportUpload.username || !this.credentialsForCrashReportUpload.password) {
+        return debug('[Crash_Report_Upload] Failed to parse user credentials while reporting crash')
+      }
+
+      const data = {
+          hashed_id: process.env.BS_TESTOPS_BUILD_HASHED_ID,
+          observability_version: {
+              frameworkName: 'Cypress',
+              frameworkVersion: getPackageVersion('cypress', this.userConfigForReporting.browserstackConfigFile),
+              sdkVersion: getAgentVersion()
+          },
+          exception: {
+              error: exception.toString(),
+              stackTrace: stacktrace
+          },
+          config: this.userConfigForReporting
+      }
+
+      const options = {
+        auth: {
+          ...this.credentialsForCrashReportUpload
         },
-        state: 'pending'
-      }
-    }, {log: false}).then((res) => {
-    }).catch((err) => {
-    });
-  
-    /* Send platform details */
-    cy.now('task', 'test_observability_platform_details', {
-      testTitle: Cypress.currentTest.title,
-      browser: Cypress.browser,
-      platform: Cypress.platform,
-      cypressVersion: Cypress.version
-    }, {log: false}).then((res) => {
-    }).catch((err) => {
-    });
-  });
-  
-  Cypress.on('command:retry', (command) => {
-    if(!command || !command.attributes) return;
-    if(command.attributes.name == 'log' || (command.attributes.name == 'task' && (command.attributes.args.includes('test_observability_command') || command.attributes.args.includes('test_observability_log')))) {
-      return;
-    }
-    cy.now('task', 'test_observability_command', {
-      type: 'COMMAND_RETRY',
-      command: {
-        _log: command._log,
-        error: {
-          message: command && command.error ? command.error.message : null,
-          isDefaultAssertionErr: command && command.error ? command.error.isDefaultAssertionErr : null
-        }
-      }
-    }, {log: false}).then((res) => {
-    }).catch((err) => {
-    });
-  });
-  
-  Cypress.on('command:end', (command) => {
-    if(!command || !command.attributes) return;
-    if(command.attributes.name == 'log' || (command.attributes.name == 'task' && (command.attributes.args.includes('test_observability_command') || command.attributes.args.includes('test_observability_log')))) {
-      return;
-    }
-    cy.now('task', 'test_observability_command', {
-      'type': 'COMMAND_END',
-      'command': {
-        'attributes': {
-          'id': command.attributes.id,
-          'name': command.attributes.name,
-          'args': command.attributes.args
+        headers: {
+          'Content-Type': 'application/json',
+          'X-BSTACK-TESTOPS': 'true'
         },
-        'state': command.state
-      }
-    }, {log: false}).then((res) => {
-    }).catch((err) => {
-    });
-  });
-  
-  Cypress.Commands.overwrite('log', (originalFn, ...args) => {
-    if(args.includes('test_observability_log') || args.includes('test_observability_command')) return;
-    const message = args.reduce((result, logItem) => {
-      if (typeof logItem === 'object') {
-        return [result, JSON.stringify(logItem)].join(' ');
-      }
-  
-      return [result, logItem ? logItem.toString() : ''].join(' ');
-    }, '');
-    cy.now('task', 'test_observability_log', {
-      'level': 'info',
-      message,
-    }, {log: false}).then((res) => {
-    }).catch((err) => {
-    });
-    originalFn(...args);
-  });
-  
-  Cypress.Commands.add('trace', (message, file) => {
-    cy.now('task', 'test_observability_log', {
-      level: 'trace',
-      message,
-      file,
-    }).then((res) => {
-    }).catch((err) => {
-    });
-  });
-  
-  Cypress.Commands.add('logDebug', (message, file) => {
-    cy.now('task', 'test_observability_log', {
-      level: 'debug',
-      message,
-      file,
-    }).then((res) => {
-    }).catch((err) => {
-    });
-  });
-  
-  Cypress.Commands.add('info', (message, file) => {
-    cy.now('task', 'test_observability_log', {
-      level: 'info',
-      message,
-      file,
-    }).then((res) => {
-    }).catch((err) => {
-    });
-  });
-  
-  Cypress.Commands.add('warn', (message, file) => {
-    cy.now('task', 'test_observability_log', {
-      level: 'warn',
-      message,
-      file,
-    }).then((res) => {
-    }).catch((err) => {
-    });
-  });
-  
-  Cypress.Commands.add('error', (message, file) => {
-    cy.now('task', 'test_observability_log', {
-      level: 'error',
-      message,
-      file,
-    }).then((res) => {
-    }).catch((err) => {
-    });
-  });
-  
-  Cypress.Commands.add('fatal', (message, file) => {
-    cy.now('task', 'test_observability_log', {
-      level: 'fatal',
-      message,
-      file,
-    }).then((res) => {
-    }).catch((err) => {
-    });
-  });
+        method: 'POST',
+        url: `${API_URL}/api/v1/analytics`,
+        body: data,
+        json: true,
+        agent: httpsKeepAliveAgent
+      };
+
+      axios(options)
+          .then(response => {
+              if(response.statusCode != 200) {
+                debug(`[Crash_Report_Upload] Failed due to ${response && response.body ? response.body : `Received response from BrowserStack Server with status : ${response.statusCode}`}`);
+              } else {
+                debug(`[Crash_Report_Upload] Success response: ${JSON.stringify({status: response.status, body: response.body})}`)
+
+                }
+          })
+          .catch(error => debug(`[Crash_Report_Upload] Failed due to ${error}`));
+    } catch(e) {
+      debug(`[Crash_Report_Upload] Processing failed due to ${e && e.stack}`);
+    }
+  }
+}
+
+module.exports = CrashReporter;
