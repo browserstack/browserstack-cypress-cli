@@ -47,34 +47,34 @@ exports.getTurboScaleGridDetails = async (bsConfig, args, rawArgs) => {
 
         return new Promise((resolve, reject) => {
             let options = {
-            url: `${config.turboScaleAPIUrl}/grids/${gridName}`,
-            auth: {
+              url: `${config.turboScaleAPIUrl}/grids/${gridName}`,
+              auth: {
                 username: bsConfig.auth.username,
                 password: bsConfig.auth.access_key,
-            },
-            headers: {
+              },
+              headers: {
                 'User-Agent': utils.getUserAgent(),
-            }
+              }
             };
             let responseData = {};
             axios(options).then(response => {
-            try {
+              try {
                 responseData = JSON.parse(response.data);
-                } catch (e) {
+              } catch (e) {
                 responseData = {};
-                }
-                if(resp.statusCode != 200) {
-                logger.warn(`Warn: Get Automate TurboScale Details Request failed with status code ${response.statusCode}`);
+              }
+              if(resp.status != 200) {
+                logger.warn(`Warn: Get Automate TurboScale Details Request failed with status code ${response.status}`);
                 utils.sendUsageReport(bsConfig, args, responseData["error"], Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
                 resolve({});
-                }
-                resolve(responseData);
+              }
+              resolve(responseData);
             }).catch(error => {
             logger.warn(utils.formatRequest(error, null, null));
             utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
             resolve({});
-            });
         });
+      });
     } catch (err) {
         logger.error(`Failed to find TurboScale Grid: ${err}: ${err.stack}`);
     }

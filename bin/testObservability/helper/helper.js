@@ -10,6 +10,7 @@ const glob = require('glob');
 const util = require('util');
 const axios = require('axios');
 
+
 const { runOptions } = require('../../helpers/runnerArgs')
 
 const pGitconfig = promisify(gitconfig);
@@ -116,38 +117,43 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
 }
 
 const nodeRequest = (type, url, data, config) => {
-  return new Promise(async (resolve, reject) => {
-    const options = {...config,...{
+    return new Promise(async (resolve, reject) => {
+      const options = {
+        ...config,
         method: type,
         url: `${API_URL}/${url}`,
-        body: data,
-        json: config.headers['Content-Type'] === 'application/json',
-        agent: this.httpsKeepAliveAgent,
-        maxAttempts: 2
-    }};
-
-    if(url === exports.requestQueueHandler.screenshotEventUrl) {
-        options.agent = httpsScreenshotsKeepAliveAgent;
-    }
-
-    axios(options)
+        data: data, 
+        httpsAgent: this.httpsKeepAliveAgent,  
+        maxAttempts: 2,
+        headers: {
+          'Content-Type': 'application/json',
+          ...config.headers 
+        }
+      };
+    
+      if(url === exports.requestQueueHandler.screenshotEventUrl) {
+          options.agent = httpsScreenshotsKeepAliveAgent;
+      }
+      axios(options)
         .then(response => {
-            if(response.statusCode != 200) {
-                reject(response && response.body ? response.body : `Received response from BrowserStack Server with status : ${response.statusCode}`);
-            } else {
-                try {
-                  const responseBody = typeof response.data === 'object' ? response.data : JSON.parse(response.data);
-                  resolve({ data: responseBody });
-                } catch (error) {
-                  if (!url.includes('/stop')) {
-                    reject('Not a JSON response from BrowserStack Server');
-                  } else {
-                    resolve({ data: response.data }); 
-                  }
-                }
+          if(response.status != 200) {
+              reject(response && response.data ? response.data : `Received response from BrowserStack Server with status : ${response.status}`);
+          } else {
+            try {
+              const responseBody = typeof response.data === 'object' ? response.data : JSON.parse(response.data);
+              resolve({ data: responseBody });
+            } catch (error) {
+              if (!url.includes('/stop')) {
+                reject('Not a JSON response from BrowserStack Server');
+              } else {
+                resolve({ data: response.data }); 
               }
+            }
+          }
         })
-        .catch(error => reject(error));
+        .catch(error => {
+          reject(error)
+        });
     });
 }
 
@@ -484,7 +490,7 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
 
   try {
     const eventsUuids = data.map(eventData => `${eventData.event_type}:${eventData.test_run ? eventData.test_run.uuid : (eventData.hook_run ? eventData.hook_run.uuid : null)}`).join(', ');
-    exports.debugOnConsole(`[Request Batch Send] for events:uuids ${eventsUuids}`);
+    exports.debugOnConsole(`[Request Batch Send] for events:uuids ${eventsUuids}`);    
     const response = await nodeRequest('POST',eventUrl,data,config);
     exports.debugOnConsole(`[Request Batch Response] for events:uuids ${eventsUuids}`);
     if(response.data.error) {

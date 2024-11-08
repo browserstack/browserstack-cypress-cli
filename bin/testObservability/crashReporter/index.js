@@ -6,7 +6,7 @@ const https = require('https');
 const logger = require("../../helpers/logger").winstonLogger;
 const utils = require('../../helpers/utils');
 
-const { API_URL } = require('../helper/constants');
+const { API_URL, consoleHolder } = require('../helper/constants');
 
 /* Below global methods are added here to remove cyclic dependency with helper.js, refactor later */
 const httpsKeepAliveAgent = new https.Agent({
@@ -150,19 +150,18 @@ class CrashReporter {
         },
         method: 'POST',
         url: `${API_URL}/api/v1/analytics`,
-        body: data,
+        data: data,
         json: true,
         agent: httpsKeepAliveAgent
       };
 
       axios(options)
           .then(response => {
-              if(response.statusCode != 200) {
-                debug(`[Crash_Report_Upload] Failed due to ${response && response.body ? response.body : `Received response from BrowserStack Server with status : ${response.statusCode}`}`);
+              if(response.status != 200) {
+                debug(`[Crash_Report_Upload] Failed due to ${response && response.data ? response.data : `Received response from BrowserStack Server with status : ${response.status}`}`);
               } else {
-                debug(`[Crash_Report_Upload] Success response: ${JSON.stringify({status: response.status, body: response.body})}`)
-
-                }
+                debug(`[Crash_Report_Upload] Success response: ${JSON.stringify({status: response.status, body: response.data})}`)
+              }
           })
           .catch(error => debug(`[Crash_Report_Upload] Failed due to ${error}`));
     } catch(e) {

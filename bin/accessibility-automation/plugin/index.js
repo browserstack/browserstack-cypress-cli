@@ -9,7 +9,7 @@ const browserstackAccessibility = (on, config) => {
   on('task', {
     browserstack_log(message) {
       console.log(message)
-
+      
       return null
     },
   })
