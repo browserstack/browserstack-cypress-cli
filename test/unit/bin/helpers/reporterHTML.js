@@ -226,28 +226,6 @@ describe('reporterHTML', () => {
       sendUsageReportStub.calledOnceWithExactly(bsConfig, args, message, messageType, errorCode, {}, rawArgs);
     });
   });
-
-  // describe('generateCypressBuildReport', () => {
-  //   it('calls cypress build report with report download url', () => {
-  //     let pathStub = sinon.stub(path, 'join');
-  //     let fileExistStub = sinon.stub(fs, 'existsSync');
-  //     let rewireReporterHTML = rewire('../../../../bin/helpers/reporterHTML');
-  //     let generateCypressBuildReport = rewireReporterHTML.__get__('generateCypressBuildReport');
-  //     let getReportResponseStub = sinon.stub();
-  //     getReportResponseStub.calledOnceWith('abc/efg', 'report.zip', 'url');
-  //     rewireReporterHTML.__set__('getReportResponse', getReportResponseStub);
-  //     pathStub.returns('abc/efg');
-  //     fileExistStub.returns(true);
-  //     generateCypressBuildReport({ report_data: 'url' });
-  //     pathStub.restore();
-  //   });
-
-  //   reporterHTML.reportGenerator(bsConfig, buildId, args, rawArgs, {});
-
-  //   sinon.assert.calledOnce(requestStub);
-  //   sinon.assert.calledOnce(getUserAgentStub);
-  //   sendUsageReportStub.calledOnceWithExactly(bsConfig, args, message, messageType, errorCode, {}, rawArgs);
-  // });
 });
 
 describe("unzipFile", () => {

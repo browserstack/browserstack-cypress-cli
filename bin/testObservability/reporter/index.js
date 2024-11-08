@@ -169,7 +169,6 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_BEGIN, async (test) => {
-        debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN`);
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
@@ -178,7 +177,6 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_END, async (test) => {
-        debugOnConsole(`[MOCHA EVENT] EVENT_TEST_END`);
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
