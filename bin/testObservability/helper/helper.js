@@ -18,6 +18,7 @@ const pGitconfig = promisify(gitconfig);
 const logger = require("../../helpers/logger").winstonLogger;
 const utils = require('../../helpers/utils');
 const helper = require('../../helpers/helper');
+const { isTurboScaleSession } = require('../../helpers/atsHelper');
 
 const CrashReporter = require('../crashReporter');
 
@@ -384,6 +385,10 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
           frameworkName: "Cypress",
           frameworkVersion: exports.getPackageVersion('cypress', user_config),
           sdkVersion: helper.getAgentVersion()
+        },
+        'product_map': {
+          observability: true,
+          turboscale: isTurboScaleSession(user_config)
         }
       };
       const config = {
