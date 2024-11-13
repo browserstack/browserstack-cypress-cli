@@ -112,10 +112,10 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
     try {
       const response = await axios.get(url, {responseType: 'stream'});
       if(response.status != 200) {
-        if (response.statusCode === 404) {
+        if (response.status === 404) {
           reject(Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_NOT_FOUND);
         }
-        const errorMsg = `Non 200 status code, got status code: ${response.statusCode}`;
+        const errorMsg = `Non 200 status code, got status code: ${response.status}`;
         reject(errorMsg);
       } else {
         //ensure that the user can call `then()` only when the file has
