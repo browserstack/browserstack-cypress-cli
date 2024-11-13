@@ -22,6 +22,9 @@ const createBuild = (bsConfig, zip) => {
         },
         body: data
       }
+      if (Constants.turboScaleObj.enabled) {
+        options.url = Constants.turboScaleObj.buildUrl;
+      }
 
       try {
         const response = await axios.post(options.url, data, {
