@@ -59,7 +59,7 @@ exports.getTurboScaleGridDetails = async (bsConfig, args, rawArgs) => {
             let responseData = {};
             axios(options).then(response => {
               try {
-                responseData = JSON.parse(response.data);
+                responseData = response.data;
               } catch (e) {
                 responseData = {};
               }
