@@ -63,7 +63,7 @@ exports.getTurboScaleGridDetails = async (bsConfig, args, rawArgs) => {
               } catch (e) {
                 responseData = {};
               }
-              if(resp.status != 200) {
+              if(response.status != 200) {
                 logger.warn(`Warn: Get Automate TurboScale Details Request failed with status code ${response.status}`);
                 utils.sendUsageReport(bsConfig, args, responseData["error"], Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
                 resolve({});
@@ -71,7 +71,7 @@ exports.getTurboScaleGridDetails = async (bsConfig, args, rawArgs) => {
               resolve(responseData);
             }).catch(error => {
             logger.warn(utils.formatRequest(error, null, null));
-            utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
+            utils.sendUsageReport(bsConfig, args, error, Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
             resolve({});
         });
       });
