@@ -1,5 +1,7 @@
 const axios = require('axios').default;
 
+const { isTurboScaleSession } = require('./atsHelper');
+
 const fs = require('fs'),
       path = require('path'),
       logger = require('./logger').winstonLogger,
@@ -19,6 +21,10 @@ let reportGenerator = async (bsConfig, buildId, args, rawArgs, buildReportData, 
       'User-Agent': utils.getUserAgent(),
     },
   };
+
+  if (isTurboScaleSession(bsConfig)) {
+    options.url = `${config.turboScaleBuildsUrl}/${buildId}/custom_report`;
+  }
 
   logger.debug('Started fetching the build json and html reports.');
 
