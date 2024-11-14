@@ -1,7 +1,5 @@
 const axios = require('axios').default;
 
-const { isTurboScaleSession } = require('./atsHelper');
-
 const fs = require('fs'),
       path = require('path'),
       logger = require('./logger').winstonLogger,
