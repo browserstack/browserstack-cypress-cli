@@ -11,6 +11,7 @@ const config = require('./config'),
 const { AUTH_REGEX, REDACTED_AUTH, REDACTED, CLI_ARGS_REGEX, RAW_ARGS_REGEX } = require("./constants");
 const { default: axios } = require("axios");
 const axiosRetry = require("axios-retry");
+const { isTurboScaleSession } = require("./atsHelper");
 
 function get_version(package_name) {
   try {
