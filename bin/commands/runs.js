@@ -363,10 +363,10 @@ module.exports = function run(args, rawArgs) {
                     await new Promise(resolve => setTimeout(resolve, 5000));
 
                     // download build artifacts
-                    if (exitCode != Constants.BUILD_FAILED_EXIT_CODE && !turboScaleSession) {
+                    if (exitCode != Constants.BUILD_FAILED_EXIT_CODE) {
                       if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
                         logger.debug("Downloading build artifacts");
-                        await downloadBuildArtifacts(bsConfig, data.build_id, args, rawArgs, buildReportData);
+                        await downloadBuildArtifacts(bsConfig, data.build_id, args, rawArgs, buildReportData, turboScaleSession);
                       }
 
                       // Generate custom report!
