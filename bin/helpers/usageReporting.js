@@ -198,8 +198,60 @@ function redactKeys(str, regex, redact) {
   return str.replace(regex, redact);
 }
 
+function sendTurboscaleErrorLogs(args) {
+  let bsConfig = JSON.parse(JSON.stringify(args.bstack_config));
+  let data = utils.isUndefined(args.data) ? {} : args.data;
+  const turboscaleErrorPayload = {
+    kind: 'hst-cypress-cli-error',
+    data: data,
+    error: args.message
+  }
+
+  const options = {
+    headers: {
+      'User-Agent': utils.getUserAgent()
+    },
+    method: "POST",
+    auth: {
+      username: bsConfig.auth.username,
+      password: bsConfig.auth.access_key,
+    },
+    url: `${config.turboScaleAPIUrl}/send-instrumentation`,
+    data: turboscaleErrorPayload,
+    maxAttempts: 10, 
+    retryDelay: 2000, // (default) wait for 2s before trying again
+  };
+
+  axiosRetry(axios, { 
+    retries: options.maxAttempts, 
+    retryDelay: (retryCount) => options.retryDelay,
+    retryCondition: (error) => {
+      return axiosRetry.isRetryableError(error) // (default) retry on 5xx or network errors
+    }
+  });
+
+  fileLogger.info(`Sending ${JSON.stringify(turboscaleErrorPayload)} to ${config.turboScaleAPIUrl}/send-instrumentation`);
+
+  axios(options)
+  .then((res) => {
+    let response = {
+      attempts: res.config['axios-retry'].retryCount + 1,
+      statusCode: res.status,
+      body: res.data
+    };
+    fileLogger.info(`${JSON.stringify(response)}`);
+  })
+  .catch((error) => {
+    fileLogger.error(JSON.stringify(error));
+  });
+}
+
 async function send(args) {
   let bsConfig = JSON.parse(JSON.stringify(args.bstack_config));
+
+  if (isTurboScaleSession(bsConfig) && args.message_type === 'error') {
+    sendTurboscaleErrorLogs(args);
+  }
 
   if (isUsageReportingEnabled() === "true") return;
 
