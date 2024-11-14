@@ -139,7 +139,7 @@ let printSpecsStatus = (bsConfig, buildDetails, rawArgs, buildReportData) => {
 
 let whileProcess = async (whilstCallback) => {  
   try {
-    const response = await axios.post(options.url, null, {
+    const response = await axios.post(options.url, {}, {
       auth: {
         username: options.auth.user,
         password: options.auth.password
