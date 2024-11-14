@@ -17,7 +17,6 @@ const purgeUploadBar = (obj) => {
     speed: ((obj.size / (Date.now() - obj.startTime)) / 125).toFixed(2) //kbits per sec
   });
   obj.bar1.stop();
-  // clearInterval(obj.zipInterval);
 }
 
 const uploadSuits = (bsConfig, filePath, opts, obj) => {
