@@ -21,9 +21,11 @@ const usageReporting = require("./usageReporting"),
   fileHelpers = require("./fileHelpers"),
   config = require("../helpers/config"),
   pkg = require('../../package.json'),
-  transports = require('./logger').transports
+  transports = require('./logger').transports,
+  o11yHelpers = require('../testObservability/helper/helper'),
+  { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER } = require('../testObservability/helper/constants');
 
-const { default: axios } = require("axios");
+const request = require('request');
 
 exports.validateBstackJson = (bsConfigPath) => {
   return new Promise(function (resolve, reject) {
@@ -489,6 +491,10 @@ exports.setNodeVersion = (bsConfig, args) => {
 // specs can be passed via command line args as a string
 // command line args takes precedence over config
 exports.setUserSpecs = (bsConfig, args) => {
+  if(o11yHelpers.isBrowserstackInfra() && o11yHelpers.isTestObservabilitySession() && o11yHelpers.shouldReRunObservabilityTests()) {
+    bsConfig.run_settings.specs = process.env.BROWSERSTACK_RERUN_TESTS;
+    return;
+  }
   
   let bsConfigSpecs = bsConfig.run_settings.specs;
 
@@ -580,6 +586,19 @@ exports.setSystemEnvs = (bsConfig) => {
   } catch (error) {
    logger.error(`Error in adding accessibility configs ${error}`)
   }
+
+  try {
+    OBSERVABILITY_ENV_VARS.forEach(key => {
+      envKeys[key] = process.env[key];
+    });
+  
+    let gitConfigPath = o11yHelpers.findGitConfig(process.cwd());
+    if(!o11yHelpers.isBrowserstackInfra()) process.env.OBSERVABILITY_GIT_CONFIG_PATH_LOCAL = gitConfigPath;
+    if(gitConfigPath) {
+      const relativePathFromGitConfig = path.relative(gitConfigPath, process.cwd());
+      envKeys["OBSERVABILITY_GIT_CONFIG_PATH"] = relativePathFromGitConfig ? relativePathFromGitConfig : 'DEFAULT';
+    }
+  } catch(e){}
 
   if (Object.keys(envKeys).length === 0) {
     bsConfig.run_settings.system_env_vars = null;
@@ -999,23 +1018,14 @@ exports.checkLocalBinaryRunning = (bsConfig, localIdentifier) => {
     },
     body: JSON.stringify({ localIdentifier: localIdentifier}),
   };
-  return new Promise (async function(resolve, reject) {
-      try {
-        const response = await axios.post(options.url, {
-          localIdentifier: localIdentifier
-        }, {
-          auth: {
-            username: options.auth.user,
-            password: options.auth.password
-          },
-          headers: options.headers
-        });
-        resolve(response.data)
-      } catch (error) {
-        if(error.response) {
-          reject(error.response.data.message);
+  return new Promise ( function(resolve, reject) {
+      request.post(options, function (err, resp, body) {
+        if(err){
+          reject(err);
         }
-      }
+        let response = JSON.parse(body);
+        resolve(response);
+    });
   });
 };
 
@@ -1202,7 +1212,11 @@ exports.handleSyncExit = (exitCode, dashboard_url) => {
     syncCliLogger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
     syncCliLogger.info(dashboard_url);
   }
-  process.exit(exitCode);
+  if(o11yHelpers.isTestObservabilitySession()) {
+    o11yHelpers.printBuildLink(true, exitCode);
+  } else {
+    process.exit(exitCode);
+  }
 }
 
 exports.getNetworkErrorMessage = (dashboard_url) => {
@@ -1461,6 +1475,10 @@ exports.splitStringByCharButIgnoreIfWithinARange = (str, splitChar, leftLimiter,
 
 // blindly send other passed configs with run_settings and handle at backend
 exports.setOtherConfigs = (bsConfig, args) => {
+  if(o11yHelpers.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
+    bsConfig["run_settings"]["reporter"] = TEST_OBSERVABILITY_REPORTER;
+    return;
+  }
 
   /* Non Observability use-case */
   if (!this.isUndefined(args.reporter)) {
@@ -1519,7 +1537,7 @@ exports.setCLIMode = (bsConfig, args) => {
 exports.formatRequest = (err, resp, body) => {
   return {
     err,
-    status: resp ? resp.status : null,
+    status: resp ? resp.statusCode : null,
     body: body ? util.format('%j', body) : null
   }
 }
@@ -1539,77 +1557,78 @@ exports.setDebugMode = (args) => {
 
 exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs, buildReportData = null) => {
   let that = this;
-  
-  let url = config.buildStopUrl + buildId;
-  let options = {
-    url: url,
-    auth: {
-      username: bsConfig["auth"]["username"],
-      password: bsConfig["auth"]["access_key"],
-    },
-    headers: {
-      'User-Agent': that.getUserAgent(),
-    },
-  };
+  return new Promise(function (resolve, reject) {
+    let url = config.buildStopUrl + buildId;
+    let options = {
+      url: url,
+      auth: {
+        username: bsConfig["auth"]["username"],
+        password: bsConfig["auth"]["access_key"],
+      },
+      headers: {
+        'User-Agent': that.getUserAgent(),
+      },
+    };
 
-  if (Constants.turboScaleObj.enabled) {
-    options.url = `${config.turboScaleBuildsUrl}/${buildId}/stop`;
-  }
+    if (Constants.turboScaleObj.enabled) {
+      options.url = `${config.turboScaleBuildsUrl}/${buildId}/stop`;
+    }
 
-  let message = null;
-  let messageType = null;
-  let errorCode = null;
-  let build = null;
-  
-  try {
-    const response = await axios.post(options.url, {}, {
-      auth: options.auth,
-      headers: options.headers
-    });
-    
-    build = response.data;
-    if (response.status == 299) {
-      messageType = Constants.messageTypes.INFO;
-      errorCode = 'api_deprecated';
-
-      if (build) {
-        message = build.message;
-        logger.info(message);
-      } else {
-        message = Constants.userMessages.API_DEPRECATED;
-        logger.info(message);
-      }
-    } else if (response.status !== 200) {
-      messageType = Constants.messageTypes.ERROR;
-      errorCode = 'api_failed_build_stop';
-
-      if (build) {
-        message = `${
-          Constants.userMessages.BUILD_STOP_FAILED
-        } with error: \n${JSON.stringify(build, null, 2)}`;
-        logger.error(message);
-        if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
-      } else {
+    let message = null;
+    let messageType = null;
+    let errorCode = null;
+    let build = null;
+    request.post(options, function(err, resp, data) {
+      if(err) {
         message = Constants.userMessages.BUILD_STOP_FAILED;
-        logger.error(message);
+        messageType = Constants.messageTypes.ERROR;
+        errorCode = 'api_failed_build_stop';
+        logger.info(message);
+      } else {
+        try {
+          build = JSON.parse(data);
+          if (resp.statusCode == 299) {
+            messageType = Constants.messageTypes.INFO;
+            errorCode = 'api_deprecated';
+      
+            if (build) {
+              message = build.message;
+              logger.info(message);
+            } else {
+              message = Constants.userMessages.API_DEPRECATED;
+              logger.info(message);
+            }
+          } else if (resp.statusCode != 200) {
+            messageType = Constants.messageTypes.ERROR;
+            errorCode = 'api_failed_build_stop';
+      
+            if (build) {
+              message = `${
+                Constants.userMessages.BUILD_STOP_FAILED
+              } with error: \n${JSON.stringify(build, null, 2)}`;
+              logger.error(message);
+              if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
+            } else {
+              message = Constants.userMessages.BUILD_STOP_FAILED;
+              logger.error(message);
+            }
+          } else {
+            messageType = Constants.messageTypes.SUCCESS;
+            message = `${JSON.stringify(build, null, 2)}`;
+            logger.info(message);
+          }
+        } catch(err) {
+          message = Constants.userMessages.BUILD_STOP_FAILED;
+          messageType = Constants.messageTypes.ERROR;
+          errorCode = 'api_failed_build_stop';
+          logger.info(message);
+        } finally {
+            that.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
+        }
       }
-    } else {
-      messageType = Constants.messageTypes.SUCCESS;
-      message = `${JSON.stringify(build, null, 2)}`;
-      logger.info(message);
-    }
-  } catch(err) {
-    if(err.response) {
-      message = `${
-        Constants.userMessages.BUILD_STOP_FAILED
-      } with error: ${err.response.data.message}`;
-      messageType = Constants.messageTypes.ERROR;
-      errorCode = 'api_failed_build_stop';
-      logger.error(message);
-    }
-  } finally {
-      that.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
-  }
+      resolve();
+    });
+  });
 }
 
 exports.setProcessHooks = (buildId, bsConfig, bsLocal, args, buildReportData) => {
@@ -1626,14 +1645,36 @@ exports.setProcessHooks = (buildId, bsConfig, bsLocal, args, buildReportData) =>
   process.on('uncaughtException', processExitHandler.bind(this, bindData));
 }
 
+exports.setO11yProcessHooks = (() => {
+  let bindData = {};
+  let handlerAdded = false;
+  return (buildId, bsConfig, bsLocal, args, buildReportData) => {
+    bindData.buildId = buildId;
+    bindData.bsConfig = bsConfig;
+    bindData.bsLocal = bsLocal;
+    bindData.args = args;
+    bindData.buildReportData = buildReportData;
+    if (handlerAdded) return;
+    handlerAdded = true;
+    process.on('beforeExit', processO11yExitHandler.bind(this, bindData));
+  }
+})()
+
 async function processExitHandler(exitData){
   logger.warn(Constants.userMessages.PROCESS_KILL_MESSAGE);
   await this.stopBrowserStackBuild(exitData.bsConfig, exitData.args, exitData.buildId, null, exitData.buildReportData);
   await this.stopLocalBinary(exitData.bsConfig, exitData.bsLocalInstance, exitData.args, null, exitData.buildReportData);
-  // await o11yHelpers.printBuildLink(true);
+  await o11yHelpers.printBuildLink(true);
   process.exit(0);
 }
 
+async function processO11yExitHandler(exitData){
+  if (exitData.buildId) {
+    await o11yHelpers.printBuildLink(false);
+  } else {
+    await o11yHelpers.printBuildLink(true);
+  }
+}
 
 exports.fetchZipSize = (fileName) => {
   try {

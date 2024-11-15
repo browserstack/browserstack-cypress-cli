@@ -1,6 +1,7 @@
 'use strict';
 const cp = require("child_process"),
   os = require("os"),
+  request = require("requestretry"),
   fs = require('fs'),
   path = require('path');
 
@@ -9,8 +10,7 @@ const config = require('./config'),
   utils = require('./utils');
 
 const { AUTH_REGEX, REDACTED_AUTH, REDACTED, CLI_ARGS_REGEX, RAW_ARGS_REGEX } = require("./constants");
-const { default: axios } = require("axios");
-const axiosRetry = require("axios-retry");
+const { isTurboScaleSession } = require('../helpers/atsHelper');
 
 function get_version(package_name) {
   try {
@@ -198,8 +198,55 @@ function redactKeys(str, regex, redact) {
   return str.replace(regex, redact);
 }
 
-async function send(args) {
+function sendTurboscaleErrorLogs(args) {
   let bsConfig = JSON.parse(JSON.stringify(args.bstack_config));
+  let data = utils.isUndefined(args.data) ? {} : args.data;
+  const turboscaleErrorPayload = {
+    kind: 'hst-cypress-cli-error',
+    data: data,
+    error: args.message
+  }
+
+  const options = {
+    headers: {
+      'User-Agent': utils.getUserAgent()
+    },
+    method: "POST",
+    auth: {
+      username: bsConfig.auth.username,
+      password: bsConfig.auth.access_key,
+    },
+    url: `${config.turboScaleAPIUrl}/send-instrumentation`,
+    body: turboscaleErrorPayload,
+    json: true,
+    maxAttempts: 10, // (default) try 3 times
+    retryDelay: 2000, // (default) wait for 2s before trying again
+    retrySrategy: request.RetryStrategies.HTTPOrNetworkError, // (default) retry on 5xx or network errors
+  };
+
+  fileLogger.info(`Sending ${JSON.stringify(turboscaleErrorPayload)} to ${config.turboScaleAPIUrl}/send-instrumentation`);
+  request(options, function (error, res, body) {
+    if (error) {
+      //write err response to file
+      fileLogger.error(JSON.stringify(error));
+      return;
+    }
+    // write response file
+    let response = {
+      attempts: res.attempts,
+      statusCode: res.statusCode,
+      body: body
+    };
+    fileLogger.info(`${JSON.stringify(response)}`);
+  });
+}
+
+function send(args) {
+  let bsConfig = JSON.parse(JSON.stringify(args.bstack_config));
+
+  if (isTurboScaleSession(bsConfig) && args.message_type === 'error') {
+    sendTurboscaleErrorLogs(args);
+  }
 
   if (isUsageReportingEnabled() === "true") return;
 
@@ -260,6 +307,10 @@ async function send(args) {
     },
   };
 
+  if (isTurboScaleSession(bsConfig)) {
+    payload.event_type = 'hst_cypress_cli_stats';
+  }
+
   const options = {
     headers: {
       "Content-Type": "text/json",
@@ -270,31 +321,24 @@ async function send(args) {
     json: true,
     maxAttempts: 10, // (default) try 3 times
     retryDelay: 2000, // (default) wait for 2s before trying again
+    retrySrategy: request.RetryStrategies.HTTPOrNetworkError, // (default) retry on 5xx or network errors
   };
 
   fileLogger.info(`Sending ${JSON.stringify(payload)} to ${config.usageReportingUrl}`);
-  axiosRetry(axios, 
-    { 
-    retries: 3, 
-    retryDelay: 2000, 
-    retryCondition: (error) => {
-      return (error.response.status === 503 || error.response.status === 500)
+  request(options, function (error, res, body) {
+    if (error) {
+      //write err response to file
+      fileLogger.error(JSON.stringify(error));
+      return;
     }
-  });
-  try {
-    const response = await axios.post(options.url, options.body, {
-      headers: options.headers,
-    });
-    let result = {
-      statusText: response.statusText,
-      statusCode: response.status,
-      body: response.data
+    // write response file
+    let response = {
+      attempts: res.attempts,
+      statusCode: res.statusCode,
+      body: body
     };
-    fileLogger.info(`${JSON.stringify(result)}`);
-  } catch (error) {
-    fileLogger.error(JSON.stringify(error.response));
-    return;
-  }
+    fileLogger.info(`${JSON.stringify(response)}`);
+  });
 }
 
 module.exports = {

@@ -2,9 +2,8 @@
 const chai = require("chai"),
   chaiAsPromised = require("chai-as-promised"),
   sinon = require("sinon"),
-  fs = require('fs');
-  
-const { default: axios } = require("axios");
+  fs = require('fs'),
+  request = require("request");
 
 const logger = require("../../../../bin/helpers/logger").winstonLogger,
   constant = require('../../../../bin/helpers/constants'),
@@ -46,15 +45,7 @@ describe("zipUpload", () => {
     const zipUploader = rewire("../../../../bin/helpers/zipUpload");
     beforeEach(() => {
       utilsStub = {
-        generateUploadParams: sinon.stub().returns({
-          auth: {
-            user: "someuser",
-            password: "someuser",
-          },
-          headers: {
-            "someheader": "header"
-          }
-        }),
+        generateUploadParams: sinon.stub().returns({}),
         formatRequest,
       };
       loggerStub = {
@@ -66,6 +57,36 @@ describe("zipUpload", () => {
 
     afterEach(() => {
       fs.lstatSync.restore();
+    });
+
+    it("reject with error", () => {
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(new Error("test error"), null, null);
+
+      zipUploader.__set__({
+        request: { post: requestStub },
+        utils: utilsStub,
+        logger: loggerStub
+      });
+      let uploadSuitsrewire = zipUploader.__get__('uploadSuits');
+      let opts = {
+        archivePresent: true,
+        messages: {}
+      }
+      let obj = {
+        bar1: null,
+        zipInterval: null,
+        size: 0,
+        startTime: null
+      }
+      return uploadSuitsrewire(bsConfig, filePath, opts, obj)
+        .then((_data) => {
+          chai.assert.fail("Promise error");
+        })
+        .catch((error) => {
+          chai.assert.equal(error.message.message, "test error");
+        });
     });
 
     it("resolve with url if already present", () => {
@@ -112,12 +133,12 @@ describe("zipUpload", () => {
     });
 
     it("resolve with nothing if parsing error", () => {
-      let axiosStub = sandbox
-        .stub(axios, "post")
-        .resolves({ status: 200, data: { "random": "test" }});
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(null, { statusCode: 200 }, '{ random: "test }');
 
       zipUploader.__set__({
-        axios: { post: axiosStub },
+        request: { post: requestStub },
         utils: utilsStub,
         logger: loggerStub
       });
@@ -125,12 +146,7 @@ describe("zipUpload", () => {
       let opts = {
         cleanupMethod: sinon.stub().returns(null),
         archivePresent: true,
-        messages: {},
-        fileDetails: {
-          filetype: "zip",
-          filename: "abc"
-        },
-        md5ReturnKey: "random"
+        messages: {}
       }
       let obj = {
         bar1: null,
@@ -140,20 +156,20 @@ describe("zipUpload", () => {
       }
       return uploadSuitsrewire(bsConfig, filePath, opts, obj)
         .then((data) => {
-          chai.assert.hasAllKeys(data, ["time", "random"]);
+          chai.assert.hasAllKeys(data, ["time"]);
         })
         .catch((_error) => {
           chai.assert.fail("Promise error");
         });
     });
 
-    it("resolve with message if status = 200", () => {
-      let axiosStub = sandbox
-        .stub(axios, "post")
-        .resolves({ status: 200 , data: { zip_url: "zip_url" }});
+    it("resolve with message if statusCode = 200", () => {
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(null, { statusCode: 200 }, JSON.stringify({ zip_url: "zip_url" }));
 
       zipUploader.__set__({
-        axios: { post: axiosStub },
+        request: { post: requestStub },
         utils: utilsStub,
         logger: loggerStub
       });
@@ -161,11 +177,7 @@ describe("zipUpload", () => {
       let opts = {
         cleanupMethod: sinon.stub().returns(null),
         archivePresent: true,
-        messages: {},
-        fileDetails: {
-          filetype: "zip",
-          filename: "abc"
-        },
+        messages: {}
       }
       let obj = {
         bar1: null,
@@ -183,23 +195,19 @@ describe("zipUpload", () => {
     });
 
     it("reject with returned message if auth failed with message", () => {
-      let axiosStub = sandbox
-        .stub(axios, "post")
-        .rejects({response: { status: 401 , data: { error: "auth failed" }}});
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(null, { statusCode: 401 }, JSON.stringify({ error: "auth failed" }));
 
       zipUploader.__set__({
-        axios: { post: axiosStub },
+        request: { post: requestStub },
         utils: utilsStub,
         logger: loggerStub
       });
       let uploadSuitsrewire = zipUploader.__get__('uploadSuits');
       let opts = {
         archivePresent: true,
-        messages: {},
-        fileDetails: {
-          filetype: "zip",
-          filename: "abc"
-        },
+        messages: {}
       }
       let obj = {
         bar1: null,
@@ -217,23 +225,19 @@ describe("zipUpload", () => {
     });
 
     it("reject with predefined message if auth failed without message", () => {
-      let axiosStub = sandbox
-        .stub(axios, "post")
-        .rejects({response: { status: 401 , data: { }}});
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(null, { statusCode: 401 }, JSON.stringify({ }));
 
       zipUploader.__set__({
-        axios: { post: axiosStub },
+        request: { post: requestStub },
         utils: utilsStub,
         logger: loggerStub
       });
       let uploadSuitsrewire = zipUploader.__get__('uploadSuits');
       let opts = {
         archivePresent: true,
-        messages: {},
-        fileDetails: {
-          filetype: "zip",
-          filename: "abc"
-        },
+        messages: {}
       }
       let obj = {
         bar1: null,
@@ -250,13 +254,13 @@ describe("zipUpload", () => {
         });
     });
 
-    it("resolve with nothing if axios error but no propogation", () => {
-      let axiosStub = sandbox
-        .stub(axios, "post")
-        .rejects({response: { status: 402 , data: { }}});
+    it("resolve with nothing if request error but no propogation", () => {
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(null, { statusCode: 402 }, JSON.stringify({ }));
 
       zipUploader.__set__({
-        axios: { post: axiosStub },
+        request: { post: requestStub },
         utils: utilsStub,
         logger: loggerStub
       });
@@ -264,12 +268,7 @@ describe("zipUpload", () => {
       let opts = {
         archivePresent: true,
         messages: {},
-        propogateError: false,
-        fileDetails: {
-          filetype: "zip",
-          filename: "abc"
-        },
-        cleanupMethod: () => {}
+        propogateError: false
       }
       let obj = {
         bar1: null,
@@ -286,13 +285,13 @@ describe("zipUpload", () => {
         });
     });
 
-    it("reject with error if axios error", () => {
-      let axiosStub = sandbox
-        .stub(axios, "post")
-        .rejects({response: { status: 402 , data: { error: "test error" }}});
+    it("reject with error if request error", () => {
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(null, { statusCode: 402 }, JSON.stringify({ error: "test error" }));
 
       zipUploader.__set__({
-        axios: { post: axiosStub },
+        request: { post: requestStub },
         utils: utilsStub,
         logger: loggerStub
       });
@@ -300,12 +299,7 @@ describe("zipUpload", () => {
       let opts = {
         archivePresent: true,
         messages: {},
-        propogateError: true,
-        fileDetails: {
-          filetype: "zip",
-          filename: "abc"
-        },
-        cleanupMethod: () => {}
+        propogateError: true
       }
       let obj = {
         bar1: null,
@@ -323,12 +317,12 @@ describe("zipUpload", () => {
     });
 
     it("reject with limit exceeded error", () => {
-      let axiosStub = sandbox
-        .stub(axios, "post")
-        .rejects({response:{ status: 413 , data: { }}});
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(null, { statusCode: 413 }, JSON.stringify({ }));
 
       zipUploader.__set__({
-        axios: { post: axiosStub },
+        request: { post: requestStub },
         utils: utilsStub,
         logger: loggerStub
       });
@@ -336,12 +330,7 @@ describe("zipUpload", () => {
       let opts = {
         archivePresent: true,
         messages: {},
-        propogateError: true,
-        fileDetails: {
-          filetype: "zip",
-          filename: "abc"
-        },
-        cleanupMethod: () => {}
+        propogateError: true
       }
       let obj = {
         bar1: null,
@@ -359,12 +348,12 @@ describe("zipUpload", () => {
     });
 
     it("reject with not reachable error", () => {
-      let axiosStub = sandbox
-        .stub(axios, "post")
-        .rejects({response: { status: 414 , data: { }}});
+      let requestStub = sandbox
+        .stub(request, "post")
+        .yields(null, { statusCode: 414 }, JSON.stringify({ }));
 
       zipUploader.__set__({
-        axios: { post: axiosStub },
+        request: { post: requestStub },
         utils: utilsStub,
         logger: loggerStub
       });
@@ -372,12 +361,7 @@ describe("zipUpload", () => {
       let opts = {
         archivePresent: true,
         messages: {},
-        propogateError: true,
-        fileDetails: {
-          filetype: "zip",
-          filename: "abc"
-        },
-        cleanupMethod: () => {}
+        propogateError: true
       }
       let obj = {
         bar1: null,

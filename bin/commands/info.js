@@ -1,5 +1,6 @@
 'use strict';
-const axios = require('axios').default;
+const request = require('request');
+
 const config = require("../helpers/config"),
   logger = require("../helpers/logger").winstonLogger,
   Constants = require("../helpers/constants"),
@@ -18,7 +19,7 @@ module.exports = function info(args, rawArgs) {
     // accept the access key from command line if provided
     utils.setAccessKey(bsConfig, args);
 
-    getInitialDetails(bsConfig, args, rawArgs).then(async (buildReportData) => {
+    getInitialDetails(bsConfig, args, rawArgs).then((buildReportData) => {
 
       utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
@@ -42,43 +43,53 @@ module.exports = function info(args, rawArgs) {
         options.url = `${config.turboScaleBuildsUrl}/${buildId}`;
       }
 
-      let message = null;
-      let messageType = null;
-      let errorCode = null;
+      request.get(options, function (err, resp, body) {
+        let message = null;
+        let messageType = null;
+        let errorCode = null;
   
-      try {
-        const response = await axios.get(options.url, {
-          auth: {
-            username: bsConfig.auth.username,
-            password: bsConfig.auth.access_key
-          },
-          headers: options.headers
-        });
-        let build = null;
+        if (err) {
+          message = Constants.userMessages.BUILD_INFO_FAILED;
+          messageType = Constants.messageTypes.ERROR;
+          errorCode = 'api_failed_build_info';
+  
+          logger.info(message);
+          logger.error(utils.formatRequest(err, resp, body));
+        } else {
+          let build = null;
           try {
-            build = response.data;
+            build = JSON.parse(body);
           } catch (error) {
             build = null;
           }
-          if (response.status == 299) {
+  
+          if (resp.statusCode == 299) {
             messageType = Constants.messageTypes.INFO;
             errorCode = 'api_deprecated';
-            message = build ? build.message : Constants.userMessages.API_DEPRECATED;
-            logger.info(utils.formatRequest(response.statusText, response, response.data));
-          } else if (response.status != 200) {
-            message = Constants.userMessages.BUILD_INFO_FAILED;
+  
+            if (build) {
+              message = build.message;
+              logger.info(message);
+            } else {
+              message = Constants.userMessages.API_DEPRECATED;
+              logger.info(message);
+            }
+            logger.info(utils.formatRequest(err, resp, body));
+          } else if (resp.statusCode != 200) {
             messageType = Constants.messageTypes.ERROR;
             errorCode = 'api_failed_build_info';
+  
             if (build) {
               message = `${
                 Constants.userMessages.BUILD_INFO_FAILED
               } with error: \n${JSON.stringify(build, null, 2)}`;
+              logger.error(message);
               if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
             } else {
               message = Constants.userMessages.BUILD_INFO_FAILED;
+              logger.error(message);
             }
-            logger.error(message);
-            logger.error(utils.formatRequest(response.statusText, response, response.data));
+            logger.error(utils.formatRequest(err, resp, body));
           } else {
             messageType = Constants.messageTypes.SUCCESS;
             message = `Build info for build id: \n ${JSON.stringify(
@@ -86,18 +97,11 @@ module.exports = function info(args, rawArgs) {
               null,
               2
             )}`;
+            logger.info(message);
           }
-        logger.info(message);
-      } catch (error) {
-        message = `${
-          Constants.userMessages.BUILD_INFO_FAILED
-        } with error: \n${error.response.data.message}`;
-        messageType = Constants.messageTypes.ERROR;
-        errorCode = 'api_failed_build_info';
-        logger.info(message);
-        logger.error(utils.formatRequest(error.response.statusText, error.response, error.response.data));
-      }      
-      utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
+        }
+        utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
+      });
     }).catch((err) => {
       logger.warn(err);
     });

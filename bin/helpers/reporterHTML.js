@@ -1,7 +1,6 @@
-const axios = require('axios').default;
-
 const fs = require('fs'),
       path = require('path'),
+      request = require('request'),
       logger = require('./logger').winstonLogger,
       utils = require("./utils"),
       Constants = require('./constants'),
@@ -9,7 +8,7 @@ const fs = require('fs'),
       decompress = require('decompress');
 const { isTurboScaleSession } = require('../helpers/atsHelper');
 
-let reportGenerator = async (bsConfig, buildId, args, rawArgs, buildReportData, cb) => {
+let reportGenerator = (bsConfig, buildId, args, rawArgs, buildReportData, cb) => {
   let options = {
     url: `${config.buildUrl}${buildId}/custom_report`,
     auth: {
@@ -27,25 +26,32 @@ let reportGenerator = async (bsConfig, buildId, args, rawArgs, buildReportData, 
   
   logger.debug('Started fetching the build json and html reports.');
 
-  let message = null;
-  let messageType = null;
-  let errorCode = null;
-  let build;
-  try {
-    const response = await axios.get(options.url, {
-      auth: {
-        username: options.auth.user,
-        password: options.auth.password
-      },
-      headers: options.headers
-    });
-    logger.debug('Received reports data from upstream.');
-    try {
-      build = response.data;
-    } catch (error) {
-      build = null;
+  return request.get(options, async function (err, resp, body) {
+    let message = null;
+    let messageType = null;
+    let errorCode = null;
+    let build;
+  
+    if (err) {
+      message = err;
+      messageType = Constants.messageTypes.ERROR;
+      errorCode = 'api_failed_build_report';
+
+      logger.error('Generating the build report failed.');
+      logger.error(utils.formatRequest(err, resp, body));
+
+      utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
+      return;
+    } else {
+      logger.debug('Received reports data from upstream.');
+      try {
+        build = JSON.parse(body);
+      } catch (error) {
+        build = null;
+      }
     }
-    if (response.status == 299) {
+
+    if (resp.statusCode == 299) {
       messageType = Constants.messageTypes.INFO;
       errorCode = 'api_deprecated';
       if (build) {
@@ -55,18 +61,18 @@ let reportGenerator = async (bsConfig, buildId, args, rawArgs, buildReportData, 
         message = Constants.userMessages.API_DEPRECATED;
         logger.info(message);
       }
-    } else if (response.status === 422) {
+    } else if (resp.statusCode === 422) {
       messageType = Constants.messageTypes.ERROR;
       errorCode = 'api_failed_build_generate_report';
       try {
-        response = error.response.data;
+        response = JSON.parse(body);
         message = response.message;
       } catch (error) {
         logger.error(`Error generating the report: ${error}`);
         response = {message: message};
       }
-      logger.error(utils.formatRequest(response.statusText, response, response.data));
-    } else if (response.status != 200) {
+      logger.error(utils.formatRequest(err, resp, body));
+    } else if (resp.statusCode != 200) {
       messageType = Constants.messageTypes.ERROR;
       errorCode = 'api_failed_build_generate_report';
 
@@ -78,7 +84,7 @@ let reportGenerator = async (bsConfig, buildId, args, rawArgs, buildReportData, 
         if (build.message === 'Unauthorized') errorCode = 'api_auth_failed';
       } else {
         message = Constants.userMessages.BUILD_GENERATE_REPORT_FAILED.replace('<build-id>', buildId);
-        logger.error(utils.formatRequest(error.response.statusText, error.response, error.response.data));
+        logger.error(utils.formatRequest(err, resp, body));
       }
     } else {
       messageType = Constants.messageTypes.SUCCESS;
@@ -91,16 +97,7 @@ let reportGenerator = async (bsConfig, buildId, args, rawArgs, buildReportData, 
     if (cb){
       cb();
     }
-  } catch (error) {
-    message = error.response.statusText;
-    messageType = Constants.messageTypes.ERROR;
-    errorCode = 'api_failed_build_report';
-
-    logger.error('Generating the build report failed.');
-    logger.error(utils.formatRequest(error.response.statusText, error.response, error.response.data));
-    utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
-    return;
-  }
+  });
 }
 
 async function generateCypressBuildReport(report_data) {
@@ -119,12 +116,15 @@ function getReportResponse(filePath, fileName, reportJsonUrl) {
   const writer = fs.createWriteStream(tmpFilePath);
   logger.debug(`Fetching build reports zip.`)
   return new Promise(async (resolve, reject) => {
-    try {
-      const response = await axios.get(reportJsonUrl, {responseType: 'stream'});
-      if(response.status === 200) {
+    request.get(reportJsonUrl).on('response', function(response) {
+
+      if(response.statusCode != 200) {
+        let message = `Received non 200 response while fetching reports, code: ${response.statusCode}`;
+        reject(message);
+      } else {
         //ensure that the user can call `then()` only when the file has
         //been downloaded entirely.
-        response.data.pipe(writer);
+        response.pipe(writer);
         let error = null;
         writer.on('error', err => {
           error = err;
@@ -149,10 +149,7 @@ function getReportResponse(filePath, fileName, reportJsonUrl) {
           //'error' stream;
         });
       }
-    } catch (error) {
-      let message = `Received non 200 response while fetching reports, code: ${error.response.status}`;
-      reject(message);
-    }
+    });
   });
 }
 

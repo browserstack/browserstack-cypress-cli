@@ -2,7 +2,7 @@
 const path = require('path');
 var sandbox = require('sinon').createSandbox();
 
-const axios = require('axios');
+const request = require('request');
 const chai = require('chai'),
   expect = chai.expect,
   sinon = require('sinon'),
@@ -2900,25 +2900,22 @@ describe('utils', () => {
   });
 
   describe('#checkLocalBinaryRunning', () => {
-    let axiosStub;
     afterEach(() => {
       sinon.restore();
-      axiosStub.restore();
     });
     it('if the bsConfig localIdentifier is not present within the response body then function should resolve with false', () => {
-      const responseBody = {
-        "should_spawn_binary": true
-      };
       const responseObject = {
-        status: 200,
+        statusCode: 200,
         headers: {
           'content-type': 'application/json',
         },
-        data: responseBody
       };
-      axiosStub = sinon
-        .stub(axios, 'post')
-        .resolves(responseObject);
+      const responseBody = {
+        "should_spawn_binary": true
+      };
+      sinon
+        .stub(request, 'post')
+        .yields(undefined, responseObject, JSON.stringify(responseBody));
 
       let bsConfig = {
         auth: {
@@ -2936,18 +2933,16 @@ describe('utils', () => {
     });
 
     it('if the bsConfig localIdentifier is present within the response body', () => {
-      const responseBody = { "should_spawn_binary": false };
       const responseObject = {
-        status: 200,
+        statusCode: 200,
         headers: {
           'content-type': 'application/json',
         },
-        data: responseBody
       };
-      
-      axiosStub = sinon
-        .stub(axios, 'post')
-        .resolves(responseObject);
+      const responseBody = { "should_spawn_binary": false };
+      sinon
+        .stub(request, 'post')
+        .yields(undefined, responseObject, JSON.stringify(responseBody));
 
       let bsConfig = {
         auth: {
@@ -2957,12 +2952,11 @@ describe('utils', () => {
       };
 
       let localIdentifier = 'lmno';
-      Promise.resolve(utils
+      return utils
         .checkLocalBinaryRunning(bsConfig, localIdentifier)
         .then((result) => {
           chai.assert.deepEqual(result, {"should_spawn_binary": false})
-        }))
-      return ;
+        });
     });
   });
 
@@ -3448,57 +3442,56 @@ describe('utils', () => {
 
     it('message thrown if API deprecated', async () => {
       let api_deprecated_response = {
-        status: 299
+        statusCode: 299
       }
       message = constant.userMessages.API_DEPRECATED;
       messageType = constant.messageTypes.INFO;
       errorCode = 'api_deprecated';
-      let axiosStub = sinon.stub(axios, 'post').resolves(api_deprecated_response);
+      let requestStub = sinon.stub(request, 'post').yields(undefined, api_deprecated_response, null);
       await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
-      sinon.assert.calledOnce(axiosStub);
+      sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
       sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
-      axiosStub.restore();
+      requestStub.restore();
     });
 
     it('message thrown if build returned', async () => {
       let api_deprecated_response = {
-        status: 299,
-        data: body
+        statusCode: 299,
       }
       message = body.message;
       messageType = constant.messageTypes.INFO;
       errorCode = 'api_deprecated';
-      let axiosStub = sinon.stub(axios, 'post').resolves(api_deprecated_response);
+      let requestStub = sinon.stub(request, 'post').yields(undefined, api_deprecated_response, JSON.stringify(body));
       await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
-      sinon.assert.calledOnce(axiosStub);
+      sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
       sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
-      axiosStub.restore();
+      requestStub.restore();
     });
 
-    it('message thrown if status != 200', async () => {
+    it('message thrown if statusCode != 200', async () => {
       let non_200_status_response = {
-        status: 400
+        statusCode: 400
       }
       message = constant.userMessages.BUILD_STOP_FAILED;
       messageType = constant.messageTypes.ERROR;
       errorCode = 'api_failed_build_stop';
-      let axiosStub = sinon.stub(axios, 'post').resolves(non_200_status_response);
+      let requestStub = sinon.stub(request, 'post').yields(undefined, non_200_status_response, null);
       await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
-      sinon.assert.calledOnce(axiosStub);
+      sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
       sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
-      axiosStub.restore();
+      requestStub.restore();
     });
 
-    it('message thrown if status != 200 and user unauthorized', async () => {
+    it('message thrown if statusCode != 200 and user unauthorized', async () => {
       let body_with_message = {
         ...body,
         "message": "Unauthorized",
       };
       let non_200_status_response = {
-        status: 401,
+        statusCode: 401,
         data: body_with_message
       }
 
@@ -3507,18 +3500,17 @@ describe('utils', () => {
       } with error: \n${JSON.stringify(body_with_message, null, 2)}`;
       messageType = constant.messageTypes.ERROR;
       errorCode = 'api_auth_failed';
-      let axiosStub = sinon.stub(axios, 'post').resolves(non_200_status_response);
+      let requestStub = sinon.stub(request, 'post').yields(undefined, non_200_status_response, JSON.stringify(body_with_message));
       await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
-      sinon.assert.calledOnce(axiosStub);
+      sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
       sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
-      axiosStub.restore();
+      requestStub.restore();
     });
 
-    it('message thrown if status != 200 and build is present', async () => {
+    it('message thrown if statusCode != 200 and build is present', async () => {
       let non_200_status_response = {
-        status: 402,
-        data: body
+        statusCode: 402,
       }
 
       message = `${
@@ -3526,29 +3518,28 @@ describe('utils', () => {
       } with error: \n${JSON.stringify(body, null, 2)}`;
       messageType = constant.messageTypes.ERROR;
       errorCode = 'api_failed_build_stop';
-      let axiosStub = sinon.stub(axios, 'post').resolves(non_200_status_response);
+      let requestStub = sinon.stub(request, 'post').yields(undefined, non_200_status_response, JSON.stringify(body));
       await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
-      sinon.assert.calledOnce(axiosStub);
+      sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
       sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
-      axiosStub.restore();
+      requestStub.restore();
     });
 
     it('message thrown if API success', async () => {
       let success_response = {
-        status: 200,
-        data: body
+        statusCode: 200,
       }
 
       message = `${JSON.stringify(body, null, 2)}`;
       messageType = constant.messageTypes.SUCCESS;
       errorCode = null;
-      let axiosStub = sinon.stub(axios, 'post').resolves(success_response);
+      let requestStub = sinon.stub(request, 'post').yields(undefined, success_response, JSON.stringify(body));
       await utils.stopBrowserStackBuild(bsConfig, args, buildId, rawArgs);
-      sinon.assert.calledOnce(axiosStub);
+      sinon.assert.calledOnce(requestStub);
       sinon.assert.calledOnce(getUserAgentStub);
       sinon.assert.calledOnceWithExactly(sendUsageReportStub, bsConfig, args, message, messageType, errorCode, null, rawArgs);
-      axiosStub.restore();
+      requestStub.restore();
     });
   });
 
@@ -4247,10 +4238,10 @@ describe('utils', () => {
     it('should return correct JSON', () => {
       expect(utils.formatRequest('Something went wrong.', undefined, undefined)).to.be.eql({err: 'Something went wrong.', status: null, body: null});
       const body = {message: "Something went wrong"};
-      expect(utils.formatRequest(null, {status: 400}, body)).to.be.eql({err: null, status: 400, body: JSON.stringify(body)});
+      expect(utils.formatRequest(null, {statusCode: 400}, body)).to.be.eql({err: null, status: 400, body: JSON.stringify(body)});
       const cricularBody = {message: "Something went wrong"};
       cricularBody.body = cricularBody;
-      expect(utils.formatRequest(null, {status: 500}, cricularBody)).to.be.eql({err: null, status: 500, body: '[Circular]'});
+      expect(utils.formatRequest(null, {statusCode: 500}, cricularBody)).to.be.eql({err: null, status: 500, body: '[Circular]'});
     });
   });
 

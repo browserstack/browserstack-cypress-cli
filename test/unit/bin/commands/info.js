@@ -1,7 +1,7 @@
-const { default: axios } = require("axios");
 const chai = require("chai"),
   chaiAsPromised = require("chai-as-promised"),
-  sinon = require('sinon');
+  sinon = require('sinon'),
+  request = require('request');
 
 const Constants = require("../../../../bin/helpers/constants"),
   logger = require("../../../../bin/helpers/logger").winstonLogger,
@@ -49,7 +49,7 @@ describe("buildInfo", () => {
       let messageType = Constants.messageTypes.INFO;
       let errorCode = "api_deprecated";
 
-      let axiosStub = sandbox.stub(axios, "get").resolves({ status: 299 });
+      let requestStub = sandbox.stub(request, "get").yields(null, { statusCode: 299 }, null);
 
       const info = proxyquire('../../../../bin/commands/info', {
         '../helpers/utils': {
@@ -68,6 +68,7 @@ describe("buildInfo", () => {
         '../helpers/getInitialDetails': {
           getInitialDetails: getInitialDetailsStub,
         },
+        request: {get: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -75,7 +76,7 @@ describe("buildInfo", () => {
 
       return info(args, rawArgs)
         .then(function (_bsConfig) {
-          sinon.assert.calledOnce(axiosStub);
+          sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnce(getInitialDetailsStub);
@@ -90,9 +91,9 @@ describe("buildInfo", () => {
       let messageType = Constants.messageTypes.INFO;
       let errorCode = "api_deprecated";
 
-      let axiosStub = sandbox
-        .stub(axios, "get")
-        .resolves({ status: 299, data: body });
+      let requestStub = sandbox
+        .stub(request, "get")
+        .yields(null, { statusCode: 299 }, JSON.stringify(body));
 
       const info = proxyquire('../../../../bin/commands/info', {
         '../helpers/utils': {
@@ -111,6 +112,7 @@ describe("buildInfo", () => {
         '../helpers/getInitialDetails': {
           getInitialDetails: getInitialDetailsStub,
         },
+        request: {get: requestStub},
       });
 
       getInitialDetailsStub.returns(Promise.resolve({}));
@@ -118,7 +120,7 @@ describe("buildInfo", () => {
 
       return info(args, rawArgs)
         .then(function (_bsConfig) {
-          sinon.assert.calledOnce(axiosStub);
+          sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getInitialDetailsStub);
@@ -158,9 +160,9 @@ describe("buildInfo", () => {
       let messageType = Constants.messageTypes.ERROR;
       let errorCode = "api_failed_build_info";
 
-      let axiosStub = sinon
-        .stub(axios, "get")
-        .resolves({ status: 400 });
+      let requestStub = sinon
+        .stub(request, "get")
+        .yields(null, { statusCode: 400 }, null);
 
       const info = proxyquire('../../../../bin/commands/info', {
         '../helpers/utils': {
@@ -179,6 +181,7 @@ describe("buildInfo", () => {
         '../helpers/getInitialDetails': {
           getInitialDetails: getInitialDetailsStub,
         },
+        request: {get: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -186,7 +189,7 @@ describe("buildInfo", () => {
 
       return info(args, rawArgs)
         .then(function (_bsConfig) {
-          sinon.assert.calledOnce(axiosStub);
+          sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getInitialDetailsStub);
@@ -207,9 +210,9 @@ describe("buildInfo", () => {
       let messageType = Constants.messageTypes.ERROR;
       let errorCode = "api_auth_failed";
 
-      let axiosStub = sinon
-        .stub(axios, "get")
-        .resolves({ status: 401, data: body_with_message });
+      let requestStub = sinon
+        .stub(request, "get")
+        .yields(null, { statusCode: 401 }, JSON.stringify(body_with_message));
 
       const info = proxyquire('../../../../bin/commands/info', {
         '../helpers/utils': {
@@ -228,13 +231,14 @@ describe("buildInfo", () => {
         '../helpers/getInitialDetails': {
           getInitialDetails: getInitialDetailsStub,
         },
+        request: {get: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
       getInitialDetailsStub.returns(Promise.resolve({}));
       return info(args, rawArgs)
         .then(function (_bsConfig) {
-          sinon.assert.calledOnce(axiosStub);
+          sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getInitialDetailsStub);
@@ -250,9 +254,9 @@ describe("buildInfo", () => {
       let messageType = Constants.messageTypes.ERROR;
       let errorCode = "api_failed_build_info";
 
-      let axiosStub = sinon
-        .stub(axios, "get")
-        .resolves({ status: 402, data: body });
+      let requestStub = sinon
+        .stub(request, "get")
+        .yields(null, { statusCode: 402 }, JSON.stringify(body));
 
       const info = proxyquire('../../../../bin/commands/info', {
         '../helpers/utils': {
@@ -271,6 +275,7 @@ describe("buildInfo", () => {
         '../helpers/getInitialDetails': {
           getInitialDetails: getInitialDetailsStub,
         },
+        request: {get: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -278,7 +283,7 @@ describe("buildInfo", () => {
 
       return info(args, rawArgs)
         .then(function (_bsConfig) {
-          sinon.assert.calledOnce(axiosStub);
+          sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getInitialDetailsStub);
@@ -320,7 +325,7 @@ describe("buildInfo", () => {
       let messageType = Constants.messageTypes.SUCCESS;
       let errorCode = null;
 
-      let axiosStub = sandbox.stub(axios, "get").resolves({ status: 200, data: body });
+      let requestStub = sandbox.stub(request, "get").yields(null, { statusCode: 200 }, JSON.stringify(body));
 
       const info = proxyquire('../../../../bin/commands/info', {
         '../helpers/utils': {
@@ -338,6 +343,7 @@ describe("buildInfo", () => {
         '../helpers/getInitialDetails': {
           getInitialDetails: getInitialDetailsStub,
         },
+        request: {get: requestStub},
       });
 
       validateBstackJsonStub.returns(Promise.resolve(bsConfig));
@@ -345,7 +351,7 @@ describe("buildInfo", () => {
 
       return info(args, rawArgs)
         .then(function (_bsConfig) {
-          sinon.assert.calledOnce(axiosStub);
+          sinon.assert.calledOnce(requestStub);
           sinon.assert.calledOnce(getUserAgentStub);
           sinon.assert.calledOnce(getConfigPathStub);
           sinon.assert.calledOnce(getInitialDetailsStub);

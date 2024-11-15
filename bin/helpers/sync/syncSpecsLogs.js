@@ -1,8 +1,6 @@
 "use strict";
-
-const { default: axios } = require("axios");
-
-const config = require("../config"),
+const request = require("request"),
+  config = require("../config"),
   utils = require("../utils"),
   logger = require("../logger").syncCliLogger,
   winstonLogger = require("../logger").winstonLogger,
@@ -137,35 +135,8 @@ let printSpecsStatus = (bsConfig, buildDetails, rawArgs, buildReportData) => {
   });
 };
 
-let whileProcess = async (whilstCallback) => {  
-  try {
-    const response = await axios.post(options.url, null, {
-      auth: {
-        username: options.auth.user,
-        password: options.auth.password
-      },
-      headers: options.headers 
-    });
-    whileTries = config.retries; // reset to default after every successful request
-    switch (response.status) {
-      case 202: // get data here and print it
-        n = 2
-        showSpecsStatus(response.data, 202);
-        return setTimeout(whilstCallback, timeout * n, null);
-      case 204: // No data available, wait for some time and ask again
-        n = 1
-        return setTimeout(whilstCallback, timeout * n, null);
-      case 200: // Build is completed.
-        whileLoop = false;
-        endTime = Date.now();
-        showSpecsStatus(response.data, 200);
-        return specSummary.exitCode == Constants.BUILD_FAILED_EXIT_CODE ? 
-        whilstCallback({ status: 204, message: "No specs ran in the build"} ) : whilstCallback(null, body);
-      default:
-        whileLoop = false;
-        return whilstCallback({ status: response.status, message: response.data });
-    }
-  } catch (error) {
+let whileProcess = (whilstCallback) => {
+  request.post(options, function(error, response, body) {
     if (error) {
       whileTries -= 1;
       if (whileTries === 0) {
@@ -178,7 +149,28 @@ let whileProcess = async (whilstCallback) => {
         return setTimeout(whilstCallback, timeout * n, null);
       }
     }
-  }
+
+    whileTries = config.retries; // reset to default after every successful request
+
+    switch (response.statusCode) {
+      case 202: // get data here and print it
+        n = 2
+        showSpecsStatus(body, 202);
+        return setTimeout(whilstCallback, timeout * n, null);
+      case 204: // No data available, wait for some time and ask again
+        n = 1
+        return setTimeout(whilstCallback, timeout * n, null);
+      case 200: // Build is completed.
+        whileLoop = false;
+        endTime = Date.now();
+        showSpecsStatus(body, 200);
+        return specSummary.exitCode == Constants.BUILD_FAILED_EXIT_CODE ? 
+        whilstCallback({ status: 204, message: "No specs ran in the build"} ) : whilstCallback(null, body);
+      default:
+        whileLoop = false;
+        return whilstCallback({ status: response.statusCode, message: body });
+    }
+  });
 }
 
 let getStackTraceUrl = () => {
@@ -186,7 +178,7 @@ let getStackTraceUrl = () => {
 }
 
 let showSpecsStatus = (data, statusCode) => {
-  let specData = data;
+  let specData = JSON.parse(data);
   specData["specData"].forEach(specDetails => {
     if (specDetails.type === Constants.CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY) {
       addCustomErrorToPrint(specDetails);

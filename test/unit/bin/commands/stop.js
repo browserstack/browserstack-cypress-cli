@@ -1,6 +1,7 @@
 const chai = require("chai"),
   chaiAsPromised = require("chai-as-promised"),
-  sinon = require("sinon");
+  sinon = require("sinon"),
+  request = require("request");
 
 const Constants = require("../../../../bin/helpers/constants"),
   logger = require("../../../../bin/helpers/logger").winstonLogger,

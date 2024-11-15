@@ -1,12 +1,11 @@
-const { default: axios } = require('axios');
-
-const logger = require('./logger').winstonLogger,
+const request = require('request'),
+      logger = require('./logger').winstonLogger,
       utils = require('./utils'),
       config = require("./config"),
       Constants = require('./constants');
 
 exports.getInitialDetails = (bsConfig, args, rawArgs) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     let options = {
       url: config.getInitialDetails,
       auth: {
@@ -18,32 +17,28 @@ exports.getInitialDetails = (bsConfig, args, rawArgs) => {
       }
     };
     let responseData = {};
-    try {
-      const response = await axios.get(options.url, {
-        auth: options.auth,
-        headers: options.headers,
-      });
-      try {
-        responseData = response.data;
-      } catch (e) {
-        responseData = {};
-      }
-      if(response.status != 200) {
-        logger.warn(`Warn: Get Initial Details Request failed with status code ${response.status}`);
-        utils.sendUsageReport(bsConfig, args, responseData["error"], Constants.messageTypes.ERROR, 'get_initial_details_failed', null, rawArgs);
+    request.get(options, function (err, resp, data) {
+      if(err) {
+        logger.warn(utils.formatRequest(err, resp, data));
+        utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'get_initial_details_failed', null, rawArgs);
         resolve({});
       } else {
-        if (!utils.isUndefined(responseData.grr) && responseData.grr.enabled && !utils.isUndefined(responseData.grr.urls)) {
-          config.uploadUrl = responseData.grr.urls.upload_url;
+        try {
+          responseData = JSON.parse(data);
+        } catch (e) {
+          responseData = {};
         }
-        resolve(responseData);
+        if(resp.statusCode != 200) {
+          logger.warn(`Warn: Get Initial Details Request failed with status code ${resp.statusCode}`);
+          utils.sendUsageReport(bsConfig, args, responseData["error"], Constants.messageTypes.ERROR, 'get_initial_details_failed', null, rawArgs);
+          resolve({});
+        } else {
+          if (!utils.isUndefined(responseData.grr) && responseData.grr.enabled && !utils.isUndefined(responseData.grr.urls)) {
+            config.uploadUrl = responseData.grr.urls.upload_url;
+          }
+          resolve(responseData);
+        }
       }
-    } catch (error) {
-      if(error.response && error.response.status !== 200) {
-        logger.warn(`Warn: Get Initial Details Request failed with status code ${error.response.status}`);
-        utils.sendUsageReport(bsConfig, args, error.response.data["error"], Constants.messageTypes.ERROR, 'get_initial_details_failed', null, rawArgs);
-      }
-      resolve({});
-    }
+    });
   });
 };
