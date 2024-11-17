@@ -122,20 +122,26 @@ const nodeRequest = (type, url, data, config) => {
         ...config,
         method: type,
         url: `${API_URL}/${url}`,
-        data: data, 
+        data: data,
         httpsAgent: this.httpsKeepAliveAgent,  
         maxAttempts: 2,
         headers: {
-          'Content-Type': 'application/json',
-          ...config.headers 
-        }
+          ...config.headers,
+          'Content-Type': 'application/json;charset=utf-8',
+          "X-Forwarded-For": "127.0.0.1"
+        },
+        clientIp: "127.0.0.1"
       };
-    
       if(url === exports.requestQueueHandler.screenshotEventUrl) {
           options.agent = httpsScreenshotsKeepAliveAgent;
       }
+      consoleHolder.log("Vals-->", JSON.stringify(options));
+      consoleHolder.log("Vals-->", JSON.stringify(options.url));
       axios(options)
         .then(response => {
+          consoleHolder.log("Resp-->", response, typeof response.data, response.data);
+          // exports.debugOnConsole(`Resp-->: ${JSON.stringify(response)}`);
+
           if(response.status != 200) {
               reject(response && response.data ? response.data : `Received response from BrowserStack Server with status : ${response.status}`);
           } else {
@@ -143,6 +149,7 @@ const nodeRequest = (type, url, data, config) => {
               const responseBody = typeof response.data === 'object' ? response.data : JSON.parse(response.data);
               resolve({ data: responseBody });
             } catch (error) {
+              consoleHolder.log("Url-->", url, url.includes('/stop'));
               if (!url.includes('/stop')) {
                 reject('Not a JSON response from BrowserStack Server');
               } else {
@@ -152,6 +159,8 @@ const nodeRequest = (type, url, data, config) => {
           }
         })
         .catch(error => {
+          // exports.debugOnConsole(`Error-->: ${JSON.stringify(error)}`);
+          consoleHolder.log("Error-->", JSON.stringify(error));
           reject(error)
         });
     });
@@ -485,7 +494,7 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
       'Authorization': `Bearer ${process.env.BS_TESTOPS_JWT}`,
       'Content-Type': 'application/json',
       'X-BSTACK-TESTOPS': 'true'
-    }
+    } 
   };
 
   try {
@@ -552,7 +561,7 @@ exports.uploadEventData = async (eventData, run=0) => {
       const config = {
         headers: {
           'Authorization': `Bearer ${process.env.BS_TESTOPS_JWT}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json;charset=utf-8',
           'X-BSTACK-TESTOPS': 'true'
         }
       };

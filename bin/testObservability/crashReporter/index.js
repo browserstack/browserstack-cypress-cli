@@ -157,6 +157,8 @@ class CrashReporter {
 
       axios(options)
           .then(response => {
+              consoleHolder.log("Resp3->", response);
+
               if(response.status != 200) {
                 debug(`[Crash_Report_Upload] Failed due to ${response && response.data ? response.data : `Received response from BrowserStack Server with status : ${response.status}`}`);
               } else {

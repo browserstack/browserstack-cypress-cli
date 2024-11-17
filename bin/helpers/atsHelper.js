@@ -1,5 +1,6 @@
 const path = require('path');
-const fs = require('fs')
+const fs = require('fs');
+const { consoleHolder } = require('../testObservability/helper/constants');
 
 const axios = require('axios'),
       logger = require('./logger').winstonLogger,
@@ -58,6 +59,7 @@ exports.getTurboScaleGridDetails = async (bsConfig, args, rawArgs) => {
             };
             let responseData = {};
             axios(options).then(response => {
+              consoleHolder.log("Resp1->", response);
               try {
                 responseData = JSON.parse(response.data);
               } catch (e) {
@@ -70,10 +72,11 @@ exports.getTurboScaleGridDetails = async (bsConfig, args, rawArgs) => {
               }
               resolve(responseData);
             }).catch(error => {
-            logger.warn(utils.formatRequest(error, null, null));
-            utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
-            resolve({});
-        });
+              consoleHolder.log("Error1->", error);
+              logger.warn(utils.formatRequest(error, null, null));
+              utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
+              resolve({});
+            });
       });
     } catch (err) {
         logger.error(`Failed to find TurboScale Grid: ${err}: ${err.stack}`);

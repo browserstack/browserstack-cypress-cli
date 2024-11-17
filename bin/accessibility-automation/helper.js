@@ -8,6 +8,7 @@ const os = require('os');
 const glob = require('glob');
 const helper = require('../helpers/helper');
 const { CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS } = require('../helpers/constants');
+const { consoleHolder } = require("../testObservability/helper/constants");
 const supportFileContentMap = {}
 
 exports.checkAccessibilityPlatform = (user_config) => {
@@ -153,6 +154,7 @@ const nodeRequest = (type, url, data, config) => {
     };
 
     axios(options).then(response => {
+      consoleHolder.log("Resp2->", response);
       if(!(response.status == 201 || response.status == 200)) {
           logger.info("response.status in nodeRequest", response.status);
           reject(response && response.data ? response.data : `Received response from BrowserStack Server with status : ${response.status}`);
@@ -169,6 +171,7 @@ const nodeRequest = (type, url, data, config) => {
           });
       }
     }).catch(error => {
+
         logger.info("error in nodeRequest", error);
         reject(error);
     })
