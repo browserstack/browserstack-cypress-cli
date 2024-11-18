@@ -142,12 +142,8 @@ const nodeRequest = (type, url, data, config) => {
       if(url === exports.requestQueueHandler.screenshotEventUrl) {
           options.agent = httpsScreenshotsKeepAliveAgent;
       }
-      consoleHolder.log("Vals-->", JSON.stringify(options));
-      consoleHolder.log("Vals-->", JSON.stringify(options.url));
       axios(options)
         .then(response => {
-          consoleHolder.log("Resp-->", response, typeof response.data, response.data);
-          // exports.debugOnConsole(`Resp-->: ${JSON.stringify(response)}`);
 
           if(response.status != 200) {
               reject(response && response.data ? response.data : `Received response from BrowserStack Server with status : ${response.status}`);
@@ -156,7 +152,6 @@ const nodeRequest = (type, url, data, config) => {
               const responseBody = typeof response.data === 'object' ? response.data : JSON.parse(response.data);
               resolve({ data: responseBody });
             } catch (error) {
-              consoleHolder.log("Url-->", url, url.includes('/stop'));
               if (!url.includes('/stop')) {
                 reject('Not a JSON response from BrowserStack Server');
               } else {
@@ -166,8 +161,6 @@ const nodeRequest = (type, url, data, config) => {
           }
         })
         .catch(error => {
-          // exports.debugOnConsole(`Error-->: ${JSON.stringify(error)}`);
-          consoleHolder.log("Error-->", JSON.stringify(error));
           reject(error)
         });
     });
