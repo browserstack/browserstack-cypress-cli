@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const { consoleHolder } = require('../testObservability/helper/constants');
+const HttpsProxyAgent = require('https-proxy-agent');
 
 const axios = require('axios'),
       logger = require('./logger').winstonLogger,
@@ -57,7 +58,15 @@ exports.getTurboScaleGridDetails = async (bsConfig, args, rawArgs) => {
                 'User-Agent': utils.getUserAgent(),
               }
             };
+
+            if(process.env.HTTP_PROXY){
+              options.httpsAgent = new HttpsProxyAgent(process.env.HTTP_PROXY);
+            } else if (process.env.HTTPS_PROXY){
+              options.httpsAgent = new HttpsProxyAgent(process.env.HTTPS_PROXY);
+            }
+
             let responseData = {};
+
             axios(options).then(response => {
               consoleHolder.log("Resp1->", response);
               try {
