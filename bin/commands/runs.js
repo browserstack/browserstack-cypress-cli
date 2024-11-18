@@ -30,7 +30,6 @@ const {
   printBuildLink
 } = require('../testObservability/helper/helper');
 
-
 const { 
   createAccessibilityTestRun,
   setAccessibilityEventListeners,
@@ -38,6 +37,7 @@ const {
   supportFileCleanup
 } = require('../accessibility-automation/helper');
 const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
+
 
 module.exports = function run(args, rawArgs) {
 
@@ -64,15 +64,14 @@ module.exports = function run(args, rawArgs) {
 
     // set cypress config filename
     utils.setCypressConfigFilename(bsConfig, args);
-    
-    /* 
-      Set testObservability & browserstackAutomation flags
-    */
+
+    /* Set testObservability & browserstackAutomation flags */
     const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
     const checkAccessibility = checkAccessibilityPlatform(bsConfig);
     const isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibility;
     const turboScaleSession = isTurboScaleSession(bsConfig);
     Constants.turboScaleObj.enabled = turboScaleSession;
+    
 
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
@@ -102,6 +101,7 @@ module.exports = function run(args, rawArgs) {
       // set spec timeout
       utils.setSpecTimeout(bsConfig, args);
     }
+
     
     // accept the specs list from command line if provided
     utils.setUserSpecs(bsConfig, args);
@@ -112,9 +112,7 @@ module.exports = function run(args, rawArgs) {
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
 
-    /* 
-      Send build start to Observability
-    */
+    // Send build start to Observability
     if(isTestObservabilitySession) {
       await launchTestSession(bsConfig, bsConfigPath);
       utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);

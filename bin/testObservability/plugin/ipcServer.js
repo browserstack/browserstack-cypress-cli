@@ -13,17 +13,17 @@ exports.startIPCServer = (subscribeServerEvents, unsubscribeServerEvents) => {
   ipc.config.silent = true;
 
   ipc.serve(() => {
-    
+
     ipc.server.on('socket.disconnected', (socket, destroyedSocketID) => {
       ipc.log(`client ${destroyedSocketID} has disconnected!`);
     });
-    
+
     ipc.server.on('destroy', () => {
       ipc.log('server destroyed');
     });
-    
+
     subscribeServerEvents(ipc.server);
-    
+
     process.on('exit', () => {
       unsubscribeServerEvents(ipc.server);
       ipc.server.stop();
@@ -31,8 +31,8 @@ exports.startIPCServer = (subscribeServerEvents, unsubscribeServerEvents) => {
       // on exit handler will block the process
       requestQueueHandler.shutdownSync();
     });
-  
+
   });
-  
+
   ipc.server.start();
 };
