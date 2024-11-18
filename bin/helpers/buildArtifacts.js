@@ -13,6 +13,7 @@ const HttpsProxyAgent = require('https-proxy-agent');
 const FormData = require('form-data');
 const decompress = require('decompress');
 const unzipper = require("unzipper");
+const { setAxiosProxy } = require('./helper');
 
 let BUILD_ARTIFACTS_TOTAL_COUNT = 0;
 let BUILD_ARTIFACTS_FAIL_COUNT = 0;
@@ -110,10 +111,12 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
   logger.debug(`Downloading build artifact for: ${filePath}`)
   return new Promise(async (resolve, reject) => {
     try {
-      const response = await axios.get(url, {
+      const axiosConfig = {
         responseType: 'stream', 
         validateStatus: status => (status >= 200 && status < 300) || status === 404
-      });
+      };
+      setAxiosProxy(axiosConfig);
+      const response = await axios.get(url, axiosConfig);
       if(response.status != 200) {
         if (response.status === 404) {
           reject(Constants.userMessages.DOWNLOAD_BUILD_ARTIFACTS_NOT_FOUND);
@@ -195,16 +198,19 @@ const sendUpdatesToBstack = async (bsConfig, buildId, args, options, rawArgs, bu
   }
 
   options.formData = data.toString();
+  const axiosConfig = {
+    auth: {
+      username: options.auth.username,
+      password: options.auth.password
+    },
+    headers: options.headers
+  };
+  setAxiosProxy(axiosConfig);
+
   let responseData = null;
   return new Promise (async (resolve, reject) => {
     try {
-      const response = await axios.post(options.url, data, {
-        auth: {
-          username: options.auth.username,
-          password: options.auth.password
-        },
-        headers: options.headers
-      });
+      const response = await axios.post(options.url, data, axiosConfig);
       try {
         responseData = response.data;
       } catch(e) {
@@ -251,13 +257,7 @@ exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs, buildR
       auth: options.auth,
       headers: options.headers
     }
-    if(process.env.HTTP_PROXY){
-      options.config.proxy = false;
-      options.config.httpAgent = new HttpsProxyAgent(process.env.HTTP_PROXY);
-    } else if (process.env.HTTPS_PROXY){
-      options.config.proxy = false;
-      options.config.httpAgent = new HttpsProxyAgent(process.env.HTTPS_PROXY);
-    }
+    setAxiosProxy(options.config);
     let response;
     try {
       response = await axios.get(options.url, options.config);

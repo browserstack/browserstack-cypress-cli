@@ -17,6 +17,7 @@ const glob = require('glob');
 const pGitconfig = promisify(gitconfig);
 const { readCypressConfigFile } = require('./readCypressConfigUtil');
 const { MAX_GIT_META_DATA_SIZE_IN_BYTES, GIT_META_DATA_TRUNCATED } = require('./constants')
+const HttpsProxyAgent = require('https-proxy-agent');
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
@@ -435,6 +436,13 @@ exports.truncateString = (field, truncateSizeInBytes) => {
   }
 
   return field;
+};
+
+exports.setAxiosProxy = (axiosConfig) => {
+  if (process.env.HTTP_PROXY || process.env.HTTPS_PROXY) {
+    const httpProxy = process.env.HTTP_PROXY || process.env.HTTPS_PROXY
+    axiosConfig.httpsAgent = new HttpsProxyAgent(httpProxy);
+  };
 };
 
 exports.combineMacWinNpmDependencies = (runSettings) => {

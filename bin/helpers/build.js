@@ -7,6 +7,8 @@ const config = require('./config'),
   utils = require('../helpers/utils'),
   logger = require('../helpers/logger').winstonLogger;
 
+const { setAxiosProxy } = require('./helper');
+
 const createBuild = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
     capabilityHelper.caps(bsConfig, zip).then(async function(data){
@@ -23,14 +25,17 @@ const createBuild = (bsConfig, zip) => {
         body: data
       }
 
+      const axiosConfig = {
+        auth: {
+          username: options.auth.user,
+          password: options.auth.password
+        },
+        headers: options.headers
+      }
+      setAxiosProxy(axiosConfig);
+
       try {
-        const response = await axios.post(options.url, data, {
-          auth: {
-            username: options.auth.user,
-            password: options.auth.password
-          },
-          headers: options.headers
-        });
+        const response = await axios.post(options.url, data, axiosConfig);
         let build = null;
         try {
           build = response.data;

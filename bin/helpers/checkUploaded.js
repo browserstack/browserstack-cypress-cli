@@ -11,6 +11,7 @@ const crypto = require('crypto'),
   utils = require('./utils'),
   logger = require('./logger').winstonLogger;
 
+const { setAxiosProxy } = require('./helper');
 
 const checkSpecsMd5 = (runSettings, args, instrumentBlocks) => {
   return new Promise(function (resolve, reject) {
@@ -124,14 +125,18 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
       }
 
       instrumentBlocks.markBlockStart("checkAlreadyUploaded.railsCheck");
+
+      const axiosConfig = {
+        auth: {
+          username: options.auth.user,
+          password: options.auth.password
+        },
+        headers: options.headers
+      };
+      setAxiosProxy(axiosConfig);
+
       try {
-        const response = await axios.post(options.url, options.body, {
-          auth: {
-            username: options.auth.user,
-            password: options.auth.password
-          },
-          headers: options.headers
-        })
+        const response = await axios.post(options.url, options.body, axiosConfig);
         let zipData = null;
         try {
           zipData = response.data;

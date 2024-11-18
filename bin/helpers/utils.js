@@ -12,6 +12,7 @@ const { promisify } = require('util');
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 const TIMEZONE = require("../helpers/timezone.json");
+const { setAxiosProxy } = require('./helper');
 
 const usageReporting = require("./usageReporting"),
   logger = require("./logger").winstonLogger,
@@ -999,17 +1000,21 @@ exports.checkLocalBinaryRunning = (bsConfig, localIdentifier) => {
     },
     body: JSON.stringify({ localIdentifier: localIdentifier}),
   };
+
+  const axiosConfig = {
+    auth: {
+      username: options.auth.user,
+      password: options.auth.password
+    },
+    headers: options.headers
+  };
+  setAxiosProxy(axiosConfig);
+
   return new Promise (async function(resolve, reject) {
       try {
         const response = await axios.post(options.url, {
           localIdentifier: localIdentifier
-        }, {
-          auth: {
-            username: options.auth.user,
-            password: options.auth.password
-          },
-          headers: options.headers
-        });
+        }, axiosConfig);
         resolve(response.data)
       } catch (error) {
         if(error.response) {
@@ -1552,6 +1557,12 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs, buildRe
     },
   };
 
+  const axiosConfig = {
+    auth: options.auth,
+    headers: options.headers
+  };
+  setAxiosProxy(axiosConfig);
+
   if (Constants.turboScaleObj.enabled) {
     options.url = `${config.turboScaleBuildsUrl}/${buildId}/stop`;
   }
@@ -1562,10 +1573,7 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs, buildRe
   let build = null;
   
   try {
-    const response = await axios.post(options.url, {}, {
-      auth: options.auth,
-      headers: options.headers
-    });
+    const response = await axios.post(options.url, {}, axiosConfig);
     
     build = response.data;
     if (response.status == 299) {

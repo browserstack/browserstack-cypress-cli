@@ -12,6 +12,8 @@ const { AUTH_REGEX, REDACTED_AUTH, REDACTED, CLI_ARGS_REGEX, RAW_ARGS_REGEX } = 
 const { default: axios } = require("axios");
 const axiosRetry = require("axios-retry");
 
+const { setAxiosProxy } = require('./helper');
+
 function get_version(package_name) {
   try {
     let options = { stdio: 'pipe' };
@@ -272,6 +274,11 @@ async function send(args) {
     retryDelay: 2000, // (default) wait for 2s before trying again
   };
 
+  const axiosConfig = {
+    headers: options.headers,
+  };
+  setAxiosProxy(axiosConfig);
+
   fileLogger.info(`Sending ${JSON.stringify(payload)} to ${config.usageReportingUrl}`);
   axiosRetry(axios, 
     { 
@@ -282,9 +289,7 @@ async function send(args) {
     }
   });
   try {
-    const response = await axios.post(options.url, options.body, {
-      headers: options.headers,
-    });
+    const response = await axios.post(options.url, options.body, axiosConfig);
     let result = {
       statusText: response.statusText,
       statusCode: response.status,

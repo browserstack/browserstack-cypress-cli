@@ -11,6 +11,7 @@ const config = require("./config"),
   Constants = require("./constants"),
   utils = require("./utils");
 
+const { setAxiosProxy } = require('./helper');
 
 const purgeUploadBar = (obj) => {
   obj.bar1.update(100, {
@@ -60,7 +61,8 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
       formData.append("filetype", opts.fileDetails.filetype);
       formData.append("filename", opts.fileDetails.filename);
       formData.append("zipMd5sum", opts.md5Data ? opts.md5Data : '');
-      const response = await axios.post(options.url, formData, {
+
+      const axiosConfig = {
         auth: {
           username: options.auth.user,
           password: options.auth.password
@@ -72,7 +74,10 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
             speed: ((progressEvent.bytes / (Date.now() - obj.startTime)) / 125).toFixed(2) //kbits per sec
           });
         },
-      });
+      };
+      setAxiosProxy(axiosConfig);
+
+      const response = await axios.post(options.url, formData, axiosConfig);
       responseData = response.data;
       purgeUploadBar(obj)
       logger.info(`${opts.messages.uploadingSuccess} (${responseData[opts.md5ReturnKey]})`);

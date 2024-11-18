@@ -1,10 +1,20 @@
 'use strict';
 const { default: axios } = require('axios');
+const { setAxiosProxy } = require('./helper');
 
-const downloadBuildStacktrace = async (url) => {
+const downloadBuildStacktrace = async (url, bsConfig) => {
+  const axiosConfig = {
+    auth: {
+      username: bsConfig.auth.username,
+      password: bsConfig.auth.access_key
+    },
+    responseType: 'stream',
+  };
+  setAxiosProxy(axiosConfig);
+
   return new Promise(async (resolve, reject) => {
     try {
-      const response = await axios.get(url, { responseType: 'stream' });
+      const response = await axios.get(url, axiosConfig);
       if (response.status === 200) {
         response.data.pipe(process.stdout);
         let error = null;
