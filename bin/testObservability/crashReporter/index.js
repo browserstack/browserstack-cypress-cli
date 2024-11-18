@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const https = require('https');
+const HttpsProxyAgent = require('https-proxy-agent');
 
 const logger = require("../../helpers/logger").winstonLogger;
 const utils = require('../../helpers/utils');
@@ -154,6 +155,13 @@ class CrashReporter {
         json: true,
         agent: httpsKeepAliveAgent
       };
+
+      if(process.env.HTTP_PROXY){
+        options.httpsAgent = new HttpsProxyAgent(process.env.HTTP_PROXY);
+
+      } else if (process.env.HTTPS_PROXY){
+        options.config.httpAgent = new HttpsProxyAgent(process.env.HTTPS_PROXY);
+      }
 
       axios(options)
           .then(response => {

@@ -9,6 +9,7 @@ const glob = require('glob');
 const helper = require('../helpers/helper');
 const { CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS } = require('../helpers/constants');
 const supportFileContentMap = {}
+const HttpsProxyAgent = require('https-proxy-agent');
 
 exports.checkAccessibilityPlatform = (user_config) => {
   let accessibility = false;
@@ -151,6 +152,13 @@ const nodeRequest = (type, url, data, config) => {
       url: `${API_URL}/${url}`,
       data: data
     };
+
+    if(process.env.HTTP_PROXY){
+      options.httpsAgent = new HttpsProxyAgent(process.env.HTTP_PROXY);
+
+    } else if (process.env.HTTPS_PROXY){
+      options.config.httpAgent = new HttpsProxyAgent(process.env.HTTPS_PROXY);
+    }
 
     axios(options).then(response => {
       if(!(response.status == 201 || response.status == 200)) {
