@@ -1,5 +1,5 @@
 'use strict';
-const request = require('request');
+const { default: axios } = require('axios');
 const { combineMacWinNpmDependencies } = require('./helper');
 
 const crypto = require('crypto'),
@@ -11,6 +11,7 @@ const crypto = require('crypto'),
   utils = require('./utils'),
   logger = require('./logger').winstonLogger;
 
+const { setAxiosProxy } = require('./helper');
 
 const checkSpecsMd5 = (runSettings, args, instrumentBlocks) => {
   return new Promise(function (resolve, reject) {
@@ -91,7 +92,7 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
     }
     
     instrumentBlocks.markBlockStart("checkAlreadyUploaded.md5Total");
-    checkSpecsMd5(bsConfig.run_settings, args, instrumentBlocks).then(function (zip_md5sum) {
+    checkSpecsMd5(bsConfig.run_settings, args, instrumentBlocks).then(async function (zip_md5sum) {
       instrumentBlocks.markBlockStart("checkAlreadyUploaded.md5Package");
       let npm_package_md5sum = checkPackageMd5(bsConfig.run_settings);
       instrumentBlocks.markBlockEnd("checkAlreadyUploaded.md5Package");
@@ -116,7 +117,7 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
           'Content-Type': 'application/json',
           "User-Agent": utils.getUserAgent(),
         },
-        body: JSON.stringify(data)
+        body: data
       };
 
       if (Constants.turboScaleObj.enabled) {
@@ -124,39 +125,48 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
       }
 
       instrumentBlocks.markBlockStart("checkAlreadyUploaded.railsCheck");
-      request.post(options, function (err, resp, body) {
-        if (err) {
-          instrumentBlocks.markBlockEnd("checkAlreadyUploaded.railsCheck");
-          resolve(obj);
-        } else {
-          let zipData = null;
-          try {
-            zipData = JSON.parse(body);
-          } catch (error) {
-            zipData = {};
-          }
-          if (resp.statusCode === 200) {
-            if (!utils.isUndefined(zipData.zipUrl)) {
-              Object.assign(obj, zipData, {zipUrlPresent: true});
-            }
-            if (!utils.isUndefined(zipData.npmPackageUrl)) {
-              Object.assign(obj, zipData, {packageUrlPresent: true});
-            }
-          }
-          if (utils.isTrueString(zipData.disableNpmSuiteCache)) {
-            bsConfig.run_settings.cache_dependencies = false;
-            Object.assign(obj, {packageUrlPresent: false});
-            delete obj.npm_package_md5sum;
-          }
-          if (utils.isTrueString(zipData.disableTestSuiteCache)) {
-            args["force-upload"] = true;
-            Object.assign(obj, {zipUrlPresent: false});
-            delete obj.zip_md5sum;
-          }
-          instrumentBlocks.markBlockEnd("checkAlreadyUploaded.railsCheck");
-          resolve(obj);
+
+      const axiosConfig = {
+        auth: {
+          username: options.auth.user,
+          password: options.auth.password
+        },
+        headers: options.headers
+      };
+      setAxiosProxy(axiosConfig);
+
+      try {
+        const response = await axios.post(options.url, options.body, axiosConfig);
+        let zipData = null;
+        try {
+          zipData = response.data;
+        } catch (error) {
+          zipData = {};
         }
-      });
+        if (response.status === 200) {
+          if (!utils.isUndefined(zipData.zipUrl)) {
+            Object.assign(obj, zipData, {zipUrlPresent: true});
+          }
+          if (!utils.isUndefined(zipData.npmPackageUrl)) {
+            Object.assign(obj, zipData, {packageUrlPresent: true});
+          }
+        }
+        if (utils.isTrueString(zipData.disableNpmSuiteCache)) {
+          bsConfig.run_settings.cache_dependencies = false;
+          Object.assign(obj, {packageUrlPresent: false});
+          delete obj.npm_package_md5sum;
+        }
+        if (utils.isTrueString(zipData.disableTestSuiteCache)) {
+          args["force-upload"] = true;
+          Object.assign(obj, {zipUrlPresent: false});
+          delete obj.zip_md5sum;
+        }
+        instrumentBlocks.markBlockEnd("checkAlreadyUploaded.railsCheck");
+        resolve(obj);
+      } catch (error) {
+        instrumentBlocks.markBlockEnd("checkAlreadyUploaded.railsCheck");
+        resolve(obj);
+      }
     }).catch((err) => {
       let errString = err.stack ? err.stack.toString().substring(0,100) : err.toString().substring(0,100);
       resolve({zipUrlPresent: false, packageUrlPresent: false, error: errString});
