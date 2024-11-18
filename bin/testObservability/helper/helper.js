@@ -134,7 +134,7 @@ const nodeRequest = (type, url, data, config) => {
       };
 
       if(process.env.HTTP_PROXY){
-        options.httpAgent = new HttpsProxyAgent(process.env.HTTP_PROXY);
+        options.httpsAgent = new HttpsProxyAgent(process.env.HTTP_PROXY);
   
       } else if (process.env.HTTPS_PROXY){
         options.httpsAgent = new HttpsProxyAgent(process.env.HTTPS_PROXY);
