@@ -1,5 +1,6 @@
 const path = require('path');
-const fs = require('fs')
+const fs = require('fs');
+const { consoleHolder } = require('../testObservability/helper/constants');
 
 const axios = require('axios'),
       logger = require('./logger').winstonLogger,
@@ -58,6 +59,7 @@ exports.getTurboScaleGridDetails = async (bsConfig, args, rawArgs) => {
             };
             let responseData = {};
             axios(options).then(response => {
+              consoleHolder.log("Resp1->", response);
               try {
                 responseData = response.data;
               } catch (e) {
