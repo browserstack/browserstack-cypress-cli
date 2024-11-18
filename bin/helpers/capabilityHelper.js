@@ -265,7 +265,6 @@ const validate = (bsConfig, args) => {
         if (!Utils.isUndefined(bsConfig.run_settings.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,bsConfig.run_settings.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
       }
     } catch(error){
-      logger.debug(error)
       reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
     }
 

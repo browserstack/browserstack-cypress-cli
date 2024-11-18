@@ -2,12 +2,12 @@ const { expect } = require("chai");
 const chai = require("chai"),
   chaiAsPromised = require("chai-as-promised"),
   sinon = require('sinon'),
-  request = require('request');
+  request = require('axios');
 
 const logger = require("../../../../bin/helpers/logger").winstonLogger,
   testObjects = require("../../support/fixtures/testObjects"),
   utils = require('../../../../bin/helpers/utils'),
-  atsHelper = require('../../../../bin/helpers/atsHelper');
+  atsHelper = require('../../../../bin/helpers/atsHelper.js');
 
 chai.use(chaiAsPromised);
 logger.transports["console.info"].silent = true;
