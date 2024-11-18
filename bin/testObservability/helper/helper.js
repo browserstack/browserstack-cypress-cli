@@ -130,7 +130,13 @@ const nodeRequest = (type, url, data, config) => {
           ...config.headers 
         }
       };
-    
+
+      if(process.env.HTTP_PROXY){
+        options.httpsAgent = new HttpsProxyAgent(process.env.HTTP_PROXY);
+
+      } else if (process.env.HTTPS_PROXY){
+        options.config.httpAgent = new HttpsProxyAgent(process.env.HTTPS_PROXY);
+      }
       if(url === exports.requestQueueHandler.screenshotEventUrl) {
           options.agent = httpsScreenshotsKeepAliveAgent;
       }
