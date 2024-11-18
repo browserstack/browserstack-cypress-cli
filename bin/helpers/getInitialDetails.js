@@ -5,6 +5,8 @@ const logger = require('./logger').winstonLogger,
       config = require("./config"),
       Constants = require('./constants');
 
+const { setAxiosProxy } = require('./helper');
+
 exports.getInitialDetails = (bsConfig, args, rawArgs) => {
   return new Promise(async (resolve, reject) => {
     let options = {
@@ -18,11 +20,15 @@ exports.getInitialDetails = (bsConfig, args, rawArgs) => {
       }
     };
     let responseData = {};
+
+    const axiosConfig = {
+      auth: options.auth,
+      headers: options.headers,
+    }
+    setAxiosProxy(axiosConfig);
+
     try {
-      const response = await axios.get(options.url, {
-        auth: options.auth,
-        headers: options.headers,
-      });
+      const response = await axios.get(options.url, axiosConfig);
       try {
         responseData = response.data;
       } catch (e) {

@@ -9,6 +9,8 @@ const fs = require('fs'),
       decompress = require('decompress');
 const { isTurboScaleSession } = require('../helpers/atsHelper');
 
+const { setAxiosProxy } = require('./helper');
+
 let reportGenerator = async (bsConfig, buildId, args, rawArgs, buildReportData, cb) => {
   let options = {
     url: `${config.buildUrl}${buildId}/custom_report`,
@@ -31,14 +33,18 @@ let reportGenerator = async (bsConfig, buildId, args, rawArgs, buildReportData, 
   let messageType = null;
   let errorCode = null;
   let build;
+
+  const axiosConfig = {
+    auth: {
+      username: options.auth.user,
+      password: options.auth.password
+    },
+    headers: options.headers
+  }
+  setAxiosProxy(axiosConfig);
+
   try {
-    const response = await axios.get(options.url, {
-      auth: {
-        username: options.auth.user,
-        password: options.auth.password
-      },
-      headers: options.headers
-    });
+    const response = await axios.get(options.url, axiosConfig);
     logger.debug('Received reports data from upstream.');
     try {
       build = response.data;
@@ -120,7 +126,11 @@ function getReportResponse(filePath, fileName, reportJsonUrl) {
   logger.debug(`Fetching build reports zip.`)
   return new Promise(async (resolve, reject) => {
     try {
-      const response = await axios.get(reportJsonUrl, {responseType: 'stream'});
+      const axiosConfig = {
+        responseType: 'stream',
+      };
+      setAxiosProxy(axiosConfig);
+      const response = await axios.get(reportJsonUrl, axiosConfig);
       if(response.status === 200) {
         //ensure that the user can call `then()` only when the file has
         //been downloaded entirely.

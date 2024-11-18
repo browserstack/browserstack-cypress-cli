@@ -377,7 +377,7 @@ module.exports = function run(args, rawArgs) {
                       });
                     } else if(!turboScaleSession){
                       let stacktraceUrl = getStackTraceUrl();
-                      downloadBuildStacktrace(stacktraceUrl).then((message) => {
+                      downloadBuildStacktrace(stacktraceUrl, bsConfig).then((message) => {
                         utils.sendUsageReport(bsConfig, args, message, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
                       }).catch((err) => {
                         let message = `Downloading build stacktrace failed with statuscode: ${err}. Please visit ${data.dashboard_url} for additional details.`;

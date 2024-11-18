@@ -11,6 +11,8 @@ const config = require("../config"),
   tableStream = require('table').createStream,
   chalk = require('chalk');
 
+const { setAxiosProxy } = require('../helper');
+
 let whileLoop = true, whileTries = config.retries, options, timeout = 3000, n = 2, tableConfig, stream, endTime, startTime = Date.now(), buildStarted = false;
 let specSummary = {
   "buildError": null,
@@ -139,13 +141,16 @@ let printSpecsStatus = (bsConfig, buildDetails, rawArgs, buildReportData) => {
 
 let whileProcess = async (whilstCallback) => {  
   try {
-    const response = await axios.post(options.url, {}, {
+    const axiosConfig = {
       auth: {
         username: options.auth.user,
         password: options.auth.password
       },
       headers: options.headers 
-    });
+    };
+    setAxiosProxy(axiosConfig);
+
+    const response = await axios.post(options.url, {}, axiosConfig);
     whileTries = config.retries; // reset to default after every successful request
     switch (response.status) {
       case 202: // get data here and print it

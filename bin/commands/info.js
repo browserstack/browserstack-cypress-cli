@@ -6,6 +6,8 @@ const config = require("../helpers/config"),
   utils = require("../helpers/utils"),
   getInitialDetails = require('../helpers/getInitialDetails').getInitialDetails;
 
+const { setAxiosProxy } = require('../helpers/helper');
+
 module.exports = function info(args, rawArgs) {
   let bsConfigPath = utils.getConfigPath(args.cf);
 
@@ -45,15 +47,18 @@ module.exports = function info(args, rawArgs) {
       let message = null;
       let messageType = null;
       let errorCode = null;
-  
+
+      options.config = {
+        auth: {
+          username: bsConfig.auth.username,
+          password: bsConfig.auth.access_key
+        },
+        headers: options.headers
+      };
+      setAxiosProxy(options.config);
+
       try {
-        const response = await axios.get(options.url, {
-          auth: {
-            username: bsConfig.auth.username,
-            password: bsConfig.auth.access_key
-          },
-          headers: options.headers
-        });
+        const response = await axios.get(options.url, options.config);
         let build = null;
           try {
             build = response.data;
