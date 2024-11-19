@@ -297,7 +297,7 @@ async function send(args) {
     };
     fileLogger.info(`${JSON.stringify(result)}`);
   } catch (error) {
-    fileLogger.error(JSON.stringify(error.response));
+    fileLogger.error(JSON.stringify(error.response.data));
     return;
   }
 }
