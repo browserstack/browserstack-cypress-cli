@@ -128,9 +128,7 @@ const nodeRequest = (type, url, data, config) => {
         headers: {
           ...config.headers,
           'Content-Type': 'application/json;charset=utf-8',
-          "X-Forwarded-For": "127.0.0.1"
         },
-        clientIp: "127.0.0.1"
       };
 
       if(process.env.HTTP_PROXY){
@@ -144,6 +142,7 @@ const nodeRequest = (type, url, data, config) => {
       }
       axios(options)
         .then(response => {
+          exports.debug(`RESPONSE IS ${JSON.stringify(response)}`);
 
           if(response.status != 200) {
               reject(response && response.data ? response.data : `Received response from BrowserStack Server with status : ${response.status}`);
@@ -161,6 +160,7 @@ const nodeRequest = (type, url, data, config) => {
           }
         })
         .catch(error => {
+          exports.debug(`ERROR IS ${error}`);
           reject(error)
         });
     });
