@@ -7,6 +7,7 @@ const fs = require('fs'),
       Constants = require('./constants'),
       config = require("./config"),
       decompress = require('decompress');
+const { isTurboScaleSession } = require('../helpers/atsHelper');
 
 const { setAxiosProxy } = require('./helper');
 
@@ -22,6 +23,10 @@ let reportGenerator = async (bsConfig, buildId, args, rawArgs, buildReportData, 
     },
   };
 
+  if (isTurboScaleSession(bsConfig)) {
+    options.url = `${config.turboScaleBuildsUrl}/${buildId}/custom_report`;
+  }
+  
   logger.debug('Started fetching the build json and html reports.');
 
   let message = null;

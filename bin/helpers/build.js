@@ -24,6 +24,9 @@ const createBuild = (bsConfig, zip) => {
         },
         body: data
       }
+      if (Constants.turboScaleObj.enabled) {
+        options.url = Constants.turboScaleObj.buildUrl;
+      }
 
       const axiosConfig = {
         auth: {

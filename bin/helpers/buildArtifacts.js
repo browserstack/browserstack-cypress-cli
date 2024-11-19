@@ -233,13 +233,15 @@ const sendUpdatesToBstack = async (bsConfig, buildId, args, options, rawArgs, bu
   });
 }
 
-exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs, buildReportData = null) => {
+exports.downloadBuildArtifacts = async (bsConfig, buildId, args, rawArgs, buildReportData = null, isTurboScaleSession = false) => {
   return new Promise ( async (resolve, reject) => {
     BUILD_ARTIFACTS_FAIL_COUNT = 0;
     BUILD_ARTIFACTS_TOTAL_COUNT = 0;
 
     let options = {
-      url: `${config.buildUrl}${buildId}/build_artifacts`,
+      url: isTurboScaleSession
+        ? `${config.turboScaleBuildsUrl}/${buildId}/build_artifacts`
+        : `${config.buildUrl}${buildId}/build_artifacts`,
       auth: {
         username: bsConfig.auth.username,
         password: bsConfig.auth.access_key,
