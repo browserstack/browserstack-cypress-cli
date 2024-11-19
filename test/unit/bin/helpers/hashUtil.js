@@ -121,7 +121,6 @@ describe("md5util", () => {
           sinon.assert.calledOnce(digestStub);
         })
         .catch((error) => {
-          console.log("error is ",error)
           chai.assert.fail("Promise error");
         });
     });

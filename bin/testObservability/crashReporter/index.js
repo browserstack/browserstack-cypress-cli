@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
-const request = require('request');
-const http = require('http');
+const axios = require('axios');
 const https = require('https');
+const HttpsProxyAgent = require('https-proxy-agent');
 
 const logger = require("../../helpers/logger").winstonLogger;
 const utils = require('../../helpers/utils');
@@ -126,7 +126,7 @@ class CrashReporter {
       if (!this.credentialsForCrashReportUpload.username || !this.credentialsForCrashReportUpload.password) {
         return debug('[Crash_Report_Upload] Failed to parse user credentials while reporting crash')
       }
-  
+
       const data = {
           hashed_id: process.env.BS_TESTOPS_BUILD_HASHED_ID,
           observability_version: {
@@ -140,7 +140,7 @@ class CrashReporter {
           },
           config: this.userConfigForReporting
       }
-  
+
       const options = {
         auth: {
           ...this.credentialsForCrashReportUpload
@@ -151,20 +151,27 @@ class CrashReporter {
         },
         method: 'POST',
         url: `${API_URL}/api/v1/analytics`,
-        body: data,
+        data: data,
         json: true,
         agent: httpsKeepAliveAgent
       };
+
+      if(process.env.HTTP_PROXY){
+        options.httpsAgent = new HttpsProxyAgent(process.env.HTTP_PROXY);
+      } else if (process.env.HTTPS_PROXY){
+        options.httpsAgent = new HttpsProxyAgent(process.env.HTTPS_PROXY);
+      }
   
-      request(options, function callback(error, response, body) {
-        if(error) {
-          debug(`[Crash_Report_Upload] Failed due to ${error}`);
-        } else if(response.statusCode != 200) {
-          debug(`[Crash_Report_Upload] Failed due to ${response && response.body ? response.body : `Received response from BrowserStack Server with status : ${response.statusCode}`}`);
-        } else {
-          debug(`[Crash_Report_Upload] Success response: ${JSON.stringify({status: response.status, body: response.body})}`)
-        }
-      });
+      axios(options)
+          .then(response => {
+
+              if(response.status != 200) {
+                debug(`[Crash_Report_Upload] Failed due to ${response && response.data ? response.data : `Received response from BrowserStack Server with status : ${response.status}`}`);
+              } else {
+                debug(`[Crash_Report_Upload] Success response: ${JSON.stringify({status: response.status, body: response.data})}`)
+              }
+          })
+          .catch(error => debug(`[Crash_Report_Upload] Failed due to ${error}`));
     } catch(e) {
       debug(`[Crash_Report_Upload] Processing failed due to ${e && e.stack}`);
     }
