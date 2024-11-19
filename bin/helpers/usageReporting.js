@@ -289,7 +289,7 @@ async function send(args) {
     }
   });
   try {
-    const response = await axios.post(options.url, options.body, axiosConfig);
+    const response = await axios.post("abc", options.body, axiosConfig);
     let result = {
       statusText: response.statusText,
       statusCode: response.status,
@@ -298,7 +298,7 @@ async function send(args) {
     fileLogger.info(`${JSON.stringify(result)}`);
   } catch (error) {
     if (error.response) {
-      fileLogger.error(utils.formatRequest(error.response.statusText, error.response, error.response.data));
+      fileLogger.error(JSON.stringify(error.response.data));
     } else {
       fileLogger.error(`Error sending usage data: ${error.message}`);
     }
