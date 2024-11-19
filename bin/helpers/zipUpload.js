@@ -1,26 +1,27 @@
 'use strict';
 
-const request = require("request"),
-  fs = require("fs");
+const fs = require("fs");
 
 const cliProgress = require('cli-progress');
+const { default: axios } = require("axios");
+const FormData = require("form-data");
 
 const config = require("./config"),
   logger = require("./logger").winstonLogger,
   Constants = require("./constants"),
   utils = require("./utils");
 
+const { setAxiosProxy } = require('./helper');
 
 const purgeUploadBar = (obj) => {
   obj.bar1.update(100, {
     speed: ((obj.size / (Date.now() - obj.startTime)) / 125).toFixed(2) //kbits per sec
   });
   obj.bar1.stop();
-  clearInterval(obj.zipInterval);
 }
 
 const uploadSuits = (bsConfig, filePath, opts, obj) => {
-  return new Promise(function (resolve, reject) {
+  return new Promise(async function (resolve, reject) {
     let uploadProgressBarErrorFlags = {
       noConnectionReportSent: false,
       unknownErrorReportSent: false
@@ -54,94 +55,69 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
 
     let options = utils.generateUploadParams(bsConfig, filePath, opts.md5Data, opts.fileDetails)
     let responseData = null;
-    var r = request.post(options, function (err, resp, body) {
+    try {
+      const formData = new FormData();
+      formData.append("file", fs.createReadStream(filePath));
+      formData.append("filetype", opts.fileDetails.filetype);
+      formData.append("filename", opts.fileDetails.filename);
+      formData.append("zipMd5sum", opts.md5Data ? opts.md5Data : '');
 
-      if (err) {
-        reject({message: err, stacktrace: utils.formatRequest(err, resp, body)});
-      } else {
-        try {
-          responseData = JSON.parse(body);
-        } catch (e) {
-          responseData = {};
-        }
-        if (resp.statusCode != 200) {
-          if (resp.statusCode == 401) {
-            if (responseData && responseData["error"]) {
-              responseData["time"] = Date.now() - obj.startTime;
-              return reject({message: responseData["error"], stacktrace: utils.formatRequest(err, resp, body)});
-            } else {
-              return reject({message: Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS, stacktrace: utils.formatRequest(err, resp, body)});
-            } 
-          }
-          if (!opts.propogateError){
-            purgeUploadBar(obj);
-            if (resp.statusCode == 413) {
-              return resolve({warn: Constants.userMessages.NODE_MODULES_LIMIT_EXCEEDED.replace("%SIZE%", (size / 1000000).toFixed(2))});
-            }
-            return resolve({})
-          }
-          if(responseData && responseData["error"]){
-            responseData["time"] = Date.now() - obj.startTime;
-            reject({message: responseData["error"], stacktrace: utils.formatRequest(err, resp, body)});
-          } else {
-            if (resp.statusCode == 413) {
-              reject({message: Constants.userMessages.ZIP_UPLOAD_LIMIT_EXCEEDED, stacktrace: utils.formatRequest(err, resp, body)});
-            } else {
-              reject({message: Constants.userMessages.ZIP_UPLOADER_NOT_REACHABLE, stacktrace: utils.formatRequest(err, resp, body)});
-            }
-          }
-        } else {
-          purgeUploadBar(obj);
-          logger.info(`${opts.messages.uploadingSuccess} (${responseData[opts.md5ReturnKey]})`);
-          opts.cleanupMethod();
-          responseData["time"] = Date.now() - obj.startTime;
-          resolve(responseData);
-        }
-      }
-    });
-
-    obj.zipInterval = setInterval(function () {
-      const errorCode = 'update_upload_progress_bar_failed';
-      try {
-        if (r && r.req && r.req.connection) {
-          let dispatched = r.req.connection._bytesDispatched;
-          let percent = dispatched * 100.0 / size;
+      const axiosConfig = {
+        auth: {
+          username: options.auth.user,
+          password: options.auth.password
+        },
+        headers: options.headers,
+        onUploadProgress: (progressEvent) => {
+          let percent = parseInt(Math.floor((progressEvent.loaded * 100) / progressEvent.total));
           obj.bar1.update(percent, {
-            speed: ((dispatched / (Date.now() - obj.startTime)) / 125).toFixed(2) //kbits per sec
+            speed: ((progressEvent.bytes / (Date.now() - obj.startTime)) / 125).toFixed(2) //kbits per sec
           });
+        },
+      };
+      setAxiosProxy(axiosConfig);
+
+      const response = await axios.post(options.url, formData, axiosConfig);
+      responseData = response.data;
+      purgeUploadBar(obj)
+      logger.info(`${opts.messages.uploadingSuccess} (${responseData[opts.md5ReturnKey]})`);
+      opts.cleanupMethod();
+      responseData["time"] = Date.now() - obj.startTime;
+      resolve(responseData);
+    } catch (error) {
+      let responseData = null;
+      if(error.response){
+        responseData = error.response.data;
+        if (error.response.status === 401) {
+          if (responseData && responseData.error) {
+            responseData.time = Date.now() - obj.startTime;
+            return reject({message: responseData.error, stacktrace: utils.formatRequest(responseData.error, error.response, responseData)});
+          } else {
+            return reject({message: Constants.validationMessages.INVALID_DEFAULT_AUTH_PARAMS, stacktrace: utils.formatRequest(error.response.statusText, error.response, responseData)});
+          } 
+        }
+        if (!opts.propogateError){
+          purgeUploadBar(obj);
+          if (error.response.status === 413) {
+            return resolve({warn: Constants.userMessages.NODE_MODULES_LIMIT_EXCEEDED.replace("%SIZE%", (size / 1000000).toFixed(2))});
+          }
+          return resolve({})
+        }
+        if(responseData && responseData["error"]){
+          responseData["time"] = Date.now() - obj.startTime;
+          reject({message: responseData["error"], stacktrace: utils.formatRequest(error.response.statusText, error.response, responseData)});
         } else {
-          if (!uploadProgressBarErrorFlags.noConnectionReportSent) {
-            logger.debug(Constants.userMessages.NO_CONNECTION_WHILE_UPDATING_UPLOAD_PROGRESS_BAR);
-            utils.sendUsageReport(
-              bsConfig,
-              null,
-              Constants.userMessages.NO_CONNECTION_WHILE_UPDATING_UPLOAD_PROGRESS_BAR,
-              Constants.messageTypes.WARNING,
-              errorCode,
-              null,
-              null
-            );
-            uploadProgressBarErrorFlags.noConnectionReportSent = true;
+          if (error.response.status === 413) {
+            reject({message: Constants.userMessages.ZIP_UPLOAD_LIMIT_EXCEEDED, stacktrace: utils.formatRequest(error.response.statusText, error.response, responseData)});
+          } else {
+            reject({message: Constants.userMessages.ZIP_UPLOADER_NOT_REACHABLE, stacktrace: utils.formatRequest(error.response.statusText, error.response, responseData)});
           }
         }
-      } catch (error) {
-        if (!uploadProgressBarErrorFlags.unknownErrorReportSent) {
-          logger.debug('Unable to determine progress.');
-          logger.debug(error);
-          utils.sendUsageReport(
-            bsConfig,
-            null,
-            error.stack,
-            Constants.messageTypes.WARNING,
-            errorCode,
-            null,
-            null
-          );
-          uploadProgressBarErrorFlags.unknownErrorReportSent = true;
-        }
+        reject({message: error.response, stacktrace: utils.formatRequest(error.response.statusText, error.response, error.response.data)});
+      } else {
+        reject({})
       }
-    }, 150);
-
+    }
   });
 }
 
