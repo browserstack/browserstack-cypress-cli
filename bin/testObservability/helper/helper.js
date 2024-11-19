@@ -1,3 +1,5 @@
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
+
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
@@ -48,7 +50,7 @@ exports.debugOnConsole = (text) => {
 }
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
-  if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
+  if (true || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
     logger.info(`[ OBSERVABILITY ] ${text}`);
   }
   if(shouldReport) {
