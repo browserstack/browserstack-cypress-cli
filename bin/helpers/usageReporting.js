@@ -285,7 +285,7 @@ async function send(args) {
     retries: 3, 
     retryDelay: 2000, 
     retryCondition: (error) => {
-      return (error.response.status === 503 || error.response.status === 500)
+      return utils.isNotUndefined(error.response) && (error.response.status === 503 || error.response.status === 500)
     }
   });
   try {
@@ -297,7 +297,11 @@ async function send(args) {
     };
     fileLogger.info(`${JSON.stringify(result)}`);
   } catch (error) {
-    fileLogger.error(JSON.stringify(error.response.data));
+    if (error.response) {
+      fileLogger.error(utils.formatRequest(error.response.statusText, error.response, error.response.data));
+    } else {
+      fileLogger.error(`Error sending usage data: ${error.message}`);
+    }
     return;
   }
 }
