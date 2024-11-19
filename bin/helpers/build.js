@@ -1,5 +1,5 @@
 'use strict';
-const request = require('request');
+const axios = require('axios').default;
 
 const config = require('./config'),
   capabilityHelper = require("../helpers/capabilityHelper"),
@@ -7,9 +7,11 @@ const config = require('./config'),
   utils = require('../helpers/utils'),
   logger = require('../helpers/logger').winstonLogger;
 
+const { setAxiosProxy } = require('./helper');
+
 const createBuild = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
-    capabilityHelper.caps(bsConfig, zip).then(function(data){
+    capabilityHelper.caps(bsConfig, zip).then(async function(data){
       let options = {
         url: config.buildUrl,
         auth: {
@@ -23,42 +25,45 @@ const createBuild = (bsConfig, zip) => {
         body: data
       }
 
-      if (Constants.turboScaleObj.enabled) {
-        options.url = Constants.turboScaleObj.buildUrl;
+      const axiosConfig = {
+        auth: {
+          username: options.auth.user,
+          password: options.auth.password
+        },
+        headers: options.headers
       }
+      setAxiosProxy(axiosConfig);
 
-      request.post(options, function (err, resp, body) {
-        if (err) {
-          logger.error(utils.formatRequest(err, resp, body));
-          reject(err);
-        } else {
-          let build = null;
-          try {
-            build = JSON.parse(body);
-          } catch (error) {
-            build = null;
-          }
-
-          if (resp.statusCode == 299) {
-            if (build) {
-              resolve(build.message);
-            } else {
-              logger.error(utils.formatRequest(err, resp, body));
-              reject(Constants.userMessages.API_DEPRECATED);
-            }
-          } else if (resp.statusCode != 201) {
-            logger.error(utils.formatRequest(err, resp, body));
-            if (build) {
-              reject(`${Constants.userMessages.BUILD_FAILED} Error: ${build.message}`);
-            } else {
-              reject(Constants.userMessages.BUILD_FAILED);
-            }
-          } else {
-            resolve(build);
-          }
-          resolve(build);
+      try {
+        const response = await axios.post(options.url, data, axiosConfig);
+        let build = null;
+        try {
+          build = response.data;
+        } catch (error) {
+          build = null;
         }
-      })
+        if (response.status == 299) {
+          if (build) {
+            resolve(build.message);
+          } else {
+            logger.error(utils.formatRequest(response.statusText, response, response.data));
+            reject(Constants.userMessages.API_DEPRECATED);
+          }
+        } else if (response.status != 201) {
+          logger.error(utils.formatRequest(response.statusText, response, response.data));
+          if (build) {
+            reject(`${Constants.userMessages.BUILD_FAILED} Error: ${build.message}`);
+          } else {
+            reject(Constants.userMessages.BUILD_FAILED);
+          }
+        }
+        resolve(build);
+      } catch (error) {
+        if(error.response) {
+          logger.error(utils.formatRequest(error.response.statusText, error.response, error.response.data));
+          reject(`${Constants.userMessages.BUILD_FAILED} Error: ${error.response.data.message}`);
+        }
+      }
     }).catch(function(err){
       reject(err);
     });
