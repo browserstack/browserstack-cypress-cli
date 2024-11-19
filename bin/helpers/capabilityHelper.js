@@ -132,6 +132,7 @@ const caps = (bsConfig, zip) => {
     }
 
     obj.cypress_cli_user_agent = Utils.getUserAgent();
+
     logger.info(`Cypress CLI User Agent: ${obj.cypress_cli_user_agent}`);
 
     if(obj.parallels === Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE) obj.parallels = undefined
@@ -265,7 +266,6 @@ const validate = (bsConfig, args) => {
         if (!Utils.isUndefined(bsConfig.run_settings.integrationFolder) && !Utils.isCypressProjDirValid(bsConfig.run_settings.cypressProjectDir,bsConfig.run_settings.integrationFolder)) reject(Constants.validationMessages.INCORRECT_DIRECTORY_STRUCTURE);
       }
     } catch(error){
-      logger.debug(error)
       reject(Constants.validationMessages.INVALID_CYPRESS_JSON)
     }
 

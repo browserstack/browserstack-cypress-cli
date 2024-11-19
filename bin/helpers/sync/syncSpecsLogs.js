@@ -150,7 +150,7 @@ let whileProcess = async (whilstCallback) => {
     };
     setAxiosProxy(axiosConfig);
 
-    const response = await axios.post(options.url, null, axiosConfig);
+    const response = await axios.post(options.url, {}, axiosConfig);
     whileTries = config.retries; // reset to default after every successful request
     switch (response.status) {
       case 202: // get data here and print it
