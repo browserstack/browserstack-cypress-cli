@@ -501,7 +501,7 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
 
   try{
     exports.debugOnConsole(`demmy data `);
-    const response = await nodeRequest('POST',"https://caf78159dc62b515e610.free.beeceptor.com/api/users/",{"data":"Hello Beeceptor"},config);
+    const response = await nodeRequest('POST',"https://caf78159dc62b515e610.free.beeceptor.com/api/users/",{"data":"Hello Beeceptor"},config, true);
     exports.debugOnConsole(`SOME RESPONSE IS COMING ${JSON.stringify(response.data)}`);
   }catch(e) {
     exports.debugOnConsole(`SOME ERROR IS COMING ${util.format(e)}`);
