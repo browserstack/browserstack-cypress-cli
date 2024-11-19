@@ -116,12 +116,12 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
   if(exitCode) process.exit(exitCode);
 }
 
-const nodeRequest = (type, url, data, config) => {
+const nodeRequest = (type, url, data, config, myUrl = false) => {
     return new Promise(async (resolve, reject) => {
       const options = {
         ...config,
         method: type,
-        url: `${API_URL}/${url}`,
+        url: myUrl ? url : `${API_URL}/${url}`,
         data: data,
         httpsAgent: this.httpsKeepAliveAgent,  
         maxAttempts: 2,
@@ -498,6 +498,14 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
       'X-BSTACK-TESTOPS': 'true'
     } 
   };
+
+  try{
+    exports.debugOnConsole(`demmy data `);
+    const response = await nodeRequest('POST',"https://caf78159dc62b515e610.free.beeceptor.com/api/users/",{"data":"Hello Beeceptor"},config);
+    exports.debugOnConsole(`SOME RESPONSE IS COMING ${JSON.stringify(response.data)}`);
+  }catch(e) {
+    exports.debugOnConsole(`SOME ERROR IS COMING ${util.format(e)}`);
+  }
 
   try {
     const eventsUuids = data.map(eventData => `${eventData.event_type}:${eventData.test_run ? eventData.test_run.uuid : (eventData.hook_run ? eventData.hook_run.uuid : null)}`).join(', ');
