@@ -140,9 +140,11 @@ const nodeRequest = (type, url, data, config) => {
       if(url === exports.requestQueueHandler.screenshotEventUrl) {
           options.agent = httpsScreenshotsKeepAliveAgent;
       }
+      exports.debug(`************  REQUEST IS ${JSON.stringify(options)}`);
+
       axios(options)
         .then(response => {
-          exports.debug(`RESPONSE IS ${JSON.stringify(response)}`);
+          exports.debug(`************ RESPONSE IS ${JSON.stringify(response.data)}`);
 
           if(response.status != 200) {
               reject(response && response.data ? response.data : `Received response from BrowserStack Server with status : ${response.status}`);
@@ -160,7 +162,7 @@ const nodeRequest = (type, url, data, config) => {
           }
         })
         .catch(error => {
-          exports.debug(`ERROR IS ${error}`);
+          exports.debug(`************ ERROR IS ${error}`);
           reject(error)
         });
     });
