@@ -1,28 +1,37 @@
-'use strict'
-const request = require('request');
+'use strict';
+const { default: axios } = require('axios');
+const { setAxiosProxy } = require('./helper');
 
-const downloadBuildStacktrace = async (url) => {
+const downloadBuildStacktrace = async (url, bsConfig) => {
+  const axiosConfig = {
+    auth: {
+      username: bsConfig.auth.username,
+      password: bsConfig.auth.access_key
+    },
+    responseType: 'stream',
+  };
+  setAxiosProxy(axiosConfig);
+
   return new Promise(async (resolve, reject) => {
-    request.get(url).on('response', function (response) {
-      if(response.statusCode == 200) {
-        response.pipe(process.stdout);
+    try {
+      const response = await axios.get(url, axiosConfig);
+      if (response.status === 200) {
+        response.data.pipe(process.stdout);
         let error = null;
         process.stdout.on('error', (err) => {
           error = err;
           process.stdout.close();
-          reject(response.statusCode);
+          reject(response.status);
         });
         process.stdout.on('close', async () => {
-          if(!error) {
-            resolve("Build stacktrace downloaded successfully");
+          if (!error) {
+            resolve('Build stacktrace downloaded successfully');
           }
         });
-      } else {
-        reject(response.statusCode);
       }
-    }).on('end', () => {
-      resolve("Build stacktrace downloaded successfully");
-    });
+    } catch (error) {
+      reject(error.response.status);
+    }
   });
 };
 

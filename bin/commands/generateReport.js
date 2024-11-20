@@ -31,7 +31,6 @@ module.exports = function generateReport(args, rawArgs) {
       let messageType = Constants.messageTypes.INFO;
       let errorCode = null;
       let buildId = args._[1];
-  
       reportGenerator(bsConfig, buildId, args, rawArgs, buildReportData);
       utils.sendUsageReport(bsConfig, args, 'generate-report called', messageType, errorCode, buildReportData, rawArgs);
     } catch(err) {
