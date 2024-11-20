@@ -445,6 +445,7 @@ exports.truncateString = (field, truncateSizeInBytes) => {
 exports.setAxiosProxy = (axiosConfig) => {
   if (process.env.HTTP_PROXY || process.env.HTTPS_PROXY) {
     const httpProxy = process.env.HTTP_PROXY || process.env.HTTPS_PROXY
+    axiosConfig.proxy = false;
     axiosConfig.httpsAgent = new HttpsProxyAgent(httpProxy);
   };
 };
