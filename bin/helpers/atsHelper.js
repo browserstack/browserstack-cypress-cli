@@ -59,9 +59,11 @@ exports.getTurboScaleGridDetails = async (bsConfig, args, rawArgs) => {
               }
             };
 
-            if(process.env.HTTP_PROXY){
+            if (process.env.HTTP_PROXY) {
+              options.proxy = false;
               options.httpsAgent = new HttpsProxyAgent(process.env.HTTP_PROXY);
-            } else if (process.env.HTTPS_PROXY){
+            } else if (process.env.HTTPS_PROXY) {
+              options.proxy = false
               options.httpsAgent = new HttpsProxyAgent(process.env.HTTPS_PROXY);
             }
 
