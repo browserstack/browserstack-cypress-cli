@@ -3,12 +3,14 @@ const { API_URL } = require('./constants');
 const utils = require('../helpers/utils');
 const fs = require('fs');
 const path = require('path');
-const request = require('request');
+const axios = require('axios');
 const os = require('os');
 const glob = require('glob');
 const helper = require('../helpers/helper');
 const { CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS } = require('../helpers/constants');
+const { consoleHolder } = require("../testObservability/helper/constants");
 const supportFileContentMap = {}
+const HttpsProxyAgent = require('https-proxy-agent');
 
 exports.checkAccessibilityPlatform = (user_config) => {
   let accessibility = false;
@@ -86,8 +88,8 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
 
     const config = {
       auth: {
-        user: userName,
-        pass: accessKey
+        username: userName,
+        password: accessKey
       },
       headers: {
         'Content-Type': 'application/json'
@@ -105,12 +107,13 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
       process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'true';
     }
     logger.debug(`BrowserStack Accessibility Automation Test Run ID: ${response.data.data.id}`);
-   
+
     this.setAccessibilityCypressCapabilities(user_config, response.data);
     helper.setBrowserstackCypressCliDependency(user_config);
 
   } catch (error) {
     if (error.response) {
+      logger.error("Incorrect Cred")
       logger.error(
         `Exception while creating test run for BrowserStack Accessibility Automation: ${
           error.response.status
@@ -118,6 +121,7 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
       );
     } else {
       if(error.message === 'Invalid configuration passed.') {
+        logger.error("Invalid configuration passed.")
         logger.error(
           `Exception while creating test run for BrowserStack Accessibility Automation: ${
             error.message || error.stack
@@ -126,7 +130,7 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
         for(const errorkey of error.errors){
           logger.error(errorkey.message);
         }
-        
+
       } else {
         logger.error(
           `Exception while creating test run for BrowserStack Accessibility Automation: ${
@@ -143,33 +147,43 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
 
 const nodeRequest = (type, url, data, config) => {
   return new Promise(async (resolve, reject) => {
-    const options = {...config,...{
+    const options = {
+      ...config,
       method: type,
       url: `${API_URL}/${url}`,
-      body: data,
-      json: config.headers['Content-Type'] === 'application/json',
-    }};
+      data: data
+    };
 
-    request(options, function callback(error, response, body) {
-      if(error) {
+    if(process.env.HTTP_PROXY){
+      options.proxy = false
+      options.httpsAgent = new HttpsProxyAgent(process.env.HTTP_PROXY);
+
+    } else if (process.env.HTTPS_PROXY){
+      options.proxy = false
+      options.httpsAgent = new HttpsProxyAgent(process.env.HTTPS_PROXY);
+    }
+
+    axios(options).then(response => {
+      if(!(response.status == 201 || response.status == 200)) {
+          logger.info("response.status in nodeRequest", response.status);
+          reject(response && response.data ? response.data : `Received response from BrowserStack Server with status : ${response.status}`);
+      } else {
+          try {
+              if(typeof(response.data) !== 'object') body = JSON.parse(response.data);
+          } catch(e) {
+              if(!url.includes('/stop')) {
+                reject('Not a JSON response from BrowserStack Server');
+              }
+          }
+          resolve({
+              data: response.data
+          });
+      }
+    }).catch(error => {
+
         logger.info("error in nodeRequest", error);
         reject(error);
-      } else if(!(response.statusCode == 201 || response.statusCode == 200)) {
-        logger.info("response.statusCode in nodeRequest", response.statusCode);
-        reject(response && response.body ? response.body : `Received response from BrowserStack Server with status : ${response.statusCode}`);
-      } else {
-        try {
-          if(typeof(body) !== 'object') body = JSON.parse(body);
-        } catch(e) {
-          if(!url.includes('/stop')) {
-            reject('Not a JSON response from BrowserStack Server');
-          }
-        }
-        resolve({
-          data: body
-        });
-      }
-    });
+    })
   });
 }
 
@@ -211,7 +225,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
         try {
           if(!file.includes('commands.js') && !file.includes('commands.ts')) {
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
-            
+
             let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
             if(!defaultFileContent.includes(cypressCommandEventListener)) {
               let newFileContent =  defaultFileContent + 
