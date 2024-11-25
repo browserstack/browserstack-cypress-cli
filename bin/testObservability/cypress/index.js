@@ -2,13 +2,13 @@
 
 /* Used to detect Gherkin steps */
 Cypress.on('log:added', (log) => {
-  return () => {
-    return cy.now('task', 'test_observability_step', {
-              log
-            }, {log: false})
-  }
-});
-
+    return () => {
+      return cy.now('task', 'test_observability_step', {
+                log
+              }, {log: false})
+    }
+  });
+  
 Cypress.on('command:start', (command) => {
   if(!command || !command.attributes) return;
   if(command.attributes.name == 'log' || (command.attributes.name == 'task' && (command.attributes.args.includes('test_observability_command') || command.attributes.args.includes('test_observability_log')))) {

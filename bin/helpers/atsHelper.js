@@ -1,7 +1,9 @@
 const path = require('path');
-const fs = require('fs')
+const fs = require('fs');
+const { consoleHolder } = require('../testObservability/helper/constants');
+const HttpsProxyAgent = require('https-proxy-agent');
 
-const request = require('request'),
+const axios = require('axios'),
       logger = require('./logger').winstonLogger,
       utils = require('./utils'),
       config = require('./config');
@@ -42,48 +44,56 @@ exports.getTurboScaleGridName = (bsConfig) => {
 };
 
 exports.getTurboScaleGridDetails = async (bsConfig, args, rawArgs) => {
-  try {
-    const gridName = this.getTurboScaleGridName(bsConfig);
+    try {
+        const gridName = this.getTurboScaleGridName(bsConfig);
 
-    return new Promise((resolve, reject) => {
-      let options = {
-        url: `${config.turboScaleAPIUrl}/grids/${gridName}`,
-        auth: {
-          username: bsConfig.auth.username,
-          password: bsConfig.auth.access_key,
-        },
-        headers: {
-          'User-Agent': utils.getUserAgent(),
-        }
-      };
-      let responseData = {};
-      request.get(options, function (err, resp, data) {
-        if(err) {
-          logger.warn(utils.formatRequest(err, resp, data));
-          utils.sendUsageReport(bsConfig, args, err, Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
-          resolve({});
-        } else {
-          try {
-            responseData = JSON.parse(data);
-          } catch (e) {
-            responseData = {};
-          }
-          if(resp.statusCode != 200) {
-            if (responseData.message == Constants.validationMessages.GRID_NOT_FOUND) {
-              logger.error(`Error: Invalid grid name '${gridName}' specified.`);
-            } else {
-              logger.error(`Error:Failed to fetch turboscale grid details with response code ${resp.statusCode}`);
+        return new Promise((resolve, reject) => {
+            let options = {
+              url: `${config.turboScaleAPIUrl}/grids/${gridName}`,
+              auth: {
+                username: bsConfig.auth.username,
+                password: bsConfig.auth.access_key,
+              },
+              headers: {
+                'User-Agent': utils.getUserAgent(),
+              }
             };
-            utils.sendUsageReport(bsConfig, args, responseData["error"], Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
+
+            if (process.env.HTTP_PROXY) {
+              options.proxy = false;
+              options.httpsAgent = new HttpsProxyAgent(process.env.HTTP_PROXY);
+            } else if (process.env.HTTPS_PROXY) {
+              options.proxy = false;
+              options.httpsAgent = new HttpsProxyAgent(process.env.HTTPS_PROXY);
+            }
+
+            let responseData = {};
+
+            axios(options).then(response => {
+              try {
+                responseData = response.data;
+              } catch (e) {
+                responseData = {};
+              }
+              if(response.status != 200) {
+                if (responseData.message == Constants.validationMessages.GRID_NOT_FOUND) {
+                  logger.error(`Error: Invalid grid name '${gridName}' specified.`);
+                } else {
+                  logger.error(`Error:Failed to fetch turboscale grid details with response code ${resp.statusCode}`);
+                };
+                utils.sendUsageReport(bsConfig, args, responseData["error"], Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
+                resolve({});
+              }
+              resolve(responseData);
+            }).catch(error => {
+            logger.warn(utils.formatRequest(error, null, null));
+            utils.sendUsageReport(bsConfig, args, error, Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
             resolve({});
-          }
-          resolve(responseData);
-        }
+        });
       });
-    });
-  } catch (err) {
-    logger.error(`Failed to find TurboScale Grid: ${err}: ${err.stack}`);
-  }
+    } catch (err) {
+        logger.error(`Failed to find TurboScale Grid: ${err}: ${err.stack}`);
+    }
 };
 
 exports.patchCypressConfigFileContent = (bsConfig) => {
@@ -91,7 +101,6 @@ exports.patchCypressConfigFileContent = (bsConfig) => {
     let cypressConfigFileData = fs.readFileSync(path.resolve(bsConfig.run_settings.cypress_config_file)).toString();
     const patchedConfigFileData = cypressConfigFileData + '\n\n' + `
     let originalFunction = module.exports.e2e.setupNodeEvents;
-
     module.exports.e2e.setupNodeEvents = (on, config) => {
       const bstackOn = require("./cypressPatch.js")(on);
       if (originalFunction !== null && originalFunction !== undefined) {
