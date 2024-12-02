@@ -1,4 +1,3 @@
-
 const path = require("node:path");
 
 const browserstackAccessibility = (on, config) => {
@@ -10,7 +9,7 @@ const browserstackAccessibility = (on, config) => {
   on('task', {
     browserstack_log(message) {
       console.log(message)
-
+      
       return null
     },
   })
@@ -36,7 +35,7 @@ const browserstackAccessibility = (on, config) => {
         }
       }
     } catch(err) {}
-    
+
   })
   config.env.ACCESSIBILITY_EXTENSION_PATH = process.env.ACCESSIBILITY_EXTENSION_PATH
   config.env.OS_VERSION = process.env.OS_VERSION
