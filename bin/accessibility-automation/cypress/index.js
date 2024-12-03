@@ -18,7 +18,7 @@ new Promise(async (resolve, reject) => {
         return win.document.querySelector("#accessibility-automation-element");
     }
 
-    function waitForScannerReadiness(retryCount = 30, retryInterval = 100) {
+    function waitForScannerReadiness(retryCount = 100, retryInterval = 100) {
     return new Promise(async (resolve, reject) => {
         let count = 0;
         const intervalID = setInterval(async () => {
@@ -261,24 +261,16 @@ const shouldScanForAccessibility = (attributes) => {
     return shouldScanTestForAccessibility;
 }
 
-Cypress.on('command:start', async (command) => {
-    if(!command || !command.attributes) return;
-    if(command.attributes.name == 'window' || command.attributes.name == 'then' || command.attributes.name == 'wrap') {
-        return;
-    }
+const commandToOverwrite = [ 'visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
+commandToOverwrite.forEach((command) => {
+  Cypress.Commands.overwrite(command, (originalFn, url, options) => {
+      const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
+      let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
+      if (!shouldScanTestForAccessibility) return;
+      cy.wrap(null).performScan().then(() => originalFn(url, options));
+  });
+});
 
-    if (!commandsToWrap.includes(command.attributes.name)) return;
-
-    const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
-
-    let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
-    if (!shouldScanTestForAccessibility) return;
-
-    cy.window().then((win) => {
-        browserStackLog('Performing scan form command ' + command.attributes.name);
-        cy.wrap(performScan(win, {method: command.attributes.name}), {timeout: 30000});
-    })
-})
 
 afterEach(() => {
     const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
@@ -337,7 +329,7 @@ Cypress.Commands.add('performScan', () => {
         }
         cy.window().then(async (win) => {
             browserStackLog(`Performing accessibility scan`);
-            await performScan(win);
+            cy.wrap(performScan(win), {timeout:40000});
         });
     } catch {}
 })
