@@ -79,6 +79,8 @@ class MyReporter {
     this.haveSentBuildUpdate = false;
     this.registerListeners();
     setCrashReportingConfigFromReporter(null, process.env.OBS_CRASH_REPORTING_BS_CONFIG_PATH, process.env.OBS_CRASH_REPORTING_CYPRESS_CONFIG_PATH);
+    process.env['observability_integration'] = true;
+    process.env['observability_product'] = 'turboscale';
 
     runner
       .once(EVENT_RUN_BEGIN, async () => {
