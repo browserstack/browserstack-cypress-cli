@@ -151,11 +151,6 @@ module.exports = function run(args, rawArgs) {
       }
 
       if (turboScaleSession) {
-        // Local is only required in case user is running on trial grid and wants to access private website.
-        // Even then, it will be spawned separately via browserstack-cli ats connect-grid command and not via browserstack-cypress-cli
-        // Hence whenever running on ATS, need to make local as false
-        bsConfig.connection_settings.local = false;
-
         const gridDetails = await getTurboScaleGridDetails(bsConfig, args, rawArgs);
 
         if (gridDetails && Object.keys(gridDetails).length > 0) {
