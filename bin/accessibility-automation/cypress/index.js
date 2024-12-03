@@ -6,6 +6,15 @@ const browserStackLog = (message) => {
   }
   
 const commandsToWrap = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scroll', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
+const commandToOverwrite = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
+commandToOverwrite.forEach((command) => {
+  Cypress.Commands.overwrite(command, (originalFn, url, options) => {
+      const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
+      let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
+      if (!shouldScanTestForAccessibility) return;
+      cy.wrap(null).performScan().then(() => originalFn(url, options));
+  });
+});
 
 const performScan = (win, payloadToSend) =>
 new Promise(async (resolve, reject) => {
@@ -222,7 +231,8 @@ new Promise( (resolve, reject) => {
                 resolve("Scanner is not ready on the page after multiple retries. after run");
             });
         }
-    } catch(er) {
+    } catch(error) {
+				browserStackLog(`Error in saving results with error: ${error.message}`);
         resolve()
     }
 
@@ -254,23 +264,12 @@ const shouldScanForAccessibility = (attributes) => {
             const included = includeTagArray.length === 0 || includeTags.some((include) => fullTestName.includes(include));
             shouldScanTestForAccessibility = !excluded && included;
         } catch (error) {
-            browserStackLog("Error while validating test case for accessibility before scanning. Error : ", error);
+            browserStackLog(`Error while validating test case for accessibility before scanning. Error : ${error.message}`);
         }
     }
 
     return shouldScanTestForAccessibility;
 }
-
-const commandToOverwrite = [ 'visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
-commandToOverwrite.forEach((command) => {
-  Cypress.Commands.overwrite(command, (originalFn, url, options) => {
-      const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
-      let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
-      if (!shouldScanTestForAccessibility) return;
-      cy.wrap(null).performScan().then(() => originalFn(url, options));
-  });
-});
-
 
 afterEach(() => {
     const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
@@ -314,6 +313,7 @@ afterEach(() => {
             })
 
         } catch (er) {
+					browserStackLog(`Error in saving results with error: ${er.message}`);
         }
         })
     });
@@ -331,7 +331,9 @@ Cypress.Commands.add('performScan', () => {
             browserStackLog(`Performing accessibility scan`);
             cy.wrap(performScan(win), {timeout:40000});
         });
-    } catch {}
+    } catch(error) {
+			browserStackLog(`Error in performing scan with error: ${error.message}`);
+		}
 })
 
 Cypress.Commands.add('getAccessibilityResultsSummary', () => {
@@ -347,7 +349,9 @@ Cypress.Commands.add('getAccessibilityResultsSummary', () => {
             browserStackLog('Getting accessibility results summary');
             return await getAccessibilityResultsSummary(win);
         });
-    } catch {}
+    } catch(error) {
+			browserStackLog(`Error in getting accessibilty results summary with error: ${error.message}`);
+		}
 
 });
 
@@ -368,6 +372,7 @@ Cypress.Commands.add('getAccessibilityResults', () => {
             return await getAccessibilityResults(win);
         });
 
-    } catch {}
-
+    } catch(error) {
+			browserStackLog(`Error in getting accessibilty results with error: ${error.message}`);
+		}
 });
