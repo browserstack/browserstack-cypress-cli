@@ -6,7 +6,6 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const https = require('https');
-const request = require('request');
 const gitLastCommit = require('git-last-commit');
 const { v4: uuidv4 } = require('uuid');
 const os = require('os');
@@ -17,8 +16,9 @@ const { spawn, execSync } = require('child_process');
 const glob = require('glob');
 const pGitconfig = promisify(gitconfig);
 const { readCypressConfigFile } = require('./readCypressConfigUtil');
-const CrashReporter = require('../testObservability/crashReporter');
 const { MAX_GIT_META_DATA_SIZE_IN_BYTES, GIT_META_DATA_TRUNCATED } = require('./constants')
+const CrashReporter = require('../testObservability/crashReporter');
+const HttpsProxyAgent = require('https-proxy-agent');
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
@@ -440,6 +440,14 @@ exports.truncateString = (field, truncateSizeInBytes) => {
   }
 
   return field;
+};
+
+exports.setAxiosProxy = (axiosConfig) => {
+  if (process.env.HTTP_PROXY || process.env.HTTPS_PROXY) {
+    const httpProxy = process.env.HTTP_PROXY || process.env.HTTPS_PROXY
+    axiosConfig.proxy = false;
+    axiosConfig.httpsAgent = new HttpsProxyAgent(httpProxy);
+  };
 };
 
 exports.combineMacWinNpmDependencies = (runSettings) => {
