@@ -1775,3 +1775,24 @@ exports.getMajorVersion = (version) => {
     return null;
   } 
 }
+
+const base64UrlDecode = (str) => {
+  const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  const buffer = Buffer.from(base64, 'base64');
+  return buffer.toString('utf-8');
+};
+
+exports.decodeJWTToken = (token) => {
+  try{
+    const parts = token.split('.');
+    if (parts.length < 2) {
+      throw new Error('Invalid JWT token');
+    }
+    const header = JSON.parse(base64UrlDecode(parts[0]));
+    const payload = JSON.parse(base64UrlDecode(parts[1]));
+    return { header, payload };
+  } catch (error) {
+    logger.err(error.message);
+    return {undefined, undefined};
+  }
+}
