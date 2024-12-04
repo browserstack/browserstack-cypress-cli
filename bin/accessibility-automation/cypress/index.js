@@ -11,8 +11,11 @@ commandToOverwrite.forEach((command) => {
   Cypress.Commands.overwrite(command, (originalFn, url, options) => {
       const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
       let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
-      if (!shouldScanTestForAccessibility) return;
-      cy.wrap(null).performScan().then(() => originalFn(url, options));
+      if (!shouldScanTestForAccessibility) {
+        cy.wrap(null).then(() => originalFn(url, options));
+        return;
+      }
+      else cy.wrap(null).performScan().then(() => originalFn(url, options));
   });
 });
 
@@ -21,6 +24,7 @@ new Promise(async (resolve, reject) => {
     const isHttpOrHttps = /^(http|https):$/.test(win.location.protocol);
     if (!isHttpOrHttps) {
         resolve();
+		return;
     }
 
     function findAccessibilityAutomationElement() {
@@ -38,9 +42,11 @@ new Promise(async (resolve, reject) => {
                     "Accessibility Automation Scanner is not ready on the page."
                 )
                 );
+				return;
             } else if (findAccessibilityAutomationElement()) {
                 clearInterval(intervalID);
                 resolve("Scanner set");
+				return;
             } else {
                 count += 1;
             }
@@ -52,6 +58,7 @@ new Promise(async (resolve, reject) => {
         function onScanComplete() {
             win.removeEventListener("A11Y_SCAN_FINISHED", onScanComplete);
             resolve();
+			return;
         }
 
         win.addEventListener("A11Y_SCAN_FINISHED", onScanComplete);
@@ -66,7 +73,8 @@ new Promise(async (resolve, reject) => {
             .then(startScan)
             .catch(async (err) => {
             resolve("Scanner is not ready on the page after multiple retries. performscan");
-            });
+			return;
+        });
     }
 })
 
@@ -75,6 +83,7 @@ new Promise((resolve) => {
     const isHttpOrHttps = /^(http|https):$/.test(window.location.protocol);
     if (!isHttpOrHttps) {
         resolve();
+		return;
     }
 
     function findAccessibilityAutomationElement() {
@@ -92,9 +101,11 @@ new Promise((resolve) => {
                         "Accessibility Automation Scanner is not ready on the page."
                     )
                     );
+					return;
                 } else if (findAccessibilityAutomationElement()) {
                     clearInterval(intervalID);
                     resolve("Scanner set");
+					return;
                 } else {
                     count += 1;
                 }
@@ -106,6 +117,7 @@ new Promise((resolve) => {
         function onReceiveSummary(event) {
             win.removeEventListener("A11Y_RESULTS_SUMMARY", onReceiveSummary);
             resolve(event.detail);
+			return;
         }
 
         win.addEventListener("A11Y_RESULTS_SUMMARY", onReceiveSummary);
@@ -120,7 +132,8 @@ new Promise((resolve) => {
             .then(getSummary)
             .catch((err) => {
             resolve();
-            });
+			return;
+        });
     }
 })
 
@@ -129,6 +142,7 @@ new Promise((resolve) => {
     const isHttpOrHttps = /^(http|https):$/.test(window.location.protocol);
     if (!isHttpOrHttps) {
         resolve();
+		return;
     }
 
     function findAccessibilityAutomationElement() {
@@ -146,9 +160,11 @@ new Promise((resolve) => {
                         "Accessibility Automation Scanner is not ready on the page."
                     )
                     );
+					return;
                 } else if (findAccessibilityAutomationElement()) {
                     clearInterval(intervalID);
                     resolve("Scanner set");
+					return;
                 } else {
                     count += 1;
                 }
@@ -160,6 +176,7 @@ new Promise((resolve) => {
         function onReceivedResult(event) {
             win.removeEventListener("A11Y_RESULTS_RESPONSE", onReceivedResult);
             resolve(event.detail);
+			return;
         }
 
         win.addEventListener("A11Y_RESULTS_RESPONSE", onReceivedResult);
@@ -174,7 +191,8 @@ new Promise((resolve) => {
             .then(getResults)
             .catch((err) => {
             resolve();
-            });
+			return;
+        });
     }
 });
 
@@ -184,6 +202,7 @@ new Promise( (resolve, reject) => {
         const isHttpOrHttps = /^(http|https):$/.test(win.location.protocol);
         if (!isHttpOrHttps) {
             resolve("Unable to save accessibility results, Invalid URL.");
+			return;
         }
 
         function findAccessibilityAutomationElement() {
@@ -201,9 +220,11 @@ new Promise( (resolve, reject) => {
                         "Accessibility Automation Scanner is not ready on the page."
                         )
                     );
+					return;
                 } else if (findAccessibilityAutomationElement()) {
                     clearInterval(intervalID);
                     resolve("Scanner set");
+					return;
                 } else {
                     count += 1;
                 }
@@ -214,6 +235,7 @@ new Promise( (resolve, reject) => {
         function saveResults() {
             function onResultsSaved(event) {
                 resolve();
+				return;
             }
             win.addEventListener("A11Y_RESULTS_SAVED", onResultsSaved);
             const e = new CustomEvent("A11Y_SAVE_RESULTS", {
@@ -229,11 +251,13 @@ new Promise( (resolve, reject) => {
             .then(saveResults)
             .catch(async (err) => {
                 resolve("Scanner is not ready on the page after multiple retries. after run");
+				return;
             });
         }
     } catch(error) {
-				browserStackLog(`Error in saving results with error: ${error.message}`);
-        resolve()
+		browserStackLog(`Error in saving results with error: ${error.message}`);
+        resolve();
+		return;
     }
 
 })
@@ -313,7 +337,7 @@ afterEach(() => {
             })
 
         } catch (er) {
-					browserStackLog(`Error in saving results with error: ${er.message}`);
+			browserStackLog(`Error in saving results with error: ${er.message}`);
         }
         })
     });
@@ -332,8 +356,8 @@ Cypress.Commands.add('performScan', () => {
             cy.wrap(performScan(win), {timeout:40000});
         });
     } catch(error) {
-			browserStackLog(`Error in performing scan with error: ${error.message}`);
-		}
+		browserStackLog(`Error in performing scan with error: ${error.message}`);
+	}
 })
 
 Cypress.Commands.add('getAccessibilityResultsSummary', () => {
@@ -350,8 +374,8 @@ Cypress.Commands.add('getAccessibilityResultsSummary', () => {
             return await getAccessibilityResultsSummary(win);
         });
     } catch(error) {
-			browserStackLog(`Error in getting accessibilty results summary with error: ${error.message}`);
-		}
+		browserStackLog(`Error in getting accessibilty results summary with error: ${error.message}`);
+	}
 
 });
 
@@ -373,6 +397,6 @@ Cypress.Commands.add('getAccessibilityResults', () => {
         });
 
     } catch(error) {
-			browserStackLog(`Error in getting accessibilty results with error: ${error.message}`);
-		}
+		browserStackLog(`Error in getting accessibilty results with error: ${error.message}`);
+	}
 });
