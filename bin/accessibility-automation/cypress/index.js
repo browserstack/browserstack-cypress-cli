@@ -22,17 +22,25 @@ const performModifiedScan = (originalFn, Subject, stateType, ...args) => {
         }
         return args;
     }
-    const runCutomizedCommand = () => {
+    const runCustomizedCommand = () => {
         if (!Subject) {
-            let cypressCommandSubject = (cy.subject?.call(cy)) ?? null;
-            customChaining.then(() => cypressCommandSubject).then(() => { originalFn(...args); });
+            let orgS1, orgS2, cypressCommandSubject = null;
+            if((orgS2 = (orgS1 = cy).subject) !==null && orgS2 !== void 0){
+                cypressCommandSubject = orgS2.call(orgS1);
+            }
+            customChaining.then(()=> cypressCommandSubject).then(() => {originalFn(...args)});
         } else {
-            let setTimeout = args.find(arg => arg?.timeout)?.timeout ?? null;
-            let cypressCommandChain = (cy.subjectChain?.call(cy)) ?? null;
-            customChaining.performScanSubjectQuery(cypressCommandChain, setTimeout).then({ timeout: 10000 }, newSubject => originalFn(...changeSub(args, stateType, newSubject)));
+            let orgSC1, orgSC2, timeO1, cypressCommandChain = null, setTimeout = null;
+            if((timeO1 = args.find(arg => arg !== null && arg !== void 0 ? arg.timeout : null)) !== null && timeO1 !== void 0) {
+                setTimeout = timeO1.timeout;
+            }
+            if((orgSC1 = (orgSC2 = cy).subjectChain) !== null && orgSC1 !== void 0){
+                cypressCommandChain = orgSC1.call(orgSC2);
+            }
+            customChaining.performScanSubjectQuery(cypressCommandChain, setTimeout).then({timeout: 30000}, (newSubject) => originalFn(...changeSub(args, stateType, newSubject)));
         }
     }
-    runCutomizedCommand(); 
+    runCustomizedCommand(); 
 }
 
 const performScan = (win, payloadToSend) =>
@@ -297,15 +305,12 @@ commandToOverwrite.forEach((command) => {
             const shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
             const state = cy.state('current'), Subject = 'getSubjectFromChain' in cy; 
             const stateName = state === null || state === void 0 ? void 0 : state.get('name');
-            let stateType;
+            let stateType = null;
             if (!shouldScanTestForAccessibility || (stateName && stateName !== command)) {
                 return originalFn(...args);
             }
             if(state !== null && state !== void 0){
                 stateType = state.get('type');
-            }
-            else {
-                stateType = null;
             }
             performModifiedScan(originalFn, Subject, stateType, ...args);
     });
