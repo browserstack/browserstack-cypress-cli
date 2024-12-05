@@ -6,32 +6,68 @@ const browserStackLog = (message) => {
   }
   
 const commandsToWrap = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scroll', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
+// scroll is not a default function in cypress.
+const commandToOverwrite = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
+
+/*
+    Overrriding the cypress commands to perform Accessibility Scan before Each command
+    - runCutomizedCommand is handling both the cases of subject available in cypress original command
+      and chaning available from original cypress command.   
+*/
+const performModifiedScan = (originalFn, Subject, stateType, ...args) => {
+    let customChaining = cy.wrap(null).performScan();
+    const changeSub = (args, stateType, newSubject) => {
+        if (stateType !== 'parent') {
+            return [newSubject, ...args.slice(1)];
+        }
+        return args;
+    }
+    const runCustomizedCommand = () => {
+        if (!Subject) {
+            let orgS1, orgS2, cypressCommandSubject = null;
+            if((orgS2 = (orgS1 = cy).subject) !==null && orgS2 !== void 0){
+                cypressCommandSubject = orgS2.call(orgS1);
+            }
+            customChaining.then(()=> cypressCommandSubject).then(() => {originalFn(...args)});
+        } else {
+            let orgSC1, orgSC2, timeO1, cypressCommandChain = null, setTimeout = null;
+            if((timeO1 = args.find(arg => arg !== null && arg !== void 0 ? arg.timeout : null)) !== null && timeO1 !== void 0) {
+                setTimeout = timeO1.timeout;
+            }
+            if((orgSC1 = (orgSC2 = cy).subjectChain) !== null && orgSC1 !== void 0){
+                cypressCommandChain = orgSC1.call(orgSC2);
+            }
+            customChaining.performScanSubjectQuery(cypressCommandChain, setTimeout).then({timeout: 30000}, (newSubject) => originalFn(...changeSub(args, stateType, newSubject)));
+        }
+    }
+    runCustomizedCommand(); 
+}
 
 const performScan = (win, payloadToSend) =>
 new Promise(async (resolve, reject) => {
     const isHttpOrHttps = /^(http|https):$/.test(win.location.protocol);
     if (!isHttpOrHttps) {
-        resolve();
+        return resolve();
     }
 
     function findAccessibilityAutomationElement() {
         return win.document.querySelector("#accessibility-automation-element");
     }
 
-    function waitForScannerReadiness(retryCount = 30, retryInterval = 100) {
+    function waitForScannerReadiness(retryCount = 100, retryInterval = 100) {
     return new Promise(async (resolve, reject) => {
         let count = 0;
         const intervalID = setInterval(async () => {
             if (count > retryCount) {
                 clearInterval(intervalID);
-                reject(
+                return reject(
                 new Error(
                     "Accessibility Automation Scanner is not ready on the page."
                 )
                 );
             } else if (findAccessibilityAutomationElement()) {
                 clearInterval(intervalID);
-                resolve("Scanner set");
+                return resolve("Scanner set");
             } else {
                 count += 1;
             }
@@ -42,7 +78,7 @@ new Promise(async (resolve, reject) => {
     function startScan() {
         function onScanComplete() {
             win.removeEventListener("A11Y_SCAN_FINISHED", onScanComplete);
-            resolve();
+            return resolve();
         }
 
         win.addEventListener("A11Y_SCAN_FINISHED", onScanComplete);
@@ -56,8 +92,8 @@ new Promise(async (resolve, reject) => {
         waitForScannerReadiness()
             .then(startScan)
             .catch(async (err) => {
-            resolve("Scanner is not ready on the page after multiple retries. performscan");
-            });
+            return resolve("Scanner is not ready on the page after multiple retries. performscan");
+        });
     }
 })
 
@@ -65,7 +101,7 @@ const getAccessibilityResultsSummary = (win) =>
 new Promise((resolve) => {
     const isHttpOrHttps = /^(http|https):$/.test(window.location.protocol);
     if (!isHttpOrHttps) {
-        resolve();
+        return resolve();
     }
 
     function findAccessibilityAutomationElement() {
@@ -78,14 +114,14 @@ new Promise((resolve) => {
             const intervalID = setInterval(() => {
                 if (count > retryCount) {
                     clearInterval(intervalID);
-                    reject(
+                    return reject(
                     new Error(
                         "Accessibility Automation Scanner is not ready on the page."
                     )
                     );
                 } else if (findAccessibilityAutomationElement()) {
                     clearInterval(intervalID);
-                    resolve("Scanner set");
+                    return resolve("Scanner set");
                 } else {
                     count += 1;
                 }
@@ -96,7 +132,7 @@ new Promise((resolve) => {
     function getSummary() {
         function onReceiveSummary(event) {
             win.removeEventListener("A11Y_RESULTS_SUMMARY", onReceiveSummary);
-            resolve(event.detail);
+            return resolve(event.detail);
         }
 
         win.addEventListener("A11Y_RESULTS_SUMMARY", onReceiveSummary);
@@ -110,8 +146,8 @@ new Promise((resolve) => {
         waitForScannerReadiness()
             .then(getSummary)
             .catch((err) => {
-            resolve();
-            });
+            return resolve();
+        });
     }
 })
 
@@ -119,7 +155,7 @@ const getAccessibilityResults = (win) =>
 new Promise((resolve) => {
     const isHttpOrHttps = /^(http|https):$/.test(window.location.protocol);
     if (!isHttpOrHttps) {
-        resolve();
+        return resolve();
     }
 
     function findAccessibilityAutomationElement() {
@@ -132,14 +168,14 @@ new Promise((resolve) => {
             const intervalID = setInterval(() => {
                 if (count > retryCount) {
                     clearInterval(intervalID);
-                    reject(
+                    return reject(
                     new Error(
                         "Accessibility Automation Scanner is not ready on the page."
                     )
                     );
                 } else if (findAccessibilityAutomationElement()) {
                     clearInterval(intervalID);
-                    resolve("Scanner set");
+                    return resolve("Scanner set");
                 } else {
                     count += 1;
                 }
@@ -150,7 +186,7 @@ new Promise((resolve) => {
     function getResults() {
         function onReceivedResult(event) {
             win.removeEventListener("A11Y_RESULTS_RESPONSE", onReceivedResult);
-            resolve(event.detail);
+            return resolve(event.detail);
         }
 
         win.addEventListener("A11Y_RESULTS_RESPONSE", onReceivedResult);
@@ -164,8 +200,8 @@ new Promise((resolve) => {
         waitForScannerReadiness()
             .then(getResults)
             .catch((err) => {
-            resolve();
-            });
+            return resolve();
+        });
     }
 });
 
@@ -175,6 +211,7 @@ new Promise( (resolve, reject) => {
         const isHttpOrHttps = /^(http|https):$/.test(win.location.protocol);
         if (!isHttpOrHttps) {
             resolve("Unable to save accessibility results, Invalid URL.");
+			return;
         }
 
         function findAccessibilityAutomationElement() {
@@ -187,14 +224,14 @@ new Promise( (resolve, reject) => {
             const intervalID = setInterval(async () => {
                 if (count > retryCount) {
                     clearInterval(intervalID);
-                    reject(
+                    return reject(
                         new Error(
                         "Accessibility Automation Scanner is not ready on the page."
                         )
                     );
                 } else if (findAccessibilityAutomationElement()) {
                     clearInterval(intervalID);
-                    resolve("Scanner set");
+                    return resolve("Scanner set");
                 } else {
                     count += 1;
                 }
@@ -204,7 +241,7 @@ new Promise( (resolve, reject) => {
 
         function saveResults() {
             function onResultsSaved(event) {
-                resolve();
+                return resolve();
             }
             win.addEventListener("A11Y_RESULTS_SAVED", onResultsSaved);
             const e = new CustomEvent("A11Y_SAVE_RESULTS", {
@@ -219,11 +256,12 @@ new Promise( (resolve, reject) => {
             waitForScannerReadiness()
             .then(saveResults)
             .catch(async (err) => {
-                resolve("Scanner is not ready on the page after multiple retries. after run");
+                return resolve("Scanner is not ready on the page after multiple retries. after run");
             });
         }
-    } catch(er) {
-        resolve()
+    } catch(error) {
+		browserStackLog(`Error in saving results with error: ${error.message}`);
+        return resolve();
     }
 
 })
@@ -254,31 +292,29 @@ const shouldScanForAccessibility = (attributes) => {
             const included = includeTagArray.length === 0 || includeTags.some((include) => fullTestName.includes(include));
             shouldScanTestForAccessibility = !excluded && included;
         } catch (error) {
-            browserStackLog("Error while validating test case for accessibility before scanning. Error : ", error);
+            browserStackLog(`Error while validating test case for accessibility before scanning. Error : ${error.message}`);
         }
     }
 
     return shouldScanTestForAccessibility;
 }
 
-Cypress.on('command:start', async (command) => {
-    if(!command || !command.attributes) return;
-    if(command.attributes.name == 'window' || command.attributes.name == 'then' || command.attributes.name == 'wrap') {
-        return;
-    }
-
-    if (!commandsToWrap.includes(command.attributes.name)) return;
-
-    const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
-
-    let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
-    if (!shouldScanTestForAccessibility) return;
-
-    cy.window().then((win) => {
-        browserStackLog('Performing scan form command ' + command.attributes.name);
-        cy.wrap(performScan(win, {method: command.attributes.name}), {timeout: 30000});
-    })
-})
+commandToOverwrite.forEach((command) => {
+    Cypress.Commands.overwrite(command, (originalFn, ...args) => {
+            const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
+            const shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
+            const state = cy.state('current'), Subject = 'getSubjectFromChain' in cy; 
+            const stateName = state === null || state === void 0 ? void 0 : state.get('name');
+            let stateType = null;
+            if (!shouldScanTestForAccessibility || (stateName && stateName !== command)) {
+                return originalFn(...args);
+            }
+            if(state !== null && state !== void 0){
+                stateType = state.get('type');
+            }
+            performModifiedScan(originalFn, Subject, stateType, ...args);
+    });
+});
 
 afterEach(() => {
     const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
@@ -322,6 +358,7 @@ afterEach(() => {
             })
 
         } catch (er) {
+			browserStackLog(`Error in saving results with error: ${er.message}`);
         }
         })
     });
@@ -337,9 +374,11 @@ Cypress.Commands.add('performScan', () => {
         }
         cy.window().then(async (win) => {
             browserStackLog(`Performing accessibility scan`);
-            await performScan(win);
+            cy.wrap(performScan(win), {timeout:30000});
         });
-    } catch {}
+    } catch(error) {
+		browserStackLog(`Error in performing scan with error: ${error.message}`);
+	}
 })
 
 Cypress.Commands.add('getAccessibilityResultsSummary', () => {
@@ -355,7 +394,9 @@ Cypress.Commands.add('getAccessibilityResultsSummary', () => {
             browserStackLog('Getting accessibility results summary');
             return await getAccessibilityResultsSummary(win);
         });
-    } catch {}
+    } catch(error) {
+		browserStackLog(`Error in getting accessibilty results summary with error: ${error.message}`);
+	}
 
 });
 
@@ -376,6 +417,12 @@ Cypress.Commands.add('getAccessibilityResults', () => {
             return await getAccessibilityResults(win);
         });
 
-    } catch {}
+    } catch(error) {
+		browserStackLog(`Error in getting accessibilty results with error: ${error.message}`);
+	}
+});
 
+Cypress.Commands.addQuery('performScanSubjectQuery', function (chaining, setTimeout) {
+    this.set('timeout', setTimeout);
+    return () => cy.getSubjectFromChain(chaining);
 });
