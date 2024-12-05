@@ -1788,11 +1788,10 @@ exports.decodeJWTToken = (token) => {
     if (parts.length < 2) {
       throw new Error('Invalid JWT token');
     }
-    const header = JSON.parse(base64UrlDecode(parts[0]));
     const payload = JSON.parse(base64UrlDecode(parts[1]));
-    return { header, payload };
+    return payload
   } catch (error) {
-    logger.err(error.message);
-    return {undefined, undefined};
+    logger.err("Error in token decoding with error:", error.message);
+    return undefined;
   }
 }

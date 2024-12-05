@@ -32,7 +32,7 @@ const browserstackAccessibility = (on, config) => {
         }
         if (browser_validation) {
           const ally_path = path.dirname(process.env.ACCESSIBILITY_EXTENSION_PATH)
-          const {_, payload} = decodeJWTToken(process.env.ACCESSIBILITY_AUTH);
+          const payload = decodeJWTToken(process.env.ACCESSIBILITY_AUTH);
           launchOptions.extensions.push(ally_path);
           if(!utils.isUndefined(payload) && !utils.isUndefined(payload.a11y_core_config) && payload.a11y_core_config.domForge === true) {
             launchOptions.args.push("--auto-open-devtools-for-tabs");

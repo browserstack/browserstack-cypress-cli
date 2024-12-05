@@ -6,41 +6,30 @@ const browserStackLog = (message) => {
   }
   
 const commandsToWrap = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scroll', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
+// scroll is not a default function in cypress.
 const commandToOverwrite = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
+
+/*
+    Overrriding the cypress commands to perform Accessibility Scan before Each command
+    - runCutomizedCommand is handling both the cases of subject available in cypress original command
+      and chaning available from original cypress command.   
+*/
 const performModifiedScan = (originalFn, Subject, stateType, ...args) => {
     let customChaining = cy.wrap(null).performScan();
-    function changeSub(args, stateType, newSubject) {
+    const changeSub = (args, stateType, newSubject) => {
         if (stateType !== 'parent') {
             return [newSubject, ...args.slice(1)];
         }
         return args;
     }
-    function runCutomizedCommand() {
+    const runCutomizedCommand = () => {
         if (!Subject) {
-            let orgS1, orgS2, cypressCommandSubject;
-            if((orgS2 = (orgS1 = cy).subject) !==null && orgS2 !== void 0){
-                cypressCommandSubject = orgS2.call(orgS1);
-            }
-            else{
-                cypressCommandSubject = null;
-            }
-            customChaining.then(()=> cypressCommandSubject).then(() => {originalFn(...args)});
-        }
-        else {
-            let orgSC1, orgSC2, timeO1, cypressCommandChain, setTimeout;
-            if((timeO1 = args.find(arg => arg !== null && arg !== void 0 ? arg.timeout : null)) !== null && timeO1 !== void 0) {
-                setTimeout = timeO1.timeout;
-            }
-            else {
-                setTimeout = null;
-            }
-            if((orgSC1 = (orgSC2 = cy).subjectChain) !== null && orgSC1 !== void 0){
-                cypressCommandChain = orgSC1.call(orgSC2);
-            }
-            else {
-                cypressCommandChain = null;
-            }
-            customChaining.performScanSubjectQuery(cypressCommandChain, setTimeout).then({timeout: 30000}, (newSubject) => originalFn(...changeSub(args, stateType, newSubject)));
+            let cypressCommandSubject = (cy.subject?.call(cy)) ?? null;
+            customChaining.then(() => cypressCommandSubject).then(() => { originalFn(...args); });
+        } else {
+            let setTimeout = args.find(arg => arg?.timeout)?.timeout ?? null;
+            let cypressCommandChain = (cy.subjectChain?.call(cy)) ?? null;
+            customChaining.performScanSubjectQuery(cypressCommandChain, setTimeout).then({ timeout: 10000 }, newSubject => originalFn(...changeSub(args, stateType, newSubject)));
         }
     }
     runCutomizedCommand(); 
@@ -50,8 +39,7 @@ const performScan = (win, payloadToSend) =>
 new Promise(async (resolve, reject) => {
     const isHttpOrHttps = /^(http|https):$/.test(win.location.protocol);
     if (!isHttpOrHttps) {
-        resolve();
-		return;
+        return resolve();
     }
 
     function findAccessibilityAutomationElement() {
@@ -64,16 +52,14 @@ new Promise(async (resolve, reject) => {
         const intervalID = setInterval(async () => {
             if (count > retryCount) {
                 clearInterval(intervalID);
-                reject(
+                return reject(
                 new Error(
                     "Accessibility Automation Scanner is not ready on the page."
                 )
                 );
-				return;
             } else if (findAccessibilityAutomationElement()) {
                 clearInterval(intervalID);
-                resolve("Scanner set");
-				return;
+                return resolve("Scanner set");
             } else {
                 count += 1;
             }
@@ -84,8 +70,7 @@ new Promise(async (resolve, reject) => {
     function startScan() {
         function onScanComplete() {
             win.removeEventListener("A11Y_SCAN_FINISHED", onScanComplete);
-            resolve();
-			return;
+            return resolve();
         }
 
         win.addEventListener("A11Y_SCAN_FINISHED", onScanComplete);
@@ -99,8 +84,7 @@ new Promise(async (resolve, reject) => {
         waitForScannerReadiness()
             .then(startScan)
             .catch(async (err) => {
-            resolve("Scanner is not ready on the page after multiple retries. performscan");
-			return;
+            return resolve("Scanner is not ready on the page after multiple retries. performscan");
         });
     }
 })
@@ -109,8 +93,7 @@ const getAccessibilityResultsSummary = (win) =>
 new Promise((resolve) => {
     const isHttpOrHttps = /^(http|https):$/.test(window.location.protocol);
     if (!isHttpOrHttps) {
-        resolve();
-		return;
+        return resolve();
     }
 
     function findAccessibilityAutomationElement() {
@@ -123,16 +106,14 @@ new Promise((resolve) => {
             const intervalID = setInterval(() => {
                 if (count > retryCount) {
                     clearInterval(intervalID);
-                    reject(
+                    return reject(
                     new Error(
                         "Accessibility Automation Scanner is not ready on the page."
                     )
                     );
-					return;
                 } else if (findAccessibilityAutomationElement()) {
                     clearInterval(intervalID);
-                    resolve("Scanner set");
-					return;
+                    return resolve("Scanner set");
                 } else {
                     count += 1;
                 }
@@ -143,8 +124,7 @@ new Promise((resolve) => {
     function getSummary() {
         function onReceiveSummary(event) {
             win.removeEventListener("A11Y_RESULTS_SUMMARY", onReceiveSummary);
-            resolve(event.detail);
-			return;
+            return resolve(event.detail);
         }
 
         win.addEventListener("A11Y_RESULTS_SUMMARY", onReceiveSummary);
@@ -158,8 +138,7 @@ new Promise((resolve) => {
         waitForScannerReadiness()
             .then(getSummary)
             .catch((err) => {
-            resolve();
-			return;
+            return resolve();
         });
     }
 })
@@ -168,8 +147,7 @@ const getAccessibilityResults = (win) =>
 new Promise((resolve) => {
     const isHttpOrHttps = /^(http|https):$/.test(window.location.protocol);
     if (!isHttpOrHttps) {
-        resolve();
-		return;
+        return resolve();
     }
 
     function findAccessibilityAutomationElement() {
@@ -182,16 +160,14 @@ new Promise((resolve) => {
             const intervalID = setInterval(() => {
                 if (count > retryCount) {
                     clearInterval(intervalID);
-                    reject(
+                    return reject(
                     new Error(
                         "Accessibility Automation Scanner is not ready on the page."
                     )
                     );
-					return;
                 } else if (findAccessibilityAutomationElement()) {
                     clearInterval(intervalID);
-                    resolve("Scanner set");
-					return;
+                    return resolve("Scanner set");
                 } else {
                     count += 1;
                 }
@@ -202,8 +178,7 @@ new Promise((resolve) => {
     function getResults() {
         function onReceivedResult(event) {
             win.removeEventListener("A11Y_RESULTS_RESPONSE", onReceivedResult);
-            resolve(event.detail);
-			return;
+            return resolve(event.detail);
         }
 
         win.addEventListener("A11Y_RESULTS_RESPONSE", onReceivedResult);
@@ -217,8 +192,7 @@ new Promise((resolve) => {
         waitForScannerReadiness()
             .then(getResults)
             .catch((err) => {
-            resolve();
-			return;
+            return resolve();
         });
     }
 });
@@ -242,16 +216,14 @@ new Promise( (resolve, reject) => {
             const intervalID = setInterval(async () => {
                 if (count > retryCount) {
                     clearInterval(intervalID);
-                    reject(
+                    return reject(
                         new Error(
                         "Accessibility Automation Scanner is not ready on the page."
                         )
                     );
-					return;
                 } else if (findAccessibilityAutomationElement()) {
                     clearInterval(intervalID);
-                    resolve("Scanner set");
-					return;
+                    return resolve("Scanner set");
                 } else {
                     count += 1;
                 }
@@ -261,8 +233,7 @@ new Promise( (resolve, reject) => {
 
         function saveResults() {
             function onResultsSaved(event) {
-                resolve();
-				return;
+                return resolve();
             }
             win.addEventListener("A11Y_RESULTS_SAVED", onResultsSaved);
             const e = new CustomEvent("A11Y_SAVE_RESULTS", {
@@ -277,14 +248,12 @@ new Promise( (resolve, reject) => {
             waitForScannerReadiness()
             .then(saveResults)
             .catch(async (err) => {
-                resolve("Scanner is not ready on the page after multiple retries. after run");
-				return;
+                return resolve("Scanner is not ready on the page after multiple retries. after run");
             });
         }
     } catch(error) {
 		browserStackLog(`Error in saving results with error: ${error.message}`);
-        resolve();
-		return;
+        return resolve();
     }
 
 })
@@ -348,7 +317,7 @@ afterEach(() => {
         let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
         if (!shouldScanTestForAccessibility) return cy.wrap({});
 
-        cy.wrap(performScan(win), {timeout: 30000}).then(() => {
+        cy.wrap(performScan(win), {timeout: 10000}).then(() => {
         try {
             let os_data;
             if (Cypress.env("OS")) {
@@ -379,7 +348,7 @@ afterEach(() => {
                 }
             };
             browserStackLog(`Saving accessibility test results`);
-            cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
+            cy.wrap(saveTestResults(win, payloadToSend), {timeout: 10000}).then(() => {
                 browserStackLog(`Saved accessibility test results`);
             })
 
@@ -400,7 +369,7 @@ Cypress.Commands.add('performScan', () => {
         }
         cy.window().then(async (win) => {
             browserStackLog(`Performing accessibility scan`);
-            cy.wrap(performScan(win), {timeout:40000});
+            cy.wrap(performScan(win), {timeout:10000});
         });
     } catch(error) {
 		browserStackLog(`Error in performing scan with error: ${error.message}`);
