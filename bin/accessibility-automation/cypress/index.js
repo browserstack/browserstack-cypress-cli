@@ -348,7 +348,7 @@ afterEach(() => {
                 }
             };
             browserStackLog(`Saving accessibility test results`);
-            cy.wrap(saveTestResults(win, payloadToSend), {timeout: 10000}).then(() => {
+            cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
                 browserStackLog(`Saved accessibility test results`);
             })
 
