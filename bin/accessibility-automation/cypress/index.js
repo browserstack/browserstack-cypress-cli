@@ -322,7 +322,7 @@ afterEach(() => {
         let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
         if (!shouldScanTestForAccessibility) return cy.wrap({});
 
-        cy.wrap(performScan(win), {timeout: 10000}).then(() => {
+        cy.wrap(performScan(win), {timeout: 30000}).then(() => {
         try {
             let os_data;
             if (Cypress.env("OS")) {
@@ -374,7 +374,7 @@ Cypress.Commands.add('performScan', () => {
         }
         cy.window().then(async (win) => {
             browserStackLog(`Performing accessibility scan`);
-            cy.wrap(performScan(win), {timeout:10000});
+            cy.wrap(performScan(win), {timeout:30000});
         });
     } catch(error) {
 		browserStackLog(`Error in performing scan with error: ${error.message}`);
