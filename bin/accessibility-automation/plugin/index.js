@@ -1,4 +1,6 @@
 const path = require("node:path");
+const { decodeJWTToken } = require("../../helpers/utils");
+const utils = require('../../helpers/utils');
 
 const browserstackAccessibility = (on, config) => {
   let browser_validation = true;
@@ -30,7 +32,16 @@ const browserstackAccessibility = (on, config) => {
         }
         if (browser_validation) {
           const ally_path = path.dirname(process.env.ACCESSIBILITY_EXTENSION_PATH)
+          const payload = decodeJWTToken(process.env.ACCESSIBILITY_AUTH);
           launchOptions.extensions.push(ally_path);
+          if(!utils.isUndefined(payload) && !utils.isUndefined(payload.a11y_core_config) && payload.a11y_core_config.domForge === true) {
+            launchOptions.args.push("--auto-open-devtools-for-tabs");
+            launchOptions.preferences.default["devtools"] = launchOptions.preferences.default["devtools"] || {};
+            launchOptions.preferences.default["devtools"]["preferences"] = launchOptions.preferences.default["devtools"]["preferences"] || {};
+            launchOptions.preferences.default["devtools"]["preferences"][
+              "currentDockState"
+            ] = '"undocked"';
+          }
           return launchOptions
         }
       }
