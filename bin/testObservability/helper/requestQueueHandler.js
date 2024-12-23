@@ -39,7 +39,7 @@ class RequestQueueHandler {
         this.queue.splice(0,BATCH_SIZE);
         this.resetEventBatchPolling();
       }
-      
+
       return {
         shouldProceed: shouldProceed,
         proceedWithData: data,
@@ -54,7 +54,7 @@ class RequestQueueHandler {
 
   shutdownSync = () => {
     this.removeEventBatchPolling('REMOVING');
-   
+
     fs.writeFileSync(path.join(__dirname, PENDING_QUEUES_FILE), JSON.stringify(this.queue));
     this.queue = [];
     cp.spawnSync('node', [path.join(__dirname, 'cleanupQueueSync.js'), path.join(__dirname, PENDING_QUEUES_FILE)], {stdio: 'inherit'});

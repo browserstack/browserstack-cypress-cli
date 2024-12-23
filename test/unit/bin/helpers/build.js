@@ -1,7 +1,7 @@
+const { default: axios } = require("axios");
 const chai = require("chai"),
   chaiAsPromised = require("chai-as-promised"),
-  sinon = require("sinon"),
-  request = require("request");
+  sinon = require("sinon");
 
 const Constants = require("../../../../bin/helpers/constants"),
   logger = require("../../../../bin/helpers/logger").winstonLogger,
@@ -31,9 +31,9 @@ describe("build", () => {
   });
 
   it("reject with error", () => {
-    let requestStub = sandbox
-      .stub(request, "post")
-      .yields(new Error("random error"), null, null);
+    let axiosStub = sandbox
+      .stub(axios, "post")
+      .rejects(new Error("random error"));
 
     const build = proxyquire("../../../../bin/helpers/build", {
       "../helpers/utils": {
@@ -43,7 +43,6 @@ describe("build", () => {
       "../helpers/capabilityHelper": {
         caps: capsStub,
       },
-      request: { post: requestStub },
     });
 
     return build.createBuild(bsConfig, "random_zip_file")
@@ -51,7 +50,7 @@ describe("build", () => {
         chai.assert.fail("Promise error");
       })
       .catch((error) => {
-        sinon.assert.calledOnce(requestStub);
+        sinon.assert.calledOnce(axiosStub);
         sinon.assert.calledOnce(getUserAgentStub);
         chai.assert.equal(error.message, "random error");
       });
@@ -59,9 +58,9 @@ describe("build", () => {
 
   describe("handle API deprecated", () => {
     it("build is null", () => {
-      let requestStub = sandbox
-        .stub(request, "post")
-        .yields(null, { statusCode: 299 }, null);
+      let axiosStub = sandbox
+        .stub(axios, "post")
+        .resolves({ status: 299 });
 
       const build = proxyquire("../../../../bin/helpers/build", {
         "../helpers/utils": {
@@ -71,7 +70,6 @@ describe("build", () => {
         "../helpers/capabilityHelper": {
           caps: capsStub,
         },
-        request: { post: requestStub },
       });
 
       return build
@@ -80,7 +78,7 @@ describe("build", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          sinon.assert.calledOnce(requestStub);
+          sinon.assert.calledOnce(axiosStub);
           sinon.assert.calledOnce(getUserAgentStub);
           chai.assert.equal(error, Constants.userMessages.API_DEPRECATED);
         });
@@ -88,9 +86,9 @@ describe("build", () => {
 
     it("build is not null", () => {
       let build_message = "random message";
-      let requestStub = sandbox
-        .stub(request, "post")
-        .yields(null, { statusCode: 299 }, JSON.stringify({ message: build_message }));
+      let axiosStub = sandbox
+        .stub(axios, "post")
+        .resolves({ status: 299, data: { message: build_message} });
 
       const build = proxyquire("../../../../bin/helpers/build", {
         "../helpers/utils": {
@@ -99,13 +97,12 @@ describe("build", () => {
         "../helpers/capabilityHelper": {
           caps: capsStub,
         },
-        request: { post: requestStub },
       });
 
       return build
         .createBuild(bsConfig, "random_zip_file")
         .then(function (data) {
-          sinon.assert.calledOnce(requestStub);
+          sinon.assert.calledOnce(axiosStub);
           sinon.assert.calledOnce(getUserAgentStub);
           chai.assert.equal(data, "random message");
         })
@@ -117,9 +114,9 @@ describe("build", () => {
 
   describe("handle statusCode != 201", () => {
     it("build is null", () => {
-      let requestStub = sandbox
-        .stub(request, "post")
-        .yields(null, { statusCode: 400 }, null);
+      let axiosStub = sandbox
+        .stub(axios, "post")
+        .resolves({ status: 400 });
 
       const build = proxyquire("../../../../bin/helpers/build", {
         "../helpers/utils": {
@@ -129,7 +126,6 @@ describe("build", () => {
         "../helpers/capabilityHelper": {
           caps: capsStub,
         },
-        request: { post: requestStub },
       });
 
       return build
@@ -138,7 +134,7 @@ describe("build", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          sinon.assert.calledOnce(requestStub);
+          sinon.assert.calledOnce(axiosStub);
           sinon.assert.calledOnce(getUserAgentStub);
           chai.assert.equal(error, Constants.userMessages.BUILD_FAILED);
         });
@@ -146,12 +142,10 @@ describe("build", () => {
 
     it("build is not null", () => {
       let build_message = "random message";
-      let requestStub = sandbox
-        .stub(request, "post")
-        .yields(
-          null,
-          { statusCode: 401 },
-          JSON.stringify({ message: build_message })
+      let axiosStub = sandbox
+        .stub(axios, "post")
+        .resolves(
+          { status: 401, data: { message: build_message }}
         );
 
       const build = proxyquire("../../../../bin/helpers/build", {
@@ -162,7 +156,6 @@ describe("build", () => {
         "../helpers/capabilityHelper": {
           caps: capsStub,
         },
-        request: { post: requestStub },
       });
 
       return build
@@ -171,7 +164,7 @@ describe("build", () => {
           chai.assert.fail("Promise error");
         })
         .catch((error) => {
-          sinon.assert.calledOnce(requestStub);
+          sinon.assert.calledOnce(axiosStub);
           sinon.assert.calledOnce(getUserAgentStub);
           chai.assert.equal(error, `${Constants.userMessages.BUILD_FAILED} Error: ${build_message}`);
         });
@@ -181,32 +174,32 @@ describe("build", () => {
   it("build created successfuly", () => {
     let build_id = "random build id";
     let build_message = "success"
-    let requestData = { message: build_message, build_id: build_id };
-    let requestStub = sandbox
-      .stub(request, "post")
-      .yields(null, { statusCode: 201 }, JSON.stringify(requestData));
+    let axiosData = { message: build_message, build_id: build_id };
+    let axiosStub = sandbox
+      .stub(axios, "post")
+      .resolves({ status: 201, data: axiosData });
 
     let dashboardUrl = "dashboard-url";
 
     const build = proxyquire("../../../../bin/helpers/build", {
       "../helpers/utils": {
         getUserAgent: getUserAgentStub,
+        formatRequest,
       },
       "../helpers/capabilityHelper": {
         caps: capsStub,
       },
       "./config": {
         dashboardUrl: dashboardUrl,
-      },
-      request: { post: requestStub },
+      }, 
     });
 
     return build
       .createBuild(bsConfig, "random_zip_file")
       .then(function (data) {
-        sinon.assert.calledOnce(requestStub);
+        sinon.assert.calledOnce(axiosStub);
         sinon.assert.calledOnce(getUserAgentStub);
-        chai.assert.equal(data, `${requestData}`);
+        chai.assert.equal(data, `${axiosData}`);
       })
       .catch((error) => {
         chai.assert.isNotOk(error, "Promise error");

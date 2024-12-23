@@ -30,7 +30,6 @@ const {
   printBuildLink
 } = require('../testObservability/helper/helper');
 
-
 const { 
   createAccessibilityTestRun,
   setAccessibilityEventListeners,
@@ -38,6 +37,7 @@ const {
   supportFileCleanup
 } = require('../accessibility-automation/helper');
 const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
+
 
 module.exports = function run(args, rawArgs) {
 
@@ -64,15 +64,14 @@ module.exports = function run(args, rawArgs) {
 
     // set cypress config filename
     utils.setCypressConfigFilename(bsConfig, args);
-    
-    /* 
-      Set testObservability & browserstackAutomation flags
-    */
+
+    /* Set testObservability & browserstackAutomation flags */
     const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
     const checkAccessibility = checkAccessibilityPlatform(bsConfig);
     const isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibility;
     const turboScaleSession = isTurboScaleSession(bsConfig);
     Constants.turboScaleObj.enabled = turboScaleSession;
+    
 
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
@@ -102,6 +101,7 @@ module.exports = function run(args, rawArgs) {
       // set spec timeout
       utils.setSpecTimeout(bsConfig, args);
     }
+
     
     // accept the specs list from command line if provided
     utils.setUserSpecs(bsConfig, args);
@@ -112,9 +112,7 @@ module.exports = function run(args, rawArgs) {
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
 
-    /* 
-      Send build start to Observability
-    */
+    // Send build start to Observability
     if(isTestObservabilitySession) {
       await launchTestSession(bsConfig, bsConfigPath);
       utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
@@ -153,11 +151,6 @@ module.exports = function run(args, rawArgs) {
       }
 
       if (turboScaleSession) {
-        // Local is only required in case user is running on trial grid and wants to access private website.
-        // Even then, it will be spawned separately via browserstack-cli ats connect-grid command and not via browserstack-cypress-cli
-        // Hence whenever running on ATS, need to make local as false
-        bsConfig.connection_settings.local = false;
-
         const gridDetails = await getTurboScaleGridDetails(bsConfig, args, rawArgs);
 
         if (gridDetails && Object.keys(gridDetails).length > 0) {
@@ -326,6 +319,9 @@ module.exports = function run(args, rawArgs) {
                 }
                 let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
                 let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
+                if (turboScaleSession) {
+                  dashboardLink = `${Constants.userMessages.VISIT_ATS_DASHBOARD} ${data.dashboard_url}`;
+                }
                 buildReportData = { 'build_id': data.build_id, 'parallels': userSpecifiedParallels, ...buildReportData }
                 utils.exportResults(data.build_id, `${config.dashboardUrl}${data.build_id}`);
                 if ((utils.isUndefined(bsConfig.run_settings.parallels) && utils.isUndefined(args.parallels)) || (!utils.isUndefined(bsConfig.run_settings.parallels) && bsConfig.run_settings.parallels == Constants.cliMessages.RUN.DEFAULT_PARALLEL_MESSAGE)) {
@@ -362,10 +358,10 @@ module.exports = function run(args, rawArgs) {
                     await new Promise(resolve => setTimeout(resolve, 5000));
 
                     // download build artifacts
-                    if (exitCode != Constants.BUILD_FAILED_EXIT_CODE && !turboScaleSession) {
+                    if (exitCode != Constants.BUILD_FAILED_EXIT_CODE) {
                       if (utils.nonEmptyArray(bsConfig.run_settings.downloads)) {
                         logger.debug("Downloading build artifacts");
-                        await downloadBuildArtifacts(bsConfig, data.build_id, args, rawArgs, buildReportData);
+                        await downloadBuildArtifacts(bsConfig, data.build_id, args, rawArgs, buildReportData, turboScaleSession);
                       }
 
                       // Generate custom report!
@@ -376,7 +372,7 @@ module.exports = function run(args, rawArgs) {
                       });
                     } else if(!turboScaleSession){
                       let stacktraceUrl = getStackTraceUrl();
-                      downloadBuildStacktrace(stacktraceUrl).then((message) => {
+                      downloadBuildStacktrace(stacktraceUrl, bsConfig).then((message) => {
                         utils.sendUsageReport(bsConfig, args, message, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
                       }).catch((err) => {
                         let message = `Downloading build stacktrace failed with statuscode: ${err}. Please visit ${data.dashboard_url} for additional details.`;
@@ -388,6 +384,8 @@ module.exports = function run(args, rawArgs) {
                         logger.info(Constants.userMessages.BUILD_FAILED_ERROR)
                         process.exitCode = Constants.BUILD_FAILED_EXIT_CODE;
                       });
+                    } else {
+                      utils.handleSyncExit(exitCode, data.dashboard_url);
                     }
                   });
                 } else if (utils.nonEmptyArray(bsConfig.run_settings.downloads && !turboScaleSession)) {

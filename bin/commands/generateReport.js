@@ -5,13 +5,13 @@ const logger = require("../helpers/logger").winstonLogger,
       utils = require("../helpers/utils"),
       reporterHTML = require('../helpers/reporterHTML'),
       getInitialDetails = require('../helpers/getInitialDetails').getInitialDetails;
-
+const { isTurboScaleSession } = require('../helpers/atsHelper');
 
 module.exports = function generateReport(args, rawArgs) {
   let bsConfigPath = utils.getConfigPath(args.cf);
   let reportGenerator = reporterHTML.reportGenerator;
 
-  return utils.validateBstackJson(bsConfigPath).then(function (bsConfig) {
+  return utils.validateBstackJson(bsConfigPath).then(async function (bsConfig) {
     // setting setDefaults to {} if not present and set via env variables or via args.
     utils.setDefaults(bsConfig, args);
 
@@ -21,9 +21,9 @@ module.exports = function generateReport(args, rawArgs) {
     // accept the access key from command line if provided
     utils.setAccessKey(bsConfig, args);
 
-    getInitialDetails(bsConfig, args, rawArgs).then((buildReportData) => {
-
-      utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
+    try {
+      let buildReportData = isTurboScaleSession(bsConfig) ? null : await getInitialDetails(bsConfig, args, rawArgs);
+       utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
   
       // set cypress config filename
       utils.setCypressConfigFilename(bsConfig, args);
@@ -31,12 +31,11 @@ module.exports = function generateReport(args, rawArgs) {
       let messageType = Constants.messageTypes.INFO;
       let errorCode = null;
       let buildId = args._[1];
-  
       reportGenerator(bsConfig, buildId, args, rawArgs, buildReportData);
       utils.sendUsageReport(bsConfig, args, 'generate-report called', messageType, errorCode, buildReportData, rawArgs);
-    }).catch((err) => {
+    } catch(err) {
       logger.warn(err);
-    });
+    };
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);

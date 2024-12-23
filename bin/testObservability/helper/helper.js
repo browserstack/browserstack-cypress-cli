@@ -1,8 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const http = require('http');
 const https = require('https');
-const request = require('requestretry');
 const { v4: uuidv4 } = require('uuid');
 const os = require('os');
 const { promisify } = require('util');
@@ -10,6 +8,8 @@ const gitconfig = require('gitconfiglocal');
 const { spawn, execSync } = require('child_process');
 const glob = require('glob');
 const util = require('util');
+const axios = require('axios');
+const HttpsProxyAgent = require('https-proxy-agent');
 
 const { runOptions } = require('../../helpers/runnerArgs')
 
@@ -117,39 +117,55 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
 }
 
 const nodeRequest = (type, url, data, config) => {
-  return new Promise(async (resolve, reject) => {
-    const options = {...config,...{
-      method: type,
-      url: `${API_URL}/${url}`,
-      body: data,
-      json: config.headers['Content-Type'] === 'application/json',
-      agent: this.httpsKeepAliveAgent,
-      maxAttempts: 2
-    }};
+    return new Promise(async (resolve, reject) => {
+      const options = {
+        ...config,
+        method: type,
+        url: `${API_URL}/${url}`,
+        data: data,
+        httpsAgent: this.httpsKeepAliveAgent,  
+        maxAttempts: 2,
+        headers: {
+          ...config.headers,
+          'Content-Type': 'application/json;charset=utf-8',
+          "X-Forwarded-For": "127.0.0.1"
+        },
+        clientIp: "127.0.0.1"
+      };
 
-    if(url === exports.requestQueueHandler.screenshotEventUrl) {
-      options.agent = httpsScreenshotsKeepAliveAgent;
-    }
-
-    request(options, function callback(error, response, body) {
-      if(error) {
-        reject(error);
-      } else if(response.statusCode != 200) {
-        reject(response && response.body ? response.body : `Received response from BrowserStack Server with status : ${response.statusCode}`);
-      } else {
-        try {
-          if(typeof(body) !== 'object') body = JSON.parse(body);
-        } catch(e) {
-          if(!url.includes('/stop')) {
-            reject('Not a JSON response from BrowserStack Server');
-          }
-        }
-        resolve({
-          data: body
-        });
+      if(process.env.HTTP_PROXY){
+        options.proxy = false
+        options.httpsAgent = new HttpsProxyAgent(process.env.HTTP_PROXY);
+      } else if (process.env.HTTPS_PROXY){
+        options.proxy = false
+        options.httpsAgent = new HttpsProxyAgent(process.env.HTTPS_PROXY);
       }
+  
+      if(url === exports.requestQueueHandler.screenshotEventUrl) {
+          options.agent = httpsScreenshotsKeepAliveAgent;
+      }
+      axios(options)
+        .then(response => {
+
+          if(response.status != 200) {
+              reject(response && response.data ? response.data : `Received response from BrowserStack Server with status : ${response.status}`);
+          } else {
+            try {
+              const responseBody = typeof response.data === 'object' ? response.data : JSON.parse(response.data);
+              resolve({ data: responseBody });
+            } catch (error) {
+              if (!url.includes('/stop')) {
+                reject('Not a JSON response from BrowserStack Server');
+              } else {
+                resolve({ data: response.data }); 
+              }
+            }
+          }
+        })
+        .catch(error => {
+          reject(error)
+        });
     });
-  });
 }
 
 exports.failureData = (errors,tag) => {
@@ -277,7 +293,7 @@ exports.setEventListeners = (bsConfig) => {
         try {
           if(!file.includes('commands.js')) {
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
-            
+
             let cypressCommandEventListener = getCypressCommandEventListener(file.includes('js'));
             if(!defaultFileContent.includes(cypressCommandEventListener)) {
               let newFileContent =  defaultFileContent + 
@@ -345,10 +361,10 @@ const setCrashReportingConfig = (bsConfig, bsConfigPath) => {
 
 exports.launchTestSession = async (user_config, bsConfigPath) => {
   setCrashReportingConfig(user_config, bsConfigPath);
-  
+
   const obsUserName = user_config["auth"]["username"];
   const obsAccessKey = user_config["auth"]["access_key"];
-  
+
   const BSTestOpsToken = `${obsUserName || ''}:${obsAccessKey || ''}`;
   if(BSTestOpsToken === '') {
     exports.debug('EXCEPTION IN BUILD START EVENT : Missing authentication token', true, null);
@@ -480,12 +496,12 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
       'Authorization': `Bearer ${process.env.BS_TESTOPS_JWT}`,
       'Content-Type': 'application/json',
       'X-BSTACK-TESTOPS': 'true'
-    }
+    } 
   };
 
   try {
     const eventsUuids = data.map(eventData => `${eventData.event_type}:${eventData.test_run ? eventData.test_run.uuid : (eventData.hook_run ? eventData.hook_run.uuid : null)}`).join(', ');
-    exports.debugOnConsole(`[Request Batch Send] for events:uuids ${eventsUuids}`);
+    exports.debugOnConsole(`[Request Batch Send] for events:uuids ${eventsUuids}`);    
     const response = await nodeRequest('POST',eventUrl,data,config);
     exports.debugOnConsole(`[Request Batch Response] for events:uuids ${eventsUuids}`);
     if(response.data.error) {
@@ -522,7 +538,7 @@ exports.uploadEventData = async (eventData, run=0) => {
   }[eventData.event_type];
 
   if(run === 0 && process.env.BS_TESTOPS_JWT != "null") exports.pending_test_uploads.count += 1;
-  
+
   if (process.env.BS_TESTOPS_BUILD_COMPLETED === "true") {
     if(process.env.BS_TESTOPS_JWT == "null") {
       exports.debug(`EXCEPTION IN ${log_tag} REQUEST TO TEST OBSERVABILITY : missing authentication token`);
@@ -533,7 +549,7 @@ exports.uploadEventData = async (eventData, run=0) => {
       };
     } else {
       let data = eventData, event_api_url = 'api/v1/event';
-      
+
       exports.requestQueueHandler.start();
       const { shouldProceed, proceedWithData, proceedWithUrl } = exports.requestQueueHandler.add(eventData);
       exports.debugOnConsole(`[Request Queue] ${eventData.event_type} with uuid ${eventData.test_run ? eventData.test_run.uuid : (eventData.hook_run ? eventData.hook_run.uuid : null)} is added`)
@@ -547,11 +563,11 @@ exports.uploadEventData = async (eventData, run=0) => {
       const config = {
         headers: {
           'Authorization': `Bearer ${process.env.BS_TESTOPS_JWT}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json;charset=utf-8',
           'X-BSTACK-TESTOPS': 'true'
         }
       };
-  
+
       try {
         const eventsUuids = data.map(eventData => `${eventData.event_type}:${eventData.test_run ? eventData.test_run.uuid : (eventData.hook_run ? eventData.hook_run.uuid : null)}`).join(', ');
         exports.debugOnConsole(`[Request Send] for events:uuids ${eventsUuids}`);
@@ -613,7 +629,7 @@ exports.setTestObservabilityFlags = (bsConfig) => {
     isTestObservabilitySession = false;
     exports.debug(`EXCEPTION while parsing testObservability capability with error ${e}`, true, e);
   }
-  
+
   /* browserstackAutomation */
   let isBrowserstackInfra = true;
   try {
@@ -624,7 +640,7 @@ exports.setTestObservabilityFlags = (bsConfig) => {
     isBrowserstackInfra = true;
     exports.debug(`EXCEPTION while parsing browserstackAutomation capability with error ${e}`, true, e);
   }
-  
+
   if(isTestObservabilitySession) logger.warn("testObservability is set to true. Other test reporters you are using will be automatically disabled. Learn more at browserstack.com/docs/test-observability/overview/what-is-test-observability");
 
   process.env.BROWSERSTACK_TEST_OBSERVABILITY = isTestObservabilitySession;
@@ -664,7 +680,7 @@ exports.stopBuildUpstream = async () => {
           'X-BSTACK-TESTOPS': 'true'
         }
       };
-  
+
       try {
         const response = await nodeRequest('PUT',`api/v1/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}/stop`,data,config);
         if(response.data && response.data.error) {

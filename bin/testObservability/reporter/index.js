@@ -169,7 +169,6 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_BEGIN, async (test) => {
-        debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN`);
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
@@ -178,7 +177,6 @@ class MyReporter {
       })
 
       .on(EVENT_TEST_END, async (test) => {
-        debugOnConsole(`[MOCHA EVENT] EVENT_TEST_END`);
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
         if(this.testObservability == true) {
@@ -188,7 +186,7 @@ class MyReporter {
           }
         }
       })
-      
+
       .once(EVENT_RUN_END, async () => {
         try {
           debugOnConsole(`[MOCHA EVENT] EVENT_RUN_END`);
@@ -307,9 +305,9 @@ class MyReporter {
       let gitConfigPath = process.env.OBSERVABILITY_GIT_CONFIG_PATH ? process.env.OBSERVABILITY_GIT_CONFIG_PATH.toString() : (rootParentFile ? findGitConfig(rootParentFile) : null);
       if(!isBrowserstackInfra()) gitConfigPath = process.env.OBSERVABILITY_GIT_CONFIG_PATH_LOCAL ? process.env.OBSERVABILITY_GIT_CONFIG_PATH_LOCAL.toString() : null;
       const prefixedTestPath = rootParentFile ? this._paths.prefixTestPath(rootParentFile) : 'File path could not be found';
-      
+
       const fileSeparator = getFileSeparatorData();
-      
+
       let testData = {
         'framework': 'Cypress',
         'uuid': (eventType.includes("Test") ? test.testAnalyticsId : test.hookAnalyticsId) || uuidv4(),
@@ -417,14 +415,14 @@ class MyReporter {
       }
 
       if(eventType == "HookRunFinished") delete testData.started_at;
-      
+
       if(eventType.match(/HookRun/)) {
         testData['hook_type'] = HOOK_TYPES_MAP[testData['hook_type']];
         uploadData['hook_run'] = testData;
       } else {
         uploadData['test_run'] = testData;
       }
-      
+
       if(eventType == 'HookRunFinished' && testData['hook_type'] == 'BEFORE_ALL') {
         uploadData.cypressSteps = JSON.parse(JSON.stringify(this.currentTestSteps));
         this.beforeHooks.push(uploadData);
@@ -610,7 +608,7 @@ class MyReporter {
       if(isCommandPresent) {
         return;
       }
-      
+
       const currentStepObj = {
         id: command.attributes.id,
         text: 'cy.' + command.attributes.name + '(' + this.getFormattedArgs(command.attributes.args) + ')',
@@ -660,7 +658,7 @@ class MyReporter {
       }
     } else if(type == 'COMMAND_RETRY') {
       if(!command.id) return;
-      
+
       let isRetryStepFound = false;
       /* Parse steps array in reverse and update the last step with common chainerId */
       for(let idx=this.currentTestSteps.length-1; idx>=0; idx--) {
@@ -754,7 +752,7 @@ class MyReporter {
         });
       }
     }
-    
+
     return null
   }
 }
