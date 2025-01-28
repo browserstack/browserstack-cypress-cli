@@ -114,8 +114,11 @@ module.exports = function run(args, rawArgs) {
 
     // Send build start to Observability
     if(isTestObservabilitySession) {
+      logger.info('TEMPLOG 1')
       await launchTestSession(bsConfig, bsConfigPath);
+      logger.info('TEMPLOG 2')
       utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
+      logger.info('TEMPLOG 3')
     }
     
     // accept the system env list from bsconf and set it
