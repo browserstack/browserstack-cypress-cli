@@ -105,6 +105,9 @@ let reportGenerator = async (bsConfig, buildId, args, rawArgs, buildReportData, 
     logger.error('Generating the build report failed.');
     logger.error(utils.formatRequest(error.response.statusText, error.response, error.response.data));
     utils.sendUsageReport(bsConfig, args, message, messageType, errorCode, buildReportData, rawArgs);
+    if (cb){
+      cb(Constants.ERROR_EXIT_CODE);
+    }
     return;
   }
 }
