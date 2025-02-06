@@ -424,7 +424,11 @@ Cypress.Commands.add('getAccessibilityResults', () => {
 	}
 });
 
-Cypress.Commands.addQuery('performScanSubjectQuery', function (chaining, setTimeout) {
-    this.set('timeout', setTimeout);
-    return () => cy.getSubjectFromChain(chaining);
-});
+if (!Cypress.Commands.hasOwnProperty('_myQueryAdded')) {
+  Cypress.Commands.addQuery('performScanSubjectQuery', function (chaining, setTimeout) {
+      this.set('timeout', setTimeout);
+      return () => cy.getSubjectFromChain(chaining);
+  });
+  Cypress.Commands._myQueryAdded = true;
+}
+
