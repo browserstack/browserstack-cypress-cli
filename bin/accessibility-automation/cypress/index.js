@@ -430,4 +430,4 @@ if (!Cypress.Commands.hasOwnProperty('_browserstackSDKQueryAdded')) {
         return () => cy.getSubjectFromChain(chaining);
     });
     Cypress.Commands._browserstackSDKQueryAdded = true;
-  }
+}
