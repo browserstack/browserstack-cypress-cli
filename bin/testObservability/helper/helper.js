@@ -412,7 +412,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
           'X-BSTACK-TESTOPS': 'true'
         }
       };
-
+      logger.info(`data: ${JSON.stringify(data)}`);
       const response = await nodeRequest('POST','api/v1/builds',data,config);
       exports.debug('Build creation successfull!');
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;

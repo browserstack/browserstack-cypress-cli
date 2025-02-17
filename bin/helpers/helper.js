@@ -103,6 +103,7 @@ exports.getGitMetaData = () => {
         exports.debug(`Unable to find a Git directory`);
         resolve({});
       }
+      logger.info(`info--> ${JSON.stringify(info)}`);
       if(!info.author && exports.findGitConfig(process.cwd())) {
         /* commit objects are packed */
         gitLastCommit.getLastCommit(async (err, commit) => {
