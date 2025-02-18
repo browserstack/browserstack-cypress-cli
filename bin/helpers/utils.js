@@ -1112,13 +1112,6 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
   if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
     defaultSpecFolder = Constants.DEFAULT_CYPRESS_10_SPEC_PATH
     testFolderPath = defaultSpecFolder
-    if (turboScaleSession) {
-      testFolderPath =
-        cypressConfig.integrationFolder &&
-        cypressConfig.integrationFolder !== '.'
-          ? cypressConfig.integrationFolder
-          : defaultSpecFolder;
-    }
     // Read cypress config if enforce_settings is not present
     if(this.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) && !this.isUndefined(cypressConfig) && !this.isUndefined(cypressConfig.e2e)) {
       if(!this.isUndefined(cypressConfig.e2e.specPattern)) {
@@ -1186,6 +1179,11 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
   logger.debug(`${files ? files.length : 0} spec files found`);
 
   if (turboScaleSession) {
+    if (bsConfig.run_settings.turboScaleOptions && bsConfig.run_settings.turboScaleOptions.integrationFolder) {
+      // this is in case the user's project does not use the default path 'cypress/e2e'
+      // add integrationFolder in turboScaleOptions in browserstack.json
+      testFolderPath = bsConfig.run_settings.turboScaleOptions.integrationFolder;
+    }
     // remove unwanted path prefix for turboscale
     files = files.map((x) => { return path.join(testFolderPath, x.split(testFolderPath)[1]) })
     // setting specs for turboScale as we don't have patched API for turboscale so we will rely on info from CLI
