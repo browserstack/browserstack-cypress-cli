@@ -1112,6 +1112,13 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
   if (bsConfig.run_settings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
     defaultSpecFolder = Constants.DEFAULT_CYPRESS_10_SPEC_PATH
     testFolderPath = defaultSpecFolder
+    if (turboScaleSession) {
+      testFolderPath =
+        cypressConfig.integrationFolder &&
+        cypressConfig.integrationFolder !== '.'
+          ? cypressConfig.integrationFolder
+          : defaultSpecFolder;
+    }
     // Read cypress config if enforce_settings is not present
     if(this.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) && !this.isUndefined(cypressConfig) && !this.isUndefined(cypressConfig.e2e)) {
       if(!this.isUndefined(cypressConfig.e2e.specPattern)) {
