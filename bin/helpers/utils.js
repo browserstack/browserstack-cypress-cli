@@ -1179,15 +1179,17 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
   logger.debug(`${files ? files.length : 0} spec files found`);
 
   if (turboScaleSession) {
-    if (bsConfig.run_settings.turboScaleOptions && bsConfig.run_settings.turboScaleOptions.integrationFolder) {
-      // this is in case the user's project does not use the default path 'cypress/e2e'
-      // add integrationFolder in turboScaleOptions in browserstack.json
-      testFolderPath = bsConfig.run_settings.turboScaleOptions.integrationFolder;
+    if (bsConfig.run_settings.cypress_config_file && bsConfig.run_settings.cypress_config_filename !== 'false') {
+      const configFilePath = path.resolve(bsConfig.run_settings.cypressConfigFilePath);
+      const directory = path.join(path.dirname(configFilePath), '/');
+      // remove unwanted path prefix for turboscale
+      files = files.map((x) => { return path.join('', x.split(directory)[1]) })
+      // setting specs for turboScale as we don't have patched API for turboscale so we will rely on info from CLI
+      bsConfig.run_settings.specs = files;
+    } else {
+      files = files.map((x) => { return path.join(testFolderPath, x.split(testFolderPath)[1]) })
+      bsConfig.run_settings.specs = files;
     }
-    // remove unwanted path prefix for turboscale
-    files = files.map((x) => { return path.join(testFolderPath, x.split(testFolderPath)[1]) })
-    // setting specs for turboScale as we don't have patched API for turboscale so we will rely on info from CLI
-    bsConfig.run_settings.specs = files;
   }
   return files;
 };
