@@ -368,10 +368,10 @@ module.exports = function run(args, rawArgs) {
                       }
 
                       // Generate custom report!
-                      reportGenerator(bsConfig, data.build_id, args, rawArgs, buildReportData, function(){
+                      reportGenerator(bsConfig, data.build_id, args, rawArgs, buildReportData, function(modifiedExitCode=exitCode){
                         utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
                         markBlockEnd('postBuild');
-                        utils.handleSyncExit(exitCode, data.dashboard_url);
+                        utils.handleSyncExit(modifiedExitCode, data.dashboard_url);
                       });
                     } else if(!turboScaleSession){
                       let stacktraceUrl = getStackTraceUrl();
