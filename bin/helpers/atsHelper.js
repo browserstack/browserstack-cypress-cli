@@ -110,7 +110,7 @@ exports.patchCypressConfigFileContent = (bsConfig) => {
     let patchedConfPathList = confPath.split(path.sep);
     const uniqueNamePatchFileName = `patched_ats_config_file_${uuidv4()}.js`;
     patchedConfPathList[patchedConfPathList.length - 1] = uniqueNamePatchFileName;
-    logger.info("Patch file name is " + uniqueNamePatchFileName);
+    logger.debug("Patch file name is " + uniqueNamePatchFileName);
     const patchedConfPath = patchedConfPathList.join(path.sep);
 
     bsConfig.run_settings.patched_cypress_config_file = patchedConfPath;
