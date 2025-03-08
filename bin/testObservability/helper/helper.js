@@ -18,6 +18,7 @@ const pGitconfig = promisify(gitconfig);
 const logger = require("../../helpers/logger").winstonLogger;
 const utils = require('../../helpers/utils');
 const helper = require('../../helpers/helper');
+// const { isTurboScaleSession } = require('../../helpers/atsHelper');
 
 const CrashReporter = require('../crashReporter');
 
@@ -100,6 +101,7 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
       supportFileCleanup();
       await this.stopBuildUpstream();
     }
+    logger.info(`TEMPLOG printBuildLink -- ${process.env.BS_TESTOPS_BUILD_HASHED_ID}`)
     try {
       if(process.env.BS_TESTOPS_BUILD_HASHED_ID 
         && process.env.BS_TESTOPS_BUILD_HASHED_ID != "null" 
@@ -400,7 +402,11 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
           frameworkName: "Cypress",
           frameworkVersion: exports.getPackageVersion('cypress', user_config),
           sdkVersion: helper.getAgentVersion()
-        }
+        },
+        // 'product_map': {
+        //   observability: true,
+        //   turboscale: isTurboScaleSession(user_config)
+        // }
       };
       const config = {
         auth: {
@@ -412,10 +418,11 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
           'X-BSTACK-TESTOPS': 'true'
         }
       };
-
+      logger.info(`TEMPLOG 4`)
       const response = await nodeRequest('POST','api/v1/builds',data,config);
       exports.debug('Build creation successfull!');
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;
+      logger.info(`TEMPLOG DATA ${JSON.stringify(response.data)}`)
       setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
       if(this.isBrowserstackInfra()) helper.setBrowserstackCypressCliDependency(user_config);
     } catch(error) {
@@ -498,6 +505,7 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
       'X-BSTACK-TESTOPS': 'true'
     } 
   };
+  console.log(`TEMPLOG -- batchAndPostEvents ${config}`);
 
   try {
     const eventsUuids = data.map(eventData => `${eventData.event_type}:${eventData.test_run ? eventData.test_run.uuid : (eventData.hook_run ? eventData.hook_run.uuid : null)}`).join(', ');
@@ -511,6 +519,7 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
       exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - data.length);
     }
   } catch(error) {
+    console.log(`TEMPLOG -- batchAndPostEvents error ${util.format(error)}`);
     exports.debugOnConsole(`[Request Error] Error in sending request ${util.format(error)}`);
     if (error.response) {
       exports.debug(`EXCEPTION IN ${kind} REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
@@ -662,6 +671,7 @@ exports.shouldReRunObservabilityTests = () => {
 }
 
 exports.stopBuildUpstream = async () => {
+  logger.info(`TEMPLOG stopBuildUpstream -- ${process.env.BS_TESTOPS_BUILD_COMPLETED}`);
   if (process.env.BS_TESTOPS_BUILD_COMPLETED === "true") {
     if(process.env.BS_TESTOPS_JWT == "null" || process.env.BS_TESTOPS_BUILD_HASHED_ID == "null") {
       exports.debug('EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : Missing authentication token');
