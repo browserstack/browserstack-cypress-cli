@@ -330,8 +330,8 @@ exports.setCypressConfigFilename = (bsConfig, args) => {
 
 exports.setCypressTestSuiteType = (bsConfig) => {
   for (const possibleCypressFileName of Constants.CYPRESS_CONFIG_FILE_NAMES) {
-    if (bsConfig.run_settings.cypressConfigFilePath && 
-        typeof(bsConfig.run_settings.cypressConfigFilePath) === 'string' && 
+    if (bsConfig.run_settings.cypressConfigFilePath &&
+        typeof(bsConfig.run_settings.cypressConfigFilePath) === 'string' &&
         (path.extname(bsConfig.run_settings.cypressConfigFilePath) == path.extname(possibleCypressFileName) || bsConfig.run_settings.cypressConfigFilePath.endsWith(possibleCypressFileName))) {
           bsConfig.run_settings.cypressTestSuiteType = Constants.CYPRESS_CONFIG_FILE_MAPPING[possibleCypressFileName].type;
           break;
@@ -347,11 +347,11 @@ exports.setCypressTestSuiteType = (bsConfig) => {
 
 exports.setCypressNpmDependency = (bsConfig) => {
   const runSettings = bsConfig.run_settings;
-  if (runSettings.npm_dependencies !== undefined && 
+  if (runSettings.npm_dependencies !== undefined &&
     Object.keys(runSettings.npm_dependencies).length !== 0 &&
     typeof runSettings.npm_dependencies === 'object') {
     if (!("cypress" in runSettings.npm_dependencies) && runSettings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE) {
-      logger.warn("Missing cypress not found in npm_dependencies");        
+      logger.warn("Missing cypress not found in npm_dependencies");
       if("cypress_version" in runSettings){
         runSettings.npm_dependencies.cypress = `^${runSettings.cypress_version.toString().split(".")[0]}`;
       } else if (runSettings.cypressTestSuiteType === Constants.CYPRESS_V10_AND_ABOVE_TYPE)  {
@@ -386,13 +386,13 @@ exports.setGeolocation = (bsConfig, args) => {
 }
 
 exports.isSpecTimeoutArgPassed = () => {
-  return this.searchForOption('--spec-timeout') || this.searchForOption('-t'); 
+  return this.searchForOption('--spec-timeout') || this.searchForOption('-t');
 }
 exports.setSpecTimeout = (bsConfig, args) => {
   let specTimeout = null;
   if(this.isSpecTimeoutArgPassed()) {
-    if(!this.isUndefined(args.specTimeout)) { 
-      specTimeout = args.specTimeout; 
+    if(!this.isUndefined(args.specTimeout)) {
+      specTimeout = args.specTimeout;
     } else {
       specTimeout = 'undefined'
     }
@@ -410,7 +410,7 @@ exports.setTimezone = (bsConfig, args) => {
   let newTimezone;
   if(this.isNotUndefined(timezone)) {
     if(this.isValidTimezone(timezone)){
-      newTimezone = timezone; 
+      newTimezone = timezone;
     } else {
       logger.error(`Invalid timezone = ${timezone}`);
       syncCliLogger.info(chalk.red(Constants.userMessages.INVALID_TIMEZONE));
@@ -443,11 +443,11 @@ exports.setProjectId = (bsConfig, args, cypressConfigFile) => {
   } else if(!this.isUndefined(process.env.CYPRESS_PROJECT_ID)) {
     return process.env.CYPRESS_PROJECT_ID;
   } else if(!this.isUndefined(bsConfig.run_settings["projectId"])) {
-    return bsConfig.run_settings["projectId"]; 
+    return bsConfig.run_settings["projectId"];
   } else {
     // ignore reading cypressconfig if enforce_settings is passed
     if (this.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) && !this.isUndefined(cypressConfigFile) && !this.isUndefined(cypressConfigFile["projectId"])) {
-      return cypressConfigFile["projectId"]; 
+      return cypressConfigFile["projectId"];
     }
   }
 }
@@ -497,7 +497,7 @@ exports.setUserSpecs = (bsConfig, args) => {
     bsConfig.run_settings.specs = process.env.BROWSERSTACK_RERUN_TESTS;
     return;
   }
-  
+
   let bsConfigSpecs = bsConfig.run_settings.specs;
 
   if (!this.isUndefined(args.specs)) {
@@ -1167,7 +1167,7 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
   let files
   if (globSearchPattern) {
     let fileMatchedWithBstackSpecPattern = glob.sync(globSearchPattern, {
-      cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles 
+      cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles
     });
     fileMatchedWithBstackSpecPattern = fileMatchedWithBstackSpecPattern.map((file) => path.resolve(bsConfig.run_settings.cypressProjectDir, file))
 
@@ -1184,12 +1184,14 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
       const directory = path.join(path.dirname(configFilePath), '/');
       // remove unwanted path prefix for turboscale
       files = files.map((x) => { return path.join('', x.split(directory)[1]) })
-      // setting specs for turboScale as we don't have patched API for turboscale so we will rely on info from CLI
-      bsConfig.run_settings.specs = files;
     } else {
       files = files.map((x) => { return path.join(testFolderPath, x.split(testFolderPath)[1]) })
-      bsConfig.run_settings.specs = files;
     }
+
+    // sanitize spec list as CLI might be running on windows
+    files = files.map((x) => { return x.replaceAll("\\", "/") })
+    // setting specs for turboScale as we don't have patched API for turboscale so we will rely on info from CLI
+    bsConfig.run_settings.specs = files;
   }
   return files;
 };
@@ -1453,12 +1455,12 @@ exports.setEnforceSettingsConfig = (bsConfig, args) => {
 /**
  * Splits a string by a specified splitChar.
  * If leftLimiter and rightLimiter are specified then string won't be splitted if the splitChar is within the range
- * 
+ *
  * @param {String} str - the string that needs to be splitted
  * @param {String} splitChar - the split string/char from which the string will be splited
  * @param {String} [leftLimiter] - the starting string/char of the range
  * @param {String} [rightLimiter] - the ending string/char of the range
- * 
+ *
  * @example Example usage of splitStringByCharButIgnoreIfWithinARange.
  * // returns ["folder/A/B", "folder/{C,D}/E"]
  * utils.splitStringByCharButIgnoreIfWithinARange("folder/A/B,folder/{C,D}/E", ",", "{", "}");
@@ -1567,7 +1569,7 @@ exports.formatRequest = (err, resp, body) => {
 
 exports.setDebugMode = (args) => {
   if(args.cliDebug || String(process.env.DEBUG).toLowerCase() === 'true'){
-    args.cliDebug ? 
+    args.cliDebug ?
       logger.info("CLI is running with the --cli-debug argument. Running CLI in the debug mode...") :
       logger.info("DEBUG environment variable set to 'true'. Running CLI in the debug mode...") ;
     transports.loggerConsole.level = 'debug';
@@ -1580,7 +1582,7 @@ exports.setDebugMode = (args) => {
 
 exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs, buildReportData = null) => {
   let that = this;
-  
+
   let url = config.buildStopUrl + buildId;
   let options = {
     url: url,
@@ -1607,10 +1609,10 @@ exports.stopBrowserStackBuild = async (bsConfig, args, buildId, rawArgs, buildRe
   let messageType = null;
   let errorCode = null;
   let build = null;
-  
+
   try {
     const response = await axios.post(options.url, {}, axiosConfig);
-    
+
     build = response.data;
     if (response.status == 299) {
       messageType = Constants.messageTypes.INFO;
@@ -1780,7 +1782,7 @@ exports.getMajorVersion = (version) => {
   } catch(error) {
     logger.debug(`Some Error occurred while fetching major version of ${version}. Returning null. Error Details: ${error}`)
     return null;
-  } 
+  }
 }
 
 const base64UrlDecode = (str) => {
