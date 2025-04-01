@@ -333,6 +333,8 @@ afterEach(() => {
             let filePath = '';
             if (attributes.invocationDetails !== undefined && attributes.invocationDetails.relativeFile !== undefined) {
                 filePath = attributes.invocationDetails.relativeFile;
+            } else if (attributes.prevAttempts && attributes.prevAttempts.length > 0) {
+                filePath = (attributes.prevAttempts[0].invocationDetails && attributes.prevAttempts[0].invocationDetails.relativeFile) || '';
             }
             const payloadToSend = {
                 "saveResults": shouldScanTestForAccessibility,
@@ -422,7 +424,10 @@ Cypress.Commands.add('getAccessibilityResults', () => {
 	}
 });
 
-Cypress.Commands.addQuery('performScanSubjectQuery', function (chaining, setTimeout) {
-    this.set('timeout', setTimeout);
-    return () => cy.getSubjectFromChain(chaining);
-});
+if (!Cypress.Commands.hasOwnProperty('_browserstackSDKQueryAdded')) {
+    Cypress.Commands.addQuery('performScanSubjectQuery', function (chaining, setTimeout) {
+        this.set('timeout', setTimeout);
+        return () => cy.getSubjectFromChain(chaining);
+    });
+    Cypress.Commands._browserstackSDKQueryAdded = true;
+}
