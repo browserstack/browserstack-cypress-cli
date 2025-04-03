@@ -525,6 +525,13 @@ const RequestQueueHandler = require('./requestQueueHandler');
 exports.requestQueueHandler = new RequestQueueHandler();
 
 exports.uploadEventData = async (eventData, run=0) => {
+
+  require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+    `
+    Inside the uploadEventData function
+    `
+  );
+
   exports.debugOnConsole(`[uploadEventData] ${eventData.event_type}`);
   const log_tag = {
     ['TestRunStarted']: 'Test_Start_Upload',
@@ -536,6 +543,12 @@ exports.uploadEventData = async (eventData, run=0) => {
     ['CBTSessionCreated']: 'CBT_Upload',
     ['BuildUpdate']: 'Build_Update'
   }[eventData.event_type];
+
+  require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+    `
+    Uploading Event Data log_tag: ${log_tag}
+    `
+  );
 
   if(run === 0 && process.env.BS_TESTOPS_JWT != "null") exports.pending_test_uploads.count += 1;
 
@@ -605,7 +618,7 @@ exports.uploadEventData = async (eventData, run=0) => {
       message: 'Retry runs exceeded'
     };
   } else if(process.env.BS_TESTOPS_BUILD_COMPLETED !== "false") {
-    setTimeout(function(){ exports.uploadEventData(eventData, run+1) }, 1000);
+    setInterval(function(){ exports.uploadEventData(eventData, run+1) }, 1000);
   }
 }
 

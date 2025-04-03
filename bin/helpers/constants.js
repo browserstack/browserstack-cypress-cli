@@ -18,6 +18,14 @@ const syncCLI = {
     "BrowserStack machines are now setting up Cypress with the specified npm dependencies for running your tests. It might take some time before your tests start runnning and showing up below...",
 };
 
+require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt', 
+
+  `
+  Reached constants.js new 2
+  `
+
+);
+
 const userMessages = {
   BUILD_FAILED: "Build creation failed.",
   BUILD_GENERATE_REPORT_FAILED:

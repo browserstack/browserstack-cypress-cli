@@ -66,6 +66,16 @@ const { consoleHolder } = require('../helper/constants');
 // this reporter outputs test results, indenting two spaces per suite
 class MyReporter {
   constructor(runner, options) {
+
+    debugOnConsole(`[MOCHA EVENT] MyReporter Constructor`);
+    debug(`[MOCHA EVENT] MyReporter Constructor`);
+    console.log(`[MOCHA EVENT] MyReporter Constructor`);
+
+    require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt', 
+      `
+      MyReporter Constructor
+      `);
+
     this.testObservability = true;
     Base.call(this, runner, options);
     this._testEnv = getTestEnv();
@@ -225,6 +235,13 @@ class MyReporter {
   }
 
   testStarted = async (test) => {
+
+    require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+      `
+      Test started for uuid: ${test.testAnalyticsId}
+      `
+    );
+
     try {
       const lastTest = this.current_test;
       this.current_test = test;
@@ -275,6 +292,12 @@ class MyReporter {
   }
 
   sendTestRunEvent = async (test, err = undefined, customFinished=false, eventType = "TestRunFinished") => {
+require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+  `
+  Sending test run event for uuid: ${test.testAnalyticsId}
+  `
+);
+
     try {
       if(test.body && test.body.match(/browserstack internal helper hook/)) return;
       let failureArgs = [];

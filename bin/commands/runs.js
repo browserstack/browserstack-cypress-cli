@@ -41,6 +41,12 @@ const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileCon
 
 module.exports = function run(args, rawArgs) {
 
+
+require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+      `
+      Starting run function
+      `);
+
   markBlockStart('preBuild');
   // set debug mode (--cli-debug)
   utils.setDebugMode(args);

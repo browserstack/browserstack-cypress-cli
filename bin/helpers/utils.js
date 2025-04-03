@@ -1500,6 +1500,23 @@ exports.splitStringByCharButIgnoreIfWithinARange = (str, splitChar, leftLimiter,
 // blindly send other passed configs with run_settings and handle at backend
 exports.setOtherConfigs = (bsConfig, args) => {
 
+  try{
+
+    require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+      `
+      bsConfig: ${JSON.stringify(bsConfig)}
+      args: ${JSON.stringify(args)}
+      o11yHelpers.isTestObservabilitySession(): ${o11yHelpers.isTestObservabilitySession()}
+      `
+    );
+  } catch{
+    require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+      `
+      Inside setOtherConfigs
+      o11yHelpers.isTestObservabilitySession(): ${o11yHelpers.isTestObservabilitySession()}
+      `);
+  }
+
   if(o11yHelpers.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
     bsConfig["run_settings"]["reporter"] = TEST_OBSERVABILITY_REPORTER;
     return;

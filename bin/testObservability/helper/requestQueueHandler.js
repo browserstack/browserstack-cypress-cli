@@ -7,6 +7,13 @@ const { batchAndPostEvents } = require('./helper');
 
 class RequestQueueHandler {
   constructor() {
+
+    require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+      `
+      Request Queue Handler Constructor
+      `
+    );
+
     this.queue = [];
     this.started = false;
     this.eventUrl = 'api/v1/batch';
@@ -16,6 +23,13 @@ class RequestQueueHandler {
   }
 
   start = () => {
+    require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt', 
+
+      `
+      Starting Request Queue Handler
+      `
+    
+    );
     if(!this.started) {
       this.started = true;
       this.startEventBatchPolling();
@@ -23,6 +37,30 @@ class RequestQueueHandler {
   }
 
   add = (event) => {
+
+    require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt', 
+
+      `
+      Adding event to queue: ${event.event_type}
+     
+      `
+    
+    );
+
+    try{
+      require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+        `
+        Event: ${JSON.stringify(event)}
+        `
+      );
+    } catch(e) {
+      require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+        `
+        The event is being added to queue but could not be stringified.
+        `
+      );
+    }
+
     if(this.BATCH_EVENT_TYPES.includes(event.event_type)) {
       if(event.logs && event.logs[0] && event.logs[0].kind === 'TEST_SCREENSHOT') {
         return {
@@ -53,6 +91,14 @@ class RequestQueueHandler {
   }
 
   shutdownSync = () => {
+
+
+    require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+      `
+      Shutting down Request Queue Handler using shutdownSync
+      `
+    );
+
     this.removeEventBatchPolling('REMOVING');
 
     fs.writeFileSync(path.join(__dirname, PENDING_QUEUES_FILE), JSON.stringify(this.queue));
@@ -62,6 +108,12 @@ class RequestQueueHandler {
   }
 
   shutdown = async () => {
+
+    require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+      `
+      Shutting down Request Queue Handler using shutdown = async
+      `
+    );
     this.removeEventBatchPolling('REMOVING');
     while(this.queue.length > 0) {
       const data = this.queue.slice(0,BATCH_SIZE);
@@ -71,6 +123,13 @@ class RequestQueueHandler {
   }
 
   startEventBatchPolling = () => {
+
+    require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+      `
+      Starting Event Batch Polling
+      `
+    );
+
     this.pollEventBatchInterval = setInterval(async () => {
       if(this.queue.length > 0) {
         const data = this.queue.slice(0,BATCH_SIZE);
@@ -81,11 +140,25 @@ class RequestQueueHandler {
   }
 
   resetEventBatchPolling = () => {
+
+    require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+      `
+      Resetting Event Batch Polling
+      `
+    );
+
     this.removeEventBatchPolling('RESETTING');
     this.startEventBatchPolling();
   }
 
   removeEventBatchPolling = (tag) => {
+
+    require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+      `
+      Removing Event Batch Polling via tag: ${tag}
+      `
+    );
+
     if(this.pollEventBatchInterval) {
       clearInterval(this.pollEventBatchInterval);
       this.pollEventBatchInterval = null;
@@ -94,6 +167,16 @@ class RequestQueueHandler {
   }
 
   shouldProceed = () => {
+
+    require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+      `
+      Checking if should proceed
+      Returning: ${this.queue.length >= BATCH_SIZE}
+      this.queue.length: ${this.queue.length}
+      BATCH_SIZE: ${BATCH_SIZE}
+      `
+    );
+
     return this.queue.length >= BATCH_SIZE;
   }
 }
