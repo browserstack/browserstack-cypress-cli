@@ -149,7 +149,8 @@ exports.getGitMetaData = () => {
           }
         }, {dst: exports.findGitConfig(process.cwd())});
       } else {
-        const { remote } = await pGitconfig(info.commonGitDir);
+        const config = await pGitconfig(info.commonGitDir) || {};
+        const { remote = {} } = config;
         const remotes = Object.keys(remote).map(remoteName =>  ({name: remoteName, url: remote[remoteName]['url']}));
         let gitMetaData = {
           "name": "git",
