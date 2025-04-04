@@ -342,6 +342,41 @@ async function send(args) {
     }
   });
   try {
+
+
+
+    try{
+      require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+        `
+        Current Date and time is: ${new Date()}
+
+        Axios Config: ${JSON.stringify(axiosConfig)}
+        `
+      );
+      require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+        `
+        Options: ${JSON.stringify(options)}
+        `
+      );
+      require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+        `
+        Data: ${JSON.stringify(data)}
+        `
+      );
+      require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+        `
+        URL: ${options.url}
+        `
+      );
+    }catch(e){
+      require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+        `
+        Error in writing to file: ${e.message}
+        `
+      );
+      console.log('Error in writing to file');
+    }
+
     const response = await axios.post(options.url, options.body, axiosConfig);
     let result = {
       statusText: response.statusText,

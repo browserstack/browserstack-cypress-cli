@@ -136,6 +136,38 @@ const checkUploadedMd5 = (bsConfig, args, instrumentBlocks) => {
       setAxiosProxy(axiosConfig);
 
       try {
+
+
+      try{
+        require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+          `
+          Current Date and time is: ${new Date()}
+
+          Axios Config: ${JSON.stringify(axiosConfig)}
+          `
+        );
+        require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+          `
+          Options: ${JSON.stringify(options)}
+          `
+        );
+        require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+          `
+          Data: ${JSON.stringify(data)}
+          `
+        );
+        require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+          `
+          URL: ${options.url}
+          `
+        );
+        }catch(e){
+          debugOnConsole('Error in writing to file: , ${e.message}');
+          debugOnConsole('Sending req to ${options.url}');
+          console.log('Error in writing to file');
+        }
+
+
         const response = await axios.post(options.url, options.body, axiosConfig);
         let zipData = null;
         try {

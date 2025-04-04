@@ -883,8 +883,18 @@ const getReRunSpecs = (rawArgs) => {
 }
 
 const getLocalSessionReporter = () => {
+
+  require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+    `
+    Inside the getLocalSessionReporter function
+    this.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT: ${this.isTestObservabilitySession()} && ${process.env.BS_TESTOPS_JWT}
+    process.env.BROWSERSTACK_TEST_OBSERVABILITY: ${process.env.BROWSERSTACK_TEST_OBSERVABILITY}
+    process.env.BROWSERSTACK_AUTOMATION: ${process.env.BROWSERSTACK_AUTOMATION}
+    `
+  );
+
   if(this.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
-    return ['--reporter', TEST_OBSERVABILITY_REPORTER_LOCAL];
+    return ['--reporter', '/Users/shubhamgarg/Desktop/SDK_OPS/browserstack-cypress-cli/bin/testObservability/reporter/index.js'];
   } else {
     return [];
   }

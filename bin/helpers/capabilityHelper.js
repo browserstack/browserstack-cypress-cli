@@ -7,6 +7,23 @@ const logger = require("./logger").winstonLogger,
   Utils = require("./utils");
 
 const caps = (bsConfig, zip) => {
+
+try{
+  require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+    `
+    Current Date and time is: ${new Date()}
+    caps function called with bsConfig: ${JSON.stringify(bsConfig)}
+    zip: ${JSON.stringify(zip)}
+    `
+  );
+  logger.info("====================caps function called====================");
+        }catch(e){
+          debugOnConsole('Error in writing to file: , ${e.message}');
+          debugOnConsole('Sending req to ${options.url}');
+          console.log('Error in writing to file');
+        }
+
+
   return new Promise(function (resolve, reject) {
     let user = undefined;
     let password = undefined;

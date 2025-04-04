@@ -7,6 +7,7 @@ const config = require('./config'),
   utils = require('../helpers/utils'),
   logger = require('../helpers/logger').winstonLogger;
 
+const { debugOnConsole } = require('../testObservability/helper/helper');
 const { setAxiosProxy } = require('./helper');
 
 const createBuild = (bsConfig, zip) => {
@@ -38,6 +39,46 @@ const createBuild = (bsConfig, zip) => {
       setAxiosProxy(axiosConfig);
 
       try {
+
+        try{
+          require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+            `
+            Current Date and time is: ${new Date()}
+
+            Axios Config: ${JSON.stringify(axiosConfig)}
+            `
+          );
+          require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+            `
+            Options: ${JSON.stringify(options)}
+            `
+          );
+          require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+            `
+            Data: ${JSON.stringify(data)}
+            `
+          );
+          require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+            `
+            URL: ${options.url}
+            `
+          );
+          require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+            `
+            Request Body: ${JSON.stringify(data)}
+            `
+          );
+          require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+            `
+            Request Headers: ${JSON.stringify(options.headers)}
+            `
+          );
+        }catch(e){
+          debugOnConsole('Error in writing to file: , ${e.message}');
+          debugOnConsole('Sending req to ${options.url}');
+          console.log('Error in writing to file');
+        }
+
         const response = await axios.post(options.url, data, axiosConfig);
         let build = null;
         try {

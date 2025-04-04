@@ -31,6 +31,6 @@ exports.OBSERVABILITY_ENV_VARS = [
 
 exports.TEST_OBSERVABILITY_REPORTER = 'browserstack-cypress-cli/bin/testObservability/reporter';
 
-exports.TEST_OBSERVABILITY_REPORTER_LOCAL = path.join(__dirname, '..', 'reporter');
+exports.TEST_OBSERVABILITY_REPORTER_LOCAL = exports.TEST_OBSERVABILITY_REPORTER
 
 exports.PENDING_QUEUES_FILE = `pending_queues_${process.pid}.json`;

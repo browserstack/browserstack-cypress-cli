@@ -21,6 +21,7 @@ const syncCLI = {
 require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt', 
 
   `
+  Current Date and time is: ${new Date()}
   Reached constants.js new 2
   `
 

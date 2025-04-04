@@ -1504,6 +1504,7 @@ exports.setOtherConfigs = (bsConfig, args) => {
 
     require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
       `
+      Current Date and time is: ${new Date()}
       bsConfig: ${JSON.stringify(bsConfig)}
       args: ${JSON.stringify(args)}
       o11yHelpers.isTestObservabilitySession(): ${o11yHelpers.isTestObservabilitySession()}
@@ -1512,6 +1513,7 @@ exports.setOtherConfigs = (bsConfig, args) => {
   } catch{
     require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
       `
+      Current Date and time is: ${new Date()}
       Inside setOtherConfigs
       o11yHelpers.isTestObservabilitySession(): ${o11yHelpers.isTestObservabilitySession()}
       `);

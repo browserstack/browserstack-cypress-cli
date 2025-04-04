@@ -27,7 +27,8 @@ const {
   setEventListeners,
   setTestObservabilityFlags, 
   runCypressTestsLocally, 
-  printBuildLink
+  printBuildLink,
+  debugOnConsole
 } = require('../testObservability/helper/helper');
 
 const { 
@@ -41,11 +42,19 @@ const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileCon
 
 module.exports = function run(args, rawArgs) {
 
+try{
 
-require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
-      `
-      Starting run function
-      `);
+  require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+        `
+        Current Date and time is: ${new Date()}
+        Starting run function
+        `);
+
+    debugOnConsole('Starting the run function');
+
+  } catch(e) {
+    debugOnConsole('Couldnt write to file, starting the run function');
+  }
 
   markBlockStart('preBuild');
   // set debug mode (--cli-debug)

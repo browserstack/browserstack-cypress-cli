@@ -22,17 +22,17 @@ module.exports = function () {
       },
       {
         "browser": "chrome",
-        "os": "OS X Mojave",
+        "os": "OS X Ventura",
         "versions": ["latest", "latest-1"]
       },
       {
         "browser": "firefox",
-        "os": "OS X Mojave",
+        "os": "OS X Ventura",
         "versions": ["latest", "latest-1"]
       },
       {
         "browser": "edge",
-        "os": "OS X Mojave",
+        "os": "OS X Ventura",
         "versions": ["latest", "latest-1"]
       },
       {

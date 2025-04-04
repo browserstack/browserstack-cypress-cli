@@ -10,6 +10,7 @@ class RequestQueueHandler {
 
     require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
       `
+      Current Date and time is: ${new Date()}
       Request Queue Handler Constructor
       `
     );
@@ -41,6 +42,8 @@ class RequestQueueHandler {
     require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt', 
 
       `
+      Current Date and time is: ${new Date()}
+
       Adding event to queue: ${event.event_type}
      
       `
