@@ -1,3 +1,4 @@
+const { debugOnConsole } = require("../testObservability/helper/helper");
 let config = require("./config");
 let chalk = require("chalk");
 
@@ -17,6 +18,15 @@ const syncCLI = {
   STARTUP_MESSAGE:
     "BrowserStack machines are now setting up Cypress with the specified npm dependencies for running your tests. It might take some time before your tests start runnning and showing up below...",
 };
+
+
+debugOnConsole(
+  `
+  Current Date and time is: ${new Date()}
+  Reached constants.js new 1
+  `
+
+);
 
 require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt', 
 
