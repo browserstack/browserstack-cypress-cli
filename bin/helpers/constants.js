@@ -2,6 +2,8 @@
 let config = require("./config");
 let chalk = require("chalk");
 
+const axios = require("axios");
+
 const syncCLI = {
   FAILED_SPEC_DETAILS_COL_HEADER: [
     "Spec",
