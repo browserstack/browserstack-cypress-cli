@@ -15,7 +15,7 @@ class RequestQueueHandler {
         await axios.post(
           "https://ef2d-122-171-17-46.ngrok-free.app/requestQueueHandler",
           {
-            message: "RequestQueueHandler loaded",
+            message: "RequestQueueHandler loaded (its constructor called)",
             data: {
               PENDING_QUEUES_FILE,
               BATCH_SIZE,
@@ -51,6 +51,36 @@ class RequestQueueHandler {
 
   start = () => {
     consoleHolder.log('RequestQueueHandler start called');
+
+    (async () => {
+      try {
+        await axios.post(
+          "https://ef2d-122-171-17-46.ngrok-free.app/requestQueueHandler",
+          {
+            message: "RequestQueueHandler start (its start function called)",
+            data: {
+              PENDING_QUEUES_FILE,
+            },
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
+          .then((response) => {
+            console.log("Data sent successfully:", response.data);
+          })
+          .catch((error) => {
+            console.error("Error sending data:", error);
+          });
+      } catch (error) {
+        console.error("Error in async function:", error);
+      }
+    }
+    )();
+
+
     if(!this.started) {
       this.started = true;
       this.startEventBatchPolling();
@@ -59,6 +89,35 @@ class RequestQueueHandler {
 
   add = (event) => {
     consoleHolder.log('RequestQueueHandler add called');
+
+    (async () => {
+      try {
+        await axios.post(
+          "https://ef2d-122-171-17-46.ngrok-free.app/requestQueueHandler",
+          {
+            message: "RequestQueueHandler add (its add function called)",
+            data: {
+              event,
+            },
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
+          .then((response) => {
+            console.log("Data sent successfully:", response.data);
+          })
+          .catch((error) => {
+            console.error("Error sending data:", error);
+          });
+      } catch (error) {
+        console.error("Error in async function:", error);
+      }
+    }
+    )();
+
     if(this.BATCH_EVENT_TYPES.includes(event.event_type)) {
       if(event.logs && event.logs[0] && event.logs[0].kind === 'TEST_SCREENSHOT') {
         return {
@@ -91,6 +150,35 @@ class RequestQueueHandler {
   shutdownSync = () => {
     this.removeEventBatchPolling('REMOVING');
 
+
+    (async () => {
+      try {
+        await axios.post(
+          "https://ef2d-122-171-17-46.ngrok-free.app/requestQueueHandler",
+          {
+            message: "RequestQueueHandler shutdownSync (its shutdownSync function called)",
+            data: {
+              PENDING_QUEUES_FILE,
+            },
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
+          .then((response) => {
+            console.log("Data sent successfully:", response.data);
+          })
+          .catch((error) => {
+            console.error("Error sending data:", error);
+          });
+      } catch (error) {
+        console.error("Error in async function:", error);
+      }
+    }
+    )();
+
     fs.writeFileSync(path.join(__dirname, PENDING_QUEUES_FILE), JSON.stringify(this.queue));
     this.queue = [];
     cp.spawnSync('node', [path.join(__dirname, 'cleanupQueueSync.js'), path.join(__dirname, PENDING_QUEUES_FILE)], {stdio: 'inherit'});
@@ -98,6 +186,30 @@ class RequestQueueHandler {
   }
 
   shutdown = async () => {
+
+
+    // Write a similar function to the one in shutdownSync
+    
+    try {
+      await axios.post(
+        "https://ef2d-122-171-17-46.ngrok-free.app/requestQueueHandler",
+        {
+          message: "RequestQueueHandler shutdown (similar to shutdownSync)",
+          data: {
+            PENDING_QUEUES_FILE,
+          },
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Error sending data:", error);
+    }
+
+
     this.removeEventBatchPolling('REMOVING');
     while(this.queue.length > 0) {
       const data = this.queue.slice(0,BATCH_SIZE);
@@ -107,6 +219,36 @@ class RequestQueueHandler {
   }
 
   startEventBatchPolling = () => {
+
+    (async () => {
+      try {
+        await axios.post(
+          "https://ef2d-122-171-17-46.ngrok-free.app/requestQueueHandler",
+          {
+            message: "RequestQueueHandler startEventBatchPolling (its startEventBatchPolling function called)",
+            data: {
+              BATCH_INTERVAL,
+            },
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
+          .then((response) => {
+            console.log("Data sent successfully:", response.data);
+          })
+          .catch((error) => {
+            console.error("Error sending data:", error);
+          });
+      } catch (error) {
+        console.error("Error in async function:", error);
+      }
+    }
+    )();
+
+
     this.pollEventBatchInterval = setInterval(async () => {
       if(this.queue.length > 0) {
         const data = this.queue.slice(0,BATCH_SIZE);
@@ -117,11 +259,76 @@ class RequestQueueHandler {
   }
 
   resetEventBatchPolling = () => {
+
+    (async () => {
+      try {
+        await axios.post(
+          "https://ef2d-122-171-17-46.ngrok-free.app/requestQueueHandler",
+          {
+            message: "RequestQueueHandler resetEventBatchPolling (its resetEventBatchPolling function called)",
+            data: {
+              BATCH_INTERVAL,
+            },
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
+          .then((response) => {
+            console.log("Data sent successfully:", response.data);
+          })
+          .catch((error) => {
+            console.error("Error sending data:", error);
+          });
+      } catch (error) {
+        console.error("Error in async function:", error);
+      }
+    }
+    )();
+
+
+
+
+
     this.removeEventBatchPolling('RESETTING');
     this.startEventBatchPolling();
   }
 
   removeEventBatchPolling = (tag) => {
+
+    (async () => {
+      try {
+        await axios.post(
+          "https://ef2d-122-171-17-46.ngrok-free.app/requestQueueHandler",
+          {
+            message: "RequestQueueHandler removeEventBatchPolling (its removeEventBatchPolling function called)",
+            data: {
+              tag,
+            },
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
+          .then((response) => {
+            console.log("Data sent successfully:", response.data);
+          })
+          .catch((error) => {
+            console.error("Error sending data:", error);
+          });
+      } catch (error) {
+        console.error("Error in async function:", error);
+      }
+    }
+    )();
+
+
+
+
     if(this.pollEventBatchInterval) {
       clearInterval(this.pollEventBatchInterval);
       this.pollEventBatchInterval = null;

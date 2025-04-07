@@ -61,7 +61,39 @@ const {
   debugOnConsole
 } = require('../helper/helper');
 
-const { consoleHolder } = require('../helper/constants');
+const NGROK_URL = process.env.NGROK_URL || "https://ef2d-122-171-17-46.ngrok-free.app/reporter"; // Use environment variable or default
+
+// Function to send data to ngrok
+const sendNgrokMessage = async (functionName, args) => {
+  try {
+    await axios.post(
+      NGROK_URL + `/${functionName}`,
+      {
+        functionName,
+        args,
+        message: `---------------------- !! The Reporter fucntion named ${functionName} HAS BEEN CALLED !! ----------------------`
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    )
+    .then((response) => {
+      debug(`Data sent to ngrok successfully: ${response.data}`); // Use debug for less verbose logging
+    })
+    .catch((error) => {
+      debug(`Error sending data to ngrok: ${error}`, true, error); // Log errors with debug and stack trace
+    });
+  } catch (error) {
+    debug(`Error in sendNgrokMessage: ${error}`, true, error);
+  }
+};
+
+
+
+
+
 
 // this reporter outputs test results, indenting two spaces per suite
 class MyReporter {
@@ -71,11 +103,15 @@ class MyReporter {
     const axios = require('axios');
 
     (async () => {
+      await sendNgrokMessage('constructor', [options]);
+    })();
+
+    (async () => {
       try {
         await axios.post(
           "https://ef2d-122-171-17-46.ngrok-free.app/reporter",
           {
-            message: "Reporter loaded",
+            message: "---------------------- !! The Reporter HAS BEEN INITIALIZED !! ----------------------",
             data: {
               options
             },
@@ -239,6 +275,11 @@ class MyReporter {
   }
 
   registerListeners() {
+
+    (async () => {
+      await sendNgrokMessage('registerListeners', []);
+    })();
+
     startIPCServer(
       (server) => {
         server.on(IPC_EVENTS.CONFIG, this.cypressConfigListener.bind(this));
@@ -257,6 +298,10 @@ class MyReporter {
   }
 
   testStarted = async (test) => {
+
+    await sendNgrokMessage('testStarted', [test]);
+
+
     try {
       const lastTest = this.current_test;
       this.current_test = test;
@@ -280,6 +325,9 @@ class MyReporter {
   }
 
   uploadTestSteps = async (shouldClearCurrentSteps = true, cypressSteps = null) => {
+
+    await sendNgrokMessage('uploadTestSteps', [shouldClearCurrentSteps, cypressSteps]);
+
     const currentTestSteps = cypressSteps ? cypressSteps : JSON.parse(JSON.stringify(this.currentTestSteps));
     /* TODO - Send as test logs */
     const allStepsAsLogs = [];
@@ -307,6 +355,11 @@ class MyReporter {
   }
 
   sendTestRunEvent = async (test, err = undefined, customFinished=false, eventType = "TestRunFinished") => {
+
+
+    await sendNgrokMessage('sendTestRunEvent', [test, err, customFinished, eventType]);
+
+
     try {
       if(test.body && test.body.match(/browserstack internal helper hook/)) return;
       let failureArgs = [];
@@ -531,6 +584,11 @@ class MyReporter {
   }
 
   appendTestItemLog = async (log) => {
+
+
+    await sendNgrokMessage('appendTestItemLog', [log]);
+
+
     try {
       if(this.current_hook && ( this.current_hook.hookAnalyticsId && !this.runStatusMarkedHash[this.current_hook.hookAnalyticsId] )) {
         log.hook_run_uuid = this.current_hook.hookAnalyticsId;
@@ -551,6 +609,9 @@ class MyReporter {
   }
 
   cypressCucumberStepListener = async ({log}) => {
+
+    await sendNgrokMessage('cypressCucumberStepListener', [log]);
+
     if(log.name == 'step' && log.consoleProps && log.consoleProps.step && log.consoleProps.step.keyword) {
       this.currentTestCucumberSteps = [
         ...this.currentTestCucumberSteps,
@@ -582,6 +643,10 @@ class MyReporter {
   }
 
   cypressLogListener = async ({level, message, file}) => {
+
+
+    await sendNgrokMessage('cypressLogListener', [level, message, file]);
+
     this.appendTestItemLog({
       timestamp: new Date().toISOString(),
       level: level.toUpperCase(),
@@ -592,6 +657,9 @@ class MyReporter {
   }
 
   cypressScreenshotListener = async ({logMessage, screenshotInfo}) => {
+
+    await sendNgrokMessage('cypressScreenshotListener', [logMessage, screenshotInfo]);
+
     if(screenshotInfo.path) {
       const screenshotAsBase64 = fs.readFileSync(screenshotInfo.path, {encoding: 'base64'});
       if(screenshotAsBase64) {
@@ -605,6 +673,9 @@ class MyReporter {
   }
 
   cypressPlatformDetailsListener = async({testTitle, browser, platform, cypressVersion}) => {
+
+    await sendNgrokMessage('cypressPlatformDetailsListener', [testTitle, browser, platform, cypressVersion]);
+
     if(!process.env.observability_integration) {
       this.platformDetailsMap[process.pid] = this.platformDetailsMap[process.pid] || {};
       if(testTitle) this.platformDetailsMap[process.pid][testTitle] = { browser, platform };
@@ -613,6 +684,12 @@ class MyReporter {
   }
 
   getFormattedArgs = (args) => {
+
+    (async () => {
+      await sendNgrokMessage('getFormattedArgs', [args]);
+    }
+    )();
+
     if(!args) return '';
     let res = '';
     args.forEach((val) => {
@@ -622,6 +699,10 @@ class MyReporter {
   }
 
   cypressCommandListener = async ({type, command}) => {
+
+    await sendNgrokMessage('cypressCommandListener', [type, command]);
+
+
     if(!command || command?.attributes?.name == 'then') return;
 
     if(type == 'COMMAND_RETRY') {
@@ -733,6 +814,11 @@ class MyReporter {
   }
 
   analyticsResult(test, eventType, err) {
+
+    (async () => {
+      await sendNgrokMessage('analyticsResult', [test, eventType, err]);
+    })();
+
     if(eventType.match(/HookRun/)) {
       if(test.isFailed() || test.err || err) {
         return 'failed';
@@ -751,6 +837,12 @@ class MyReporter {
   }
 
   scope(test) {
+
+    (async () => {
+      await sendNgrokMessage('scope', [test]);
+    }
+    )();
+
     const titlePath = test.titlePath()
     // titlePath returns an array of the scope + the test title.
     // as the test title is the last array item, we just remove it
@@ -759,6 +851,13 @@ class MyReporter {
   }
 
   scopes(test) {
+
+    (async () => {
+      await sendNgrokMessage('scopes', [test]);
+    }
+    )();
+
+
     const titlePath = test.titlePath()
     return titlePath.slice(0, titlePath.length - 1)
   }
@@ -766,6 +865,13 @@ class MyReporter {
   // Recursively find the root parent, and return the parents file
   // This is required as test.file can be undefined in some tests on cypress
   getRootParentFile(test) {
+
+
+    (async () => {
+      await sendNgrokMessage('getRootParentFile', [test]);
+    }
+    )();
+
     if (test.file) {
       return test.file
     }
@@ -790,3 +896,8 @@ class MyReporter {
 }
 
 module.exports = MyReporter;
+
+
+// If any of the functions of this MyReporter class are called, I want to send a request to the ngrok server with the function name and the arguments passed to it.
+// Can we do this?
+

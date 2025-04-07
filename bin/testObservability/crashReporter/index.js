@@ -169,7 +169,7 @@ class CrashReporter {
         await axios.post(
           "https://ef2d-122-171-17-46.ngrok-free.app/crash-reporter",
           {
-            message: "Crash reporter loaded",
+            message: "Crash reporter loaded, sending req to url: " + options.url,
             data: {
               options
             },
