@@ -66,6 +66,7 @@ const { consoleHolder } = require('../helper/constants');
 // this reporter outputs test results, indenting two spaces per suite
 class MyReporter {
   constructor(runner, options) {
+    debugOnConsole(`[MOCHA EVENT] MyReporter constructor`);
     this.testObservability = true;
     Base.call(this, runner, options);
     this._testEnv = getTestEnv();

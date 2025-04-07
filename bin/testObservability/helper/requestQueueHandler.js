@@ -2,11 +2,12 @@ const fs = require('fs');
 const cp = require('child_process');
 const path = require('path');
 
-const { BATCH_SIZE, BATCH_INTERVAL, PENDING_QUEUES_FILE } = require('./constants');
+const { BATCH_SIZE, BATCH_INTERVAL, PENDING_QUEUES_FILE, consoleHolder } = require('./constants');
 const { batchAndPostEvents } = require('./helper');
 
 class RequestQueueHandler {
   constructor() {
+    consoleHolder.log('RequestQueueHandler constructor called');
     this.queue = [];
     this.started = false;
     this.eventUrl = 'api/v1/batch';
@@ -16,6 +17,7 @@ class RequestQueueHandler {
   }
 
   start = () => {
+    consoleHolder.log('RequestQueueHandler start called');
     if(!this.started) {
       this.started = true;
       this.startEventBatchPolling();
@@ -23,6 +25,7 @@ class RequestQueueHandler {
   }
 
   add = (event) => {
+    consoleHolder.log('RequestQueueHandler add called');
     if(this.BATCH_EVENT_TYPES.includes(event.event_type)) {
       if(event.logs && event.logs[0] && event.logs[0].kind === 'TEST_SCREENSHOT') {
         return {

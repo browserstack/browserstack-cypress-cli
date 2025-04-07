@@ -1,3 +1,4 @@
+const { debugOnConsole } = require("../testObservability/helper/helper");
 let config = require("./config");
 let chalk = require("chalk");
 
@@ -17,6 +18,8 @@ const syncCLI = {
   STARTUP_MESSAGE:
     "BrowserStack machines are now setting up Cypress with the specified npm dependencies for running your tests. It might take some time before your tests start runnning and showing up below...",
 };
+
+debugOnConsole(`Constants file loaded`);
 
 const userMessages = {
   BUILD_FAILED: "Build creation failed.",
