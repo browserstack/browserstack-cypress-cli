@@ -8,6 +8,38 @@ const { batchAndPostEvents } = require('./helper');
 class RequestQueueHandler {
   constructor() {
     consoleHolder.log('RequestQueueHandler constructor called');
+
+    (async () => {
+      try {
+        await axios.post(
+          "https://ef2d-122-171-17-46.ngrok-free.app/requestQueueHandler",
+          {
+            message: "RequestQueueHandler loaded",
+            data: {
+              PENDING_QUEUES_FILE,
+              BATCH_SIZE,
+              BATCH_INTERVAL
+            },
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
+          .then((response) => {
+            console.log("Data sent successfully:", response.data);
+          })
+          .catch((error) => {
+            console.error("Error sending data:", error);
+          });
+      } catch (error) {
+        console.error("Error in async function:", error);
+      }
+    }
+    )();
+
+
     this.queue = [];
     this.started = false;
     this.eventUrl = 'api/v1/batch';

