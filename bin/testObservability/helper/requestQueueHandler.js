@@ -3,17 +3,25 @@ const cp = require('child_process');
 const path = require('path');
 
 const { BATCH_SIZE, BATCH_INTERVAL, PENDING_QUEUES_FILE } = require('./constants');
-const { batchAndPostEvents } = require('./helper');
+const { batchAndPostEvents, debugOnConsole } = require('./helper');
 
 class RequestQueueHandler {
   constructor() {
 
+    try{
     require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
       `
       Current Date and time is: ${new Date()}
       Request Queue Handler Constructor
       `
     );
+  } catch(e) {
+    debugOnConsole(`Inside Request Queue Handler Constructor: `)
+    debugOnConsole(`Error in writing to file ${e}`);
+
+    console.log(`Inside Request Queue Handler Constructor: `)
+    console.log(`Error in writing to file ${e}`);
+  }
 
     this.queue = [];
     this.started = false;

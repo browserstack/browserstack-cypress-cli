@@ -884,6 +884,7 @@ const getReRunSpecs = (rawArgs) => {
 
 const getLocalSessionReporter = () => {
 
+  try{
   require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
     `
     Inside the getLocalSessionReporter function
@@ -892,9 +893,13 @@ const getLocalSessionReporter = () => {
     process.env.BROWSERSTACK_AUTOMATION: ${process.env.BROWSERSTACK_AUTOMATION}
     `
   );
+  } catch(e) {
+    this.debugOnConsole(`Unable to write to file with error ${e}`);
+    console.log(e);
+  }
 
   if(this.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
-    return ['--reporter', '/Users/shubhamgarg/Desktop/SDK_OPS/browserstack-cypress-cli/bin/testObservability/reporter/index.js'];
+    return ['--reporter', TEST_OBSERVABILITY_REPORTER_LOCAL];
   } else {
     return [];
   }

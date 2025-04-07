@@ -11,6 +11,7 @@ const { CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS } = require('../helpers/con
 const { consoleHolder } = require("../testObservability/helper/constants");
 const supportFileContentMap = {}
 const HttpsProxyAgent = require('https-proxy-agent');
+const { debugOnConsole } = require("../testObservability/helper/helper");
 
 exports.checkAccessibilityPlatform = (user_config) => {
   let accessibility = false;
@@ -146,6 +147,34 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
 }
 
 const nodeRequest = (type, url, data, config) => {
+
+  try {
+    require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt',
+      `
+      Current Date and time is: ${new Date()}
+
+      Sending request to BrowserStack Server: ${url}
+      Event: ${JSON.stringify(data)}
+      
+      `
+    );
+  } catch(e) {
+    debugOnConsole(
+      `The event is being added to queue but could not be stringified / written to file.`
+    );
+    logger.info(
+      `The event is being added to queue but could not be stringified / written to file.`
+    );
+    consoleHolder.log(
+      `The event is being added to queue but could not be stringified / written to file.`
+    );
+
+    debugOnConsole(`URL: ${url}`);
+    logger.info(`URL: ${url}`);
+    consoleHolder.log(`URL: ${url}`);
+
+  }
+
   return new Promise(async (resolve, reject) => {
     const options = {
       ...config,

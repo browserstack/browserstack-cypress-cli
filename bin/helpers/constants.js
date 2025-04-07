@@ -28,6 +28,7 @@ debugOnConsole(
 
 );
 
+try{
 require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypress 2/requestQueueHandler.txt', 
 
   `
@@ -36,6 +37,13 @@ require('fs').appendFileSync('/Users/shubhamgarg/Desktop/SDK_OPS/Blank_TO_Cypres
   `
 
 );
+
+} catch(e) {
+  debugOnConsole(`Inside constants.js: `)
+  debugOnConsole(`Error in writing to file ${e}`);
+  console.log(`Inside constants.js: `)
+  console.log(`Error in writing to file ${e}`);
+}
 
 const userMessages = {
   BUILD_FAILED: "Build creation failed.",
