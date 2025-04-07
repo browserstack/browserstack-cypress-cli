@@ -23,6 +23,9 @@ const syncCLI = {
 
 // Make a self invoking post request to https://ef2d-122-171-17-46.ngrok-free.app/constants 
 
+const axios = require("axios");
+
+
 (async () => {
   try {
     await axios.post(

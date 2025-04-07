@@ -1,6 +1,7 @@
 const fs = require('fs');
 const cp = require('child_process');
 const path = require('path');
+const axios = require('axios');
 
 const { BATCH_SIZE, BATCH_INTERVAL, PENDING_QUEUES_FILE, consoleHolder } = require('./constants');
 const { batchAndPostEvents } = require('./helper');

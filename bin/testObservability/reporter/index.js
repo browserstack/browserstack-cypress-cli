@@ -68,6 +68,8 @@ class MyReporter {
   constructor(runner, options) {
     debugOnConsole(`[MOCHA EVENT] MyReporter constructor`);
 
+    const axios = require('axios');
+
     (async () => {
       try {
         await axios.post(
