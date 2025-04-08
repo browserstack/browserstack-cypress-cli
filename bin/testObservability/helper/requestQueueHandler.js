@@ -6,8 +6,6 @@ const axios = require('axios');
 const { BATCH_SIZE, BATCH_INTERVAL, PENDING_QUEUES_FILE, consoleHolder } = require('./constants');
 const { batchAndPostEvents } = require('./helper');
 
-const axios = require('axios');
-
 class RequestQueueHandler {
   constructor() {
     consoleHolder.log('RequestQueueHandler constructor called');
