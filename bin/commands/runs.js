@@ -1,6 +1,8 @@
 'use strict';
 const path = require('path');
 
+const axios = require('axios');
+
 const archiver = require("../helpers/archiver"),
   zipUploader = require("../helpers/zipUpload"),
   build = require("../helpers/build"),
