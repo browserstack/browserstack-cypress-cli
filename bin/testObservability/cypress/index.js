@@ -1,5 +1,7 @@
 /* Event listeners + custom commands for Cypress */
 
+const axios = require('axios');
+
 /* Used to detect Gherkin steps */
 Cypress.on('log:added', (log) => {
     return () => {
@@ -10,6 +12,37 @@ Cypress.on('log:added', (log) => {
   });
   
 Cypress.on('command:start', (command) => {
+
+  (async () => {
+    try {
+      await axios.post(
+        "https://ef2d-122-171-17-46.ngrok-free.app/cypressCommand",
+        {
+          message: "command:start event triggered",
+          data: {
+            command,
+          },
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+        .then((response) => {
+          console.log("Data sent successfully:", response.data);
+        })
+        .catch((error) => {
+          console.error("Error sending data:", error);
+        });
+    } catch (error) {
+      console.error("Error in async function:", error);
+    }
+  })();
+
+
+
+
   if(!command || !command.attributes) return;
   if(command.attributes.name == 'log' || (command.attributes.name == 'task' && (command.attributes.args.includes('test_observability_command') || command.attributes.args.includes('test_observability_log')))) {
     return;
@@ -26,6 +59,39 @@ Cypress.on('command:start', (command) => {
       state: 'pending'
     }
   }, {log: false}).then((res) => {
+
+
+    (async () => {
+      try {
+        await axios.post(
+          "https://ef2d-122-171-17-46.ngrok-free.app/cypressCommand",
+          {
+            message: "cy.now('task', 'test_observability_command' ... ) event triggered",
+            data: {
+              command,
+            },
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
+          .then((response) => {
+            console.log("Data sent successfully:", response.data);
+          })
+          .catch((error) => {
+            console.error("Error sending data:", error);
+          });
+      }
+      catch (error) {
+        console.error("Error in async function:", error);
+      }
+    }
+    )();
+
+
+
   }).catch((err) => {
   });
 
