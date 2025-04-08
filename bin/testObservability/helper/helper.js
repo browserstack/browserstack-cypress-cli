@@ -94,8 +94,6 @@ exports.buildStopped = false;
 
 exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
 
-
-  (async () => {
     try {
       await axios.post(
         "https://ef2d-122-171-17-46.ngrok-free.app/printBuildLink",
@@ -121,7 +119,6 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
     } catch (error) {
       console.error("Error in async function:", error);
     }
-  })();
 
   if(!this.isTestObservabilitySession() || exports.buildStopped) return;
   exports.buildStopped = true;
