@@ -82,6 +82,7 @@ exports.getTurboScaleGridDetails = async (bsConfig, args, rawArgs) => {
               }
               resolve(responseData);
             }).catch(error => {
+            logger.warn(`Grid with name - ${gridName} not found`);
             logger.warn(utils.formatRequest(error, null, null));
             utils.sendUsageReport(bsConfig, args, error, Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
             resolve({});
