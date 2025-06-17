@@ -13,6 +13,68 @@ exports.detectLanguage = (cypress_config_filename) => {
     return constants.CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS.includes(extension) ? extension : 'js'
 }
 
+function generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, complied_js_dir, cypress_config_filepath) {
+  const working_dir = path.dirname(cypress_config_filepath);
+  const typescript_path = path.join(bstack_node_modules_path, 'typescript', 'bin', 'tsc');
+  const tsc_alias_path = path.join(bstack_node_modules_path, 'tsc-alias', 'dist', 'bin', 'index.js');
+  const tsConfigFilePath = bsConfig.run_settings.ts_config_file_path;
+  
+  // Prepare base temp tsconfig
+  const tempTsConfig = {
+    compilerOptions: {
+      "outDir": `./${path.basename(complied_js_dir)}`, // Add ./ prefix for consistency
+      "listEmittedFiles": true,
+      "allowSyntheticDefaultImports": true,
+      "module": "commonjs",
+      "declaration": false,
+      "baseUrl": ".", // Default fallback baseUrl
+      "skipLibCheck": true
+    },
+    include: [cypress_config_filepath]
+  };
+  
+  // Inject paths and baseUrl from original tsconfig if available
+  if (tsConfigFilePath && fs.existsSync(tsConfigFilePath) && path.extname(tsConfigFilePath).toLowerCase() === '.json') {
+    const tsConfig = JSON.parse(fs.readFileSync(tsConfigFilePath, 'utf8'));
+    if (tsConfig.compilerOptions) {
+      if (tsConfig.compilerOptions.baseUrl) {
+        // Use the directory containing the original tsconfig as baseUrl
+        tempTsConfig.compilerOptions.baseUrl = path.dirname(tsConfigFilePath);
+      } else {
+        logger.warn(`tsconfig at ${tsConfigFilePath} does not define baseUrl, defaulting to "."`);
+      }
+      if (tsConfig.compilerOptions.paths) {
+        tempTsConfig.compilerOptions.paths = tsConfig.compilerOptions.paths;
+      }
+    }
+  } else {
+    logger.warn(`tsconfig file not found or invalid: ${tsConfigFilePath}`);
+  }
+  
+  // Write the temporary tsconfig
+  const tempTsConfigPath = path.join(working_dir, 'tsconfig.singlefile.tmp.json');
+  fs.writeFileSync(tempTsConfigPath, JSON.stringify(tempTsConfig, null, 2));
+  logger.info(`Temporary tsconfig created at: ${tempTsConfigPath}`);
+  
+  // Platform-specific command generation
+  const isWindows = /^win/.test(process.platform);
+  
+  if (isWindows) {
+    // Windows: Use && to chain commands, no space after SET
+    const setNodePath = isWindows
+      ? `set NODE_PATH=${nodePath}`
+      : `NODE_PATH="${nodePath}"`;
+
+    const tscCommand = `${setNodePath} && node "${typescript_path}" --project "${tempTsConfigPath}" && ${setNodePath} && node "${tsc_alias_path}" --project "${tempTsConfigPath}"`;
+    return { tscCommand, tempTsConfigPath };
+  } else {
+    // Unix/Linux/macOS: Use ; to separate commands or && to chain
+    const nodePathPrefix = `NODE_PATH=${bsConfig.run_settings.bstack_node_modules_path}`;
+    const tscCommand = `${nodePathPrefix} node "${typescript_path}" --project "${tempTsConfigPath}" && ${nodePathPrefix} node "${tsc_alias_path}" --project "${tempTsConfigPath}"`;
+    return { tscCommand, tempTsConfigPath };
+  }
+}
+
 exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_modules_path) => {
     const cypress_config_filename = bsConfig.run_settings.cypress_config_filename
     const working_dir = path.dirname(cypress_config_filepath);
@@ -22,19 +84,12 @@ exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_module
     }
     fs.mkdirSync(complied_js_dir, { recursive: true })
 
-    const typescript_path = path.join(bstack_node_modules_path, 'typescript', 'bin', 'tsc')
+    const { tscCommand, tempTsConfigPath } = generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, complied_js_dir, cypress_config_filepath);
 
-    let tsc_command = `NODE_PATH=${bstack_node_modules_path} node "${typescript_path}" --outDir "${complied_js_dir}" --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false "${cypress_config_filepath}"`
-
-    if (/^win/.test(process.platform)) {
-        tsc_command = `set NODE_PATH=${bstack_node_modules_path}&& node "${typescript_path}" --outDir "${complied_js_dir}" --listEmittedFiles true --allowSyntheticDefaultImports --module commonjs --declaration false "${cypress_config_filepath}"`
-    }
-
-    
     let tsc_output
     try {
-        logger.debug(`Running: ${tsc_command}`)
-        tsc_output = cp.execSync(tsc_command, { cwd: working_dir })
+        logger.debug(`Running: ${tscCommand}`)
+        tsc_output = cp.execSync(tscCommand, { cwd: working_dir })
     } catch (err) {
         // error while compiling ts files
         logger.debug(err.message);
@@ -43,6 +98,12 @@ exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_module
     } finally {
         logger.debug(`Saved compiled js output at: ${complied_js_dir}`);
         logger.debug(`Finding compiled cypress config file in: ${complied_js_dir}`);
+
+        // Clean up the temporary tsconfig file
+        if (fs.existsSync(tempTsConfigPath)) {
+            fs.unlinkSync(tempTsConfigPath);
+            logger.info(`Temporary tsconfig file removed: ${tempTsConfigPath}`);
+        }
 
         const lines = tsc_output.toString().split('\n');
         let foundLine = null;
@@ -53,7 +114,7 @@ exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_module
             }
         }
         if (foundLine === null) {
-            logger.error(`No compiled cypress config found. There might some error running ${tsc_command} command`)
+            logger.error(`No compiled cypress config found. There might some error running ${tscCommand} command`)
             return null
         } else {
             const compiled_cypress_config_filepath = foundLine.split('TSFILE: ').pop()
