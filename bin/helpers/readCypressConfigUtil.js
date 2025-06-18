@@ -105,6 +105,8 @@ exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_module
             logger.info(`Temporary tsconfig file removed: ${tempTsConfigPath}`);
         }
 
+        logger.info(tsc_output.toString());
+
         const lines = tsc_output.toString().split('\n');
         let foundLine = null;
         for (let i = 0; i < lines.length; i++) {
