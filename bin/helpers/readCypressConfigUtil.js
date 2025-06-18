@@ -103,7 +103,7 @@ exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_module
 
         // Clean up the temporary tsconfig file
         if (fs.existsSync(tempTsConfigPath)) {
-            fs.unlinkSync(tempTsConfigPath);
+            // fs.unlinkSync(tempTsConfigPath);
             logger.info(`Temporary tsconfig file removed: ${tempTsConfigPath}`);
         }
 
