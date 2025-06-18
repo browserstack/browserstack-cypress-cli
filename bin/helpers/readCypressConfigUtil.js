@@ -62,8 +62,8 @@ function generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, c
   if (isWindows) {
     // Windows: Use && to chain commands, no space after SET
     const setNodePath = isWindows
-      ? `set NODE_PATH=${nodePath}`
-      : `NODE_PATH="${nodePath}"`;
+      ? `set NODE_PATH=${bstack_node_modules_path}`
+      : `NODE_PATH="${bstack_node_modules_path}"`;
 
     const tscCommand = `${setNodePath} && node "${typescript_path}" --project "${tempTsConfigPath}" && ${setNodePath} && node "${tsc_alias_path}" --project "${tempTsConfigPath}"`;
     return { tscCommand, tempTsConfigPath };
