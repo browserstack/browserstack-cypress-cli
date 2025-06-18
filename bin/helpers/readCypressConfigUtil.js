@@ -22,7 +22,7 @@ function generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, c
   // Prepare base temp tsconfig
   const tempTsConfig = {
     compilerOptions: {
-      "outDir": `./${path.basename(complied_js_dir)}`, // Add ./ prefix for consistency
+      "outDir": `${path.basename(complied_js_dir)}`, // Add ./ prefix for consistency
       "listEmittedFiles": true,
       "allowSyntheticDefaultImports": true,
       "module": "commonjs",
@@ -65,12 +65,14 @@ function generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, c
       ? `set NODE_PATH=${bstack_node_modules_path}`
       : `NODE_PATH="${bstack_node_modules_path}"`;
 
-    const tscCommand = `${setNodePath} && node "${typescript_path}" --project "${tempTsConfigPath}" && ${setNodePath} && node "${tsc_alias_path}" --project "${tempTsConfigPath}"`;
+    const tscCommand = `${setNodePath} && node "${typescript_path}" --project "${tempTsConfigPath}" && ${setNodePath} && node "${tsc_alias_path}" --project "${tempTsConfigPath}" --verbose`;
+    logger.info(`TypeScript compilation command: ${tscCommand}`);
     return { tscCommand, tempTsConfigPath };
   } else {
     // Unix/Linux/macOS: Use ; to separate commands or && to chain
     const nodePathPrefix = `NODE_PATH=${bsConfig.run_settings.bstack_node_modules_path}`;
-    const tscCommand = `${nodePathPrefix} node "${typescript_path}" --project "${tempTsConfigPath}" && ${nodePathPrefix} node "${tsc_alias_path}" --project "${tempTsConfigPath}"`;
+    const tscCommand = `${nodePathPrefix} node "${typescript_path}" --project "${tempTsConfigPath}" && ${nodePathPrefix} node "${tsc_alias_path}" --project "${tempTsConfigPath}" --verbose`;
+    logger.info(`TypeScript compilation command: ${tscCommand}`);
     return { tscCommand, tempTsConfigPath };
   }
 }
