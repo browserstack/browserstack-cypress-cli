@@ -25,7 +25,7 @@ function generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, c
       "outDir": `${path.basename(complied_js_dir)}`, // Add ./ prefix for consistency
       "listEmittedFiles": true,
       "allowSyntheticDefaultImports": true,
-      "module": "commonjs",
+      "module": "nodenext",
       "declaration": false,
       "baseUrl": ".", // Default fallback baseUrl
       "skipLibCheck": true
