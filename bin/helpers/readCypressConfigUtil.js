@@ -37,13 +37,8 @@ function generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, c
   if (tsConfigFilePath && fs.existsSync(tsConfigFilePath) && path.extname(tsConfigFilePath).toLowerCase() === '.json') {
     const tsConfig = JSON.parse(fs.readFileSync(tsConfigFilePath, 'utf8'));
     if (tsConfig.compilerOptions) {
-      if (tsConfig.compilerOptions.baseUrl) {
-        // Use the directory containing the original tsconfig as baseUrl
-        tempTsConfig.compilerOptions.baseUrl = path.dirname(tsConfigFilePath);
-      } else {
-        logger.warn(`tsconfig at ${tsConfigFilePath} does not define baseUrl, defaulting to "."`);
-      }
       if (tsConfig.compilerOptions.paths) {
+        tempTsConfig.compilerOptions.baseUrl = path.dirname(path.resolve(tsConfigFilePath));
         tempTsConfig.compilerOptions.paths = tsConfig.compilerOptions.paths;
       }
     }
@@ -92,6 +87,7 @@ exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_module
     try {
         logger.debug(`Running: ${tscCommand}`)
         tsc_output = cp.execSync(tscCommand, { cwd: working_dir })
+        cp.execSync(tscCommand, { cwd: working_dir })
     } catch (err) {
         // error while compiling ts files
         logger.debug(err.message);
@@ -103,7 +99,7 @@ exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_module
 
         // Clean up the temporary tsconfig file
         if (fs.existsSync(tempTsConfigPath)) {
-            // fs.unlinkSync(tempTsConfigPath);
+            fs.unlinkSync(tempTsConfigPath);
             logger.info(`Temporary tsconfig file removed: ${tempTsConfigPath}`);
         }
 
