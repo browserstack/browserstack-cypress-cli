@@ -17,34 +17,17 @@ function generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, c
   const working_dir = path.dirname(cypress_config_filepath);
   const typescript_path = path.join(bstack_node_modules_path, 'typescript', 'bin', 'tsc');
   const tsc_alias_path = path.join(bstack_node_modules_path, 'tsc-alias', 'dist', 'bin', 'index.js');
-  const tsConfigFilePath = bsConfig.run_settings.ts_config_file_path;
+  const tsConfigFilePath = path.resolve(bsConfig.run_settings.ts_config_file_path);
   
   // Prepare base temp tsconfig
   const tempTsConfig = {
+    extends: tsConfigFilePath, // Use a base tsconfig if available
     compilerOptions: {
       "outDir": `${path.basename(complied_js_dir)}`, // Add ./ prefix for consistency
       "listEmittedFiles": true,
-      "allowSyntheticDefaultImports": true,
-      "module": "nodenext",
-      "declaration": false,
-      "baseUrl": ".", // Default fallback baseUrl
-      "skipLibCheck": true
     },
     include: [cypress_config_filepath]
   };
-  
-  // Inject paths and baseUrl from original tsconfig if available
-  if (tsConfigFilePath && fs.existsSync(tsConfigFilePath) && path.extname(tsConfigFilePath).toLowerCase() === '.json') {
-    const tsConfig = JSON.parse(fs.readFileSync(tsConfigFilePath, 'utf8'));
-    if (tsConfig.compilerOptions) {
-      if (tsConfig.compilerOptions.paths) {
-        tempTsConfig.compilerOptions.baseUrl = path.dirname(path.resolve(tsConfigFilePath));
-        tempTsConfig.compilerOptions.paths = tsConfig.compilerOptions.paths;
-      }
-    }
-  } else {
-    logger.warn(`tsconfig file not found or invalid: ${tsConfigFilePath}`);
-  }
   
   // Write the temporary tsconfig
   const tempTsConfigPath = path.join(working_dir, 'tsconfig.singlefile.tmp.json');
