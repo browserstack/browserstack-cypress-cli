@@ -34,7 +34,7 @@ const setupPackageFolder = (runSettings, directoryPath) => {
         // Combine win and mac specific dependencies if present
         if (typeof runSettings.npm_dependencies === 'object') {
           Object.assign(packageJSON, {
-            devDependencies: combineMacWinNpmDependencies(runSettings),
+            devDependencies: runSettings.npm_dependencies,
           });
         }
 
