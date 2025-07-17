@@ -289,7 +289,7 @@ const shouldScanForAccessibility = (attributes) => {
 
             const fullTestName = attributes.title;
             const excluded = excludeTagArray.some((exclude) => fullTestName.includes(exclude));
-            const included = includeTagArray.length === 0 || includeTags.some((include) => fullTestName.includes(include));
+            const included = includeTagArray.length === 0 || includeTagArray.some((include) => fullTestName.includes(include));
             shouldScanTestForAccessibility = !excluded && included;
         } catch (error) {
             browserStackLog(`Error while validating test case for accessibility before scanning. Error : ${error.message}`);
