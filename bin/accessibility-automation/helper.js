@@ -15,13 +15,17 @@ const HttpsProxyAgent = require('https-proxy-agent');
 exports.checkAccessibilityPlatform = (user_config) => {
   let accessibility = false;
   try {
+    console.debug('[A11Y][helper] Checking accessibility platform. Browsers:', user_config.browsers);
     user_config.browsers.forEach(browser => {
       if (browser.accessibility) {
         accessibility = true;
+        console.debug(`[A11Y][helper] Accessibility enabled for browser:`, browser);
       }
     })
-  } catch {}
-
+  } catch (err) {
+    console.debug('[A11Y][helper] Error checking accessibility platform:', err);
+  }
+  console.debug(`[A11Y][helper] Accessibility platform result: ${accessibility}`);
   return accessibility;
 }
 
@@ -29,11 +33,13 @@ exports.setAccessibilityCypressCapabilities = async (user_config, accessibilityR
   if (utils.isUndefined(user_config.run_settings.accessibilityOptions)) {
     user_config.run_settings.accessibilityOptions = {}
   }
+  console.debug('[A11Y][helper] Setting Cypress capabilities for accessibility:', accessibilityResponse.data);
   user_config.run_settings.accessibilityOptions["authToken"] = accessibilityResponse.data.accessibilityToken;
   user_config.run_settings.accessibilityOptions["auth"] = accessibilityResponse.data.accessibilityToken;
   user_config.run_settings.accessibilityOptions["scannerVersion"] = accessibilityResponse.data.scannerVersion;
   user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_AUTH=${accessibilityResponse.data.accessibilityToken}`)
   user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_SCANNERVERSION=${accessibilityResponse.data.scannerVersion}`)
+  console.debug('[A11Y][helper] Updated user_config.run_settings:', user_config.run_settings);
 }
 
 exports.isAccessibilitySupportedCypressVersion = (cypress_config_filename) => {
@@ -44,8 +50,9 @@ exports.isAccessibilitySupportedCypressVersion = (cypress_config_filename) => {
 exports.createAccessibilityTestRun = async (user_config, framework) => {
 
   try {
+    console.debug('[A11Y][helper] Starting createAccessibilityTestRun');
     if (!this.isAccessibilitySupportedCypressVersion(user_config.run_settings.cypress_config_file) ){
-      logger.warn(`Accessibility Testing is not supported on Cypress version 9 and below.`)
+      logger.warn(`[A11Y][helper] Accessibility Testing is not supported on Cypress version 9 and below.`)
       process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'false';
       user_config.run_settings.accessibility = false;
       return;
@@ -59,6 +66,7 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
       projectName,
       buildDescription
     } = helper.getBuildDetails(user_config);
+    console.debug('[A11Y][helper] Build details:', { buildName, projectName, buildDescription });
 
     const data = {
       'projectName': projectName,
@@ -85,6 +93,7 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
       },
       'browserstackAutomation': process.env.BROWSERSTACK_AUTOMATION === 'true'
     };
+    console.debug('[A11Y][helper] Test run payload:', data);
 
     const config = {
       auth: {
@@ -95,27 +104,32 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
         'Content-Type': 'application/json'
       }
     };
+    console.debug('[A11Y][helper] Test run config:', config);
 
     const response = await nodeRequest(
       'POST', 'v2/test_runs', data, config, API_URL
     );
+    console.debug('[A11Y][helper] Test run response:', response.data);
     if(!utils.isUndefined(response.data)) {
       process.env.BS_A11Y_JWT = response.data.data.accessibilityToken;
       process.env.BS_A11Y_TEST_RUN_ID = response.data.data.id;
+      console.debug(`[A11Y][helper] Set BS_A11Y_JWT: ${process.env.BS_A11Y_JWT}, BS_A11Y_TEST_RUN_ID: ${process.env.BS_A11Y_TEST_RUN_ID}`);
     }
     if (process.env.BS_A11Y_JWT) {
       process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'true';
+      console.debug('[A11Y][helper] Accessibility session enabled');
     }
-    logger.debug(`BrowserStack Accessibility Automation Test Run ID: ${response.data.data.id}`);
+    logger.debug(`[A11Y][helper] BrowserStack Accessibility Automation Test Run ID: ${response.data.data.id}`);
 
     this.setAccessibilityCypressCapabilities(user_config, response.data);
     helper.setBrowserstackCypressCliDependency(user_config);
 
   } catch (error) {
+    console.debug('[A11Y][helper] Error in createAccessibilityTestRun:', error);
     if (error.response) {
       logger.error("Incorrect Cred")
       logger.error(
-        `Exception while creating test run for BrowserStack Accessibility Automation: ${
+        `[A11Y][helper] Exception while creating test run for BrowserStack Accessibility Automation: ${
           error.response.status
         } ${error.response.statusText} ${JSON.stringify(error.response.data)}`
       );
@@ -123,7 +137,7 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
       if(error.message === 'Invalid configuration passed.') {
         logger.error("Invalid configuration passed.")
         logger.error(
-          `Exception while creating test run for BrowserStack Accessibility Automation: ${
+          `[A11Y][helper] Exception while creating test run for BrowserStack Accessibility Automation: ${
             error.message || error.stack
           }`
         );
@@ -133,7 +147,7 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
 
       } else {
         logger.error(
-          `Exception while creating test run for BrowserStack Accessibility Automation: ${
+          `[A11Y][helper] Exception while creating test run for BrowserStack Accessibility Automation: ${
             error.message || error.stack
           }`
         );
