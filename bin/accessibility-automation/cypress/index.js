@@ -211,7 +211,7 @@ new Promise( (resolve, reject) => {
         const isHttpOrHttps = /^(http|https):$/.test(win.location.protocol);
         if (!isHttpOrHttps) {
             resolve("Unable to save accessibility results, Invalid URL.");
-			return;
+            return;
         }
 
         function findAccessibilityAutomationElement() {
@@ -260,7 +260,7 @@ new Promise( (resolve, reject) => {
             });
         }
     } catch(error) {
-		browserStackLog(`Error in saving results with error: ${error.message}`);
+        browserStackLog(`Error in saving results with error: ${error.message}`);
         return resolve();
     }
 
@@ -318,63 +318,51 @@ commandToOverwrite.forEach((command) => {
 
 afterEach(() => {
     const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
-    console.log(`--- ENTERING AFTEREACH FOR: ${testTitle} ---`); // Added
-    console.log(`Timestamp (afterEach start): ${new Date().toISOString()}`)
+    // Use a custom property to ensure saveTestResults is only called once per test
+    if (attributes._a11yResultsSaved) return;
+    attributes._a11yResultsSaved = true;
     cy.window().then(async (win) => {
         let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
-        if (!shouldScanTestForAccessibility) {
-            console.log(`Skipping scan for: ${testTitle} (not accessibility session)`); // Added
-            return cy.wrap({});
-        }
-        console.log(`Performing initial scan within afterEach for: ${testTitle}`); // Added
-
+        if (!shouldScanTestForAccessibility) return cy.wrap({});
         cy.wrap(performScan(win), {timeout: 30000}).then(() => {
-        console.log(`Initial scan completed within afterEach for: ${testTitle}`); // Added
-        try {
-            let os_data;
-            if (Cypress.env("OS")) {
-                os_data = Cypress.env("OS");
-            } else {
-                os_data = Cypress.platform === 'linux' ? 'mac' : "win"
-            }
-            let filePath = '';
-            if (attributes.invocationDetails !== undefined && attributes.invocationDetails.relativeFile !== undefined) {
-                filePath = attributes.invocationDetails.relativeFile;
-            } else if (attributes.prevAttempts && attributes.prevAttempts.length > 0) {
-                filePath = (attributes.prevAttempts[0].invocationDetails && attributes.prevAttempts[0].invocationDetails.relativeFile) || '';
-            }
-            const payloadToSend = {
-                "saveResults": shouldScanTestForAccessibility,
-                "testDetails": {
-                    "name": attributes.title,
-                    "testRunId": '5058', // variable not consumed, shouldn't matter what we send
-                    "filePath": filePath,
-                    "scopeList": [
-                    filePath,
-                    attributes.title
-                    ]
-                },
-                "platform": {
-                    "os_name": os_data,
-                    "os_version": Cypress.env("OS_VERSION"),
-                    "browser_name": Cypress.browser.name,
-                    "browser_version": Cypress.browser.version
+            try {
+                let os_data;
+                if (Cypress.env("OS")) {
+                    os_data = Cypress.env("OS");
+                } else {
+                    os_data = Cypress.platform === 'linux' ? 'mac' : "win"
                 }
-            };
-            browserStackLog(`Saving accessibility test results`);
-            console.log(`Timestamp (saveTestResults call): ${new Date().toISOString()}`); // Added
-            cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
-                browserStackLog(`Saved accessibility test results`);
-                console.log(`Timestamp (saveTestResults completed): ${new Date().toISOString()}`); // Added
-                console.log(`--- EXITING AFTEREACH FOR: ${testTitle} ---`); // Added
-                
-            })
-
-        } catch (er) {
-			browserStackLog(`Error in saving results with error: ${er.message}`);
-            console.error(`Error in afterEach for ${testTitle}:`, er); // Added
-
-        }
+                let filePath = '';
+                if (attributes.invocationDetails !== undefined && attributes.invocationDetails.relativeFile !== undefined) {
+                    filePath = attributes.invocationDetails.relativeFile;
+                } else if (attributes.prevAttempts && attributes.prevAttempts.length > 0) {
+                    filePath = (attributes.prevAttempts[0].invocationDetails && attributes.prevAttempts[0].invocationDetails.relativeFile) || '';
+                }
+                const payloadToSend = {
+                    "saveResults": shouldScanTestForAccessibility,
+                    "testDetails": {
+                        "name": attributes.title,
+                        "testRunId": '5058', // variable not consumed, shouldn't matter what we send
+                        "filePath": filePath,
+                        "scopeList": [
+                            filePath,
+                            attributes.title
+                        ]
+                    },
+                    "platform": {
+                        "os_name": os_data,
+                        "os_version": Cypress.env("OS_VERSION"),
+                        "browser_name": Cypress.browser.name,
+                        "browser_version": Cypress.browser.version
+                    }
+                };
+                browserStackLog(`Saving accessibility test results`);
+                cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
+                    browserStackLog(`Saved accessibility test results`);
+                })
+            } catch (er) {
+                browserStackLog(`Error in saving results with error: ${er.message}`);
+            }
         })
     });
 })
@@ -392,8 +380,8 @@ Cypress.Commands.add('performScan', () => {
             cy.wrap(performScan(win), {timeout:30000});
         });
     } catch(error) {
-		browserStackLog(`Error in performing scan with error: ${error.message}`);
-	}
+        browserStackLog(`Error in performing scan with error: ${error.message}`);
+    }
 })
 
 Cypress.Commands.add('getAccessibilityResultsSummary', () => {
@@ -410,8 +398,8 @@ Cypress.Commands.add('getAccessibilityResultsSummary', () => {
             return await getAccessibilityResultsSummary(win);
         });
     } catch(error) {
-		browserStackLog(`Error in getting accessibilty results summary with error: ${error.message}`);
-	}
+        browserStackLog(`Error in getting accessibilty results summary with error: ${error.message}`);
+    }
 
 });
 
@@ -433,8 +421,8 @@ Cypress.Commands.add('getAccessibilityResults', () => {
         });
 
     } catch(error) {
-		browserStackLog(`Error in getting accessibilty results with error: ${error.message}`);
-	}
+        browserStackLog(`Error in getting accessibilty results with error: ${error.message}`);
+    }
 });
 
 if (!Cypress.Commands.hasOwnProperty('_browserstackSDKQueryAdded')) {
