@@ -318,11 +318,18 @@ commandToOverwrite.forEach((command) => {
 
 afterEach(() => {
     const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
+    console.log(`--- ENTERING AFTEREACH FOR: ${testTitle} ---`); // Added
+    console.log(`Timestamp (afterEach start): ${new Date().toISOString()}`)
     cy.window().then(async (win) => {
         let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
-        if (!shouldScanTestForAccessibility) return cy.wrap({});
+        if (!shouldScanTestForAccessibility) {
+            console.log(`Skipping scan for: ${testTitle} (not accessibility session)`); // Added
+            return cy.wrap({});
+        }
+        console.log(`Performing initial scan within afterEach for: ${testTitle}`); // Added
 
         cy.wrap(performScan(win), {timeout: 30000}).then(() => {
+        console.log(`Initial scan completed within afterEach for: ${testTitle}`); // Added
         try {
             let os_data;
             if (Cypress.env("OS")) {
@@ -355,12 +362,18 @@ afterEach(() => {
                 }
             };
             browserStackLog(`Saving accessibility test results`);
+            console.log(`Timestamp (saveTestResults call): ${new Date().toISOString()}`); // Added
             cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
                 browserStackLog(`Saved accessibility test results`);
+                console.log(`Timestamp (saveTestResults completed): ${new Date().toISOString()}`); // Added
+                console.log(`--- EXITING AFTEREACH FOR: ${testTitle} ---`); // Added
+                
             })
 
         } catch (er) {
 			browserStackLog(`Error in saving results with error: ${er.message}`);
+            console.error(`Error in afterEach for ${testTitle}:`, er); // Added
+
         }
         })
     });
