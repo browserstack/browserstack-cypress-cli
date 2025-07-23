@@ -52,7 +52,6 @@ const {
   mapTestHooks,
   debug,
   isBrowserstackInfra,
-  requestQueueHandler,
   getHookSkippedTests,
   getOSDetailsFromSystem,
   findGitConfig,

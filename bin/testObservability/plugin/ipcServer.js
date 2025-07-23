@@ -1,6 +1,6 @@
 const ipc = require('node-ipc');
 const { consoleHolder } = require('../helper/constants');
-const { requestQueueHandler } = require('../helper/helper');
+const requestQueueHandler = require('../helper/requestQueueHandler');
 
 exports.startIPCServer = (subscribeServerEvents, unsubscribeServerEvents) => {
   if (ipc.server) {

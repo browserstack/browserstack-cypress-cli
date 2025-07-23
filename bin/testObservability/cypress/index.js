@@ -1,21 +1,31 @@
 /* Event listeners + custom commands for Cypress */
 
 /* Used to detect Gherkin steps */
+
+const browserStackLog = (message) => {
+  if (!Cypress.env('BROWSERSTACK_LOGS')) return;
+  cy.task('browserstack_log', message);
+}
+
+const shouldSkipCommand = (command) => {
+  return command.attributes.name == 'log' || (command.attributes.name == 'task' && (['test_observability_platform_details', 'test_observability_step', 'test_observability_command'].some(event => command.attributes.args.includes(event))));
+}
+
 Cypress.on('log:added', (log) => {
-    return () => {
-      return cy.now('task', 'test_observability_step', {
-                log
-              }, {log: false})
-    }
-  });
-  
+  return () => {
+    return cy.task('test_observability_step', {
+      log
+    }, { log: false })
+  }
+});
+
 Cypress.on('command:start', (command) => {
-  if(!command || !command.attributes) return;
-  if(command.attributes.name == 'log' || (command.attributes.name == 'task' && (command.attributes.args.includes('test_observability_command') || command.attributes.args.includes('test_observability_log')))) {
+  if (!command || !command.attributes) return;
+  if (shouldSkipCommand(command)) {
     return;
   }
   /* Send command details */
-  cy.now('task', 'test_observability_command', {
+  cy.task('test_observability_command', {
     type: 'COMMAND_START',
     command: {
       attributes: {
@@ -25,27 +35,23 @@ Cypress.on('command:start', (command) => {
       },
       state: 'pending'
     }
-  }, {log: false}).then((res) => {
-  }).catch((err) => {
-  });
+  }, { log: false });
 
   /* Send platform details */
-  cy.now('task', 'test_observability_platform_details', {
-    testTitle: Cypress.currentTest.title,
+  cy.task('test_observability_platform_details', {
+    testTitle: Cypress.currentRunnable?.title || '',
     browser: Cypress.browser,
     platform: Cypress.platform,
     cypressVersion: Cypress.version
-  }, {log: false}).then((res) => {
-  }).catch((err) => {
-  });
+  }, { log: false });
 });
 
 Cypress.on('command:retry', (command) => {
-  if(!command || !command.attributes) return;
-  if(command.attributes.name == 'log' || (command.attributes.name == 'task' && (command.attributes.args.includes('test_observability_command') || command.attributes.args.includes('test_observability_log')))) {
+  if (!command || !command.attributes) return;
+  if (shouldSkipCommand(command)) {
     return;
   }
-  cy.now('task', 'test_observability_command', {
+  cy.task('test_observability_command', {
     type: 'COMMAND_RETRY',
     command: {
       _log: command._log,
@@ -54,17 +60,15 @@ Cypress.on('command:retry', (command) => {
         isDefaultAssertionErr: command && command.error ? command.error.isDefaultAssertionErr : null
       }
     }
-  }, {log: false}).then((res) => {
-  }).catch((err) => {
-  });
+  }, { log: false });
 });
 
 Cypress.on('command:end', (command) => {
-  if(!command || !command.attributes) return;
-  if(command.attributes.name == 'log' || (command.attributes.name == 'task' && (command.attributes.args.includes('test_observability_command') || command.attributes.args.includes('test_observability_log')))) {
+  if (!command || !command.attributes) return;
+  if (shouldSkipCommand(command)) {
     return;
   }
-  cy.now('task', 'test_observability_command', {
+  cy.task('test_observability_command', {
     'type': 'COMMAND_END',
     'command': {
       'attributes': {
@@ -74,13 +78,11 @@ Cypress.on('command:end', (command) => {
       },
       'state': command.state
     }
-  }, {log: false}).then((res) => {
-  }).catch((err) => {
-  });
+  }, { log: false });
 });
 
 Cypress.Commands.overwrite('log', (originalFn, ...args) => {
-  if(args.includes('test_observability_log') || args.includes('test_observability_command')) return;
+  if (args.includes('test_observability_log') || args.includes('test_observability_command')) return;
   const message = args.reduce((result, logItem) => {
     if (typeof logItem === 'object') {
       return [result, JSON.stringify(logItem)].join(' ');
@@ -88,71 +90,57 @@ Cypress.Commands.overwrite('log', (originalFn, ...args) => {
 
     return [result, logItem ? logItem.toString() : ''].join(' ');
   }, '');
-  cy.now('task', 'test_observability_log', {
+  cy.task('test_observability_log', {
     'level': 'info',
     message,
-  }, {log: false}).then((res) => {
-  }).catch((err) => {
-  });
+  }, { log: false });
   originalFn(...args);
 });
 
 Cypress.Commands.add('trace', (message, file) => {
-  cy.now('task', 'test_observability_log', {
+  cy.task('test_observability_log', {
     level: 'trace',
     message,
     file,
-  }).then((res) => {
-  }).catch((err) => {
   });
 });
 
 Cypress.Commands.add('logDebug', (message, file) => {
-  cy.now('task', 'test_observability_log', {
+  cy.task('test_observability_log', {
     level: 'debug',
     message,
     file,
-  }).then((res) => {
-  }).catch((err) => {
   });
 });
 
 Cypress.Commands.add('info', (message, file) => {
-  cy.now('task', 'test_observability_log', {
+  cy.task('test_observability_log', {
     level: 'info',
     message,
     file,
-  }).then((res) => {
-  }).catch((err) => {
   });
 });
 
 Cypress.Commands.add('warn', (message, file) => {
-  cy.now('task', 'test_observability_log', {
+  cy.task('test_observability_log', {
     level: 'warn',
     message,
     file,
-  }).then((res) => {
-  }).catch((err) => {
   });
 });
 
 Cypress.Commands.add('error', (message, file) => {
-  cy.now('task', 'test_observability_log', {
+  cy.task('test_observability_log', {
     level: 'error',
     message,
     file,
-  }).then((res) => {
-  }).catch((err) => {
   });
 });
 
 Cypress.Commands.add('fatal', (message, file) => {
-  cy.now('task', 'test_observability_log', {
+  cy.task('test_observability_log', {
     level: 'fatal',
     message,
     file,
-  }).then((res) => {
-  }).catch((err) => {
   });
 });
