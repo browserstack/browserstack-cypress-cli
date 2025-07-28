@@ -345,7 +345,7 @@ afterEach(() => {
         const endLine = Math.min(lines.length, 355);
         
         const relevantLines = lines.slice(startLine, endLine);
-        cy.log('Lines around error:', relevantLines.join('\n'));
+        browserStackLog(`Lines around error:`, relevantLines.join('\n'));
  });
         browserStackLog(`Exception caught in afterEach: ${error.message}`);
         if (error && error.stack) {
