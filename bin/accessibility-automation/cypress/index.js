@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+
 /* Event listeners + custom commands for Cypress */
 
 const browserStackLog = (message) => {
@@ -15,6 +18,7 @@ const commandToOverwrite = ['visit', 'click', 'type', 'request', 'dblclick', 'ri
       and chaning available from original cypress command.   
 */
 const performModifiedScan = (originalFn, Subject, stateType, ...args) => {
+    process.env.PERFORM_MODIFIED_SCAN = 'true';
     let customChaining = cy.wrap(null).performScan();
     const changeSub = (args, stateType, newSubject) => {
         if (stateType !== 'parent') {
@@ -41,7 +45,9 @@ const performModifiedScan = (originalFn, Subject, stateType, ...args) => {
         }
     }
     runCustomizedCommand(); 
+    process.env.PERFORM_MODIFIED_SCAN = 'true';
 }
+
 
 const performScan = (win, payloadToSend) =>
 new Promise(async (resolve, reject) => {
@@ -289,7 +295,7 @@ const shouldScanForAccessibility = (attributes) => {
 
             const fullTestName = attributes.title;
             const excluded = excludeTagArray.some((exclude) => fullTestName.includes(exclude));
-            const included = includeTagArray.length === 0 || includeTagArray.some((include) => fullTestName.includes(include));
+            const included = includeTagArray.length === 0 || includeTags.some((include) => fullTestName.includes(include));
             shouldScanTestForAccessibility = !excluded && included;
         } catch (error) {
             browserStackLog(`Error while validating test case for accessibility before scanning. Error : ${error.message}`);
@@ -316,20 +322,35 @@ commandToOverwrite.forEach((command) => {
     });
 });
 
+const logFilePath = path.join(__dirname, 'accessibility-log.txt');
 afterEach(() => {
+    
+    const logMessage = `afterEach executed for test`
+    try {
+        fs.appendFileSync(logFilePath, logMessage);
+    } catch (err) {
+        // ignore logging errors
+    }
+    if (process.env.AFTER_EACH_RUN === 'true' || process.env.PERFORM_MODIFIED_SCAN === 'true') {
+        return;
+    }
+    process.env.AFTER_EACH_RUN = 'true';
+
+    try {
+        throw new Error('Deliberate exception thrown for testing purposes');
+    } catch (error) {
+        console.error('Exception caught in afterEach:', error);
+        if (error && error.stack) {
+            console.error(error.stack);
+        }
+    }
+
     const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
-    console.log(`--- ENTERING AFTEREACH FOR: ${testTitle} ---`); // Added
-    console.log(`Timestamp (afterEach start): ${new Date().toISOString()}`)
     cy.window().then(async (win) => {
         let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
-        if (!shouldScanTestForAccessibility) {
-            console.log(`Skipping scan for: ${testTitle} (not accessibility session)`); // Added
-            return cy.wrap({});
-        }
-        console.log(`Performing initial scan within afterEach for: ${testTitle}`); // Added
+        if (!shouldScanTestForAccessibility) return cy.wrap({});
 
         cy.wrap(performScan(win), {timeout: 30000}).then(() => {
-        console.log(`Initial scan completed within afterEach for: ${testTitle}`); // Added
         try {
             let os_data;
             if (Cypress.env("OS")) {
@@ -361,19 +382,15 @@ afterEach(() => {
                     "browser_version": Cypress.browser.version
                 }
             };
-            browserStackLog(`Saving accessibility test results`);
-            console.log(`Timestamp (saveTestResults call): ${new Date().toISOString()}`); // Added
+            browserStackLog(`afterEach hook called from function: ${attributes.title}, file: ${filePath}`);
+            browserStackLog(`File name: ${__filename}`);
+            browserStackLog(`Saving accessibility test results123`);
             cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
                 browserStackLog(`Saved accessibility test results`);
-                console.log(`Timestamp (saveTestResults completed): ${new Date().toISOString()}`); // Added
-                console.log(`--- EXITING AFTEREACH FOR: ${testTitle} ---`); // Added
-                
             })
 
         } catch (er) {
 			browserStackLog(`Error in saving results with error: ${er.message}`);
-            console.error(`Error in afterEach for ${testTitle}:`, er); // Added
-
         }
         })
     });
