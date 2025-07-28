@@ -325,23 +325,23 @@ commandToOverwrite.forEach((command) => {
 const logFilePath = path.join(__dirname, 'accessibility-log.txt');
 afterEach(() => {
     
-    const logMessage = `afterEach executed for test`
-    try {
-        fs.appendFileSync(logFilePath, logMessage);
-    } catch (err) {
-        // ignore logging errors
-    }
-    if (process.env.AFTER_EACH_RUN === 'true' || process.env.PERFORM_MODIFIED_SCAN === 'true') {
-        return;
-    }
-    process.env.AFTER_EACH_RUN = 'true';
+    // const logMessage = `afterEach executed for test`
+    // try {
+    //     fs.appendFileSync(logFilePath, logMessage);
+    // } catch (err) {
+    //     // ignore logging errors
+    // }
+    // if (process.env.AFTER_EACH_RUN === 'true' || process.env.PERFORM_MODIFIED_SCAN === 'true') {
+    //     return;
+    // }
+    // process.env.AFTER_EACH_RUN = 'true';
 
     try {
         throw new Error('Deliberate exception thrown for testing purposes');
     } catch (error) {
-        console.error('Exception caught in afterEach:', error);
+        browserStackLog(`Exception caught in afterEach: ${error.message}`);
         if (error && error.stack) {
-            console.error(error.stack);
+            browserStackLog(error.stack);
         }
     }
 
