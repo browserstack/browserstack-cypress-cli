@@ -339,10 +339,14 @@ afterEach(() => {
     try {
         throw new Error('Deliberate exception thrown for testing purposes');
     } catch (error) {
-        cy.readFile('cypress/integration/test_Accessibility/AppFlow.spec.ts').then((fileContent) => {
-        cy.log('File contents:', fileContent);
-        browserStackLog('File contents:', fileContent);
-    });
+        cy.readFile('https://bstackdemo.com/__cypress/tests?p=cypress\integration\test_Accessibility\AppFlow.spec.ts').then((content) => {
+        const lines = content.split('\n');
+        const startLine = Math.max(0, 350); // Around line 352
+        const endLine = Math.min(lines.length, 355);
+        
+        const relevantLines = lines.slice(startLine, endLine);
+        cy.log('Lines around error:', relevantLines.join('\n'));
+ });
         browserStackLog(`Exception caught in afterEach: ${error.message}`);
         if (error && error.stack) {
             browserStackLog(error.stack);
