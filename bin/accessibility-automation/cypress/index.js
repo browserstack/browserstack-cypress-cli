@@ -339,6 +339,10 @@ afterEach(() => {
     try {
         throw new Error('Deliberate exception thrown for testing purposes');
     } catch (error) {
+        cy.readFile('cypress/integration/test_Accessibility/AppFlow.spec.ts').then((fileContent) => {
+        cy.log('File contents:', fileContent);
+        browserStackLog('File contents:', fileContent);
+    });
         browserStackLog(`Exception caught in afterEach: ${error.message}`);
         if (error && error.stack) {
             browserStackLog(error.stack);
@@ -383,8 +387,7 @@ afterEach(() => {
                 }
             };
             browserStackLog(`afterEach hook called from function: ${attributes.title}, file: ${filePath}`);
-            browserStackLog(`File name: ${__filename}`);
-            browserStackLog(`Saving accessibility test results123`);
+            browserStackLog(`Saving accessibility test results`);
             cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
                 browserStackLog(`Saved accessibility test results`);
             })
