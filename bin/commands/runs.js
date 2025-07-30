@@ -41,8 +41,6 @@ const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileCon
 
 module.exports = function run(args, rawArgs) {
 
-  console.log(`BrowserStack Cypress CLI v${pkg.version}`);
-
   markBlockStart('preBuild');
   // set debug mode (--cli-debug)
   utils.setDebugMode(args);
@@ -197,7 +195,7 @@ module.exports = function run(args, rawArgs) {
       if(process.env.BS_TESTOPS_BUILD_COMPLETED) {
         setEventListeners(bsConfig);
       }
-      
+
       return runCypressTestsLocally(bsConfig, args, rawArgs);
     }
 
@@ -208,7 +206,6 @@ module.exports = function run(args, rawArgs) {
       if(process.env.BROWSERSTACK_TEST_ACCESSIBILITY) {
         setAccessibilityEventListeners(bsConfig);
       }
-      console.log('BrowserStack Test Observability Plugin initialized ' + process.env.BS_TESTOPS_BUILD_COMPLETED);
       if(process.env.BS_TESTOPS_BUILD_COMPLETED) {
         setEventListeners(bsConfig);
       }
