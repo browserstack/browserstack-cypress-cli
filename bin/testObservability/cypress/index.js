@@ -8,7 +8,7 @@ const browserStackLog = (message) => {
 }
 
 const shouldSkipCommand = (command) => {
-  return command.attributes.name == 'log' || (command.attributes.name == 'task' && (['test_observability_platform_details', 'test_observability_step', 'test_observability_command'].some(event => command.attributes.args.includes(event))));
+  return command.attributes.name == 'log' || (command.attributes.name == 'task' && (['test_observability_platform_details', 'test_observability_step', 'test_observability_command', 'browserstack_log'].some(event => command.attributes.args.includes(event))));
 }
 
 Cypress.on('log:added', (log) => {
