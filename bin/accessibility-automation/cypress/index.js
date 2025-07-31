@@ -347,13 +347,6 @@ afterEach(() => {
     const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
     cy.window().then(async (win) => {
 
-        try {
-        throw new Error('Deliberate exception thrown for testing purposes2');
-        } catch (error) {
-        if (error && error.stack) {
-            browserStackLog(error.stack);
-        }
-    }
         let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
         if (!shouldScanTestForAccessibility) return cy.wrap({});
 

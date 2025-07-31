@@ -237,7 +237,8 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
       if(err) return logger.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
       files.forEach(file => {
         try {
-          if(!file.includes('commands.js') && !file.includes('commands.ts')) {
+          const fileName = path.basename(file);
+          if((fileName === 'e2e.js' || fileName === 'e2e.ts')) {
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
 
             let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
