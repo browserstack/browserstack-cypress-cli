@@ -235,7 +235,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
     if(!supportFilesData.supportFile) return;
     const isPattern = glob.hasMagic(supportFilesData.supportFile);
     if(!isPattern) {
-      console.debug(`Inside isPattern`);
+      console.log(`Inside isPattern`);
       logger.debug(`Inside isPattern`);
       const defaultFileContent = fs.readFileSync(supportFilesData.supportFile, {encoding: 'utf-8'});
 
@@ -255,10 +255,10 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
       files.forEach(file => {
         try {
           const fileName = path.basename(file);
-          console.debug(`Adding accessibility event listeners to ${fileName}`);
-            logger.debug(`Adding accessibility event listeners to ${fileName}`);
+          console.log(`Adding accessibility event listeners to ${fileName}`);
+          logger.debug(`Adding accessibility event listeners to ${fileName}`);
           if((fileName === 'e2e.js' || fileName === 'e2e.ts' || fileName === 'component.ts' || fileName === 'component.js')) {
-            console.debug(`Adding accessibility event listeners to ${file}`);
+            console.log(`Adding accessibility event listeners to ${file}`);
             logger.debug(`Adding accessibility event listeners to ${file}`);
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
 

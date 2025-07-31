@@ -4,13 +4,7 @@ const utils = require('../../helpers/utils');
 const fs = require('fs');
 
 const browserstackAccessibility = (on, config) => {
-  // const logFilePath = path.join(__dirname, 'accessibility-start-log.txt');
-  // const logMessage = `afterEach executed for test`
-  //   try {
-  //       fs.appendFileSync(logFilePath, logMessage);
-  //   } catch (err) {
-  //       // ignore logging errors
-  //   }
+  
   let browser_validation = true;
   if (process.env.BROWSERSTACK_ACCESSIBILITY_DEBUG === 'true') {
     config.env.BROWSERSTACK_LOGS = 'true';
