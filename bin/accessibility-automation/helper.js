@@ -257,7 +257,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
           const fileName = path.basename(file);
           console.log(`Adding accessibility event listeners to ${fileName}`);
           logger.debug(`Adding accessibility event listeners to ${fileName}`);
-          if((fileName === 'e2e.js' || fileName === 'e2e.ts' || fileName === 'component.ts' || fileName === 'component.js')) {
+          if((file.includes('e2e.js') || file.includes('e2e.ts') || file.includes('component.ts') || file.includes('component.js'))) {
             console.log(`Adding accessibility event listeners to ${file}`);
             logger.debug(`Adding accessibility event listeners to ${file}`);
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
