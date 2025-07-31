@@ -233,12 +233,33 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
     // Searching form command.js recursively
     const supportFilesData = helper.getSupportFiles(bsConfig, true);
     if(!supportFilesData.supportFile) return;
+    const isPattern = glob.hasMagic(supportFilesData.supportFile);
+    if(!isPattern) {
+      console.debug(`Inside isPattern`);
+      logger.debug(`Inside isPattern`);
+      const defaultFileContent = fs.readFileSync(supportFilesData.supportFile, {encoding: 'utf-8'});
+
+            let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(supportFilesData.supportFile));
+            if(!defaultFileContent.includes(cypressCommandEventListener)) {
+              let newFileContent =  defaultFileContent + 
+                                  '\n' +
+                                  cypressCommandEventListener +
+                                  '\n'
+              fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
+              supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
+            }
+
+    }
     glob(process.cwd() + supportFilesData.supportFile, {}, (err, files) => {
       if(err) return logger.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
       files.forEach(file => {
         try {
           const fileName = path.basename(file);
-          if((fileName === 'e2e.js' || fileName === 'e2e.ts')) {
+          console.debug(`Adding accessibility event listeners to ${fileName}`);
+            logger.debug(`Adding accessibility event listeners to ${fileName}`);
+          if((fileName === 'e2e.js' || fileName === 'e2e.ts' || fileName === 'component.ts' || fileName === 'component.js')) {
+            console.debug(`Adding accessibility event listeners to ${file}`);
+            logger.debug(`Adding accessibility event listeners to ${file}`);
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
 
             let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
