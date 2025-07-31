@@ -12,6 +12,11 @@ const { consoleHolder } = require("../testObservability/helper/constants");
 const supportFileContentMap = {}
 const HttpsProxyAgent = require('https-proxy-agent');
 
+const browserStackLog = (message) => {
+    if (!Cypress.env('BROWSERSTACK_LOGS')) return;
+    cy.task('browserstack_log', message);
+  }
+
 exports.checkAccessibilityPlatform = (user_config) => {
   let accessibility = false;
   try {
@@ -236,7 +241,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
     const isPattern = glob.hasMagic(supportFilesData.supportFile);
     if(!isPattern) {
       console.log(`Inside isPattern`);
-      logger.debug(`Inside isPattern`);
+      browserStackLog(`Inside isPattern`);
       const defaultFileContent = fs.readFileSync(supportFilesData.supportFile, {encoding: 'utf-8'});
 
             let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(supportFilesData.supportFile));
@@ -256,10 +261,10 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
         try {
           const fileName = path.basename(file);
           console.log(`Adding accessibility event listeners to ${fileName}`);
-          logger.debug(`Adding accessibility event listeners to ${fileName}`);
+          browserStackLog(`Adding accessibility event listeners to ${fileName}`);
           if((file.includes('e2e.js') || file.includes('e2e.ts') || file.includes('component.ts') || file.includes('component.js'))) {
             console.log(`Adding accessibility event listeners to ${file}`);
-            logger.debug(`Adding accessibility event listeners to ${file}`);
+            browserStackLog(`Adding accessibility event listeners to ${file}`);
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
 
             let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));

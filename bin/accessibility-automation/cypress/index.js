@@ -325,17 +325,6 @@ commandToOverwrite.forEach((command) => {
 
 afterEach(() => {
     
-    // const logMessage = `afterEach executed for test`
-    // try {
-    //     fs.appendFileSync(logFilePath, logMessage);
-    // } catch (err) {
-    //     // ignore logging errors
-    // }
-    // if (process.env.AFTER_EACH_RUN === 'true' || process.env.PERFORM_MODIFIED_SCAN === 'true') {
-    //     return;
-    // }
-    // process.env.AFTER_EACH_RUN = 'true';
-
     try {
         throw new Error('Deliberate exception thrown for testing purposes');
     } catch (error) {
