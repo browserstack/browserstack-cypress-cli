@@ -1,10 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-
 /* Event listeners + custom commands for Cypress */
 
 const browserStackLog = (message) => {
-    if (!Cypress.env('BROWSERSTACK_LOGS')) return;
+    // if (!Cypress.env('BROWSERSTACK_LOGS')) return;
     cy.task('browserstack_log', message);
   }
   
@@ -45,7 +44,6 @@ const performModifiedScan = (originalFn, Subject, stateType, ...args) => {
     }
     runCustomizedCommand(); 
 }
-
 
 const performScan = (win, payloadToSend) =>
 new Promise(async (resolve, reject) => {
@@ -320,7 +318,6 @@ commandToOverwrite.forEach((command) => {
     });
 });
 
-
 afterEach(() => {
     
     try {
@@ -333,7 +330,6 @@ afterEach(() => {
 
     const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
     cy.window().then(async (win) => {
-
         let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
         if (!shouldScanTestForAccessibility) return cy.wrap({});
 

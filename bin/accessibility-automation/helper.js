@@ -13,7 +13,7 @@ const supportFileContentMap = {}
 const HttpsProxyAgent = require('https-proxy-agent');
 
 const browserStackLog = (message) => {
-    if (!Cypress.env('BROWSERSTACK_LOGS')) return;
+    // if (!Cypress.env('BROWSERSTACK_LOGS')) return;
     cy.task('browserstack_log', message);
   }
 
