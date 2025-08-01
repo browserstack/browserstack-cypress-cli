@@ -3,7 +3,6 @@ const { decodeJWTToken } = require("../../helpers/utils");
 const utils = require('../../helpers/utils');
 
 const browserstackAccessibility = (on, config) => {
-  
   let browser_validation = true;
   if (process.env.BROWSERSTACK_ACCESSIBILITY_DEBUG === 'true') {
     config.env.BROWSERSTACK_LOGS = 'true';
