@@ -629,8 +629,8 @@ class MyReporter {
         finished_at: null,
         duration: null,
         result: 'pending',
-        test_run_uuid: this.current_test?.testAnalyticsId,
-        hook_run_uuid : this.current_hook?.hookAnalyticsId
+        test_run_uuid: command.location === 'test' ? this.current_test?.testAnalyticsId : null,
+        hook_run_uuid : command.location === 'hook' ? this.current_hook?.hookAnalyticsId : null
       };
       if(currentStepObj.hook_run_uuid && currentStepObj.test_run_uuid) delete currentStepObj.test_run_uuid;
       this.currentTestSteps = [
@@ -660,8 +660,8 @@ class MyReporter {
           finished_at: new Date().toISOString(),
           duration: 0,
           result: command.state,
-          test_run_uuid: this.current_test?.testAnalyticsId && !this.runStatusMarkedHash[this.current_test.testAnalyticsId] ? this.current_test.testAnalyticsId : null,
-          hook_run_uuid : this.current_hook?.hookAnalyticsId && !this.runStatusMarkedHash[this.current_hook.hookAnalyticsId] ? this.current_hook.hookAnalyticsId : null
+          test_run_uuid: command.location === 'test' ? this.current_test?.testAnalyticsId : null,
+          hook_run_uuid : command.location === 'hook' ? this.current_hook?.hookAnalyticsId : null
         };
         if(currentStepObj.hook_run_uuid && currentStepObj.test_run_uuid) delete currentStepObj.test_run_uuid;
         this.currentTestSteps = [

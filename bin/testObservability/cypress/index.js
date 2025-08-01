@@ -5,6 +5,7 @@
 const util = require('util');
 
 let eventsQueue = [];
+let testRunStarted = false;
 
 const browserStackLog = (message) => {
   if (!Cypress.env('BROWSERSTACK_LOGS')) return;
@@ -48,7 +49,8 @@ Cypress.on('command:start', (command) => {
           args: command.attributes.args
         },
         state: 'pending',
-        started_at: new Date().toISOString()
+        started_at: new Date().toISOString(),
+        location: testRunStarted ? 'test' : 'hook'
       }
     },
     options: { log: false }
@@ -82,7 +84,8 @@ Cypress.on('command:retry', (command) => {
         error: {
           message: command && command.error ? command.error.message : null,
           isDefaultAssertionErr: command && command.error ? command.error.isDefaultAssertionErr : null
-        }
+        },
+        location: testRunStarted ? 'test' : 'hook'
       }
     },
     options: { log: false }
@@ -105,7 +108,8 @@ Cypress.on('command:end', (command) => {
           'args': command.attributes.args
         },
         'state': command.state,
-        finished_at: new Date().toISOString()
+        finished_at: new Date().toISOString(),
+        location: testRunStarted ? 'test' : 'hook'
       }
     },
     options: { log: false }
@@ -213,6 +217,7 @@ beforeEach(() => {
     });
   }
   eventsQueue = [];
+  testRunStarted = true;
 });
 
 afterEach(function() {
@@ -224,4 +229,5 @@ afterEach(function() {
   }
   
   eventsQueue = [];
+  testRunStarted = false;
 });
