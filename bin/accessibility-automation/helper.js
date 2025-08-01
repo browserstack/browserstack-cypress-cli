@@ -250,20 +250,28 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
       files.forEach(file => {
         try {
           const fileName = path.basename(file);
-          if((file.includes('e2e.js') || file.includes('e2e.ts') || file.includes('component.ts') || file.includes('component.js'))) {
+          console.log(`fileName: ${fileName}`);
+          browserStackLog(`bstack-${fileName}`);
+          if((fileName === 'e2e.js' || fileName === 'e2e.ts' || fileName === 'component.ts' || fileName === 'component.js')) {
             console.log(`Adding accessibility event listeners to ${file}`);
             browserStackLog(`Adding accessibility event listeners to ${file}`);
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
-
+            console.log(`log1`);
+            browserStackLog(`bstack-log1`);
             let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
+            console.log(`log2`);
+            browserStackLog(`bstack-log2`);
             if(!defaultFileContent.includes(cypressCommandEventListener)) {
               let newFileContent =  defaultFileContent + 
                                   '\n' +
                                   cypressCommandEventListener +
                                   '\n'
               fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
+            console.log(`log3`);
+            browserStackLog(`bstack-log3`);
               supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
             }
+            browserStackLog(`>>> completed ${fileName}`);
             console.log(`>>> completed ${fileName}`);
           }
         } catch(e) {
