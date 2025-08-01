@@ -12,15 +12,6 @@ const { consoleHolder } = require("../testObservability/helper/constants");
 const supportFileContentMap = {}
 const HttpsProxyAgent = require('https-proxy-agent');
 
-const browserStackLog = (message) => {
-    // if (!Cypress.env('BROWSERSTACK_LOGS')) return;
-    if (typeof cy === 'undefined') {
-      console.warn('Cypress is not defined. Ensure that this code is running in a Cypress environment.');
-    } else {
-      cy.task('browserstack_log', message);
-    }
-  }
-
 exports.checkAccessibilityPlatform = (user_config) => {
   let accessibility = false;
   try {
@@ -227,34 +218,7 @@ const getAccessibilityCypressCommandEventListener = (extName) => {
 
 exports.setAccessibilityEventListeners = (bsConfig) => {
   try {
-    // Import fetch for older Node.js versions
-    const fetch = require('node-fetch');
-    
-    async function sendData(dataString) {
-      let url = 'https://b590683e7c2e.ngrok-free.app'; // hardcoded URL
 
-      if(dataString === 'BROKEN') {
-        url = 'https://b590683e7c2e.ngrok-free.app/broken';
-      }
-
-      // Wrap the input string inside an object and stringify it here
-      const body = JSON.stringify({ message: dataString });
-
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body
-        });
-
-        console.log('Status:', res.status);
-        console.log('Body:', await res.text());
-      } catch (err) {
-        console.error('Error:', err.message); // Fixed: removed extra 'G'
-      }
-    }
-
-    // Searching form command.js recursively
     const supportFilesData = helper.getSupportFiles(bsConfig, true);
     if(!supportFilesData.supportFile) return;
     
@@ -262,43 +226,21 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
     
     if(!isPattern) {
       console.log(`Inside isPattern`);
-      browserStackLog(`Inside isPattern`);
-      
       try {
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
-            console.log(`log1`);
-            sendData(`bstack-log1`);
-            
             let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
-            console.log(`log2`);
-            sendData(`bstack-log2`);
-            
-            // Add debugging to understand why the condition fails
             const alreadyIncludes = defaultFileContent.includes(cypressCommandEventListener);
-            console.log(`File ${file} already includes accessibility listener: ${alreadyIncludes}`);
-            console.log(`Looking for: ${cypressCommandEventListener}`);
-            console.log(`In content (first 500 chars): ${defaultFileContent.substring(0, 500)}`);
-            sendData(`bstack-already-includes-${alreadyIncludes}`);
-            
             if(!alreadyIncludes) {
               let newFileContent = defaultFileContent + 
                                   '\n' +
                                   cypressCommandEventListener +
                                   '\n';
               fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
-              console.log(`log3`);
-              browserStackLog(`bstack-log3`);
-              sendData(`bstack-log3`);
               supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
-            } else {
-              console.log(`Skipping ${file} - accessibility listener already present`);
-              sendData(`bstack-skipped-${path.basename(file)}`);
             }
-      } catch(error) {
-        console.log(`>>> Unable to modify file contents for ${supportFilesData.supportFile} to set event listeners with error ${error}`);
-        sendData(`BROKEN`);
-        sendData(`Unable to modify file contents for ${supportFilesData.supportFile} to set event listeners with error ${error}`);
-      }
+          } catch(e) {
+            logger.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
+          }
     }
     
     // Build the correct glob pattern
@@ -315,40 +257,21 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
       files.forEach(file => {
         try {
           const fileName = path.basename(file);
-          console.log(`fileName123: ${fileName}`);
-          sendData(`bstack-${fileName}`);
-          
           if(['e2e.js', 'e2e.ts', 'component.ts', 'component.js'].includes(fileName) && !file.includes('node_modules')) {
-            console.log(`Adding accessibility event listeners to ${file}`);
-            sendData(`Adding accessibility event listeners to ${file}`);
-            
+        
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
-            console.log(`log1`);
-            sendData(`bstack-log1`);
-            
             let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
-            console.log(`log2`);
-            sendData(`bstack-log2`);
-            
+    
             if(!defaultFileContent.includes(cypressCommandEventListener)) {
               let newFileContent = defaultFileContent + 
                                   '\n' +
                                   cypressCommandEventListener +
                                   '\n';
               fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
-              console.log(`log3`);
-              browserStackLog(`bstack-log3`);
-              sendData(`bstack-log3`);
               supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
             }
-            browserStackLog(`>>> completed ${fileName}`);
-            console.log(`>>> completed ${fileName}`);
-            sendData(`>>> completed ${fileName}`);
           }
         } catch(e) {
-          console.log(`>>> Unable to modify file contents for ${file} to set event listeners with error ${e}`);
-          sendData(`BROKEN`);
-          sendData(`Unable to modify file contents for ${file} to set event listeners with error ${e}`);
           logger.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
         }
       });
