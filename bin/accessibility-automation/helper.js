@@ -264,6 +264,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
               fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
               supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
             }
+            console.log(`>>> completed ${fileName}`);
           }
         } catch(e) {
           logger.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
