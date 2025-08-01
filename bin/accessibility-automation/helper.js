@@ -271,6 +271,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
           const fileName = path.basename(file);
           console.log(`fileName: ${fileName}`);
           browserStackLog(`bstack-${fileName}`);
+          sendData(`bstack-${fileName}`);
           if(fileName === 'e2e.js' || fileName === 'e2e.ts' || fileName === 'component.ts' || fileName === 'component.js') {
             console.log(`Adding accessibility event listeners to ${file}`);
             browserStackLog(`Adding accessibility event listeners to ${file}`);
