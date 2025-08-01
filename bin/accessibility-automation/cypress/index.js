@@ -18,7 +18,6 @@ const commandToOverwrite = ['visit', 'click', 'type', 'request', 'dblclick', 'ri
       and chaning available from original cypress command.   
 */
 const performModifiedScan = (originalFn, Subject, stateType, ...args) => {
-    process.env.PERFORM_MODIFIED_SCAN = 'true';
     let customChaining = cy.wrap(null).performScan();
     const changeSub = (args, stateType, newSubject) => {
         if (stateType !== 'parent') {
@@ -45,7 +44,6 @@ const performModifiedScan = (originalFn, Subject, stateType, ...args) => {
         }
     }
     runCustomizedCommand(); 
-    process.env.PERFORM_MODIFIED_SCAN = 'true';
 }
 
 
@@ -371,7 +369,6 @@ afterEach(() => {
                     "browser_version": Cypress.browser.version
                 }
             };
-            browserStackLog(`afterEach hook called from function: ${attributes.title}, file: ${filePath}`);
             browserStackLog(`Saving accessibility test results`);
             cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
                 browserStackLog(`Saved accessibility test results`);
