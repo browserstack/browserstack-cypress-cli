@@ -317,13 +317,6 @@ commandToOverwrite.forEach((command) => {
 });
 
 afterEach(() => {
-    try {
-        throw new Error('Deliberate exception thrown for testing purposes');
-    } catch (error) {
-        if (error && error.stack) {
-            browserStackLog(error.stack);
-        }
-    }
     const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
     cy.window().then(async (win) => {
         let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
