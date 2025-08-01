@@ -14,7 +14,11 @@ const HttpsProxyAgent = require('https-proxy-agent');
 
 const browserStackLog = (message) => {
     // if (!Cypress.env('BROWSERSTACK_LOGS')) return;
-    cy.task('browserstack_log', message);
+    if (typeof cy === 'undefined') {
+      console.warn('Cypress is not defined. Ensure that this code is running in a Cypress environment.');
+    } else {
+      cy.task('browserstack_log', message);
+    }
   }
 
 exports.checkAccessibilityPlatform = (user_config) => {
@@ -297,7 +301,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
           console.log(`fileName123: ${fileName}`);
           sendData(`bstack-${fileName}`);
           
-          if(['e2e.js', 'e2e.ts', 'component.ts', 'component.js'].includes(fileName)) {
+          if(['e2e.js', 'e2e.ts', 'component.ts', 'component.js'].includes(fileName) && !file.includes('node_modules')) {
             console.log(`Adding accessibility event listeners to ${file}`);
             sendData(`Adding accessibility event listeners to ${file}`);
             

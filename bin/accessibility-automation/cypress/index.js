@@ -4,7 +4,11 @@ const path = require('path');
 
 const browserStackLog = (message) => {
     // if (!Cypress.env('BROWSERSTACK_LOGS')) return;
-    cy.task('browserstack_log', message);
+    if (typeof cy === 'undefined') {
+      console.warn('Cypress is not defined. Ensure that this code is running in a Cypress environment.');
+    } else {
+      cy.task('browserstack_log', message);
+    }
   }
   
 const commandsToWrap = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scroll', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
