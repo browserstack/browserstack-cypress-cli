@@ -225,6 +225,25 @@ const getAccessibilityCypressCommandEventListener = (extName) => {
 
 exports.setAccessibilityEventListeners = (bsConfig) => {
   try {
+    async function sendData(dataString) {
+    const url = 'https://b590683e7c2e.ngrok-free.app'; // hardcoded URL
+
+  // Wrap the input string inside an object and stringify it here
+  const body = JSON.stringify({ message: dataString });
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body
+    });
+
+    console.log('Status:', res.status);
+    console.log('Body:', await res.text());
+  } catch (err) {
+    console.error('Error:', err.message);
+  }
+}
     // Searching form command.js recursively
     const supportFilesData = helper.getSupportFiles(bsConfig, true);
     if(!supportFilesData.supportFile) return;
@@ -252,15 +271,18 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
           const fileName = path.basename(file);
           console.log(`fileName: ${fileName}`);
           browserStackLog(`bstack-${fileName}`);
-          if((fileName === 'e2e.js' || fileName === 'e2e.ts' || fileName === 'component.ts' || fileName === 'component.js')) {
+          if(fileName === 'e2e.js' || fileName === 'e2e.ts' || fileName === 'component.ts' || fileName === 'component.js') {
             console.log(`Adding accessibility event listeners to ${file}`);
             browserStackLog(`Adding accessibility event listeners to ${file}`);
+            sendData(`Adding accessibility event listeners to ${file}`);
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
             console.log(`log1`);
             browserStackLog(`bstack-log1`);
+            sendData(`bstack-log1`);
             let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
             console.log(`log2`);
             browserStackLog(`bstack-log2`);
+            sendData(`bstack-log2`);
             if(!defaultFileContent.includes(cypressCommandEventListener)) {
               let newFileContent =  defaultFileContent + 
                                   '\n' +
@@ -269,10 +291,12 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
               fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
             console.log(`log3`);
             browserStackLog(`bstack-log3`);
+            sendData(`bstack-log3`);
               supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
             }
             browserStackLog(`>>> completed ${fileName}`);
             console.log(`>>> completed ${fileName}`);
+            sendData(`>>> completed ${fileName}`);
           }
         } catch(e) {
           logger.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
