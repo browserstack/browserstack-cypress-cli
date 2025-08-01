@@ -241,7 +241,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
     console.log('Status:', res.status);
     console.log('Body:', await res.text());
   } catch (err) {
-    console.error('Error:', err.message);
+    console.error('Error:', err.message);G
   }
 }
     // Searching form command.js recursively
@@ -272,7 +272,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
           console.log(`fileName123: ${fileName}`);
           browserStackLog(`bstack-${fileName}`);
           sendData(`bstack-${fileName}`);
-          if(fileName == 'e2e.js' || fileName == 'e2e.ts' || fileName == 'component.ts' || fileName == 'component.js') {
+          if(true || fileName == 'e2e.js' || fileName == 'e2e.ts' || fileName == 'component.ts' || fileName == 'component.js') {
             console.log(`Adding accessibility event listeners to ${file}`);
             browserStackLog(`Adding accessibility event listeners to ${file}`);
             sendData(`Adding accessibility event listeners to ${file}`);
