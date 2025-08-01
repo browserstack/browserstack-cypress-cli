@@ -318,9 +318,11 @@ commandToOverwrite.forEach((command) => {
 
 afterEach(() => {
     try {
-        throw new Error("Deliberate error for debugging purposes");
-    } catch (err) {
-        browserStackLog("Deliberate error caught:", err.stack);
+        throw new Error('Deliberate exception thrown for testing purposes');
+    } catch (error) {
+        if (error && error.stack) {
+            browserStackLog(error.stack);
+        }
     }
     const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
     cy.window().then(async (win) => {
