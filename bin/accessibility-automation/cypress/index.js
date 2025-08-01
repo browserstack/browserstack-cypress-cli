@@ -1,15 +1,10 @@
-const fs = require('fs');
-const path = require('path');
+
 /* Event listeners + custom commands for Cypress */
 
 const browserStackLog = (message) => {
-    // if (!Cypress.env('BROWSERSTACK_LOGS')) return;
-    if (typeof cy === 'undefined') {
-      console.warn('Cypress is not defined. Ensure that this code is running in a Cypress environment.');
-    } else {
+    if (!Cypress.env('BROWSERSTACK_LOGS')) return;
       cy.task('browserstack_log', message);
     }
-  }
   
 const commandsToWrap = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scroll', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
 // scroll is not a default function in cypress.
@@ -324,14 +319,6 @@ commandToOverwrite.forEach((command) => {
 
 afterEach(() => {
     
-    try {
-        throw new Error('Deliberate exception thrown for testing purposes');
-    } catch (error) {
-        if (error && error.stack) {
-            browserStackLog(error.stack);
-        }
-    }
-
     const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
     cy.window().then(async (win) => {
         let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
