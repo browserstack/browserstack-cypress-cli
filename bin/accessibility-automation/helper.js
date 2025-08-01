@@ -265,18 +265,35 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
       browserStackLog(`Inside isPattern`);
       
       try {
-        const defaultFileContent = fs.readFileSync(supportFilesData.supportFile, {encoding: 'utf-8'});
-        let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(supportFilesData.supportFile));
-        
-        if(!defaultFileContent.includes(cypressCommandEventListener)) {
-          let newFileContent = defaultFileContent + 
-                              '\n' +
-                              cypressCommandEventListener +
-                              '\n';
-          // Fixed: use supportFilesData.supportFile instead of undefined 'file'
-          fs.writeFileSync(supportFilesData.supportFile, newFileContent, {encoding: 'utf-8'});
-          supportFileContentMap[supportFilesData.supportFile] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
-        }
+            const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
+            console.log(`log1`);
+            sendData(`bstack-log1`);
+            
+            let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
+            console.log(`log2`);
+            sendData(`bstack-log2`);
+            
+            // Add debugging to understand why the condition fails
+            const alreadyIncludes = defaultFileContent.includes(cypressCommandEventListener);
+            console.log(`File ${file} already includes accessibility listener: ${alreadyIncludes}`);
+            console.log(`Looking for: ${cypressCommandEventListener}`);
+            console.log(`In content (first 500 chars): ${defaultFileContent.substring(0, 500)}`);
+            sendData(`bstack-already-includes-${alreadyIncludes}`);
+            
+            if(!alreadyIncludes) {
+              let newFileContent = defaultFileContent + 
+                                  '\n' +
+                                  cypressCommandEventListener +
+                                  '\n';
+              fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
+              console.log(`log3`);
+              browserStackLog(`bstack-log3`);
+              sendData(`bstack-log3`);
+              supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
+            } else {
+              console.log(`Skipping ${file} - accessibility listener already present`);
+              sendData(`bstack-skipped-${path.basename(file)}`);
+            }
       } catch(error) {
         console.log(`>>> Unable to modify file contents for ${supportFilesData.supportFile} to set event listeners with error ${error}`);
         sendData(`BROKEN`);
