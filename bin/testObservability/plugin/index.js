@@ -7,18 +7,22 @@ const browserstackTestObservabilityPlugin = (on, config, callbacks) => {
 
   on('task', {
     test_observability_log(log) {
+      console.log('test_observability_log', log);
       ipc.of.browserstackTestObservability.emit(IPC_EVENTS.LOG, log);
       return null;
     },
     test_observability_command(commandObj) {
+      console.log('test_observability_command', commandObj);
       ipc.of.browserstackTestObservability.emit(IPC_EVENTS.COMMAND, commandObj);
       return null;
     },
     test_observability_platform_details(platformObj) {
+      console.log('test_observability_platform_details', platformObj);
       ipc.of.browserstackTestObservability.emit(IPC_EVENTS.PLATFORM_DETAILS, platformObj);
       return null;
     },
     test_observability_step(log) {
+      console.log('test_observability_step', log);
       ipc.of.browserstackTestObservability.emit(IPC_EVENTS.CUCUMBER, log);
       return null;
     }

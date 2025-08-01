@@ -468,6 +468,7 @@ exports.getHooksForTest = (test) => {
   ['_beforeAll','_afterAll','_beforeEach','_afterEach'].forEach(hookType => {
     let hooks = test.parent[hookType] || []
     hooks.forEach(testHook => {
+      this.debugOnConsole(`[getHooksForTest] Hook ${util.format(testHook)} with title ${testHook.title} and analyticsId ${testHook.hookAnalyticsId}`);
       if(testHook.hookAnalyticsId) hooksArr.push(testHook.hookAnalyticsId);
     })
   });
@@ -479,6 +480,7 @@ exports.mapTestHooks = (test) => {
   ['_beforeAll','_afterAll','_beforeEach','_afterEach'].forEach(hookType => {
     let hooks = test.parent[hookType] || []
     hooks.forEach(testHook => {
+      this.debugOnConsole(`[mapTestHooks] Hook ${util.format(testHook)} with title ${testHook.title} and analyticsId ${testHook.hookAnalyticsId}`);
       if(!testHook.hookAnalyticsId) {
         testHook.hookAnalyticsId = uuidv4();
       } else if(testHook.markedStatus && hookType == '_afterEach') {
@@ -523,6 +525,9 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
 }
 
 exports.uploadEventData = async (eventData, run=0) => {
+
+
+  this.debugOnConsole('event data is ' + util.format(eventData))
   
   const requestQueueHandler = require('./requestQueueHandler');
   exports.debugOnConsole(`[uploadEventData] ${eventData.event_type}`);
@@ -925,7 +930,7 @@ exports.runCypressTestsLocally = (bsConfig, args, rawArgs) => {
     logger.info(`Running npx cypress run ${getReRunSpecs(rawArgs.slice(1)).join(' ')} ${getLocalSessionReporter().join(' ')}`);
     const cypressProcess = spawn(
       'npx',
-      ['cypress', 'run', ...getReRunSpecs(rawArgs.slice(1)), ...getLocalSessionReporter()],
+      ['cypress', 'run', '--headed', ...getReRunSpecs(rawArgs.slice(1)), ...getLocalSessionReporter()],
       { stdio: 'inherit', cwd: process.cwd(), env: process.env, shell: true }
     );
     cypressProcess.on('close', async (code) => {
