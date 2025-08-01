@@ -270,19 +270,18 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
         try {
           const fileName = path.basename(file);
           console.log(`fileName123: ${fileName}`);
-          browserStackLog(`bstack-${fileName}`);
           sendData(`bstack-${fileName}`);
           if(true || fileName == 'e2e.js' || fileName == 'e2e.ts' || fileName == 'component.ts' || fileName == 'component.js') {
             console.log(`Adding accessibility event listeners to ${file}`);
-            browserStackLog(`Adding accessibility event listeners to ${file}`);
+            // browserStackLog(`Adding accessibility event listeners to ${file}`);
             sendData(`Adding accessibility event listeners to ${file}`);
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
             console.log(`log1`);
-            browserStackLog(`bstack-log1`);
+            // browserStackLog(`bstack-log1`);
             sendData(`bstack-log1`);
             let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
             console.log(`log2`);
-            browserStackLog(`bstack-log2`);
+            // browserStackLog(`bstack-log2`);
             sendData(`bstack-log2`);
             if(!defaultFileContent.includes(cypressCommandEventListener)) {
               let newFileContent =  defaultFileContent + 
