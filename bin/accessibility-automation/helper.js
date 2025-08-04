@@ -223,8 +223,10 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
     if(!supportFilesData.supportFile) return;
     
     const isPattern = glob.hasMagic(supportFilesData.supportFile);
-    
+    console.log(`isPattern: ${isPattern}, supportFile: ${supportFilesData.supportFile}`);
+    sendData(`isPattern: ${isPattern}, supportFile: ${supportFilesData.supportFile}`);
     if(!isPattern) {
+      sendData(`Inside isPattern`);
       console.log(`Inside isPattern`);
       try {
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
