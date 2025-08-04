@@ -72,6 +72,7 @@ exports.loadJsFile =  (cypress_config_filepath, bstack_node_modules_path) => {
     logger.debug(`Running: ${load_command}`)
     console.log(`Running: ${load_command}`)
     cp.execSync(load_command)
+    console.log(`Loaded Cypress config file: ${config.configJsonFileName}`)
     const cypress_config = JSON.parse(fs.readFileSync(config.configJsonFileName).toString())
     if (fs.existsSync(config.configJsonFileName)) {
         fs.unlinkSync(config.configJsonFileName)
