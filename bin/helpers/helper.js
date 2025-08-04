@@ -354,10 +354,12 @@ exports.getSupportFiles = (bsConfig, isA11y) => {
   let userSupportFile = null;
   try {
     const completeCypressConfigFile = readCypressConfigFile(bsConfig)
+    console.log(`Complete Cypress config file: ${JSON.stringify(completeCypressConfigFile)}`);
     let cypressConfigFile = {};
     if (!utils.isUndefined(completeCypressConfigFile)) {
       cypressConfigFile = !utils.isUndefined(completeCypressConfigFile.default) ? completeCypressConfigFile.default : completeCypressConfigFile
     }
+    console.log(`Cypress config file: ${JSON.stringify(cypressConfigFile)}`);
     userSupportFile = cypressConfigFile.e2e?.supportFile !== null ? cypressConfigFile.e2e?.supportFile : cypressConfigFile.component?.supportFile !== null ? cypressConfigFile.component?.supportFile : cypressConfigFile.supportFile;
     if(userSupportFile == false && extension) {
       const supportFolderPath = path.join(process.cwd(), 'cypress', 'support');
@@ -384,13 +386,16 @@ exports.getSupportFiles = (bsConfig, isA11y) => {
         supportFile = process.env[envVar];
       } else {
         /* Single file / glob pattern */
+        console.log(`Using user defined support file: ${userSupportFile}`);
         supportFile = userSupportFile;
       }
     } else if(Array.isArray(userSupportFile)) {
+      console.log(`Using user defined support files123: ${userSupportFile}`);
       supportFile = userSupportFile[0];
     }
   } catch (err) {}
   if(supportFile && supportFile[0] != '/') supportFile = '/' + supportFile;
+  console.log(`Final support file: ${supportFile}`);
   return {
     supportFile,
     cleanupParams: Object.keys(cleanupParams).length ? cleanupParams : null
