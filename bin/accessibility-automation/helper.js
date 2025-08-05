@@ -227,7 +227,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
     if(!isPattern) {
       console.log(`Inside isPattern`);
       try {
-            file = supportFilesData.supportFile;
+            file = process.cwd() + supportFilesData.supportFile;
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
             let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
             const alreadyIncludes = defaultFileContent.includes(cypressCommandEventListener);
