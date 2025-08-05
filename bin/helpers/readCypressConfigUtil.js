@@ -70,22 +70,16 @@ exports.loadJsFile =  (cypress_config_filepath, bstack_node_modules_path) => {
         load_command = `set NODE_PATH=${bstack_node_modules_path}&& node "${require_module_helper_path}" "${cypress_config_filepath}"`
     }
     logger.debug(`Running: ${load_command}`)
-    console.log(`Running: ${load_command}`)
     cp.execSync(load_command)
-    console.log(`Loaded Cypress config file: ${config.configJsonFileName}`)
-    console.log('Content of config file:', fs.readFileSync(config.configJsonFileName, 'utf8'))
     const fileContent = fs.readFileSync(config.configJsonFileName).toString();
-    console.log('Content of config file2:', fileContent);
     const cypress_config = JSON.parse(fileContent);
     if (fs.existsSync(config.configJsonFileName)) {
         fs.unlinkSync(config.configJsonFileName)
     }
-    console.log('Loaded Cypress config:', cypress_config)
     return cypress_config
 }
 
 exports.readCypressConfigFile = (bsConfig) => {
-    console.log('Reading Cypress config file:', JSON.stringify(bsConfig));
     const cypress_config_filepath = path.resolve(bsConfig.run_settings.cypressConfigFilePath)
     try {
         const cypress_config_filename = bsConfig.run_settings.cypress_config_filename
@@ -93,13 +87,10 @@ exports.readCypressConfigFile = (bsConfig) => {
         const conf_lang = this.detectLanguage(cypress_config_filename)
 
         logger.debug(`cypress config path: ${cypress_config_filepath}`);
-        console.log(`cypress config path: ${cypress_config_filepath}`);
 
         if (conf_lang == 'js' || conf_lang == 'cjs') {
-            console.log('Detected config language:', conf_lang)
             return this.loadJsFile(cypress_config_filepath, bstack_node_modules_path)
         } else if (conf_lang === 'ts') {
-            console.log('Detected config language:', conf_lang)
             const compiled_cypress_config_filepath = this.convertTsConfig(bsConfig, cypress_config_filepath, bstack_node_modules_path)
             return this.loadJsFile(compiled_cypress_config_filepath, bstack_node_modules_path)
         }
@@ -107,7 +98,6 @@ exports.readCypressConfigFile = (bsConfig) => {
         const errorMessage = `Error while reading cypress config: ${error.message}`
         const errorCode = 'cypress_config_file_read_failed'
         logger.error(errorMessage)
-        console.log("error:", errorMessage)
         utils.sendUsageReport(
             bsConfig,
             null,
@@ -123,6 +113,5 @@ exports.readCypressConfigFile = (bsConfig) => {
         if (fs.existsSync(complied_js_dir)) {
             fs.rmdirSync(complied_js_dir, { recursive: true })
         }
-        console.log('Cleaned up compiled JS directory:', complied_js_dir)
     }
 }
