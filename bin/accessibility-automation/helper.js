@@ -244,9 +244,10 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
     }
     
     // Build the correct glob pattern
+    const cwd_path = process.cwd();
     const globPattern = supportFilesData.supportFile.startsWith('/') 
-      ? process.cwd() + supportFilesData.supportFile 
-      : path.resolve(process.cwd(),supportFilesData.supportFile);
+      ? cwd_path + supportFilesData.supportFile 
+      : path.resolve(cwd_path,supportFilesData.supportFile);
     
     glob(globPattern, {}, (err, files) => {
       if(err) {
