@@ -223,28 +223,23 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
     if(!supportFilesData.supportFile) return;
     
     const isPattern = glob.hasMagic(supportFilesData.supportFile);
-    console.log(`isPattern: ${isPattern}, supportFile: ${supportFilesData.supportFile}`);
     if(!isPattern) {
-      console.log(`Inside isPattern`);
+      console.log(`Using user defined support file: ${supportFilesData.supportFile}`);
       try {
             file = process.cwd() + supportFilesData.supportFile;
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
             let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
             const alreadyIncludes = defaultFileContent.includes(cypressCommandEventListener);
-            console.log(`alreadyIncludes: ${alreadyIncludes}, file: ${file}`);
             if(!alreadyIncludes) {
               let newFileContent = defaultFileContent + 
                                   '\n' +
                                   cypressCommandEventListener +
                                   '\n';
-              console.log(`New file content for ${file}: ${newFileContent}`);
               fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
               supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
             }
           } catch(e) {
-
-                logger.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
-                console.log(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, e);
+              logger.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
             }
     }
     
