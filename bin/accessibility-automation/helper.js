@@ -225,6 +225,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
     const isPattern = glob.hasMagic(supportFilesData.supportFile);
     if(!isPattern) {
       console.log(`Using user defined support file: ${supportFilesData.supportFile}`);
+      let file;
       try {
             file = process.cwd() + supportFilesData.supportFile;
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
@@ -245,7 +246,6 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
     }
     
     const globPattern = process.cwd() + supportFilesData.supportFile;
-    console.log(`Using glob pattern to find support files: ${globPattern}`);
     glob(globPattern, {}, (err, files) => {
       if(err) {
         logger.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
@@ -255,31 +255,25 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
       files.forEach(file => {
         try {
           const fileName = path.basename(file);
-          console.log(`Found support file: ${file}`);
-          console.log(`File name: ${fileName}`);
           if(['e2e.js', 'e2e.ts', 'component.ts', 'component.js'].includes(fileName) && !file.includes('node_modules')) {
         
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
             let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
-            console.log(`Cypress command event listener: ${cypressCommandEventListener}`);
             if(!defaultFileContent.includes(cypressCommandEventListener)) {
               let newFileContent = defaultFileContent + 
                                   '\n' +
                                   cypressCommandEventListener +
                                   '\n';
               fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
-              console.log(`Updated file content for ${file}: ${newFileContent}`);
               supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
             }
           }
         } catch(e) {
-          console.log(`Error updating file content for ${file}: ${e}`);
           logger.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
         }
       });
     });
   } catch(e) {
-    console.log(`Error updating file content for2 ${file}: ${e}`);
     logger.debug(`Unable to parse support files to set event listeners with error ${e}`, true, e);
   }
 }
