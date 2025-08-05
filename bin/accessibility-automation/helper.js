@@ -231,6 +231,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
             let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
             const alreadyIncludes = defaultFileContent.includes(cypressCommandEventListener);
+            console.log(`alreadyIncludes: ${alreadyIncludes}, file: ${file}`);
             if(!alreadyIncludes) {
               let newFileContent = defaultFileContent + 
                                   '\n' +
