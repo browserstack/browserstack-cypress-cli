@@ -241,13 +241,9 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
           } catch(e) {
               logger.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
             }
+      return;      
     }
     
-    // Build the correct glob pattern
-    // const globPattern = supportFilesData.supportFile.startsWith('/') 
-    //   ?  process.cwd() + supportFilesData.supportFile 
-    //   : path.resolve(process.cwd(), supportFilesData.supportFile);
-
     const globPattern = process.cwd() + supportFilesData.supportFile;
     console.log(`Using glob pattern to find support files: ${globPattern}`);
     glob(globPattern, {}, (err, files) => {
