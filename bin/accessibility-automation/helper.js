@@ -227,6 +227,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
     if(!isPattern) {
       console.log(`Inside isPattern`);
       try {
+            file = supportFilesData.supportFile;
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
             let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
             const alreadyIncludes = defaultFileContent.includes(cypressCommandEventListener);
@@ -235,6 +236,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
                                   '\n' +
                                   cypressCommandEventListener +
                                   '\n';
+              console.log(`New file content for ${file}: ${newFileContent}`);
               fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
               supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
             }
