@@ -8,6 +8,7 @@ let eventsQueue = [];
 let testRunStarted = false;
 
 const browserStackLog = (message) => {
+
   if (!Cypress.env('BROWSERSTACK_LOGS')) return;
   cy.task('browserstack_log', message);
 }
@@ -55,8 +56,6 @@ Cypress.on('command:start', (command) => {
     },
     options: { log: false }
   });
-  browserStackLog(`Command started: with args: ${util.format(Cypress.mocha?.getRunner()?.suite?.ctx?.currentTest?.title)}}`);
-  // browserStackLog(`Command started: ${util.format(command.attributes)} with args: ${util.format(Cypress.mocha)}}`);
   /* Send platform details */
   eventsQueue.push({
     task: 'test_observability_platform_details',

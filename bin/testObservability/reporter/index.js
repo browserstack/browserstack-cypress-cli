@@ -255,8 +255,7 @@ class MyReporter {
     }
   }
 
-  uploadTestSteps = async (shouldClearCurrentSteps = true, cypressSteps = null) => {
-    console.log('uploading test steps');
+  uploadTestSteps = async (shouldClearCurrentSteps = true, cypressSteps = null) => {    
     const currentTestSteps = cypressSteps ? cypressSteps : JSON.parse(JSON.stringify(this.currentTestSteps));
     /* TODO - Send as test logs */
     const allStepsAsLogs = [];
@@ -352,8 +351,6 @@ class MyReporter {
       }
 
       const { os, os_version } = await getOSDetailsFromSystem(process.env.observability_product);
-       debugOnConsole(`${process.env.observability_integration} is integration env`);
-       debugOnConsole(`platformdetails map is ${util.format(this.platformDetailsMap)} ${process.pid}`);
       if(process.env.observability_integration) {
         testData = {...testData, integrations: {
           [process.env.observability_integration || 'local_grid' ]: {
@@ -368,7 +365,6 @@ class MyReporter {
           }
         }};
       } else if(this.platformDetailsMap[process.pid] && this.platformDetailsMap[process.pid][test.title]) {
-        debugOnConsole(`Platform details found for test title: ${test.title}`);
         const {browser, platform} = this.platformDetailsMap[process.pid][test.title];
         testData = {...testData, integrations: {
           'local_grid': {
@@ -585,7 +581,6 @@ class MyReporter {
   }
 
   cypressPlatformDetailsListener = async({testTitle, browser, platform, cypressVersion}) => {
-    debugOnConsole(`[MOCHA EVENT] cypressPlatformDetailsListener for testTitle: ${testTitle} ${process.env.observability_integration} ${process.pid}`);
     if(!process.env.observability_integration) {
       this.platformDetailsMap[process.pid] = this.platformDetailsMap[process.pid] || {};
       if(testTitle) this.platformDetailsMap[process.pid][testTitle] = { browser, platform };
