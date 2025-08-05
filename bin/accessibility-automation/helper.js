@@ -242,8 +242,10 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
               supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
             }
           } catch(e) {
-            logger.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
-          }
+
+                logger.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
+                console.log(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, e);
+            }
     }
     
     // Build the correct glob pattern
