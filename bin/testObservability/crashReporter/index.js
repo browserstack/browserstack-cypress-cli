@@ -10,7 +10,7 @@ const utils = require('../../helpers/utils');
 const { API_URL, consoleHolder } = require('../helper/constants');
 
 /* Below global methods are added here to remove cyclic dependency with helper.js, refactor later */
-const httpsKeepAliveAgent = new https.Agent({
+const httpsKeepAliveAgent = new http.Agent({
   keepAlive: true,
   timeout: 60000,
   maxSockets: 2,

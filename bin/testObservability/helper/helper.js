@@ -58,14 +58,14 @@ exports.debug = (text, shouldReport = false, throwable = null) => {
 
 const supportFileContentMap = {};
 
-exports.httpsKeepAliveAgent = new https.Agent({
+exports.httpsKeepAliveAgent = new http.Agent({
   keepAlive: true,
   timeout: 60000,
   maxSockets: 2,
   maxTotalSockets: 2
 });
 
-const httpsScreenshotsKeepAliveAgent = new https.Agent({
+const httpsScreenshotsKeepAliveAgent = new http.Agent({
   keepAlive: true,
   timeout: 60000,
   maxSockets: 2,
@@ -362,8 +362,10 @@ const setCrashReportingConfig = (bsConfig, bsConfigPath) => {
 exports.launchTestSession = async (user_config, bsConfigPath) => {
   setCrashReportingConfig(user_config, bsConfigPath);
 
-  const obsUserName = user_config["auth"]["username"];
-  const obsAccessKey = user_config["auth"]["access_key"];
+  // const obsUserName = user_config["auth"]["username"];
+  // const obsAccessKey = user_config["auth"]["access_key"];
+  const obsUserName = "rahulsingh_1XxuwZ";
+  const obsAccessKey = "qzEZftSQmD1wuFAZWGTo";
 
   const BSTestOpsToken = `${obsUserName || ''}:${obsAccessKey || ''}`;
   if(BSTestOpsToken === '') {
