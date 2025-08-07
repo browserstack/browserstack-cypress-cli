@@ -333,6 +333,7 @@ exports.setCrashReportingConfigFromReporter = (credentialsStr, bsConfigPath, cyp
   console.log(`Setting Crash Reporting Config with bsConfig: ${JSON.stringify(bsConfig)}`);  
   try {
     const browserstackConfigFile = utils.readBsConfigJSON(bsConfigPath);
+    
     const cypressConfigFile = getCypressConfigFileContent(null, cypressConfigPath);
 
     if(!credentialsStr) {
@@ -349,7 +350,10 @@ exports.setCrashReportingConfigFromReporter = (credentialsStr, bsConfigPath, cyp
 
 const setCrashReportingConfig = (bsConfig, bsConfigPath) => {
   try {
+    console.log(`Setting Crash Reporting Config with bsConfigPath: ${bsConfigPath}`);
     const browserstackConfigFile = utils.readBsConfigJSON(bsConfigPath);
+    console.log(`checking the type of bsConfig: ${typeof bsConfig}`);
+
     const cypressConfigFile = getCypressConfigFileContent(bsConfig, null);
     const credentialsStr = JSON.stringify({
       username: bsConfig["auth"]["username"],
