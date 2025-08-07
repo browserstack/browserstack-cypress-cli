@@ -532,6 +532,7 @@ module.exports = function run(args, rawArgs) {
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
     console.log(`now reading using readBsConfigJSON in catch block for validateBstackJson`);
     let bsJsonData = utils.readBsConfigJSON(bsConfigPath);
+    console.log(`checking the type of bsJsonData with main logic: ${typeof bsJsonData}`);
     utils.sendUsageReport(bsJsonData, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), null, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;
   }).finally(function(){
