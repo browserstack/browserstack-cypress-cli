@@ -1522,17 +1522,17 @@ exports.setOtherConfigs = (bsConfig, args) => {
 exports.readBsConfigJSON = (bsConfigPath) => {
   try {
     fs.accessSync(bsConfigPath, fs.constants.R_OK);
-    return fs.readFileSync(bsConfigPath, 'utf-8');
-    // console.log(`configContent: ${configContent}`);
-    // try {
-    //   const bsConfig = JSON.parse(configContent);
-    //   const normalizedBsConfig = exports.normalizeTestReportingConfig(bsConfig);
-    //   console.log(`normalizedBsConfig: ${JSON.stringify(normalizedBsConfig)}`);
-    //   return JSON.stringify(normalizedBsConfig);
-    // } catch (err) {
-    //   logger.error(`Error parsing JSON from ${bsConfigPath}:`, err);
-    //   return configContent;
-    // }
+    const configContent = fs.readFileSync(bsConfigPath, 'utf-8');
+    console.log(`configContent: ${configContent}`);
+    try {
+      const bsConfig = JSON.parse(configContent);
+      const normalizedBsConfig = exports.normalizeTestReportingConfig(bsConfig);
+      console.log(`normalizedBsConfig: ${JSON.stringify(normalizedBsConfig)}`);
+      return JSON.stringify(normalizedBsConfig);
+    } catch (err) {
+      logger.error(`Error parsing JSON from ${bsConfigPath}:`, err);
+      return null;
+    }
   } catch (err) {
     return null;
   }

@@ -353,6 +353,7 @@ const setCrashReportingConfig = (bsConfig, bsConfigPath) => {
     console.log(`Setting Crash Reporting Config with bsConfigPath: ${bsConfigPath}`);
     const browserstackConfigFile = utils.readBsConfigJSON(bsConfigPath);
     console.log(`checking the type of bsConfig: ${typeof bsConfig}`);
+    console.log(`printing username and acces_key from bsConfig: ${bsConfig["auth"]["username"]} : ${bsConfig["auth"]["access_key"]}`);
 
     const cypressConfigFile = getCypressConfigFileContent(bsConfig, null);
     const credentialsStr = JSON.stringify({
