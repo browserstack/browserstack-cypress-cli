@@ -12,7 +12,7 @@ const Mocha = requireModule('mocha');
 const Runnable = require('mocha/lib/runnable'); // need to handle as this isn't present in older mocha versions
 const { v4: uuidv4 } = require('uuid');
 
-const { IPC_EVENTS } = require('../helper/constants');
+const { IPC_EVENTS, TEST_REPORTING_ANALYTICS } = require('../helper/constants');
 const { startIPCServer } = require('../plugin/ipcServer');
 
 const HOOK_TYPES_MAP = {
@@ -88,6 +88,7 @@ class MyReporter {
       })
 
       .on(EVENT_HOOK_BEGIN, async (hook) => {
+        console.log(`checking testObservability is enabled in hook begin ${this.testObservability}`);
         debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_BEGIN`);
         if(this.testObservability == true) {
           if(!hook.hookAnalyticsId) {
@@ -511,7 +512,7 @@ class MyReporter {
         });
       }
     } catch(error) {
-      debug(`Exception in uploading log data to Observability with error : ${error}`, true, error);
+      debug(`Exception in uploading log data to ${TEST_REPORTING_ANALYTICS} with error : ${error}`, true, error);
     }
   }
 

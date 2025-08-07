@@ -27,7 +27,7 @@ const GLOBAL_MODULE_PATH = execSync('npm root -g').toString().trim();
 const { name, version } = require('../../../package.json');
 
 const { CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS } = require('../../helpers/constants');
-const { consoleHolder, API_URL, TEST_OBSERVABILITY_REPORTER, TEST_OBSERVABILITY_REPORTER_LOCAL } = require('./constants');
+const { consoleHolder, API_URL, TEST_OBSERVABILITY_REPORTER, TEST_OBSERVABILITY_REPORTER_LOCAL, TEST_REPORTING_ANALYTICS } = require('./constants');
 
 const ALLOWED_MODULES = [
   'cypress/package.json',
@@ -41,15 +41,17 @@ exports.pending_test_uploads = {
 };
 
 exports.debugOnConsole = (text) => {
+  console.log(`checking  if BROWSERSTACK_TEST_OBSERVABILITY_DEBUG is enabled in debugOnConsole: ${process.env.BROWSERSTACK_OBSERVABILITY_DEBUG}`);
   if ((process.env.BROWSERSTACK_OBSERVABILITY_DEBUG + '')  === "true" || 
       (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG + '') === "1") {
-    consoleHolder.log(`[ OBSERVABILITY ] ${text}`);
+    consoleHolder.log(`[ ${TEST_REPORTING_ANALYTICS} ] ${text}`);
   }
 }
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
+  console.log(`checking if BROWSERSTACK_OBSERVABILITY_DEBUG is enabled in debug 52: ${process.env.BROWSERSTACK_OBSERVABILITY_DEBUG}`);  
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
-    logger.info(`[ OBSERVABILITY ] ${text}`);
+    logger.info(`[ ${TEST_REPORTING_ANALYTICS} ] ${text}`);
   }
   if(shouldReport) {
     CrashReporter.getInstance().uploadCrashReport(text, throwable ? throwable && throwable.stack : null);
@@ -93,6 +95,7 @@ const supportFileCleanup = () => {
 exports.buildStopped = false;
 
 exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
+  console.log(`checking if testObservability session is active from printBuildLink ${this.isTestObservabilitySession()}`);
   if(!this.isTestObservabilitySession() || exports.buildStopped) return;
   exports.buildStopped = true;
   try {
@@ -326,6 +329,8 @@ const getCypressConfigFileContent = (bsConfig, cypressConfigPath) => {
 }
 
 exports.setCrashReportingConfigFromReporter = (credentialsStr, bsConfigPath, cypressConfigPath) => {
+  console.log(`Setting Crash Reporting Config with bsConfigPath: ${bsConfigPath}`);
+  console.log(`Setting Crash Reporting Config with bsConfig: ${JSON.stringify(bsConfig)}`);  
   try {
     const browserstackConfigFile = utils.readBsConfigJSON(bsConfigPath);
     const cypressConfigFile = getCypressConfigFileContent(null, cypressConfigPath);
@@ -513,15 +518,16 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
   } catch(error) {
     exports.debugOnConsole(`[Request Error] Error in sending request ${util.format(error)}`);
     if (error.response) {
-      exports.debug(`EXCEPTION IN ${kind} REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
+      exports.debug(`EXCEPTION IN ${kind} REQUEST TO ${TEST_REPORTING_ANALYTICS} : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
     } else {
-      exports.debug(`EXCEPTION IN ${kind} REQUEST TO TEST OBSERVABILITY : ${error.message || error}`, true, error);
+      exports.debug(`EXCEPTION IN ${kind} REQUEST TO ${TEST_REPORTING_ANALYTICS} : ${error.message || error}`, true, error);
     }
     exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - data.length);
   }
 }
 
 const RequestQueueHandler = require('./requestQueueHandler');
+const constants = require('../../helpers/constants');
 exports.requestQueueHandler = new RequestQueueHandler();
 
 exports.uploadEventData = async (eventData, run=0) => {
@@ -541,7 +547,7 @@ exports.uploadEventData = async (eventData, run=0) => {
 
   if (process.env.BS_TESTOPS_BUILD_COMPLETED === "true") {
     if(process.env.BS_TESTOPS_JWT == "null") {
-      exports.debug(`EXCEPTION IN ${log_tag} REQUEST TO TEST OBSERVABILITY : missing authentication token`);
+      exports.debug(`EXCEPTION IN ${log_tag} REQUEST TO ${TEST_REPORTING_ANALYTICS}: missing authentication token`);
       exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count-1);
       return {
         status: 'error',
@@ -586,9 +592,9 @@ exports.uploadEventData = async (eventData, run=0) => {
       } catch(error) {
         exports.debugOnConsole(`[Request Error] Error in sending request ${util.format(error)}`);
         if (error.response) {
-          exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
+          exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO ${TEST_REPORTING_ANALYTICS} : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
         } else {
-          exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO TEST OBSERVABILITY : ${error.message || error}`, true, error);
+          exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO ${TEST_REPORTING_ANALYTICS} : ${error.message || error}`, true, error);
         }
         exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - (event_api_url === 'api/v1/event' ? 1 : data.length));
         return {
@@ -598,7 +604,7 @@ exports.uploadEventData = async (eventData, run=0) => {
       }
     }
   } else if (run >= 5) {
-    exports.debug(`EXCEPTION IN ${log_tag} REQUEST TO TEST OBSERVABILITY : Build Start is not completed and ${log_tag} retry runs exceeded`);
+    exports.debug(`EXCEPTION IN ${log_tag} REQUEST TO ${TEST_REPORTING_ANALYTICS} : Build Start is not completed and ${log_tag} retry runs exceeded`);
     if(process.env.BS_TESTOPS_JWT != "null") exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count-1);
     return {
       status: 'error',
@@ -620,6 +626,9 @@ exports.setTestObservabilityFlags = (bsConfig) => {
   try {
     /* set default again but under try catch in case of wrong config */
     isTestObservabilitySession = utils.nonEmptyArray(bsConfig.run_settings.downloads) ? false : true;
+
+    console.log(`bsconfig from setTestObservabilityFlags: ${JSON.stringify(bsConfig)}`);
+    console.log(`bs test olly enabled from env: ${process.env.BROWSERSTACK_TEST_OBSERVABILITY}`);
 
     if(!utils.isUndefined(bsConfig["testObservability"])) isTestObservabilitySession = ( bsConfig["testObservability"] == true || bsConfig["testObservability"] == 1 );
     if(!utils.isUndefined(process.env.BROWSERSTACK_TEST_OBSERVABILITY)) isTestObservabilitySession = ( process.env.BROWSERSTACK_TEST_OBSERVABILITY == "true" || process.env.BROWSERSTACK_TEST_OBSERVABILITY == "1" );
@@ -646,6 +655,7 @@ exports.setTestObservabilityFlags = (bsConfig) => {
   process.env.BROWSERSTACK_TEST_OBSERVABILITY = isTestObservabilitySession;
   process.env.BROWSERSTACK_AUTOMATION = isBrowserstackInfra;
 
+  console.log(`final testObservability capability is set to in setTestPObservabilityFlag ${isTestObservabilitySession}`);
   return [isTestObservabilitySession, isBrowserstackInfra];
 }
 
@@ -664,7 +674,7 @@ exports.shouldReRunObservabilityTests = () => {
 exports.stopBuildUpstream = async () => {
   if (process.env.BS_TESTOPS_BUILD_COMPLETED === "true") {
     if(process.env.BS_TESTOPS_JWT == "null" || process.env.BS_TESTOPS_BUILD_HASHED_ID == "null") {
-      exports.debug('EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : Missing authentication token');
+      exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO ${TEST_REPORTING_ANALYTICS} : Missing authentication token`);
       return {
         status: 'error',
         message: 'Token/buildID is undefined, build creation might have failed'
@@ -694,9 +704,9 @@ exports.stopBuildUpstream = async () => {
         }
       } catch(error) {
         if (error.response) {
-          exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
+          exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO ${TEST_REPORTING_ANALYTICS} : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
         } else {
-          exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : ${error.message || error}`, true, error);
+          exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO ${TEST_REPORTING_ANALYTICS} : ${error.message || error}`, true, error);
         }
         return {
           status: 'error',
@@ -852,6 +862,7 @@ exports.resolveModule = (module) => {
 
 const getReRunSpecs = (rawArgs) => {
   let finalArgs = rawArgs;
+  console.log(`checking if testObservability is enabled in getRerun specs ${this.isTestObservabilitySession()}`);
   if (this.isTestObservabilitySession() && this.shouldReRunObservabilityTests()) {
     let startIdx = -1, numEle = 0;
     for(let idx=0; idx<rawArgs.length; idx++) {
@@ -870,6 +881,7 @@ const getReRunSpecs = (rawArgs) => {
 }
 
 const getLocalSessionReporter = () => {
+  console.log(`checking if testObservability is enabled getLocalSessionReporter ${this.isTestObservabilitySession()}`);  
   if(this.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
     return ['--reporter', TEST_OBSERVABILITY_REPORTER_LOCAL];
   } else {

@@ -7,7 +7,7 @@ const HttpsProxyAgent = require('https-proxy-agent');
 const logger = require("../../helpers/logger").winstonLogger;
 const utils = require('../../helpers/utils');
 
-const { API_URL, consoleHolder } = require('../helper/constants');
+const { API_URL, consoleHolder, TEST_REPORTING_ANALYTICS } = require('../helper/constants');
 
 /* Below global methods are added here to remove cyclic dependency with helper.js, refactor later */
 const httpsKeepAliveAgent = new https.Agent({
@@ -18,8 +18,9 @@ const httpsKeepAliveAgent = new https.Agent({
 });
 
 const debug = (text) => {
+  console.log(`checking if BROWSERSTACK_OBSERVABILITY_DEBUG is enabled: ${process.env.BROWSERSTACK_OBSERVABILITY_DEBUG}`);  
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
-    logger.info(`[ OBSERVABILITY ] ${text}`);
+    logger.info(`[ ${TEST_REPORTING_ANALYTICS} ] ${text}`);
   }
 }
 

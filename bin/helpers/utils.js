@@ -33,6 +33,8 @@ exports.validateBstackJson = (bsConfigPath) => {
     try {
       logger.info(`Reading config from ${bsConfigPath}`);
       let bsConfig = require(bsConfigPath);
+      bsConfig = exports.normalizeTestReportingConfig(bsConfig);
+      console.log(`BrowserStack config loaded after normalizing: ${JSON.stringify(bsConfig, null, 2)}`);
       resolve(bsConfig);
     } catch (e) {
       reject(
@@ -492,7 +494,7 @@ exports.setNodeVersion = (bsConfig, args) => {
 // specs can be passed via command line args as a string
 // command line args takes precedence over config
 exports.setUserSpecs = (bsConfig, args) => {
-
+  console.log(`checking if testObservability session is enabled setUserSpecs line 497: ${o11yHelpers.isTestObservabilitySession()}`);
   if(o11yHelpers.isBrowserstackInfra() && o11yHelpers.isTestObservabilitySession() && o11yHelpers.shouldReRunObservabilityTests()) {
     bsConfig.run_settings.specs = process.env.BROWSERSTACK_RERUN_TESTS;
     return;
@@ -1236,6 +1238,7 @@ exports.handleSyncExit = (exitCode, dashboard_url) => {
     syncCliLogger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
     syncCliLogger.info(dashboard_url);
   }
+  console.log(`checking if observability session is active from handleSyncExit ${o11yHelpers.isTestObservabilitySession()}`);
   if(o11yHelpers.isTestObservabilitySession()) {
     o11yHelpers.printBuildLink(true, exitCode);
   } else {
@@ -1499,7 +1502,7 @@ exports.splitStringByCharButIgnoreIfWithinARange = (str, splitChar, leftLimiter,
 
 // blindly send other passed configs with run_settings and handle at backend
 exports.setOtherConfigs = (bsConfig, args) => {
-
+  console.log(`checking if observability session is active from setOtherConfigs ${o11yHelpers.isTestObservabilitySession()}`);
   if(o11yHelpers.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
     bsConfig["run_settings"]["reporter"] = TEST_OBSERVABILITY_REPORTER;
     return;
@@ -1519,7 +1522,17 @@ exports.setOtherConfigs = (bsConfig, args) => {
 exports.readBsConfigJSON = (bsConfigPath) => {
   try {
     fs.accessSync(bsConfigPath, fs.constants.R_OK);
-    return fs.readFileSync(bsConfigPath, 'utf-8');
+    const configContent = fs.readFileSync(bsConfigPath, 'utf-8');
+    console.log(`configContent: ${configContent}`);
+    try {
+      const bsConfig = JSON.parse(configContent);
+      const normalizedBsConfig = exports.normalizeTestReportingConfig(bsConfig);
+      console.log(`normalizedBsConfig: ${JSON.stringify(normalizedBsConfig)}`);
+      return JSON.stringify(normalizedBsConfig);
+    } catch (err) {
+      logger.error(`Error parsing JSON from ${bsConfigPath}:`, err);
+      return configContent;
+    }
   } catch (err) {
     return null;
   }
@@ -1803,4 +1816,26 @@ exports.decodeJWTToken = (token) => {
     logger.err("Error in token decoding with error:", error.message);
     return undefined;
   }
+}
+
+exports.normalizeTestReportingEnvVars = () => {
+  if (!this.isUndefined(process.env.BROWSERSTACK_TEST_REPORTING)){
+    process.env.BROWSERSTACK_TEST_OBSERVABILITY = process.env.BROWSERSTACK_TEST_REPORTING;
+  }
+
+  if (!this.isUndefined(process.env.BROWSERSTACK_TEST_REPORTING_DEBUG)){
+    process.env.BROWSERSTACK_OBSERVABILITY_DEBUG = process.env.BROWSERSTACK_TEST_REPORTING_DEBUG;
+  }
+}
+
+exports.normalizeTestReportingConfig = (bsConfig) => {
+  if (!this.isUndefined(bsConfig["testReporting"])) {
+    bsConfig["testObservability"] = bsConfig["testReporting"];
+  }
+
+  if (!this.isUndefined(bsConfig["testReportingOptions"])) {
+    bsConfig["testObservabilityOptions"] = bsConfig["testReportingOptions"];
+  }
+
+  return bsConfig;
 }
