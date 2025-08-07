@@ -33,6 +33,9 @@ exports.validateBstackJson = (bsConfigPath) => {
     try {
       logger.info(`Reading config from ${bsConfigPath}`);
       let bsConfig = require(bsConfigPath);
+      // log bsConfg
+      logger.info(`BrowserStack config loaded: ${JSON.stringify(bsConfig, null, 2)}`);
+      console.log(`BrowserStack config loaded: ${JSON.stringify(bsConfig, null, 2)}`);
       resolve(bsConfig);
     } catch (e) {
       reject(
@@ -1517,8 +1520,12 @@ exports.setOtherConfigs = (bsConfig, args) => {
 }
 
 exports.readBsConfigJSON = (bsConfigPath) => {
+  logger.info(`Reading BrowserStack config file from in readBsConfigJSON ${bsConfigPath}`);
   try {
     fs.accessSync(bsConfigPath, fs.constants.R_OK);
+    console.log(`read data ${fs.readFileSync(bsConfigPath, 'utf-8')}`);
+    logger.info(fs.readFileSync(bsConfigPath, 'utf-8'));
+    // If the file is readable, return its content
     return fs.readFileSync(bsConfigPath, 'utf-8');
   } catch (err) {
     return null;

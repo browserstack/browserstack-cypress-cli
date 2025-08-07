@@ -59,6 +59,9 @@ module.exports = function run(args, rawArgs) {
   return utils.validateBstackJson(bsConfigPath).then(async function (bsConfig) {
     markBlockEnd('validateBstackJson');
     logger.debug('Completed browserstack.json validation');
+    console.log("bsConfig",bsConfig);
+    logger.info(`config loaded ${bsConfig}`);
+
     markBlockStart('setConfig');
     logger.debug('Started setting the configs');
 
@@ -524,6 +527,8 @@ module.exports = function run(args, rawArgs) {
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
+    logger.info(`Error while reading browserstack.json file: ${bsConfigPath}`);
+    logger.info(`now reading usinf readBsConfigJSON`);
     let bsJsonData = utils.readBsConfigJSON(bsConfigPath);
     utils.sendUsageReport(bsJsonData, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), null, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;

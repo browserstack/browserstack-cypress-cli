@@ -105,7 +105,7 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
         && process.env.BS_TESTOPS_BUILD_HASHED_ID != "null" 
         && process.env.BS_TESTOPS_BUILD_HASHED_ID != "undefined") {
           console.log();
-          logger.info(`Visit https://observability.browserstack.com/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID} to view build report, insights, and many more debugging information all at one place!\n`);
+          logger.info(`Visit https://automation.browserstack.com/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID} to view build report, insights, and many more debugging information all at one place!\n`);
       }
     } catch(err) {
       exports.debug('Build Not Found');
@@ -343,6 +343,10 @@ exports.setCrashReportingConfigFromReporter = (credentialsStr, bsConfigPath, cyp
 }
 
 const setCrashReportingConfig = (bsConfig, bsConfigPath) => {
+  exports.debug(`Setting Crash Reporting Config with bsConfigPath: ${bsConfigPath}`);
+  exports.debug(`Setting Crash Reporting Config with bsConfig: ${JSON.stringify(bsConfig)}`);
+  console.log(`Setting Crash Reporting Config with bsConfigPath: ${bsConfigPath}`);
+  console.log(`Setting Crash Reporting Config with bsConfig: ${JSON.stringify(bsConfig)}`);
   try {
     const browserstackConfigFile = utils.readBsConfigJSON(bsConfigPath);
     const cypressConfigFile = getCypressConfigFileContent(bsConfig, null);
