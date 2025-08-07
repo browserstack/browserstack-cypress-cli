@@ -18,6 +18,7 @@ const httpsKeepAliveAgent = new https.Agent({
 });
 
 const debug = (text) => {
+  console.log(`checking if BROWSERSTACK_OBSERVABILITY_DEBUG is enabled: ${process.env.BROWSERSTACK_OBSERVABILITY_DEBUG}`);
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
     logger.info(`[ OBSERVABILITY ] ${text}`);
   }

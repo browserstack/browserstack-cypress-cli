@@ -41,6 +41,7 @@ exports.pending_test_uploads = {
 };
 
 exports.debugOnConsole = (text) => {
+  console.log(`checking if BROWSERSTACK_OBSERVABILITY_DEBUG is enabled: ${process.env.BROWSERSTACK_OBSERVABILITY_DEBUG}`);
   if ((process.env.BROWSERSTACK_OBSERVABILITY_DEBUG + '')  === "true" || 
       (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG + '') === "1") {
     consoleHolder.log(`[ OBSERVABILITY ] ${text}`);
@@ -48,6 +49,7 @@ exports.debugOnConsole = (text) => {
 }
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
+  console.log(`checking if BROWSERSTACK_OBSERVABILITY_DEBUG is enabled: ${process.env.BROWSERSTACK_OBSERVABILITY_DEBUG}`);
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
     logger.info(`[ OBSERVABILITY ] ${text}`);
   }
@@ -93,6 +95,7 @@ const supportFileCleanup = () => {
 exports.buildStopped = false;
 
 exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
+  console.log(`checking if testObservability session is active from printBuildLink ${this.isTestObservabilitySession()}`);
   if(!this.isTestObservabilitySession() || exports.buildStopped) return;
   exports.buildStopped = true;
   try {
@@ -343,8 +346,6 @@ exports.setCrashReportingConfigFromReporter = (credentialsStr, bsConfigPath, cyp
 }
 
 const setCrashReportingConfig = (bsConfig, bsConfigPath) => {
-  exports.debug(`Setting Crash Reporting Config with bsConfigPath: ${bsConfigPath}`);
-  exports.debug(`Setting Crash Reporting Config with bsConfig: ${JSON.stringify(bsConfig)}`);
   console.log(`Setting Crash Reporting Config with bsConfigPath: ${bsConfigPath}`);
   console.log(`Setting Crash Reporting Config with bsConfig: ${JSON.stringify(bsConfig)}`);
   try {
@@ -650,6 +651,7 @@ exports.setTestObservabilityFlags = (bsConfig) => {
   process.env.BROWSERSTACK_TEST_OBSERVABILITY = isTestObservabilitySession;
   process.env.BROWSERSTACK_AUTOMATION = isBrowserstackInfra;
 
+  console.log(`final testObservability capability is set to ${isTestObservabilitySession}`);
   return [isTestObservabilitySession, isBrowserstackInfra];
 }
 
@@ -856,6 +858,7 @@ exports.resolveModule = (module) => {
 
 const getReRunSpecs = (rawArgs) => {
   let finalArgs = rawArgs;
+  console.log(`checking if testObservability is enabled ${this.isTestObservabilitySession()}`);
   if (this.isTestObservabilitySession() && this.shouldReRunObservabilityTests()) {
     let startIdx = -1, numEle = 0;
     for(let idx=0; idx<rawArgs.length; idx++) {
@@ -874,6 +877,7 @@ const getReRunSpecs = (rawArgs) => {
 }
 
 const getLocalSessionReporter = () => {
+  console.log(`checking if testObservability is enabled getLocalSessionReporter ${this.isTestObservabilitySession()}`);
   if(this.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
     return ['--reporter', TEST_OBSERVABILITY_REPORTER_LOCAL];
   } else {

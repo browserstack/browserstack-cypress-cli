@@ -40,7 +40,7 @@ const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileCon
 
 
 module.exports = function run(args, rawArgs) {
-
+  utils.normalizeTestReportingEnvVars();
   markBlockStart('preBuild');
   // set debug mode (--cli-debug)
   utils.setDebugMode(args);
@@ -60,7 +60,6 @@ module.exports = function run(args, rawArgs) {
     markBlockEnd('validateBstackJson');
     logger.debug('Completed browserstack.json validation');
     console.log("bsConfig",bsConfig);
-    logger.info(`config loaded ${bsConfig}`);
 
     markBlockStart('setConfig');
     logger.debug('Started setting the configs');
@@ -116,6 +115,7 @@ module.exports = function run(args, rawArgs) {
     utils.setBuildTags(bsConfig, args);
 
     // Send build start to Observability
+    console.log(`checking if testObservability session is enabled line 118: ${isTestObservabilitySession}`);
     if(isTestObservabilitySession) {
       await launchTestSession(bsConfig, bsConfigPath);
       utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
@@ -317,6 +317,7 @@ module.exports = function run(args, rawArgs) {
                 markBlockEnd('createBuild');
                 markBlockEnd('total');
                 utils.setProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
+                console.log(`checking if testObservability session is enabled line 320: ${isTestObservabilitySession}`);
                 if(isTestObservabilitySession) {
                   utils.setO11yProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
                 }
@@ -528,7 +529,7 @@ module.exports = function run(args, rawArgs) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
     logger.info(`Error while reading browserstack.json file: ${bsConfigPath}`);
-    logger.info(`now reading usinf readBsConfigJSON`);
+    console.log(`now reading usinf readBsConfigJSON`);
     let bsJsonData = utils.readBsConfigJSON(bsConfigPath);
     utils.sendUsageReport(bsJsonData, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), null, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;

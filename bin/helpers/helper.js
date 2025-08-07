@@ -21,6 +21,7 @@ const CrashReporter = require('../testObservability/crashReporter');
 const HttpsProxyAgent = require('https-proxy-agent');
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
+  console.log(`checking  if BROWSERSTACK_TEST_OBSERVABILITY_DEBUG is enabled: ${process.env.BROWSERSTACK_OBSERVABILITY_DEBUG}`);
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
     logger.info(`[ OBSERVABILITY ] ${text}`);
   }
@@ -279,6 +280,8 @@ exports.getCiInfo = () => {
 
 exports.getBuildDetails = (bsConfig, isO11y = false) => {
   const isTestObservabilityOptionsPresent = isO11y && !utils.isUndefined(bsConfig["testObservabilityOptions"]);
+  console.log(`isTestObservabilityOptionsPresent: ${isTestObservabilityOptionsPresent}`);
+  console.log(`bsConfig: ${JSON.stringify(bsConfig, null, 2)}`);
 
   let buildName = '',
       projectName = '',
