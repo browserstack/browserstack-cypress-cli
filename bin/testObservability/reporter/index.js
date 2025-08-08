@@ -88,7 +88,6 @@ class MyReporter {
       })
 
       .on(EVENT_HOOK_BEGIN, async (hook) => {
-        console.log(`checking testObservability is enabled in hook begin ${this.testObservability}`);
         debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_BEGIN`);
         if(this.testObservability == true) {
           if(!hook.hookAnalyticsId) {

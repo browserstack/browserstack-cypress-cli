@@ -41,7 +41,6 @@ exports.pending_test_uploads = {
 };
 
 exports.debugOnConsole = (text) => {
-  console.log(`checking  if BROWSERSTACK_TEST_OBSERVABILITY_DEBUG is enabled in debugOnConsole: ${process.env.BROWSERSTACK_OBSERVABILITY_DEBUG}`);
   if ((process.env.BROWSERSTACK_OBSERVABILITY_DEBUG + '')  === "true" || 
       (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG + '') === "1") {
     consoleHolder.log(`[ ${TEST_REPORTING_ANALYTICS} ] ${text}`);
@@ -49,7 +48,6 @@ exports.debugOnConsole = (text) => {
 }
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
-  console.log(`checking if BROWSERSTACK_OBSERVABILITY_DEBUG is enabled in debug 52: ${process.env.BROWSERSTACK_OBSERVABILITY_DEBUG}`);  
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
     logger.info(`[ ${TEST_REPORTING_ANALYTICS} ] ${text}`);
   }
@@ -95,7 +93,6 @@ const supportFileCleanup = () => {
 exports.buildStopped = false;
 
 exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
-  console.log(`checking if testObservability session is active from printBuildLink ${this.isTestObservabilitySession()}`);
   if(!this.isTestObservabilitySession() || exports.buildStopped) return;
   exports.buildStopped = true;
   try {
@@ -329,11 +326,8 @@ const getCypressConfigFileContent = (bsConfig, cypressConfigPath) => {
 }
 
 exports.setCrashReportingConfigFromReporter = (credentialsStr, bsConfigPath, cypressConfigPath) => {
-  console.log(`Setting Crash Reporting Config with bsConfigPath: ${bsConfigPath}`);
-  console.log(`Setting Crash Reporting Config with bsConfig: ${JSON.stringify(bsConfig)}`);  
   try {
     const browserstackConfigFile = utils.readBsConfigJSON(bsConfigPath);
-    
     const cypressConfigFile = getCypressConfigFileContent(null, cypressConfigPath);
 
     if(!credentialsStr) {
@@ -350,11 +344,7 @@ exports.setCrashReportingConfigFromReporter = (credentialsStr, bsConfigPath, cyp
 
 const setCrashReportingConfig = (bsConfig, bsConfigPath) => {
   try {
-    console.log(`Setting Crash Reporting Config with bsConfigPath: ${bsConfigPath}`);
     const browserstackConfigFile = utils.readBsConfigJSON(bsConfigPath);
-    console.log(`checking the type of bsConfig: ${typeof bsConfig}`);
-    console.log(`printing username and acces_key from bsConfig: ${bsConfig["auth"]["username"]} : ${bsConfig["auth"]["access_key"]}`);
-
     const cypressConfigFile = getCypressConfigFileContent(bsConfig, null);
     const credentialsStr = JSON.stringify({
       username: bsConfig["auth"]["username"],
@@ -532,7 +522,6 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
 }
 
 const RequestQueueHandler = require('./requestQueueHandler');
-const constants = require('../../helpers/constants');
 exports.requestQueueHandler = new RequestQueueHandler();
 
 exports.uploadEventData = async (eventData, run=0) => {
@@ -632,9 +621,6 @@ exports.setTestObservabilityFlags = (bsConfig) => {
     /* set default again but under try catch in case of wrong config */
     isTestObservabilitySession = utils.nonEmptyArray(bsConfig.run_settings.downloads) ? false : true;
 
-    console.log(`bsconfig from setTestObservabilityFlags: ${JSON.stringify(bsConfig)}`);
-    console.log(`bs test olly enabled from env: ${process.env.BROWSERSTACK_TEST_OBSERVABILITY}`);
-
     if(!utils.isUndefined(bsConfig["testObservability"])) isTestObservabilitySession = ( bsConfig["testObservability"] == true || bsConfig["testObservability"] == 1 );
     if(!utils.isUndefined(process.env.BROWSERSTACK_TEST_OBSERVABILITY)) isTestObservabilitySession = ( process.env.BROWSERSTACK_TEST_OBSERVABILITY == "true" || process.env.BROWSERSTACK_TEST_OBSERVABILITY == "1" );
     if(process.argv.includes('--disable-test-observability')) isTestObservabilitySession = false;
@@ -660,7 +646,6 @@ exports.setTestObservabilityFlags = (bsConfig) => {
   process.env.BROWSERSTACK_TEST_OBSERVABILITY = isTestObservabilitySession;
   process.env.BROWSERSTACK_AUTOMATION = isBrowserstackInfra;
 
-  console.log(`final testObservability capability is set to in setTestPObservabilityFlag ${isTestObservabilitySession}`);
   return [isTestObservabilitySession, isBrowserstackInfra];
 }
 
@@ -867,7 +852,6 @@ exports.resolveModule = (module) => {
 
 const getReRunSpecs = (rawArgs) => {
   let finalArgs = rawArgs;
-  console.log(`checking if testObservability is enabled in getRerun specs ${this.isTestObservabilitySession()}`);
   if (this.isTestObservabilitySession() && this.shouldReRunObservabilityTests()) {
     let startIdx = -1, numEle = 0;
     for(let idx=0; idx<rawArgs.length; idx++) {
@@ -886,7 +870,6 @@ const getReRunSpecs = (rawArgs) => {
 }
 
 const getLocalSessionReporter = () => {
-  console.log(`checking if testObservability is enabled getLocalSessionReporter ${this.isTestObservabilitySession()}`);  
   if(this.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
     return ['--reporter', TEST_OBSERVABILITY_REPORTER_LOCAL];
   } else {

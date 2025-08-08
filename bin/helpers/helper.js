@@ -22,7 +22,6 @@ const HttpsProxyAgent = require('https-proxy-agent');
 const { TEST_REPORTING_ANALYTICS } = require("../testObservability/helper/constants");
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
-  console.log(`checking if BROWSERSTACK_OBSERVABILITY_DEBUG is enabled: ${process.env.BROWSERSTACK_OBSERVABILITY_DEBUG}`);
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
     logger.info(`[ ${TEST_REPORTING_ANALYTICS} ] ${text}`);
   }
@@ -292,8 +291,6 @@ exports.getBuildDetails = (bsConfig, isO11y = false) => {
   projectName = process.env.BROWSERSTACK_PROJECT_NAME || projectName;
 
   /* Pick from testObservabilityOptions */
-  console.log(`isTestObservabilityOptionsPresent: ${isTestObservabilityOptionsPresent}`);
-  console.log(`bsConfig in getBuildDetails: ${JSON.stringify(bsConfig, null, 2)}`);
   if(isTestObservabilityOptionsPresent) {
     buildName = buildName || bsConfig["testObservabilityOptions"]["buildName"];
     projectName = projectName || bsConfig["testObservabilityOptions"]["projectName"];

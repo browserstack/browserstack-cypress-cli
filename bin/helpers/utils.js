@@ -34,7 +34,6 @@ exports.validateBstackJson = (bsConfigPath) => {
       logger.info(`Reading config from ${bsConfigPath}`);
       let bsConfig = require(bsConfigPath);
       bsConfig = exports.normalizeTestReportingConfig(bsConfig);
-      console.log(`BrowserStack config loaded after normalizing: ${JSON.stringify(bsConfig, null, 2)}`);
       resolve(bsConfig);
     } catch (e) {
       reject(
@@ -494,7 +493,6 @@ exports.setNodeVersion = (bsConfig, args) => {
 // specs can be passed via command line args as a string
 // command line args takes precedence over config
 exports.setUserSpecs = (bsConfig, args) => {
-  console.log(`checking if testObservability session is enabled setUserSpecs line 497: ${o11yHelpers.isTestObservabilitySession()}`);
   if(o11yHelpers.isBrowserstackInfra() && o11yHelpers.isTestObservabilitySession() && o11yHelpers.shouldReRunObservabilityTests()) {
     bsConfig.run_settings.specs = process.env.BROWSERSTACK_RERUN_TESTS;
     return;
@@ -1238,7 +1236,6 @@ exports.handleSyncExit = (exitCode, dashboard_url) => {
     syncCliLogger.info(Constants.userMessages.BUILD_REPORT_MESSAGE);
     syncCliLogger.info(dashboard_url);
   }
-  console.log(`checking if observability session is active from handleSyncExit ${o11yHelpers.isTestObservabilitySession()}`);
   if(o11yHelpers.isTestObservabilitySession()) {
     o11yHelpers.printBuildLink(true, exitCode);
   } else {
@@ -1502,7 +1499,6 @@ exports.splitStringByCharButIgnoreIfWithinARange = (str, splitChar, leftLimiter,
 
 // blindly send other passed configs with run_settings and handle at backend
 exports.setOtherConfigs = (bsConfig, args) => {
-  console.log(`checking if observability session is active from setOtherConfigs ${o11yHelpers.isTestObservabilitySession()}`);
   if(o11yHelpers.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
     bsConfig["run_settings"]["reporter"] = TEST_OBSERVABILITY_REPORTER;
     return;
@@ -1523,11 +1519,9 @@ exports.readBsConfigJSON = (bsConfigPath) => {
   try {
     fs.accessSync(bsConfigPath, fs.constants.R_OK);
     const configContent = fs.readFileSync(bsConfigPath, 'utf-8');
-    console.log(`configContent: ${configContent}`);
     try {
       const bsConfig = JSON.parse(configContent);
       const normalizedBsConfig = exports.normalizeTestReportingConfig(bsConfig);
-      console.log(`normalizedBsConfig: ${JSON.stringify(normalizedBsConfig)}`);
       return JSON.stringify(normalizedBsConfig);
     } catch (err) {
       logger.error(`Error parsing JSON from ${bsConfigPath}:`, err);

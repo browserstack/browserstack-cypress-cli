@@ -59,9 +59,6 @@ module.exports = function run(args, rawArgs) {
   return utils.validateBstackJson(bsConfigPath).then(async function (bsConfig) {
     markBlockEnd('validateBstackJson');
     logger.debug('Completed browserstack.json validation');
-
-    console.log("bsConfig after validation",bsConfig);
-
     markBlockStart('setConfig');
     logger.debug('Started setting the configs');
 
@@ -114,8 +111,6 @@ module.exports = function run(args, rawArgs) {
 
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
-
-    console.log(`checking if testObservability session is enabled line run() 118: ${isTestObservabilitySession}`);
 
     // Send build start to TEST REPORTING AND ANALYTICS
     if(isTestObservabilitySession) {
@@ -319,7 +314,6 @@ module.exports = function run(args, rawArgs) {
                 markBlockEnd('createBuild');
                 markBlockEnd('total');
                 utils.setProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
-                console.log(`checking if testObservability session is enabled line 322: ${isTestObservabilitySession}`);
                 if(isTestObservabilitySession) {
                   utils.setO11yProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
                 }
@@ -530,9 +524,7 @@ module.exports = function run(args, rawArgs) {
   }).catch(function (err) {
     logger.error(err);
     utils.setUsageReportingFlag(null, args.disableUsageReporting);
-    console.log(`now reading using readBsConfigJSON in catch block for validateBstackJson`);
     let bsJsonData = utils.readBsConfigJSON(bsConfigPath);
-    console.log(`checking the type of bsJsonData with main logic: ${typeof bsJsonData}`);
     utils.sendUsageReport(bsJsonData, args, err.message, Constants.messageTypes.ERROR, utils.getErrorCodeFromErr(err), null, rawArgs);
     process.exitCode = Constants.ERROR_EXIT_CODE;
   }).finally(function(){
