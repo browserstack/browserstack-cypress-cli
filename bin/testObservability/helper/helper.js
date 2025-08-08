@@ -117,6 +117,7 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
 }
 
 const nodeRequest = (type, url, data, config) => {
+    log.info(`[RAHUL_LOG] nodeRequest, api url: ${API_URL}, url: ${url}`)
     return new Promise(async (resolve, reject) => {
       const options = {
         ...config,
