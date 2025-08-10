@@ -15,14 +15,12 @@ const HttpsProxyAgent = require('https-proxy-agent');
 exports.checkAccessibilityPlatform = (user_config) => {
   let accessibility = false;
   try {
-
     user_config.browsers.forEach(browser => {
       if (browser.accessibility) {
         accessibility = true;
       }
     })
   } catch {}
-  
   return accessibility;
 }
 
@@ -35,7 +33,6 @@ exports.setAccessibilityCypressCapabilities = async (user_config, accessibilityR
   user_config.run_settings.accessibilityOptions["scannerVersion"] = accessibilityResponse.data.scannerVersion;
   user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_AUTH=${accessibilityResponse.data.accessibilityToken}`)
   user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_SCANNERVERSION=${accessibilityResponse.data.scannerVersion}`)
-  
 }
 
 exports.isAccessibilitySupportedCypressVersion = (cypress_config_filename) => {
@@ -46,7 +43,6 @@ exports.isAccessibilitySupportedCypressVersion = (cypress_config_filename) => {
 exports.createAccessibilityTestRun = async (user_config, framework) => {
 
   try {
-
     if (!this.isAccessibilitySupportedCypressVersion(user_config.run_settings.cypress_config_file) ){
       logger.warn(`Accessibility Testing is not supported on Cypress version 9 and below.`)
       process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'false';
@@ -102,7 +98,6 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
     const response = await nodeRequest(
       'POST', 'v2/test_runs', data, config, API_URL
     );
-    
     if(!utils.isUndefined(response.data)) {
       process.env.BS_A11Y_JWT = response.data.data.accessibilityToken;
       process.env.BS_A11Y_TEST_RUN_ID = response.data.data.id;
