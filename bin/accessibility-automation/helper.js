@@ -224,7 +224,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
     
     const isPattern = glob.hasMagic(supportFilesData.supportFile);
     if(!isPattern) {
-      console.log(`Using user defined support file: ${supportFilesData.supportFile}`);
+      logger.debug(`Using user defined support file: ${supportFilesData.supportFile}`);
       let file;
       try {
             file = process.cwd() + supportFilesData.supportFile;

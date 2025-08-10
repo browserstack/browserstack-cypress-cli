@@ -390,7 +390,7 @@ exports.getSupportFiles = (bsConfig, isA11y) => {
       supportFile = userSupportFile[0];
     }
   } catch (err) {}
-  if (supportFile && !path.isAbsolute(supportFile)) supportFile = '/' + supportFile;
+  if(supportFile && supportFile[0] != '/') supportFile = '/' + supportFile;;
   return {
     supportFile,
     cleanupParams: Object.keys(cleanupParams).length ? cleanupParams : null
