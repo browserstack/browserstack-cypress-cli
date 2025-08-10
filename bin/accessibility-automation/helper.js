@@ -21,6 +21,7 @@ exports.checkAccessibilityPlatform = (user_config) => {
       }
     })
   } catch {}
+  
   return accessibility;
 }
 
