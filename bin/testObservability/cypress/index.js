@@ -14,11 +14,17 @@ const browserStackLog = (message) => {
 }
 
 const shouldSkipCommand = (command) => {
+  if (!Cypress.env('BROWSERSTACK_O11Y_LOGS')) {
+    return true;
+  }
   return command.attributes.name == 'log' || (command.attributes.name == 'task' && (['test_observability_platform_details', 'test_observability_step', 'test_observability_command', 'browserstack_log', 'test_observability_log'].some(event => command.attributes.args.includes(event))));
 }
 
 Cypress.on('log:added', (log) => {
   return () => {
+    if (shouldSkipCommand(command)) {
+      return;
+    }
     eventsQueue.push({
       task: 'test_observability_step',
       data: {
@@ -219,6 +225,11 @@ Cypress.Commands.add('fatal', (message, file) => {
 
 beforeEach(() => {
   /* browserstack internal helper hook */
+
+  if (!Cypress.env('BROWSERSTACK_O11Y_LOGS')) {
+    return;
+  }
+
   if (eventsQueue.length > 0) {
     eventsQueue.forEach(event => {
       cy.task(event.task, event.data, event.options);
@@ -230,6 +241,10 @@ beforeEach(() => {
 
 afterEach(function() {
   /* browserstack internal helper hook */
+  if (!Cypress.env('BROWSERSTACK_O11Y_LOGS')) {
+    return;
+  }
+
   if (eventsQueue.length > 0) {
     eventsQueue.forEach(event => {
       cy.task(event.task, event.data, event.options);
