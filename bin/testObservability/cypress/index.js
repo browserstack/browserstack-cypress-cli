@@ -57,10 +57,19 @@ Cypress.on('command:start', (command) => {
     options: { log: false }
   });
   /* Send platform details */
+  let testTitle = '';
+  try {
+    const runner = Cypress.mocha.getRunner();
+    const ctx = runner.suite.ctx;
+    testTitle = ctx.currentTest.title || ctx._runnable.title;
+  } catch (error) {
+    // Silently handle if any property is undefined
+  }
+
   eventsQueue.push({
     task: 'test_observability_platform_details',
     data: {
-      testTitle: Cypress?.mocha?.getRunner()?.suite?.ctx?.currentTest?.title || Cypress?.mocha?.getRunner()?.suite?.ctx?._runnable?.title,
+      testTitle,
       browser: Cypress.browser,
       platform: Cypress.platform,
       cypressVersion: Cypress.version
