@@ -98,4 +98,4 @@ class RequestQueueHandler {
   }
 }
 
-module.exports = RequestQueueHandler;
+module.exports = new RequestQueueHandler();

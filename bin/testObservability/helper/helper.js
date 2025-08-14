@@ -117,6 +117,7 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
 }
 
 const nodeRequest = (type, url, data, config) => {
+  const requestQueueHandler = require('./requestQueueHandler');
     return new Promise(async (resolve, reject) => {
       const options = {
         ...config,
@@ -140,8 +141,8 @@ const nodeRequest = (type, url, data, config) => {
         options.proxy = false
         options.httpsAgent = new HttpsProxyAgent(process.env.HTTPS_PROXY);
       }
-  
-      if(url === exports.requestQueueHandler.screenshotEventUrl) {
+
+      if(url === requestQueueHandler.screenshotEventUrl) {
           options.agent = httpsScreenshotsKeepAliveAgent;
       }
       axios(options)
@@ -521,10 +522,8 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
   }
 }
 
-const RequestQueueHandler = require('./requestQueueHandler');
-exports.requestQueueHandler = new RequestQueueHandler();
-
 exports.uploadEventData = async (eventData, run=0) => {
+  const requestQueueHandler = require('./requestQueueHandler');
   exports.debugOnConsole(`[uploadEventData] ${eventData.event_type}`);
   const log_tag = {
     ['TestRunStarted']: 'Test_Start_Upload',
@@ -550,8 +549,8 @@ exports.uploadEventData = async (eventData, run=0) => {
     } else {
       let data = eventData, event_api_url = 'api/v1/event';
 
-      exports.requestQueueHandler.start();
-      const { shouldProceed, proceedWithData, proceedWithUrl } = exports.requestQueueHandler.add(eventData);
+      requestQueueHandler.start();
+      const { shouldProceed, proceedWithData, proceedWithUrl } = requestQueueHandler.add(eventData);
       exports.debugOnConsole(`[Request Queue] ${eventData.event_type} with uuid ${eventData.test_run ? eventData.test_run.uuid : (eventData.hook_run ? eventData.hook_run.uuid : null)} is added`)
       if(!shouldProceed) {
         return;
@@ -576,7 +575,7 @@ exports.uploadEventData = async (eventData, run=0) => {
         if(response.data.error) {
           throw({message: response.data.error});
         } else {
-          exports.debug(`${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'}[${run}] event successfull!`)
+          exports.debug(`${event_api_url !== requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'}[${run}] event successfull!`)
           exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - (event_api_url === 'api/v1/event' ? 1 : data.length));
           return {
             status: 'success',
@@ -586,9 +585,9 @@ exports.uploadEventData = async (eventData, run=0) => {
       } catch(error) {
         exports.debugOnConsole(`[Request Error] Error in sending request ${util.format(error)}`);
         if (error.response) {
-          exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
+          exports.debug(`EXCEPTION IN ${event_api_url !== requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
         } else {
-          exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO TEST OBSERVABILITY : ${error.message || error}`, true, error);
+          exports.debug(`EXCEPTION IN ${event_api_url !== requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO TEST OBSERVABILITY : ${error.message || error}`, true, error);
         }
         exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - (event_api_url === 'api/v1/event' ? 1 : data.length));
         return {
