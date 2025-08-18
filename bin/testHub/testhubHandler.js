@@ -139,6 +139,7 @@ class TestHubHandler {
    * @returns {Object} Processed build data
    */
   static async handleBuildResponse(responseData) {
+    console.log("response data:", JSON.stringify(responseData, null, 2));
     const buildData = {};
 
     // Set common environment variables
