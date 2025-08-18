@@ -585,9 +585,9 @@ exports.uploadEventData = async (eventData, run=0) => {
       } catch(error) {
         exports.debugOnConsole(`[Request Error] Error in sending request ${util.format(error)}`);
         if (error.response) {
-          exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO ${TEST_REPORTING_ANALYTICS} : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
+          exports.debug(`EXCEPTION IN ${event_api_url !== requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO ${TEST_REPORTING_ANALYTICS} : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
         } else {
-          exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO ${TEST_REPORTING_ANALYTICS} : ${error.message || error}`, true, error);
+          exports.debug(`EXCEPTION IN ${event_api_url !== requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO ${TEST_REPORTING_ANALYTICS} : ${error.message || error}`, true, error);
         }
         exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - (event_api_url === 'api/v1/event' ? 1 : data.length));
         return {
