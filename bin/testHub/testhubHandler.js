@@ -7,6 +7,7 @@ const logger = require("../helpers/logger").winstonLogger;
 const utils = require('../helpers/utils');
 const helper = require('../helpers/helper');
 const testhubUtils = require('./testhubUtils');
+const { setAccessibilityCypressCapabilities } = require('../accessibility-automation/helper');
 
 const BROWSERSTACK_TESTHUB_URL = 'https://collector-observability.browserstack.com';
 
@@ -70,7 +71,7 @@ class TestHubHandler {
         return null;
       }
 
-      const buildData = this.handleBuildResponse(response.data);
+      const buildData = await this.handleBuildResponse(response.data);
       logger.debug('TestHub launch completed successfully');
       return buildData;
 
@@ -137,7 +138,7 @@ class TestHubHandler {
    * @param {Object} responseData - Response from TestHub API
    * @returns {Object} Processed build data
    */
-  static handleBuildResponse(responseData) {
+  static async handleBuildResponse(responseData) {
     const buildData = {};
 
     // Set common environment variables
@@ -163,7 +164,7 @@ class TestHubHandler {
 
     // Handle accessibility
     if (testhubUtils.isAccessibilityEnabled(this.bsConfig)) {
-      const [authToken, a11yHashedId] = this.setAccessibilityVariables(responseData);
+      const [authToken, a11yHashedId] = await this.setAccessibilityVariables(responseData);
       buildData.accessibility = authToken && a11yHashedId ? {
         auth_token: authToken,
         build_hashed_id: a11yHashedId
@@ -217,7 +218,7 @@ class TestHubHandler {
    * @param {Object} responseData - Response data
    * @returns {Array} [auth_token, build_hashed_id]
    */
-  static setAccessibilityVariables(responseData) {
+  static async setAccessibilityVariables(responseData) {
     if (!responseData.accessibility) {
       this.handleErrorForAccessibility();
       return [null, null];
@@ -231,18 +232,44 @@ class TestHubHandler {
     if (responseData.accessibility.options) {
       logger.debug('Test Accessibility Build creation Successful!');
       
+      logger.debug('Accessibility capabilities:', JSON.stringify(responseData.accessibility.options.capabilities));
+      
       const capabilities = testhubUtils.convertArrayToDict(
         responseData.accessibility.options.capabilities, 
         'name', 
         'value'
       );
       
+      logger.debug('Converted capabilities:', JSON.stringify(capabilities));
+      
       const authToken = capabilities.accessibilityToken;
+      let scannerVersion = capabilities.scannerVersion;
+      
+      // Fallback: try to get scannerVersion from direct options if not in capabilities
+      if (!scannerVersion && responseData.accessibility.options.scannerVersion) {
+        scannerVersion = responseData.accessibility.options.scannerVersion;
+      }
+      
+      logger.debug(`Auth token: ${authToken}, Scanner version: ${scannerVersion}`);
+      
       process.env.BS_A11Y_JWT = authToken;
 
-      // Set additional accessibility environment variables if needed
-      if (responseData.accessibility.options.scannerVersion) {
-        process.env.BS_A11Y_SCANNER_VERSION = responseData.accessibility.options.scannerVersion;
+      // Set additional accessibility environment variables
+      if (scannerVersion) {
+        process.env.BS_A11Y_SCANNER_VERSION = scannerVersion;
+      }
+
+      // Set accessibility capabilities in the config to maintain compatibility
+      if (this.bsConfig && authToken && scannerVersion) {
+        await setAccessibilityCypressCapabilities(this.bsConfig, {
+          data: {
+            accessibilityToken: authToken,
+            scannerVersion: scannerVersion
+          }
+        });
+        
+        // Set cypress CLI dependency as in original accessibility flow
+        helper.setBrowserstackCypressCliDependency(this.bsConfig);
       }
 
       return [authToken, responseData.build_hashed_id];
