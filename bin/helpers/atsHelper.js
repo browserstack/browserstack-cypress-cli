@@ -76,7 +76,11 @@ exports.getTurboScaleGridDetails = async (bsConfig, args, rawArgs) => {
                 responseData = {};
               }
               if(response.status != 200) {
-                logger.warn(`Warn: Get Automate TurboScale Details Request failed with status code ${response.status}`);
+                if (responseData.message == Constants.validationMessages.GRID_NOT_FOUND) {
+                  logger.error(`Error: Invalid grid name '${gridName}' specified.`);
+                } else {
+                  logger.error(`Error:Failed to fetch turboscale grid details with response code ${resp.statusCode}`);
+                };
                 utils.sendUsageReport(bsConfig, args, responseData["error"], Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
                 resolve({});
               }
