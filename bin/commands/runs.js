@@ -40,7 +40,7 @@ const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileCon
 
 
 module.exports = function run(args, rawArgs) {
-
+  utils.normalizeTestReportingEnvVars();
   markBlockStart('preBuild');
   // set debug mode (--cli-debug)
   utils.setDebugMode(args);
@@ -112,7 +112,7 @@ module.exports = function run(args, rawArgs) {
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
 
-    // Send build start to Observability
+    // Send build start to TEST REPORTING AND ANALYTICS
     if(isTestObservabilitySession) {
       await launchTestSession(bsConfig, bsConfigPath);
       utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
