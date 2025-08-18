@@ -9,6 +9,7 @@ const archiver = require("../helpers/archiver"),
   capabilityHelper = require("../helpers/capabilityHelper"),
   Constants = require("../helpers/constants"),
   utils = require("../helpers/utils"),
+  helper = require("../helpers/helper"),
   fileHelpers = require("../helpers/fileHelpers"),
   getInitialDetails = require('../helpers/getInitialDetails').getInitialDetails,
   syncRunner = require("../helpers/syncRunner"),
@@ -23,7 +24,6 @@ const archiver = require("../helpers/archiver"),
 const { getStackTraceUrl } = require('../helpers/sync/syncSpecsLogs');
 
 const { 
-  launchTestSession, 
   setEventListeners,
   setTestObservabilityFlags, 
   runCypressTestsLocally, 
@@ -31,11 +31,13 @@ const {
 } = require('../testObservability/helper/helper');
 
 const { 
-  createAccessibilityTestRun,
   setAccessibilityEventListeners,
   checkAccessibilityPlatform,
   supportFileCleanup
 } = require('../accessibility-automation/helper');
+
+// Import unified TestHub handler
+const TestHubHandler = require('../testHub/testhubHandler');
 const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
 
 
@@ -112,10 +114,20 @@ module.exports = function run(args, rawArgs) {
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
 
-    // Send build start to Observability
-    if(isTestObservabilitySession) {
-      await launchTestSession(bsConfig, bsConfigPath);
-      utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
+    // Launch unified TestHub session for both observability and accessibility
+    if(isTestObservabilitySession || isAccessibilitySession) {
+      const frameworkDetails = {
+        framework_name: 'Cypress',
+        framework_version: helper.getPackageVersion('cypress', bsConfig),
+        sdk_version: helper.getAgentVersion(),
+        testFramework: 'cypress'
+      };
+      
+      const buildData = await TestHubHandler.launch(bsConfig, bsConfigPath, frameworkDetails);
+      
+      if (isTestObservabilitySession && buildData?.observability) {
+        utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
+      }
     }
     
     // accept the system env list from bsconf and set it
@@ -146,9 +158,7 @@ module.exports = function run(args, rawArgs) {
       // add cypress dependency if missing
       utils.setCypressNpmDependency(bsConfig);
 
-      if (isAccessibilitySession && isBrowserstackInfra) {
-        await createAccessibilityTestRun(bsConfig);
-      }
+      // Note: Accessibility test run creation is now handled by unified TestHub launch above
 
       if (turboScaleSession) {
         const gridDetails = await getTurboScaleGridDetails(bsConfig, args, rawArgs);
