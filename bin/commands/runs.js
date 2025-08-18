@@ -192,6 +192,10 @@ module.exports = function run(args, rawArgs) {
     logger.debug("Completed setting the configs");
 
     if(!isBrowserstackInfra) {
+      if(process.env.BS_TESTOPS_BUILD_COMPLETED) {
+        setEventListeners(bsConfig);
+      }
+
       return runCypressTestsLocally(bsConfig, args, rawArgs);
     }
 
@@ -203,7 +207,7 @@ module.exports = function run(args, rawArgs) {
         setAccessibilityEventListeners(bsConfig);
       }
       if(process.env.BS_TESTOPS_BUILD_COMPLETED) {
-        // setEventListeners(bsConfig);
+        setEventListeners(bsConfig);
       }
       markBlockEnd('validateConfig');
       logger.debug("Completed configs validation");
