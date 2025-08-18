@@ -82,22 +82,10 @@ function getHostInfo() {
  */
 function getAccessibilitySettings(bsConfig) {
   try {
-    let accessibilitySettings = {};
-    
-    // Check if accessibility is enabled in run_settings
-    if (bsConfig.run_settings && bsConfig.run_settings.accessibilityOptions) {
-      accessibilitySettings = { ...bsConfig.run_settings.accessibilityOptions };
-    }
-
-    // Add non-BrowserStack infrastructure settings if needed
-    accessibilitySettings = addNonBstackInfraA11ySettings(bsConfig, accessibilitySettings);
-
-    // Note: Don't send scanner version in request - server will provide it
-    // Remove any scanner version that might be set to avoid validation errors
-    delete accessibilitySettings.scannerVersion;
+    let settings = utils.isUndefined(bsConfig.run_settings.accessibilityOptions) ? {} : bsConfig.run_settings.accessibilityOptions
 
     return {
-      settings: accessibilitySettings
+      settings
     };
   } catch (error) {
     logger.error(`Exception while creating accessibility settings for TestHub: ${error.message}`);
