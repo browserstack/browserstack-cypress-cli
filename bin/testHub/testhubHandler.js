@@ -54,6 +54,8 @@ class TestHubHandler {
       };
 
       logger.debug('Sending unified launch request to TestHub');
+      console.log("Sending request to TestHub:", JSON.stringify(data, null, 2));
+      console.log("Request config:", JSON.stringify(config, null, 2));
       const response = await this.makeRequest('POST', 'api/v2/builds', data, config);
       
       if (!response || response.status !== 200) {
