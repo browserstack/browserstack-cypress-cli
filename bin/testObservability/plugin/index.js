@@ -3,6 +3,12 @@ const { connectIPCClient } = require('./ipcClient');
 const { IPC_EVENTS } = require('../helper/constants');
 
 const browserstackTestObservabilityPlugin = (on, config, callbacks) => {
+
+  try {
+    config.env.BROWSERSTACK_O11Y_LOGS = 'true';
+    process.env.BROWSERSTACK_O11Y_LOGS = 'true';
+  } catch (err) {}
+
   connectIPCClient(config);
 
   on('task', {

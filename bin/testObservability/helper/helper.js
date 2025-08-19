@@ -27,7 +27,7 @@ const GLOBAL_MODULE_PATH = execSync('npm root -g').toString().trim();
 const { name, version } = require('../../../package.json');
 
 const { CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS } = require('../../helpers/constants');
-const { consoleHolder, API_URL, TEST_OBSERVABILITY_REPORTER, TEST_OBSERVABILITY_REPORTER_LOCAL } = require('./constants');
+const { consoleHolder, API_URL, TEST_OBSERVABILITY_REPORTER, TEST_OBSERVABILITY_REPORTER_LOCAL, TEST_REPORTING_ANALYTICS } = require('./constants');
 
 const ALLOWED_MODULES = [
   'cypress/package.json',
@@ -43,13 +43,13 @@ exports.pending_test_uploads = {
 exports.debugOnConsole = (text) => {
   if ((process.env.BROWSERSTACK_OBSERVABILITY_DEBUG + '')  === "true" || 
       (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG + '') === "1") {
-    consoleHolder.log(`[ OBSERVABILITY ] ${text}`);
+    consoleHolder.log(`[ ${TEST_REPORTING_ANALYTICS} ] ${text}`);
   }
 }
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
-    logger.info(`[ OBSERVABILITY ] ${text}`);
+    logger.info(`[ ${TEST_REPORTING_ANALYTICS} ] ${text}`);
   }
   if(shouldReport) {
     CrashReporter.getInstance().uploadCrashReport(text, throwable ? throwable && throwable.stack : null);
@@ -105,7 +105,7 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
         && process.env.BS_TESTOPS_BUILD_HASHED_ID != "null" 
         && process.env.BS_TESTOPS_BUILD_HASHED_ID != "undefined") {
           console.log();
-          logger.info(`Visit https://observability.browserstack.com/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID} to view build report, insights, and many more debugging information all at one place!\n`);
+          logger.info(`Visit https://automation.browserstack.com/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID} to view build report, insights, and many more debugging information all at one place!\n`);
       }
     } catch(err) {
       exports.debug('Build Not Found');
@@ -117,6 +117,7 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
 }
 
 const nodeRequest = (type, url, data, config) => {
+  const requestQueueHandler = require('./requestQueueHandler');
     return new Promise(async (resolve, reject) => {
       const options = {
         ...config,
@@ -140,8 +141,8 @@ const nodeRequest = (type, url, data, config) => {
         options.proxy = false
         options.httpsAgent = new HttpsProxyAgent(process.env.HTTPS_PROXY);
       }
-  
-      if(url === exports.requestQueueHandler.screenshotEventUrl) {
+
+      if(url === requestQueueHandler.screenshotEventUrl) {
           options.agent = httpsScreenshotsKeepAliveAgent;
       }
       axios(options)
@@ -513,18 +514,16 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
   } catch(error) {
     exports.debugOnConsole(`[Request Error] Error in sending request ${util.format(error)}`);
     if (error.response) {
-      exports.debug(`EXCEPTION IN ${kind} REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
+      exports.debug(`EXCEPTION IN ${kind} REQUEST TO ${TEST_REPORTING_ANALYTICS} : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
     } else {
-      exports.debug(`EXCEPTION IN ${kind} REQUEST TO TEST OBSERVABILITY : ${error.message || error}`, true, error);
+      exports.debug(`EXCEPTION IN ${kind} REQUEST TO ${TEST_REPORTING_ANALYTICS} : ${error.message || error}`, true, error);
     }
     exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - data.length);
   }
 }
 
-const RequestQueueHandler = require('./requestQueueHandler');
-exports.requestQueueHandler = new RequestQueueHandler();
-
 exports.uploadEventData = async (eventData, run=0) => {
+  const requestQueueHandler = require('./requestQueueHandler');
   exports.debugOnConsole(`[uploadEventData] ${eventData.event_type}`);
   const log_tag = {
     ['TestRunStarted']: 'Test_Start_Upload',
@@ -541,7 +540,7 @@ exports.uploadEventData = async (eventData, run=0) => {
 
   if (process.env.BS_TESTOPS_BUILD_COMPLETED === "true") {
     if(process.env.BS_TESTOPS_JWT == "null") {
-      exports.debug(`EXCEPTION IN ${log_tag} REQUEST TO TEST OBSERVABILITY : missing authentication token`);
+      exports.debug(`EXCEPTION IN ${log_tag} REQUEST TO ${TEST_REPORTING_ANALYTICS}: missing authentication token`);
       exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count-1);
       return {
         status: 'error',
@@ -550,8 +549,8 @@ exports.uploadEventData = async (eventData, run=0) => {
     } else {
       let data = eventData, event_api_url = 'api/v1/event';
 
-      exports.requestQueueHandler.start();
-      const { shouldProceed, proceedWithData, proceedWithUrl } = exports.requestQueueHandler.add(eventData);
+      requestQueueHandler.start();
+      const { shouldProceed, proceedWithData, proceedWithUrl } = requestQueueHandler.add(eventData);
       exports.debugOnConsole(`[Request Queue] ${eventData.event_type} with uuid ${eventData.test_run ? eventData.test_run.uuid : (eventData.hook_run ? eventData.hook_run.uuid : null)} is added`)
       if(!shouldProceed) {
         return;
@@ -576,7 +575,7 @@ exports.uploadEventData = async (eventData, run=0) => {
         if(response.data.error) {
           throw({message: response.data.error});
         } else {
-          exports.debug(`${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'}[${run}] event successfull!`)
+          exports.debug(`${event_api_url !== requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'}[${run}] event successfull!`)
           exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - (event_api_url === 'api/v1/event' ? 1 : data.length));
           return {
             status: 'success',
@@ -586,9 +585,9 @@ exports.uploadEventData = async (eventData, run=0) => {
       } catch(error) {
         exports.debugOnConsole(`[Request Error] Error in sending request ${util.format(error)}`);
         if (error.response) {
-          exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
+          exports.debug(`EXCEPTION IN ${event_api_url !== requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO ${TEST_REPORTING_ANALYTICS} : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
         } else {
-          exports.debug(`EXCEPTION IN ${event_api_url !== exports.requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO TEST OBSERVABILITY : ${error.message || error}`, true, error);
+          exports.debug(`EXCEPTION IN ${event_api_url !== requestQueueHandler.eventUrl ? log_tag : 'Batch-Queue'} REQUEST TO ${TEST_REPORTING_ANALYTICS} : ${error.message || error}`, true, error);
         }
         exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count - (event_api_url === 'api/v1/event' ? 1 : data.length));
         return {
@@ -598,7 +597,7 @@ exports.uploadEventData = async (eventData, run=0) => {
       }
     }
   } else if (run >= 5) {
-    exports.debug(`EXCEPTION IN ${log_tag} REQUEST TO TEST OBSERVABILITY : Build Start is not completed and ${log_tag} retry runs exceeded`);
+    exports.debug(`EXCEPTION IN ${log_tag} REQUEST TO ${TEST_REPORTING_ANALYTICS} : Build Start is not completed and ${log_tag} retry runs exceeded`);
     if(process.env.BS_TESTOPS_JWT != "null") exports.pending_test_uploads.count = Math.max(0,exports.pending_test_uploads.count-1);
     return {
       status: 'error',
@@ -664,7 +663,7 @@ exports.shouldReRunObservabilityTests = () => {
 exports.stopBuildUpstream = async () => {
   if (process.env.BS_TESTOPS_BUILD_COMPLETED === "true") {
     if(process.env.BS_TESTOPS_JWT == "null" || process.env.BS_TESTOPS_BUILD_HASHED_ID == "null") {
-      exports.debug('EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : Missing authentication token');
+      exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO ${TEST_REPORTING_ANALYTICS} : Missing authentication token`);
       return {
         status: 'error',
         message: 'Token/buildID is undefined, build creation might have failed'
@@ -694,9 +693,9 @@ exports.stopBuildUpstream = async () => {
         }
       } catch(error) {
         if (error.response) {
-          exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
+          exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO ${TEST_REPORTING_ANALYTICS} : ${error.response.status} ${error.response.statusText} ${JSON.stringify(error.response.data)}`, true, error);
         } else {
-          exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO TEST OBSERVABILITY : ${error.message || error}`, true, error);
+          exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO ${TEST_REPORTING_ANALYTICS} : ${error.message || error}`, true, error);
         }
         return {
           status: 'error',

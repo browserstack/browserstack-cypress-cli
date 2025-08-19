@@ -40,7 +40,7 @@ const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileCon
 
 
 module.exports = function run(args, rawArgs) {
-
+  utils.normalizeTestReportingEnvVars();
   markBlockStart('preBuild');
   // set debug mode (--cli-debug)
   utils.setDebugMode(args);
@@ -112,7 +112,7 @@ module.exports = function run(args, rawArgs) {
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
 
-    // Send build start to Observability
+    // Send build start to TEST REPORTING AND ANALYTICS
     if(isTestObservabilitySession) {
       await launchTestSession(bsConfig, bsConfigPath);
       utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
@@ -195,6 +195,10 @@ module.exports = function run(args, rawArgs) {
     logger.debug("Completed setting the configs");
 
     if(!isBrowserstackInfra) {
+      if(process.env.BS_TESTOPS_BUILD_COMPLETED) {
+        setEventListeners(bsConfig);
+      }
+
       return runCypressTestsLocally(bsConfig, args, rawArgs);
     }
 
@@ -206,7 +210,7 @@ module.exports = function run(args, rawArgs) {
         setAccessibilityEventListeners(bsConfig);
       }
       if(process.env.BS_TESTOPS_BUILD_COMPLETED) {
-        // setEventListeners(bsConfig);
+        setEventListeners(bsConfig);
       }
       markBlockEnd('validateConfig');
       logger.debug("Completed configs validation");
