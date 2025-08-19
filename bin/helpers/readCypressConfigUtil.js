@@ -37,7 +37,7 @@ function resolveTsConfigPath(bsConfig, cypress_config_filepath) {
 function generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, complied_js_dir, cypress_config_filepath) {
   const working_dir = path.dirname(cypress_config_filepath);
   const typescript_path = path.join(bstack_node_modules_path, 'typescript', 'bin', 'tsc');
-  const tsc_alias_path = path.join(bstack_node_modules_path, 'tsc-alias', 'dist', 'bin', 'index.js');
+  const tsc_alias_path = require.resolve('tsc-alias/dist/bin/index.js');
   
   // Smart tsconfig detection and validation
   const resolvedTsConfigPath = resolveTsConfigPath(bsConfig, cypress_config_filepath);

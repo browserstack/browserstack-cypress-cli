@@ -109,7 +109,7 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
     logger.debug(`BrowserStack Accessibility Automation Test Run ID: ${response.data.data.id}`);
 
     this.setAccessibilityCypressCapabilities(user_config, response.data);
-    helper.setBrowserstackCypressCliDependency(user_config);
+    if(user_config.run_settings.auto_import_dev_dependencies != true) helper.setBrowserstackCypressCliDependency(user_config);
 
   } catch (error) {
     if (error.response) {
