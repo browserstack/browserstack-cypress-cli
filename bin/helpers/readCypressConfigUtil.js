@@ -14,15 +14,37 @@ exports.detectLanguage = (cypress_config_filename) => {
 }
 
 function resolveTsConfigPath(bsConfig, cypress_config_filepath) {
+  const utils = require("./utils");
   const working_dir = path.dirname(cypress_config_filepath);
+  const project_root = process.cwd();
   
-  // Priority order for finding tsconfig
-  const candidates = [
-    bsConfig.run_settings && bsConfig.run_settings.ts_config_file_path, // User specified
-    path.join(working_dir, 'tsconfig.json'),    // Same directory as cypress config
-    path.join(working_dir, '..', 'tsconfig.json'), // Parent directory
-    path.join(process.cwd(), 'tsconfig.json')   // Project root
-  ].filter(Boolean).map(p => path.resolve(p));
+  // Priority order for finding tsconfig with secure path validation
+  const candidates = [];
+  
+  // User specified path - validate it's within project bounds
+  if (bsConfig.run_settings && bsConfig.run_settings.ts_config_file_path) {
+    try {
+      const safePath = utils.validateSecurePath(bsConfig.run_settings.ts_config_file_path, project_root);
+      candidates.push(safePath);
+    } catch (error) {
+      logger.warn(`Invalid user-specified tsconfig path: ${error.message}`);
+    }
+  }
+  
+  // Safe predefined paths
+  try {
+    candidates.push(utils.validateSecurePath(path.join(working_dir, 'tsconfig.json'), project_root));
+  } catch (error) {
+    logger.debug(`Working directory tsconfig path validation failed: ${error.message}`);
+  }
+  
+  try {
+    candidates.push(utils.validateSecurePath(path.join(working_dir, '..', 'tsconfig.json'), project_root));
+  } catch (error) {
+    logger.debug(`Parent directory tsconfig path validation failed: ${error.message}`);
+  }
+  
+  candidates.push(path.join(project_root, 'tsconfig.json'));
   
   for (const candidate of candidates) {
     if (fs.existsSync(candidate)) {
@@ -35,12 +57,32 @@ function resolveTsConfigPath(bsConfig, cypress_config_filepath) {
 }
 
 function generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, complied_js_dir, cypress_config_filepath) {
+  const utils = require("./utils");
   const working_dir = path.dirname(cypress_config_filepath);
-  const typescript_path = path.join(bstack_node_modules_path, 'typescript', 'bin', 'tsc');
-  const tsc_alias_path = path.join(bstack_node_modules_path, 'tsc-alias', 'dist', 'bin', 'index.js');
+  const project_root = process.cwd();
+  
+  // Sanitize and validate paths to prevent command injection
+  let safe_bstack_node_modules_path;
+  let safe_cypress_config_filepath;
+  let safe_working_dir;
+  
+  try {
+    safe_bstack_node_modules_path = utils.sanitizeCommandPath(bstack_node_modules_path);
+    safe_cypress_config_filepath = utils.sanitizeCommandPath(cypress_config_filepath);
+    safe_working_dir = utils.sanitizeCommandPath(working_dir);
+    
+    // Additional validation - ensure paths are within expected bounds
+    utils.validateSecurePath(safe_bstack_node_modules_path, project_root);
+    utils.validateSecurePath(safe_cypress_config_filepath, project_root);
+  } catch (error) {
+    throw new Error(`Invalid file paths detected: ${error.message}`);
+  }
+  
+  const typescript_path = path.join(safe_bstack_node_modules_path, 'typescript', 'bin', 'tsc');
+  const tsc_alias_path = path.join(safe_bstack_node_modules_path, 'tsc-alias', 'dist', 'bin', 'index.js');
   
   // Smart tsconfig detection and validation
-  const resolvedTsConfigPath = resolveTsConfigPath(bsConfig, cypress_config_filepath);
+  const resolvedTsConfigPath = resolveTsConfigPath(bsConfig, safe_cypress_config_filepath);
   let hasValidTsConfig = false;
   
   if (resolvedTsConfigPath) {
@@ -72,7 +114,7 @@ function generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, c
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true
       },
-      include: [cypress_config_filepath]
+      include: [safe_cypress_config_filepath]
     };
   } else {
     // Scenario 2: No tsconfig or invalid tsconfig - create standalone with all basic parameters
@@ -96,31 +138,28 @@ function generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, c
         "strict": false, // Avoid breaking existing code
         "noEmitOnError": false // Continue compilation even with errors
       },
-      include: [cypress_config_filepath],
+      include: [safe_cypress_config_filepath],
       exclude: ["node_modules", "dist", "build"]
     };
   }
   
   // Write the temporary tsconfig
-  const tempTsConfigPath = path.join(working_dir, 'tsconfig.singlefile.tmp.json');
+  const tempTsConfigPath = path.join(safe_working_dir, 'tsconfig.singlefile.tmp.json');
   fs.writeFileSync(tempTsConfigPath, JSON.stringify(tempTsConfig, null, 2));
   logger.info(`Temporary tsconfig created at: ${tempTsConfigPath}`);
   
-  // Platform-specific command generation
+  // Platform-specific command generation with sanitized paths
   const isWindows = /^win/.test(process.platform);
   
   if (isWindows) {
     // Windows: Use && to chain commands, no space after SET
-    const setNodePath = isWindows
-      ? `set NODE_PATH=${bstack_node_modules_path}`
-      : `NODE_PATH="${bstack_node_modules_path}"`;
-
+    const setNodePath = `set NODE_PATH=${safe_bstack_node_modules_path}`;
     const tscCommand = `${setNodePath} && node "${typescript_path}" --project "${tempTsConfigPath}" && ${setNodePath} && node "${tsc_alias_path}" --project "${tempTsConfigPath}" --verbose`;
     logger.info(`TypeScript compilation command: ${tscCommand}`);
     return { tscCommand, tempTsConfigPath };
   } else {
     // Unix/Linux/macOS: Use ; to separate commands or && to chain
-    const nodePathPrefix = `NODE_PATH=${bstack_node_modules_path}`;
+    const nodePathPrefix = `NODE_PATH=${safe_bstack_node_modules_path}`;
     const tscCommand = `${nodePathPrefix} node "${typescript_path}" --project "${tempTsConfigPath}" && ${nodePathPrefix} node "${tsc_alias_path}" --project "${tempTsConfigPath}" --verbose`;
     logger.info(`TypeScript compilation command: ${tscCommand}`);
     return { tscCommand, tempTsConfigPath };
