@@ -143,6 +143,9 @@ module.exports = function run(args, rawArgs) {
       // set the no-wrap
       utils.setNoWrap(bsConfig, args);
 
+      // process auto-import dev dependencies
+      utils.processAutoImportDependencies(bsConfig.run_settings);
+
       // add cypress dependency if missing
       utils.setCypressNpmDependency(bsConfig);
 

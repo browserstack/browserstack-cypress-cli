@@ -130,6 +130,7 @@ describe("runs", () => {
       setDebugModeStub = sandbox.stub();
       setTimezoneStub = sandbox.stub();
       setCypressNpmDependencyStub = sandbox.stub();
+      processAutoImportDependenciesStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -179,7 +180,8 @@ describe("runs", () => {
           setBuildTags: setBuildTagsStub,
           setNetworkLogs: setNetworkLogsStub,
           setTimezone: setTimezoneStub,
-          setCypressNpmDependency: setCypressNpmDependencyStub
+          setCypressNpmDependency: setCypressNpmDependencyStub,
+          processAutoImportDependencies: processAutoImportDependenciesStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub
@@ -303,6 +305,7 @@ describe("runs", () => {
       setTimezoneStub = sandbox.stub();
       setCypressNpmDependencyStub = sandbox.stub();
       packageSetupAndInstallerStub = sandbox.stub();
+      processAutoImportDependenciesStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -356,7 +359,8 @@ describe("runs", () => {
           setNetworkLogs: setNetworkLogsStub,
           setInteractiveCapability: setInteractiveCapabilityStub,
           setTimezone: setTimezoneStub,
-          setCypressNpmDependency: setCypressNpmDependencyStub
+          setCypressNpmDependency: setCypressNpmDependencyStub,
+          processAutoImportDependencies: processAutoImportDependenciesStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -510,6 +514,7 @@ describe("runs", () => {
       setCypressNpmDependencyStub = sandbox.stub();
       packageSetupAndInstallerStub = sandbox.stub();
       fetchFolderSizeStub = sandbox.stub();
+      processAutoImportDependenciesStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -565,7 +570,8 @@ describe("runs", () => {
           setInteractiveCapability: setInteractiveCapabilityStub,
           setTimezone: setTimezoneStub,
           setCypressNpmDependency: setCypressNpmDependencyStub,
-          fetchFolderSize: fetchFolderSizeStub
+          fetchFolderSize: fetchFolderSizeStub,
+          processAutoImportDependencies: processAutoImportDependenciesStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -734,6 +740,7 @@ describe("runs", () => {
       setCypressNpmDependencyStub = sandbox.stub();
       packageSetupAndInstallerStub = sandbox.stub();
       fetchFolderSizeStub = sandbox.stub();
+      processAutoImportDependenciesStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -792,7 +799,8 @@ describe("runs", () => {
           setInteractiveCapability: setInteractiveCapabilityStub,
           setTimezone: setTimezoneStub,
           setCypressNpmDependency: setCypressNpmDependencyStub,
-          fetchFolderSize: fetchFolderSizeStub
+          fetchFolderSize: fetchFolderSizeStub,
+          processAutoImportDependencies: processAutoImportDependenciesStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -954,7 +962,8 @@ describe("runs", () => {
           setInteractiveCapability: setInteractiveCapabilityStub,
           setTimezone: setTimezoneStub,
           setCypressNpmDependency: setCypressNpmDependencyStub,
-          fetchFolderSize: fetchFolderSizeStub
+          fetchFolderSize: fetchFolderSizeStub,
+          processAutoImportDependencies: processAutoImportDependenciesStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -1147,6 +1156,7 @@ describe("runs", () => {
       setCypressNpmDependencyStub = sandbox.stub();
       packageSetupAndInstallerStub = sandbox.stub();
       fetchFolderSizeStub = sandbox.stub();
+      processAutoImportDependenciesStub = sandbox.stub();
     });
 
     afterEach(() => {
@@ -1213,7 +1223,8 @@ describe("runs", () => {
           setInteractiveCapability: setInteractiveCapabilityStub,
           setTimezone: setTimezoneStub,
           setCypressNpmDependency: setCypressNpmDependencyStub,
-          fetchFolderSize: fetchFolderSizeStub
+          fetchFolderSize: fetchFolderSizeStub,
+          processAutoImportDependencies: processAutoImportDependenciesStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
@@ -1407,7 +1418,8 @@ describe("runs", () => {
           setInteractiveCapability: setInteractiveCapabilityStub,
           setTimezone: setTimezoneStub,
           setCypressNpmDependency: setCypressNpmDependencyStub,
-          fetchFolderSize: fetchFolderSizeStub
+          fetchFolderSize: fetchFolderSizeStub,
+          processAutoImportDependencies: processAutoImportDependenciesStub
         },
         '../helpers/capabilityHelper': {
           validate: capabilityValidatorStub,
