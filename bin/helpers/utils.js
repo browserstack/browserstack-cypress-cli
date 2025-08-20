@@ -1962,6 +1962,35 @@ exports.filterDependenciesWithRegex = (dependencies, excludePatterns) => {
   return filteredDependencies;
 };
 
+exports.ensureBrowserstackCypressCliDependency = (npmDependencies) => {
+  // Validate npmDependencies parameter
+  if (npmDependencies === undefined || npmDependencies === null || 
+      typeof npmDependencies !== 'object' || Array.isArray(npmDependencies)) {
+    return;
+  }
+  
+  // Check if browserstack-cypress-cli already exists
+  if ("browserstack-cypress-cli" in npmDependencies) {
+    return;
+  }
+  
+  logger.warn("Missing browserstack-cypress-cli not found in npm_dependencies");
+  
+  // Get version from package.json (similar to getAgentVersion)
+  let version = "latest";
+  try {
+    const packageJsonPath = path.join(__dirname, '../../package.json');
+    if (fs.existsSync(packageJsonPath)) {
+      version = require(packageJsonPath).version;
+    }
+  } catch (err) {
+    logger.debug("Could not read package.json version, using 'latest'");
+  }
+  
+  npmDependencies['browserstack-cypress-cli'] = version;
+  logger.warn(`Adding browserstack-cypress-cli version ${version} in npm_dependencies`);
+};
+
 exports.processAutoImportDependencies = (runSettings) => {
   // Always run validation first
   exports.validateAutoImportConflict(runSettings);
@@ -1988,6 +2017,9 @@ exports.processAutoImportDependencies = (runSettings) => {
   
   // Set the npm_dependencies in runSettings
   runSettings.npm_dependencies = filteredDependencies;
+  
+  // Ensure browserstack-cypress-cli dependency is present when auto import is enabled
+  exports.ensureBrowserstackCypressCliDependency(runSettings.npm_dependencies);
 };
 exports.normalizeTestReportingEnvVars = () => {
   if (!this.isUndefined(process.env.BROWSERSTACK_TEST_REPORTING)){

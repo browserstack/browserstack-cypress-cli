@@ -5237,7 +5237,8 @@ describe('utils', () => {
       
       sinon.assert.calledOnce(readPackageStub);
       sinon.assert.calledOnce(filterStub);
-      expect(runSettings.npm_dependencies).to.deep.equal({});
+      // Should now have browserstack-cypress-cli added automatically
+      expect(runSettings.npm_dependencies).to.have.property('browserstack-cypress-cli');
     });
 
     it('should merge auto-imported deps with existing empty npm_dependencies', () => {
@@ -5396,7 +5397,7 @@ describe('utils', () => {
       const endTime = Date.now();
       
       expect(endTime - startTime).to.be.lessThan(1000); // Should complete within 1 second
-      expect(Object.keys(runSettings.npm_dependencies)).to.have.lengthOf(500);
+      expect(Object.keys(runSettings.npm_dependencies)).to.have.lengthOf(501); // 500 + browserstack-cypress-cli
     });
 
     it('should initialize npm_dependencies when it does not exist', () => {
@@ -5415,6 +5416,180 @@ describe('utils', () => {
       
       expect(runSettings).to.have.property('npm_dependencies');
       expect(runSettings.npm_dependencies).to.deep.equal(mockDevDeps);
+    });
+
+    it('should call ensureBrowserstackCypressCliDependency when auto import is enabled', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        home_directory: '/project/dir'
+      };
+      
+      const mockDevDeps = { jest: '^29.0.0' };
+      const ensureStub = sinon.stub(utils, 'ensureBrowserstackCypressCliDependency');
+      
+      validateStub.returns();
+      readPackageStub.returns(mockDevDeps);
+      filterStub.returns(mockDevDeps);
+      
+      utils.processAutoImportDependencies(runSettings);
+      
+      sinon.assert.calledOnceWithExactly(ensureStub, mockDevDeps);
+      ensureStub.restore();
+    });
+
+    it('should not call ensureBrowserstackCypressCliDependency when auto import is disabled', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: false
+      };
+      
+      const ensureStub = sinon.stub(utils, 'ensureBrowserstackCypressCliDependency');
+      
+      utils.processAutoImportDependencies(runSettings);
+      
+      sinon.assert.notCalled(ensureStub);
+      ensureStub.restore();
+    });
+  });
+
+  describe('#ensureBrowserstackCypressCliDependency', () => {
+    let loggerWarnStub, loggerDebugStub, fsExistsSyncStub;
+    
+    beforeEach(() => {
+      loggerWarnStub = sinon.stub(logger, 'warn');
+      loggerDebugStub = sinon.stub(logger, 'debug');
+      fsExistsSyncStub = sinon.stub(fs, 'existsSync');
+    });
+
+    afterEach(() => {
+      loggerWarnStub.restore();
+      loggerDebugStub.restore();
+      fsExistsSyncStub.restore();
+      // Clear require cache
+      delete require.cache[require.resolve('../../../../package.json')];
+    });
+
+    it('should add browserstack-cypress-cli when not present with version from package.json', () => {
+      const npmDependencies = {
+        'cypress': '^12.0.0',
+        'jest': '^29.0.0'
+      };
+
+      fsExistsSyncStub.returns(true);
+      
+      // Mock require to return a version
+      const mockPackageJson = { version: '1.2.3' };
+      
+      // Temporarily replace require
+      const Module = require('module');
+      const originalLoad = Module._load;
+      Module._load = function(request, parent) {
+        if (request.includes('package.json')) {
+          return mockPackageJson;
+        }
+        return originalLoad.call(this, request, parent);
+      };
+
+      utils.ensureBrowserstackCypressCliDependency(npmDependencies);
+
+      expect(npmDependencies).to.have.property('browserstack-cypress-cli', '1.2.3');
+      sinon.assert.calledWith(loggerWarnStub, 'Missing browserstack-cypress-cli not found in npm_dependencies');
+      sinon.assert.calledWith(loggerWarnStub, 'Adding browserstack-cypress-cli version 1.2.3 in npm_dependencies');
+
+      // Restore require
+      Module._load = originalLoad;
+    });
+
+    it('should add browserstack-cypress-cli with "latest" when package.json does not exist', () => {
+      const npmDependencies = {
+        'cypress': '^12.0.0'
+      };
+
+      fsExistsSyncStub.returns(false);
+
+      utils.ensureBrowserstackCypressCliDependency(npmDependencies);
+
+      expect(npmDependencies).to.have.property('browserstack-cypress-cli', 'latest');
+      sinon.assert.calledWith(loggerWarnStub, 'Missing browserstack-cypress-cli not found in npm_dependencies');
+      sinon.assert.calledWith(loggerWarnStub, 'Adding browserstack-cypress-cli version latest in npm_dependencies');
+    });
+
+    it('should add browserstack-cypress-cli with "latest" when require throws error', () => {
+      const npmDependencies = {
+        'cypress': '^12.0.0'
+      };
+
+      fsExistsSyncStub.returns(true);
+      
+      // Mock require to throw an error
+      const Module = require('module');
+      const originalLoad = Module._load;
+      Module._load = function(request, parent) {
+        if (request.includes('package.json')) {
+          throw new Error('Cannot read file');
+        }
+        return originalLoad.call(this, request, parent);
+      };
+
+      utils.ensureBrowserstackCypressCliDependency(npmDependencies);
+
+      expect(npmDependencies).to.have.property('browserstack-cypress-cli', 'latest');
+      sinon.assert.calledWith(loggerDebugStub, "Could not read package.json version, using 'latest'");
+      sinon.assert.calledWith(loggerWarnStub, 'Adding browserstack-cypress-cli version latest in npm_dependencies');
+
+      // Restore require
+      Module._load = originalLoad;
+    });
+
+    it('should not modify npmDependencies when browserstack-cypress-cli already exists', () => {
+      const npmDependencies = {
+        'browserstack-cypress-cli': '^2.5.0',
+        'cypress': '^12.0.0'
+      };
+
+      utils.ensureBrowserstackCypressCliDependency(npmDependencies);
+
+      expect(npmDependencies['browserstack-cypress-cli']).to.equal('^2.5.0');
+      sinon.assert.notCalled(loggerWarnStub);
+      sinon.assert.notCalled(fsExistsSyncStub);
+    });
+
+    it('should handle undefined npmDependencies parameter', () => {
+      utils.ensureBrowserstackCypressCliDependency(undefined);
+      
+      sinon.assert.notCalled(loggerWarnStub);
+      sinon.assert.notCalled(fsExistsSyncStub);
+    });
+
+    it('should handle null npmDependencies parameter', () => {
+      utils.ensureBrowserstackCypressCliDependency(null);
+      
+      sinon.assert.notCalled(loggerWarnStub);
+      sinon.assert.notCalled(fsExistsSyncStub);
+    });
+
+    it('should handle non-object npmDependencies parameter', () => {
+      utils.ensureBrowserstackCypressCliDependency('not an object');
+      
+      sinon.assert.notCalled(loggerWarnStub);
+      sinon.assert.notCalled(fsExistsSyncStub);
+    });
+
+    it('should handle array npmDependencies parameter', () => {
+      utils.ensureBrowserstackCypressCliDependency(['not', 'an', 'object']);
+      
+      sinon.assert.notCalled(loggerWarnStub);
+      sinon.assert.notCalled(fsExistsSyncStub);
+    });
+
+    it('should handle empty npmDependencies object', () => {
+      const npmDependencies = {};
+
+      fsExistsSyncStub.returns(false);
+
+      utils.ensureBrowserstackCypressCliDependency(npmDependencies);
+
+      expect(npmDependencies).to.have.property('browserstack-cypress-cli', 'latest');
+      sinon.assert.calledWith(loggerWarnStub, 'Missing browserstack-cypress-cli not found in npm_dependencies');
     });
   });
 
