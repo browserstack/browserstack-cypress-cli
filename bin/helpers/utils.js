@@ -1812,6 +1812,215 @@ exports.decodeJWTToken = (token) => {
   }
 }
 
+exports.validateAutoImportConflict = (runSettings) => {
+  const constants = require('./constants');
+  
+  // Validate auto_import_dev_dependencies type
+  if (runSettings.auto_import_dev_dependencies !== undefined && 
+      typeof runSettings.auto_import_dev_dependencies !== 'boolean') {
+    throw new Error(constants.validationMessages.AUTO_IMPORT_INVALID_TYPE);
+  }
+  
+  // Skip validation if auto_import_dev_dependencies is not enabled
+  if (!runSettings.auto_import_dev_dependencies) {
+    return;
+  }
+  
+  // Check if any manual npm dependency configurations have values
+  const hasNpmDeps = runSettings.npm_dependencies && 
+                     typeof runSettings.npm_dependencies === 'object' && 
+                     Object.keys(runSettings.npm_dependencies).length > 0;
+  
+  const hasWinDeps = runSettings.win_npm_dependencies && 
+                     typeof runSettings.win_npm_dependencies === 'object' && 
+                     Object.keys(runSettings.win_npm_dependencies).length > 0;
+  
+  const hasMacDeps = runSettings.mac_npm_dependencies && 
+                     typeof runSettings.mac_npm_dependencies === 'object' && 
+                     Object.keys(runSettings.mac_npm_dependencies).length > 0;
+  
+  if (hasNpmDeps || hasWinDeps || hasMacDeps) {
+    throw new Error(constants.validationMessages.AUTO_IMPORT_CONFLICT_ERROR);
+  }
+};
+
+exports.readPackageJsonDevDependencies = (projectDir) => {
+  const fs = require('fs');
+  const path = require('path');
+  const constants = require('./constants');
+  
+  const packageJsonPath = path.join(projectDir, 'package.json');
+  
+  try {
+    const packageJsonContent = fs.readFileSync(packageJsonPath, 'utf8');
+    
+    // Remove BOM if present
+    const cleanedContent = packageJsonContent.replace(/^\ufeff/, '');
+    
+    if (!cleanedContent.trim()) {
+      throw new Error(constants.validationMessages.PACKAGE_JSON_MALFORMED);
+    }
+    
+    let packageJson;
+    try {
+      packageJson = JSON.parse(cleanedContent);
+    } catch (parseError) {
+      throw new Error(constants.validationMessages.PACKAGE_JSON_MALFORMED);
+    }
+    
+    if (typeof packageJson !== 'object' || packageJson === null || Array.isArray(packageJson)) {
+      throw new Error(constants.validationMessages.PACKAGE_JSON_NOT_OBJECT);
+    }
+    
+    // Handle missing devDependencies field
+    if (packageJson.devDependencies === undefined) {
+      return {};
+    }
+    
+    // Validate devDependencies format
+    if (typeof packageJson.devDependencies !== 'object' || 
+        packageJson.devDependencies === null || 
+        Array.isArray(packageJson.devDependencies)) {
+      throw new Error(constants.validationMessages.DEVDEPS_INVALID_FORMAT);
+    }
+    
+    return packageJson.devDependencies;
+    
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      throw new Error(constants.validationMessages.PACKAGE_JSON_NOT_FOUND);
+    } else if (error.code === 'EACCES') {
+      throw new Error(constants.validationMessages.PACKAGE_JSON_PERMISSION_DENIED);
+    } else if (error.message.includes(constants.validationMessages.PACKAGE_JSON_MALFORMED) ||
+               error.message.includes(constants.validationMessages.PACKAGE_JSON_NOT_OBJECT) ||
+               error.message.includes(constants.validationMessages.DEVDEPS_INVALID_FORMAT)) {
+      throw error;
+    } else {
+      throw new Error(`Cannot read package.json: ${error.message}`);
+    }
+  }
+};
+
+exports.filterDependenciesWithRegex = (dependencies, excludePatterns) => {
+  const constants = require('./constants');
+  
+  // Validate dependencies parameter
+  if (!dependencies || typeof dependencies !== 'object' || Array.isArray(dependencies)) {
+    throw new Error(constants.validationMessages.DEPENDENCIES_PARAM_INVALID);
+  }
+  
+  // Return all dependencies if no exclusion patterns
+  if (!excludePatterns) {
+    return dependencies;
+  }
+  
+  // Validate excludePatterns parameter
+  if (!Array.isArray(excludePatterns)) {
+    throw new Error(constants.validationMessages.EXCLUDE_DEPS_INVALID_TYPE);
+  }
+  
+  // Validate all patterns are strings
+  for (const pattern of excludePatterns) {
+    if (typeof pattern !== 'string') {
+      throw new Error(constants.validationMessages.EXCLUDE_DEPS_INVALID_PATTERNS);
+    }
+  }
+  
+  // If no patterns, return all dependencies
+  if (excludePatterns.length === 0) {
+    return dependencies;
+  }
+  
+  const filteredDependencies = {};
+  
+  for (const [packageName, version] of Object.entries(dependencies)) {
+    let shouldExclude = false;
+    
+    for (const pattern of excludePatterns) {
+      // Skip empty patterns
+      if (!pattern) {
+        continue;
+      }
+      
+      try {
+        const regex = new RegExp(pattern);
+        if (regex.test(packageName)) {
+          shouldExclude = true;
+          break;
+        }
+      } catch (regexError) {
+        const errorMsg = constants.validationMessages.INVALID_REGEX_PATTERN.replace('{pattern}', pattern);
+        throw new Error(errorMsg);
+      }
+    }
+    
+    if (!shouldExclude) {
+      filteredDependencies[packageName] = version;
+    }
+  }
+  
+  return filteredDependencies;
+};
+
+exports.ensureBrowserstackCypressCliDependency = (npmDependencies) => {
+  // Validate npmDependencies parameter
+  if (npmDependencies === undefined || npmDependencies === null || 
+      typeof npmDependencies !== 'object' || Array.isArray(npmDependencies)) {
+    return;
+  }
+  
+  // Check if browserstack-cypress-cli already exists
+  if ("browserstack-cypress-cli" in npmDependencies) {
+    return;
+  }
+  
+  logger.warn("Missing browserstack-cypress-cli not found in npm_dependencies");
+  
+  // Get version from package.json (similar to getAgentVersion)
+  let version = "latest";
+  try {
+    const packageJsonPath = path.join(__dirname, '../../package.json');
+    if (fs.existsSync(packageJsonPath)) {
+      version = require(packageJsonPath).version;
+    }
+  } catch (err) {
+    logger.debug("Could not read package.json version, using 'latest'");
+  }
+  
+  npmDependencies['browserstack-cypress-cli'] = version;
+  logger.warn(`Adding browserstack-cypress-cli version ${version} in npm_dependencies`);
+};
+
+exports.processAutoImportDependencies = (runSettings) => {
+  // Always run validation first
+  exports.validateAutoImportConflict(runSettings);
+  
+  // Skip processing if auto_import_dev_dependencies is not enabled
+  if (!runSettings.auto_import_dev_dependencies) {
+    return;
+  }
+  
+  // Determine project directory using battle-tested logic
+  let projectDir;
+  if (runSettings.home_directory) {
+    projectDir = runSettings.home_directory;
+  } else {
+    const path = require('path');
+    projectDir = path.dirname(runSettings.cypressConfigFilePath);
+  }
+  
+  // Read devDependencies from package.json
+  const devDependencies = exports.readPackageJsonDevDependencies(projectDir);
+  
+  // Apply exclusion filters
+  const filteredDependencies = exports.filterDependenciesWithRegex(devDependencies, runSettings.exclude_dependencies);
+  
+  // Set the npm_dependencies in runSettings
+  runSettings.npm_dependencies = filteredDependencies;
+  
+  // Ensure browserstack-cypress-cli dependency is present when auto import is enabled
+  exports.ensureBrowserstackCypressCliDependency(runSettings.npm_dependencies);
+};
 exports.normalizeTestReportingEnvVars = () => {
   if (!this.isUndefined(process.env.BROWSERSTACK_TEST_REPORTING)){
     process.env.BROWSERSTACK_TEST_OBSERVABILITY = process.env.BROWSERSTACK_TEST_REPORTING;

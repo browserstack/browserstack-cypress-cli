@@ -59,6 +59,8 @@ module.exports = function () {
       "parallels": "Number of parallels you want to run",
       "npm_dependencies": {
       },
+      "auto_import_dev_dependencies": false,
+      "exclude_dependencies": [],
       "package_config_options": {
       },
       "headless": true

@@ -418,7 +418,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
       exports.debug('Build creation successfull!');
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;
       setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
-      if(this.isBrowserstackInfra()) helper.setBrowserstackCypressCliDependency(user_config);
+      if(this.isBrowserstackInfra() && (user_config.run_settings.auto_import_dev_dependencies != true)) helper.setBrowserstackCypressCliDependency(user_config);
     } catch(error) {
       if(!error.errorType) {
         if (error.response) {
