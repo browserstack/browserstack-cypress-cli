@@ -275,7 +275,9 @@ describe("checkUploaded", () => {
       };
     });
 
-    it("resolves early due to force upload", () => {
+    // https://github.com/browserstack/browserstack-cypress-cli/commit/e55b6232ddb6cdc08ab80a0e3275c8c8c1191639#diff-e4adc3c50732024d070d2df81b167010ada80e39e52edfc8f3f48b0e9b44a501L16-L18
+    // Skipping because in above PR this was removed.
+    it.skip("resolves early due to force upload", () => {
       let hashElementstub = sandbox.stub().returns(Promise.resolve("random_md5sum"));
       const checkUploaded = rewire("../../../../bin/helpers/checkUploaded");
       checkUploaded.__set__({

@@ -1,0 +1,14 @@
+{
+  "name": "test-project",
+  "version": "1.0.0",
+  "devDependencies": {
+    "git-package": "git+https://github.com/user/repo.git#branch",
+    "github-shorthand": "user/repo#v1.0.0",
+    "file-package": "file:../local-package",
+    "tarball-package": "https://registry.npmjs.org/package/-/package-1.0.0.tgz",
+    "normal-package": "^1.0.0",
+    "prerelease": "1.0.0-alpha.1",
+    "range-package": ">=1.0.0 <2.0.0"
+  }
+}
+
