@@ -1,0 +1,15 @@
+{
+  "name": "test-project",
+  "version": "1.0.0",
+  "devDependencies": {
+    "normal-package": "^1.0.0",
+    "package-with-ümlauts": "^1.0.0",
+    "pàckagé-wïth-áccénts": "^2.0.0",
+    "包名测试": "^1.0.0",
+    "пакет-кириллица": "^1.0.0",
+    "package.with.dots": "^1.0.0",
+    "package_with_underscores": "^1.0.0",
+    "package-with-dashes": "^1.0.0"
+  }
+}
+

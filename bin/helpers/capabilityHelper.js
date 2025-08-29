@@ -183,10 +183,16 @@ const getAccessibilityPlatforms = (bsConfig) => {
 const addCypressZipStartLocation = (runSettings) => {
   let resolvedHomeDirectoryPath = path.resolve(runSettings.home_directory);
   let resolvedCypressConfigFilePath = path.resolve(runSettings.cypressConfigFilePath);
-  runSettings.cypressZipStartLocation = path.dirname(resolvedCypressConfigFilePath.split(resolvedHomeDirectoryPath)[1]);
+  
+  // Convert to POSIX style paths for consistent behavior
+  let posixHomePath = resolvedHomeDirectoryPath.split(path.sep).join(path.posix.sep);
+  let posixConfigPath = resolvedCypressConfigFilePath.split(path.sep).join(path.posix.sep);
+  
+  runSettings.cypressZipStartLocation = path.posix.dirname(posixConfigPath.split(posixHomePath)[1]);
   runSettings.cypressZipStartLocation = runSettings.cypressZipStartLocation.substring(1);
   logger.debug(`Setting cypress zip start location = ${runSettings.cypressZipStartLocation}`);
 }
+
 
 const validate = (bsConfig, args) => {
   return new Promise(function (resolve, reject) {

@@ -4531,5 +4531,1066 @@ describe('utils', () => {
     });
   });
 
+  describe('#validateAutoImportConflict', () => {
     
+    it('should pass when auto_import_dev_dependencies is true and no manual dependencies defined', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true
+      };
+      expect(() => utils.validateAutoImportConflict(runSettings)).to.not.throw();
+    });
+
+    it('should pass when auto_import_dev_dependencies is true and npm_dependencies is empty object', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        npm_dependencies: {}
+      };
+      expect(() => utils.validateAutoImportConflict(runSettings)).to.not.throw();
+    });
+
+    it('should pass when auto_import_dev_dependencies is true and npm_dependencies is null', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        npm_dependencies: null
+      };
+      expect(() => utils.validateAutoImportConflict(runSettings)).to.not.throw();
+    });
+
+    it('should pass when auto_import_dev_dependencies is true and npm_dependencies is undefined', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        npm_dependencies: undefined
+      };
+      expect(() => utils.validateAutoImportConflict(runSettings)).to.not.throw();
+    });
+
+    it('should throw error when auto_import_dev_dependencies is true and npm_dependencies has values', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        npm_dependencies: {
+          lodash: '^4.17.21'
+        }
+      };
+      expect(() => utils.validateAutoImportConflict(runSettings)).to.throw();
+    });
+
+    it('should throw error when auto_import_dev_dependencies is true and win_npm_dependencies has values', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        win_npm_dependencies: {
+          lodash: '^4.17.21'
+        }
+      };
+      expect(() => utils.validateAutoImportConflict(runSettings)).to.throw();
+    });
+
+    it('should throw error when auto_import_dev_dependencies is true and mac_npm_dependencies has values', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        mac_npm_dependencies: {
+          lodash: '^4.17.21'
+        }
+      };
+      expect(() => utils.validateAutoImportConflict(runSettings)).to.throw();
+    });
+
+    it('should throw error when auto_import_dev_dependencies is true and all manual dependency types have values', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        npm_dependencies: {
+          lodash: '^4.17.21'
+        },
+        win_npm_dependencies: {
+          winonly: '^1.0.0'
+        },
+        mac_npm_dependencies: {
+          maconly: '^1.0.0'
+        }
+      };
+      expect(() => utils.validateAutoImportConflict(runSettings)).to.throw();
+    });
+
+    it('should pass when auto_import_dev_dependencies is false and manual dependencies exist', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: false,
+        npm_dependencies: {
+          lodash: '^4.17.21'
+        }
+      };
+      expect(() => utils.validateAutoImportConflict(runSettings)).to.not.throw();
+    });
+
+    it('should pass when auto_import_dev_dependencies is undefined and manual dependencies exist', () => {
+      const runSettings = {
+        npm_dependencies: {
+          lodash: '^4.17.21'
+        }
+      };
+      expect(() => utils.validateAutoImportConflict(runSettings)).to.not.throw();
+    });
+
+    it('should throw error with proper message when auto_import conflicts with npm_dependencies', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        npm_dependencies: {
+          lodash: '^4.17.21'
+        }
+      };
+      expect(() => utils.validateAutoImportConflict(runSettings)).to.throw(/auto_import_dev_dependencies.*npm_dependencies/i);
+    });
+
+    it('should throw error for invalid boolean value of auto_import_dev_dependencies', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: "true"
+      };
+      expect(() => utils.validateAutoImportConflict(runSettings)).to.throw(/must be a boolean/i);
+    });
+
+    it('should throw error for invalid type of auto_import_dev_dependencies', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: 1
+      };
+      expect(() => utils.validateAutoImportConflict(runSettings)).to.throw(/must be a boolean/i);
+    });
+
+    it('should pass when both auto_import_dev_dependencies and manual deps have empty objects', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        npm_dependencies: {},
+        win_npm_dependencies: {},
+        mac_npm_dependencies: {}
+      };
+      expect(() => utils.validateAutoImportConflict(runSettings)).to.not.throw();
+    });
+  });
+
+  describe('#readPackageJsonDevDependencies', () => {
+    let fsStub, pathStub;
+
+    beforeEach(() => {
+      fsStub = sinon.stub(fs, 'readFileSync');
+      pathStub = sinon.stub(path, 'join');
+    });
+
+    afterEach(() => {
+      fsStub.restore();
+      pathStub.restore();
+    });
+
+    it('should read valid package.json and return devDependencies', () => {
+      const validPackageJson = {
+        "name": "test-project",
+        "version": "1.0.0",
+        "devDependencies": {
+          "jest": "^29.0.0",
+          "prettier": "^2.8.0",
+          "eslint": "^8.30.0",
+          "cypress": "^12.0.0"
+        }
+      };
+      pathStub.returns('/fake/path/package.json');
+      fsStub.returns(JSON.stringify(validPackageJson));
+      
+      const result = utils.readPackageJsonDevDependencies('/fake/path');
+      expect(result).to.deep.equal(validPackageJson.devDependencies);
+    });
+
+    it('should return empty object when devDependencies field is empty', () => {
+      const emptyDevDepsPackage = {
+        "name": "test-project",
+        "version": "1.0.0",
+        "devDependencies": {}
+      };
+      pathStub.returns('/fake/path/package.json');
+      fsStub.returns(JSON.stringify(emptyDevDepsPackage));
+      
+      const result = utils.readPackageJsonDevDependencies('/fake/path');
+      expect(result).to.deep.equal({});
+    });
+
+    it('should return empty object when devDependencies field is missing', () => {
+      const noDevDepsPackage = {
+        "name": "test-project", 
+        "version": "1.0.0",
+        "dependencies": {
+          "lodash": "^4.17.21",
+          "axios": "^1.3.0"
+        }
+      };
+      pathStub.returns('/fake/path/package.json');
+      fsStub.returns(JSON.stringify(noDevDepsPackage));
+      
+      const result = utils.readPackageJsonDevDependencies('/fake/path');
+      expect(result).to.deep.equal({});
+    });
+
+    it('should handle scoped packages correctly', () => {
+      const scopedPackage = {
+        "name": "test-project",
+        "version": "1.0.0",
+        "devDependencies": {
+          "@types/node": "^18.0.0",
+          "@types/jest": "^29.0.0",
+          "@testing-library/react": "^13.0.0",
+          "@testing-library/jest-dom": "^5.16.0",
+          "@eslint/config": "^1.0.0",
+          "regular-package": "^1.0.0",
+          "@babel/core": "^7.20.0"
+        }
+      };
+      pathStub.returns('/fake/path/package.json');
+      fsStub.returns(JSON.stringify(scopedPackage));
+      
+      const result = utils.readPackageJsonDevDependencies('/fake/path');
+      expect(result).to.deep.equal(scopedPackage.devDependencies);
+      expect(result).to.have.property('@types/node');
+      expect(result).to.have.property('@testing-library/react');
+    });
+
+    it('should handle cypress and cypress-related packages', () => {
+      const cypressPackage = {
+        "name": "test-project",
+        "version": "1.0.0",
+        "devDependencies": {
+          "cypress": "^12.5.0",
+          "@cypress/webpack-preprocessor": "^5.17.0",
+          "cypress-mochawesome-reporter": "^3.4.0",
+          "cypress-real-events": "^1.8.0",
+          "@testing-library/cypress": "^9.0.0"
+        }
+      };
+      pathStub.returns('/fake/path/package.json');
+      fsStub.returns(JSON.stringify(cypressPackage));
+      
+      const result = utils.readPackageJsonDevDependencies('/fake/path');
+      expect(result).to.deep.equal(cypressPackage.devDependencies);
+      expect(result).to.have.property('cypress');
+      expect(result).to.have.property('@cypress/webpack-preprocessor');
+    });
+
+    it('should handle git URLs and various dependency formats', () => {
+      const gitDepsPackage = {
+        "name": "test-project",
+        "version": "1.0.0",
+        "devDependencies": {
+          "git-package": "git+https://github.com/user/repo.git#branch",
+          "github-shorthand": "user/repo#v1.0.0",
+          "file-package": "file:../local-package",
+          "tarball-package": "https://registry.npmjs.org/package/-/package-1.0.0.tgz",
+          "normal-package": "^1.0.0",
+          "prerelease": "1.0.0-alpha.1",
+          "range-package": ">=1.0.0 <2.0.0"
+        }
+      };
+      pathStub.returns('/fake/path/package.json');
+      fsStub.returns(JSON.stringify(gitDepsPackage));
+      
+      const result = utils.readPackageJsonDevDependencies('/fake/path');
+      expect(result).to.deep.equal(gitDepsPackage.devDependencies);
+      expect(result).to.have.property('git-package');
+      expect(result).to.have.property('file-package');
+    });
+
+    it('should handle unicode package names', () => {
+      const unicodePackage = {
+        "name": "test-project",
+        "version": "1.0.0",
+        "devDependencies": {
+          "normal-package": "^1.0.0",
+          "package-with-ümlauts": "^1.0.0",
+          "pàckagé-wïth-áccénts": "^2.0.0",
+          "包名测试": "^1.0.0",
+          "пакет-кириллица": "^1.0.0",
+          "package.with.dots": "^1.0.0",
+          "package_with_underscores": "^1.0.0",
+          "package-with-dashes": "^1.0.0"
+        }
+      };
+      pathStub.returns('/fake/path/package.json');
+      fsStub.returns(JSON.stringify(unicodePackage));
+      
+      const result = utils.readPackageJsonDevDependencies('/fake/path');
+      expect(result).to.deep.equal(unicodePackage.devDependencies);
+      expect(result).to.have.property('pàckagé-wïth-áccénts');
+    });
+
+    it('should throw error when package.json file does not exist', () => {
+      pathStub.returns('/fake/path/package.json');
+      fsStub.throws(new Error('ENOENT: no such file or directory'));
+      
+      expect(() => utils.readPackageJsonDevDependencies('/fake/path')).to.throw(/Cannot read package.json/i);
+    });
+
+    it('should throw error when package.json has permission issues', () => {
+      pathStub.returns('/fake/path/package.json');
+      fsStub.throws(new Error('EACCES: permission denied'));
+      
+      expect(() => utils.readPackageJsonDevDependencies('/fake/path')).to.throw(/cannot read package.json/i);
+    });
+
+    it('should throw error when package.json is malformed JSON', () => {
+      pathStub.returns('/fake/path/package.json');
+      fsStub.returns('{ "name": "test", // invalid comment }');
+      
+      expect(() => utils.readPackageJsonDevDependencies('/fake/path')).to.throw(/invalid JSON syntax/i);
+    });
+
+    it('should throw error when package.json is not a JSON object', () => {
+      pathStub.returns('/fake/path/package.json');
+      fsStub.returns('"this is a string not an object"');
+      
+      expect(() => utils.readPackageJsonDevDependencies('/fake/path')).to.throw(/must contain a JSON object/i);
+    });
+
+    it('should throw error when devDependencies is not an object', () => {
+      pathStub.returns('/fake/path/package.json');
+      fsStub.returns('{"name": "test-project", "version": "1.0.0", "devDependencies": ["this-should-be-object-not-array"]}');
+      
+      expect(() => utils.readPackageJsonDevDependencies('/fake/path')).to.throw(/devDependencies.*must be an object/i);
+    });
+
+    it('should throw error when devDependencies is null', () => {
+      pathStub.returns('/fake/path/package.json');
+      fsStub.returns('{"name": "test", "devDependencies": null}');
+      
+      expect(() => utils.readPackageJsonDevDependencies('/fake/path')).to.throw(/devDependencies field.*must be an object/i);
+    });
+
+    it('should handle empty package.json file', () => {
+      pathStub.returns('/fake/path/package.json');
+      fsStub.returns('');
+      
+      expect(() => utils.readPackageJsonDevDependencies('/fake/path')).to.throw(/invalid JSON syntax/i);
+    });
+
+    it('should construct correct path with path.join', () => {
+      const validPackageJson = {
+        "name": "test-project",
+        "version": "1.0.0",
+        "devDependencies": {
+          "jest": "^29.0.0"
+        }
+      };
+      pathStub.withArgs('/project/dir', 'package.json').returns('/project/dir/package.json');
+      fsStub.withArgs('/project/dir/package.json', 'utf8').returns(JSON.stringify(validPackageJson));
+      
+      utils.readPackageJsonDevDependencies('/project/dir');
+      
+      sinon.assert.calledWith(pathStub, '/project/dir', 'package.json');
+      sinon.assert.calledWith(fsStub, '/project/dir/package.json', 'utf8');
+    });
+
+    it('should handle BOM (Byte Order Mark) in package.json', () => {
+      const validPackageJson = {
+        "name": "test-project",
+        "version": "1.0.0",
+        "devDependencies": {
+          "jest": "^29.0.0"
+        }
+      };
+      pathStub.returns('/fake/path/package.json');
+      // Add BOM to the beginning of the JSON string
+      const jsonWithBOM = '\ufeff' + JSON.stringify(validPackageJson);
+      fsStub.returns(jsonWithBOM);
+      
+      const result = utils.readPackageJsonDevDependencies('/fake/path');
+      expect(result).to.deep.equal(validPackageJson.devDependencies);
+    });
+  });
+
+  describe('#filterDependenciesWithRegex', () => {
+    
+    it('should return all dependencies when exclude_dependencies is empty', () => {
+      const dependencies = {
+        lodash: '^4.17.21',
+        axios: '^1.3.0',
+        jest: '^29.0.0'
+      };
+      const excludePatterns = [];
+      
+      const result = utils.filterDependenciesWithRegex(dependencies, excludePatterns);
+      expect(result).to.deep.equal(dependencies);
+    });
+
+    it('should return all dependencies when exclude_dependencies is undefined', () => {
+      const dependencies = {
+        lodash: '^4.17.21',
+        axios: '^1.3.0'
+      };
+      
+      const result = utils.filterDependenciesWithRegex(dependencies, undefined);
+      expect(result).to.deep.equal(dependencies);
+    });
+
+    it('should filter out dependencies matching single regex pattern', () => {
+      const dependencies = {
+        lodash: '^4.17.21',
+        axios: '^1.3.0',
+        jest: '^29.0.0',
+        'testing-library': '^1.0.0'
+      };
+      const excludePatterns = ['jest'];
+      
+      const result = utils.filterDependenciesWithRegex(dependencies, excludePatterns);
+      expect(result).to.deep.equal({
+        lodash: '^4.17.21',
+        axios: '^1.3.0',
+        'testing-library': '^1.0.0'
+      });
+    });
+
+    it('should filter out dependencies matching multiple regex patterns', () => {
+      const dependencies = {
+        lodash: '^4.17.21',
+        axios: '^1.3.0',
+        jest: '^29.0.0',
+        'jest-environment': '^1.0.0',
+        eslint: '^8.30.0',
+        'eslint-config': '^1.0.0'
+      };
+      const excludePatterns = ['^jest', 'eslint'];
+      
+      const result = utils.filterDependenciesWithRegex(dependencies, excludePatterns);
+      expect(result).to.deep.equal({
+        lodash: '^4.17.21',
+        axios: '^1.3.0'
+      });
+    });
+
+    it('should handle scoped packages filtering correctly', () => {
+      const dependencies = {
+        '@types/node': '^18.0.0',
+        '@types/jest': '^29.0.0',
+        '@testing-library/react': '^13.0.0',
+        '@babel/core': '^7.20.0',
+        'regular-package': '^1.0.0'
+      };
+      const excludePatterns = ['^@types/', '^@testing-library/'];
+      
+      const result = utils.filterDependenciesWithRegex(dependencies, excludePatterns);
+      expect(result).to.deep.equal({
+        '@babel/core': '^7.20.0',
+        'regular-package': '^1.0.0'
+      });
+    });
+
+    it('should handle unicode package names in filtering', () => {
+      const dependencies = {
+        'normal-package': '^1.0.0',
+        'package-with-ümlauts': '^1.0.0',
+        'pàckagé-wïth-áccénts': '^2.0.0',
+        '包名测试': '^1.0.0'
+      };
+      const excludePatterns = ['ümlaut', 'áccént'];
+      
+      const result = utils.filterDependenciesWithRegex(dependencies, excludePatterns);
+      expect(result).to.deep.equal({
+        'normal-package': '^1.0.0',
+        '包名测试': '^1.0.0'
+      });
+    });
+
+    it('should handle special characters in package names', () => {
+      const dependencies = {
+        'package.with.dots': '^1.0.0',
+        'package_with_underscores': '^1.0.0',
+        'package-with-dashes': '^1.0.0',
+        'package+with+plus': '^1.0.0'
+      };
+      const excludePatterns = ['\\.', '_'];
+      
+      const result = utils.filterDependenciesWithRegex(dependencies, excludePatterns);
+      expect(result).to.deep.equal({
+        'package-with-dashes': '^1.0.0',
+        'package+with+plus': '^1.0.0'
+      });
+    });
+
+    it('should throw error for invalid regex patterns', () => {
+      const dependencies = { lodash: '^4.17.21' };
+      const excludePatterns = ['[unclosed'];
+      
+      expect(() => utils.filterDependenciesWithRegex(dependencies, excludePatterns)).to.throw(/invalid regex pattern/i);
+    });
+
+    it('should throw error for non-string regex patterns', () => {
+      const dependencies = { lodash: '^4.17.21' };
+      const excludePatterns = [123, true];
+      
+      expect(() => utils.filterDependenciesWithRegex(dependencies, excludePatterns)).to.throw(/must contain only string values/i);
+    });
+
+    it('should throw error when exclude_dependencies is not an array', () => {
+      const dependencies = { lodash: '^4.17.21' };
+      const excludePatterns = 'not-an-array';
+      
+      expect(() => utils.filterDependenciesWithRegex(dependencies, excludePatterns)).to.throw(/must be an array/i);
+    });
+
+    it('should handle empty string regex pattern', () => {
+      const dependencies = {
+        lodash: '^4.17.21',
+        axios: '^1.3.0'
+      };
+      const excludePatterns = [''];
+      
+      const result = utils.filterDependenciesWithRegex(dependencies, excludePatterns);
+      expect(result).to.deep.equal(dependencies);
+    });
+
+    it('should handle regex that matches everything (.*)', () => {
+      const dependencies = {
+        lodash: '^4.17.21',
+        axios: '^1.3.0'
+      };
+      const excludePatterns = ['.*'];
+      
+      const result = utils.filterDependenciesWithRegex(dependencies, excludePatterns);
+      expect(result).to.deep.equal({});
+    });
+
+    it('should handle regex that matches nothing', () => {
+      const dependencies = {
+        lodash: '^4.17.21',
+        axios: '^1.3.0'
+      };
+      const excludePatterns = ['(?!.*)'];
+      
+      const result = utils.filterDependenciesWithRegex(dependencies, excludePatterns);
+      expect(result).to.deep.equal(dependencies);
+    });
+
+    it('should be case sensitive by default', () => {
+      const dependencies = {
+        Lodash: '^4.17.21',
+        lodash: '^4.17.21',
+        AXIOS: '^1.3.0'
+      };
+      const excludePatterns = ['lodash'];
+      
+      const result = utils.filterDependenciesWithRegex(dependencies, excludePatterns);
+      expect(result).to.deep.equal({
+        Lodash: '^4.17.21',
+        AXIOS: '^1.3.0'
+      });
+    });
+
+    it('should handle complex regex patterns with word boundaries', () => {
+      const dependencies = {
+        test: '^1.0.0',
+        'test-utils': '^1.0.0',
+        'my-test': '^1.0.0',
+        'testing': '^1.0.0'
+      };
+      const excludePatterns = ['^test$'];
+      
+      const result = utils.filterDependenciesWithRegex(dependencies, excludePatterns);
+      expect(result).to.deep.equal({
+        'test-utils': '^1.0.0',
+        'my-test': '^1.0.0',
+        'testing': '^1.0.0'
+      });
+    });
+
+    it('should handle regex with lookahead and lookbehind', () => {
+      const dependencies = {
+        'test-package': '^1.0.0',
+        'test-dev': '^1.0.0',
+        'prod-test': '^1.0.0',
+        'other': '^1.0.0'
+      };
+      const excludePatterns = ['test(?=-dev)'];
+      
+      const result = utils.filterDependenciesWithRegex(dependencies, excludePatterns);
+      expect(result).to.deep.equal({
+        'test-package': '^1.0.0',
+        'prod-test': '^1.0.0',
+        'other': '^1.0.0'
+      });
+    });
+
+    it('should validate dependencies parameter', () => {
+      const excludePatterns = ['test'];
+      
+      expect(() => utils.filterDependenciesWithRegex(null, excludePatterns)).to.throw(/Dependencies parameter must be an object/i);
+      expect(() => utils.filterDependenciesWithRegex('not-object', excludePatterns)).to.throw(/Dependencies parameter must be an object/i);
+      expect(() => utils.filterDependenciesWithRegex([], excludePatterns)).to.throw(/Dependencies parameter must be an object/i);
+    });
+
+    it('should handle very long package names and regex patterns', () => {
+      const longPackageName = 'very-long-package-name-that-exceeds-normal-length-expectations-and-continues-for-testing-purposes';
+      const dependencies = {};
+      dependencies[longPackageName] = '^1.0.0';
+      dependencies['short'] = '^1.0.0';
+      
+      const longRegexPattern = 'very-long.*testing-purposes';
+      const excludePatterns = [longRegexPattern];
+      
+      const result = utils.filterDependenciesWithRegex(dependencies, excludePatterns);
+      expect(result).to.deep.equal({
+        'short': '^1.0.0'
+      });
+    });
+  });
+
+  describe('#processAutoImportDependencies', () => {
+    let validateStub, readPackageStub, filterStub;
+
+    beforeEach(() => {
+      validateStub = sinon.stub(utils, 'validateAutoImportConflict');
+      readPackageStub = sinon.stub(utils, 'readPackageJsonDevDependencies');
+      filterStub = sinon.stub(utils, 'filterDependenciesWithRegex');
+    });
+
+    afterEach(() => {
+      validateStub.restore();
+      readPackageStub.restore();
+      filterStub.restore();
+    });
+
+    it('should process full workflow successfully', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        exclude_dependencies: ['^@types/'],
+        home_directory: '/project/dir'
+      };
+      
+      const mockDevDeps = {
+        '@types/node': '^18.0.0',
+        'jest': '^29.0.0',
+        'lodash': '^4.17.21'
+      };
+      
+      const expectedFiltered = {
+        'jest': '^29.0.0',
+        'lodash': '^4.17.21'
+      };
+      
+      validateStub.returns();
+      readPackageStub.returns(mockDevDeps);
+      filterStub.returns(expectedFiltered);
+      
+      utils.processAutoImportDependencies(runSettings);
+      
+      sinon.assert.calledOnceWithExactly(validateStub, runSettings);
+      sinon.assert.calledOnceWithExactly(readPackageStub, '/project/dir');
+      sinon.assert.calledOnceWithExactly(filterStub, mockDevDeps, ['^@types/']);
+      expect(runSettings.npm_dependencies).to.deep.equal(expectedFiltered);
+    });
+
+    it('should use cypressConfigFilePath directory when home_directory is not set', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        cypressConfigFilePath: '/project/cypress.config.js'
+      };
+      
+      const mockDevDeps = { jest: '^29.0.0' };
+      
+      validateStub.returns();
+      readPackageStub.returns(mockDevDeps);
+      filterStub.returns(mockDevDeps);
+      
+      utils.processAutoImportDependencies(runSettings);
+      
+      sinon.assert.calledOnceWithExactly(readPackageStub, '/project');
+      expect(runSettings.npm_dependencies).to.deep.equal(mockDevDeps);
+    });
+
+    it('should skip processing when auto_import_dev_dependencies is false', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: false,
+        npm_dependencies: { existing: '^1.0.0' }
+      };
+      
+      utils.processAutoImportDependencies(runSettings);
+      
+      sinon.assert.calledOnceWithExactly(validateStub, runSettings);
+      sinon.assert.notCalled(readPackageStub);
+      sinon.assert.notCalled(filterStub);
+      expect(runSettings.npm_dependencies).to.deep.equal({ existing: '^1.0.0' });
+    });
+
+    it('should skip processing when auto_import_dev_dependencies is undefined', () => {
+      const runSettings = {
+        npm_dependencies: { existing: '^1.0.0' }
+      };
+      
+      utils.processAutoImportDependencies(runSettings);
+      
+      sinon.assert.calledOnceWithExactly(validateStub, runSettings);
+      sinon.assert.notCalled(readPackageStub);
+      sinon.assert.notCalled(filterStub);
+      expect(runSettings.npm_dependencies).to.deep.equal({ existing: '^1.0.0' });
+    });
+
+    it('should handle empty devDependencies from package.json', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        home_directory: '/project/dir'
+      };
+      
+      validateStub.returns();
+      readPackageStub.returns({});
+      filterStub.returns({});
+      
+      utils.processAutoImportDependencies(runSettings);
+      
+      sinon.assert.calledOnce(readPackageStub);
+      sinon.assert.calledOnce(filterStub);
+      // Should now have browserstack-cypress-cli added automatically
+      expect(runSettings.npm_dependencies).to.have.property('browserstack-cypress-cli');
+    });
+
+    it('should merge auto-imported deps with existing empty npm_dependencies', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        npm_dependencies: {},
+        home_directory: '/project/dir'
+      };
+      
+      const mockDevDeps = { jest: '^29.0.0' };
+      
+      validateStub.returns();
+      readPackageStub.returns(mockDevDeps);
+      filterStub.returns(mockDevDeps);
+      
+      utils.processAutoImportDependencies(runSettings);
+      
+      expect(runSettings.npm_dependencies).to.deep.equal(mockDevDeps);
+    });
+
+    it('should handle exclude_dependencies undefined', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        home_directory: '/project/dir'
+      };
+      
+      const mockDevDeps = { jest: '^29.0.0' };
+      
+      validateStub.returns();
+      readPackageStub.returns(mockDevDeps);
+      filterStub.returns(mockDevDeps);
+      
+      utils.processAutoImportDependencies(runSettings);
+      
+      sinon.assert.calledOnceWithExactly(filterStub, mockDevDeps, undefined);
+      expect(runSettings.npm_dependencies).to.deep.equal(mockDevDeps);
+    });
+
+    it('should handle exclude_dependencies empty array', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        exclude_dependencies: [],
+        home_directory: '/project/dir'
+      };
+      
+      const mockDevDeps = { jest: '^29.0.0' };
+      
+      validateStub.returns();
+      readPackageStub.returns(mockDevDeps);
+      filterStub.returns(mockDevDeps);
+      
+      utils.processAutoImportDependencies(runSettings);
+      
+      sinon.assert.calledOnceWithExactly(filterStub, mockDevDeps, []);
+      expect(runSettings.npm_dependencies).to.deep.equal(mockDevDeps);
+    });
+
+    it('should propagate validation errors', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        npm_dependencies: { existing: '^1.0.0' }
+      };
+      
+      const validationError = new Error('Validation failed');
+      validateStub.throws(validationError);
+      
+      expect(() => utils.processAutoImportDependencies(runSettings)).to.throw('Validation failed');
+      sinon.assert.calledOnce(validateStub);
+      sinon.assert.notCalled(readPackageStub);
+    });
+
+    it('should propagate package reading errors', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        home_directory: '/project/dir'
+      };
+      
+      const readError = new Error('Cannot read package.json');
+      validateStub.returns();
+      readPackageStub.throws(readError);
+      
+      expect(() => utils.processAutoImportDependencies(runSettings)).to.throw('Cannot read package.json');
+      sinon.assert.calledOnce(validateStub);
+      sinon.assert.calledOnce(readPackageStub);
+      sinon.assert.notCalled(filterStub);
+    });
+
+    it('should propagate filtering errors', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        exclude_dependencies: ['[invalid'],
+        home_directory: '/project/dir'
+      };
+      
+      const mockDevDeps = { jest: '^29.0.0' };
+      const filterError = new Error('Invalid regex pattern');
+      
+      validateStub.returns();
+      readPackageStub.returns(mockDevDeps);
+      filterStub.throws(filterError);
+      
+      expect(() => utils.processAutoImportDependencies(runSettings)).to.throw('Invalid regex pattern');
+      sinon.assert.calledOnce(validateStub);
+      sinon.assert.calledOnce(readPackageStub);
+      sinon.assert.calledOnce(filterStub);
+    });
+
+    it('should handle complex integration scenario with cypress precedence', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        exclude_dependencies: ['^@testing-library/'],
+        home_directory: '/project/dir'
+      };
+      
+      const mockDevDeps = {
+        'cypress': '^12.5.0',
+        '@testing-library/cypress': '^9.0.0',
+        'cypress-real-events': '^1.8.0',
+        'jest': '^29.0.0'
+      };
+      
+      const expectedFiltered = {
+        'cypress': '^12.5.0',
+        'cypress-real-events': '^1.8.0',
+        'jest': '^29.0.0'
+      };
+      
+      validateStub.returns();
+      readPackageStub.returns(mockDevDeps);
+      filterStub.returns(expectedFiltered);
+      
+      utils.processAutoImportDependencies(runSettings);
+      
+      expect(runSettings.npm_dependencies).to.deep.equal(expectedFiltered);
+      expect(runSettings.npm_dependencies.cypress).to.equal('^12.5.0');
+    });
+
+    it('should handle large number of dependencies efficiently', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        home_directory: '/project/dir'
+      };
+      
+      // Create a large number of mock dependencies
+      const mockDevDeps = {};
+      for (let i = 0; i < 500; i++) {
+        mockDevDeps[`package-${i}`] = '^1.0.0';
+      }
+      
+      validateStub.returns();
+      readPackageStub.returns(mockDevDeps);
+      filterStub.returns(mockDevDeps);
+      
+      const startTime = Date.now();
+      utils.processAutoImportDependencies(runSettings);
+      const endTime = Date.now();
+      
+      expect(endTime - startTime).to.be.lessThan(1000); // Should complete within 1 second
+      expect(Object.keys(runSettings.npm_dependencies)).to.have.lengthOf(501); // 500 + browserstack-cypress-cli
+    });
+
+    it('should initialize npm_dependencies when it does not exist', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        home_directory: '/project/dir'
+      };
+      
+      const mockDevDeps = { jest: '^29.0.0' };
+      
+      validateStub.returns();
+      readPackageStub.returns(mockDevDeps);
+      filterStub.returns(mockDevDeps);
+      
+      utils.processAutoImportDependencies(runSettings);
+      
+      expect(runSettings).to.have.property('npm_dependencies');
+      expect(runSettings.npm_dependencies).to.deep.equal(mockDevDeps);
+    });
+
+    it('should call ensureBrowserstackCypressCliDependency when auto import is enabled', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: true,
+        home_directory: '/project/dir'
+      };
+      
+      const mockDevDeps = { jest: '^29.0.0' };
+      const ensureStub = sinon.stub(utils, 'ensureBrowserstackCypressCliDependency');
+      
+      validateStub.returns();
+      readPackageStub.returns(mockDevDeps);
+      filterStub.returns(mockDevDeps);
+      
+      utils.processAutoImportDependencies(runSettings);
+      
+      sinon.assert.calledOnceWithExactly(ensureStub, mockDevDeps);
+      ensureStub.restore();
+    });
+
+    it('should not call ensureBrowserstackCypressCliDependency when auto import is disabled', () => {
+      const runSettings = {
+        auto_import_dev_dependencies: false
+      };
+      
+      const ensureStub = sinon.stub(utils, 'ensureBrowserstackCypressCliDependency');
+      
+      utils.processAutoImportDependencies(runSettings);
+      
+      sinon.assert.notCalled(ensureStub);
+      ensureStub.restore();
+    });
+  });
+
+  describe('#ensureBrowserstackCypressCliDependency', () => {
+    let loggerWarnStub, loggerDebugStub, fsExistsSyncStub;
+    
+    beforeEach(() => {
+      loggerWarnStub = sinon.stub(logger, 'warn');
+      loggerDebugStub = sinon.stub(logger, 'debug');
+      fsExistsSyncStub = sinon.stub(fs, 'existsSync');
+    });
+
+    afterEach(() => {
+      loggerWarnStub.restore();
+      loggerDebugStub.restore();
+      fsExistsSyncStub.restore();
+      // Clear require cache
+      delete require.cache[require.resolve('../../../../package.json')];
+    });
+
+    it('should add browserstack-cypress-cli when not present with version from package.json', () => {
+      const npmDependencies = {
+        'cypress': '^12.0.0',
+        'jest': '^29.0.0'
+      };
+
+      fsExistsSyncStub.returns(true);
+      
+      // Mock require to return a version
+      const mockPackageJson = { version: '1.2.3' };
+      
+      // Temporarily replace require
+      const Module = require('module');
+      const originalLoad = Module._load;
+      Module._load = function(request, parent) {
+        if (request.includes('package.json')) {
+          return mockPackageJson;
+        }
+        return originalLoad.call(this, request, parent);
+      };
+
+      utils.ensureBrowserstackCypressCliDependency(npmDependencies);
+
+      expect(npmDependencies).to.have.property('browserstack-cypress-cli', '1.2.3');
+      sinon.assert.calledWith(loggerWarnStub, 'Missing browserstack-cypress-cli not found in npm_dependencies');
+      sinon.assert.calledWith(loggerWarnStub, 'Adding browserstack-cypress-cli version 1.2.3 in npm_dependencies');
+
+      // Restore require
+      Module._load = originalLoad;
+    });
+
+    it('should add browserstack-cypress-cli with "latest" when package.json does not exist', () => {
+      const npmDependencies = {
+        'cypress': '^12.0.0'
+      };
+
+      fsExistsSyncStub.returns(false);
+
+      utils.ensureBrowserstackCypressCliDependency(npmDependencies);
+
+      expect(npmDependencies).to.have.property('browserstack-cypress-cli', 'latest');
+      sinon.assert.calledWith(loggerWarnStub, 'Missing browserstack-cypress-cli not found in npm_dependencies');
+      sinon.assert.calledWith(loggerWarnStub, 'Adding browserstack-cypress-cli version latest in npm_dependencies');
+    });
+
+    it('should add browserstack-cypress-cli with "latest" when require throws error', () => {
+      const npmDependencies = {
+        'cypress': '^12.0.0'
+      };
+
+      fsExistsSyncStub.returns(true);
+      
+      // Mock require to throw an error
+      const Module = require('module');
+      const originalLoad = Module._load;
+      Module._load = function(request, parent) {
+        if (request.includes('package.json')) {
+          throw new Error('Cannot read file');
+        }
+        return originalLoad.call(this, request, parent);
+      };
+
+      utils.ensureBrowserstackCypressCliDependency(npmDependencies);
+
+      expect(npmDependencies).to.have.property('browserstack-cypress-cli', 'latest');
+      sinon.assert.calledWith(loggerDebugStub, "Could not read package.json version, using 'latest'");
+      sinon.assert.calledWith(loggerWarnStub, 'Adding browserstack-cypress-cli version latest in npm_dependencies');
+
+      // Restore require
+      Module._load = originalLoad;
+    });
+
+    it('should not modify npmDependencies when browserstack-cypress-cli already exists', () => {
+      const npmDependencies = {
+        'browserstack-cypress-cli': '^2.5.0',
+        'cypress': '^12.0.0'
+      };
+
+      utils.ensureBrowserstackCypressCliDependency(npmDependencies);
+
+      expect(npmDependencies['browserstack-cypress-cli']).to.equal('^2.5.0');
+      sinon.assert.notCalled(loggerWarnStub);
+      sinon.assert.notCalled(fsExistsSyncStub);
+    });
+
+    it('should handle undefined npmDependencies parameter', () => {
+      utils.ensureBrowserstackCypressCliDependency(undefined);
+      
+      sinon.assert.notCalled(loggerWarnStub);
+      sinon.assert.notCalled(fsExistsSyncStub);
+    });
+
+    it('should handle null npmDependencies parameter', () => {
+      utils.ensureBrowserstackCypressCliDependency(null);
+      
+      sinon.assert.notCalled(loggerWarnStub);
+      sinon.assert.notCalled(fsExistsSyncStub);
+    });
+
+    it('should handle non-object npmDependencies parameter', () => {
+      utils.ensureBrowserstackCypressCliDependency('not an object');
+      
+      sinon.assert.notCalled(loggerWarnStub);
+      sinon.assert.notCalled(fsExistsSyncStub);
+    });
+
+    it('should handle array npmDependencies parameter', () => {
+      utils.ensureBrowserstackCypressCliDependency(['not', 'an', 'object']);
+      
+      sinon.assert.notCalled(loggerWarnStub);
+      sinon.assert.notCalled(fsExistsSyncStub);
+    });
+
+    it('should handle empty npmDependencies object', () => {
+      const npmDependencies = {};
+
+      fsExistsSyncStub.returns(false);
+
+      utils.ensureBrowserstackCypressCliDependency(npmDependencies);
+
+      expect(npmDependencies).to.have.property('browserstack-cypress-cli', 'latest');
+      sinon.assert.calledWith(loggerWarnStub, 'Missing browserstack-cypress-cli not found in npm_dependencies');
+    });
+  });
+
 });
