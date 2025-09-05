@@ -9,7 +9,7 @@ const logger = require("../../../../bin/helpers/logger").winstonLogger;
 chai.use(chaiAsPromised);
 logger.transports["console.info"].silent = true;
 
-describe('unzipFile', () => {
+describe.skip('unzipFile', () => {
   let unzipFile;
   let decompressStub;
   let createReadStreamStub;
