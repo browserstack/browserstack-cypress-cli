@@ -1,0 +1,12 @@
+{
+  "name": "test-project",
+  "version": "1.0.0",
+  "devDependencies": {
+    "cypress": "^12.5.0",
+    "@cypress/webpack-preprocessor": "^5.17.0",
+    "cypress-mochawesome-reporter": "^3.4.0",
+    "cypress-real-events": "^1.8.0",
+    "@testing-library/cypress": "^9.0.0"
+  }
+}
+

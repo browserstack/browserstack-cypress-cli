@@ -18,6 +18,8 @@ describe("build", () => {
   let capsData = testObjects.sampleCapsData;
 
   var sandbox;
+  var getUserAgentStub;
+  var capsStub;
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
