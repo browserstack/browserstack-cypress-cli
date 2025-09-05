@@ -37,6 +37,8 @@ const {
   supportFileCleanup
 } = require('../accessibility-automation/helper');
 const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
+const { checkAndSetAccessibility, shouldProcessEventForTesthub } = require('../testhub/utils');
+const TestHubHandler = require('../testhub/testHubHandler');
 
 
 module.exports = function run(args, rawArgs) {
@@ -71,8 +73,8 @@ module.exports = function run(args, rawArgs) {
     const isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibility;
     const turboScaleSession = isTurboScaleSession(bsConfig);
     Constants.turboScaleObj.enabled = turboScaleSession;
-    
 
+    checkAndSetAccessibility(bsConfig, isAccessibilitySession);
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
     utils.setDefaults(bsConfig, args);
@@ -113,8 +115,8 @@ module.exports = function run(args, rawArgs) {
     utils.setBuildTags(bsConfig, args);
 
     // Send build start to TEST REPORTING AND ANALYTICS
-    if(isTestObservabilitySession) {
-      await launchTestSession(bsConfig, bsConfigPath);
+    if(shouldProcessEventForTesthub()) {
+      await TestHubHandler.launchBuild(bsConfig, bsConfigPath);
       utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
     }
     
@@ -148,10 +150,6 @@ module.exports = function run(args, rawArgs) {
 
       // add cypress dependency if missing
       utils.setCypressNpmDependency(bsConfig);
-
-      if (isAccessibilitySession && isBrowserstackInfra) {
-        await createAccessibilityTestRun(bsConfig);
-      }
 
       if (turboScaleSession) {
         const gridDetails = await getTurboScaleGridDetails(bsConfig, args, rawArgs);
