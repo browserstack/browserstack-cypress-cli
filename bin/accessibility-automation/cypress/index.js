@@ -355,6 +355,8 @@ afterEach(() => {
                 }
             };
             browserStackLog(`Saving accessibility test results`);
+            browserStackLog(`Test Details from save accessibility`);
+            browserStackLog(`Payload: ${JSON.stringify(payloadToSend)}`);
             cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
                 browserStackLog(`Saved accessibility test results`);
             })
