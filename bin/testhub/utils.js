@@ -199,6 +199,10 @@ exports.setTestHubCommonMetaInfo = (user_config, responseData) => {
 };
 
 exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
+  if (!user_config.run_settings.system_env_vars) {
+    user_config.run_settings.system_env_vars = [];
+  }
+
   if (
     !user_config.run_settings.system_env_vars.includes("BROWSERSTACK_TEST_ACCESSIBILITY")
   ) {
