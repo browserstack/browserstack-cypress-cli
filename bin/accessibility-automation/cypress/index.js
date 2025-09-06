@@ -207,6 +207,7 @@ new Promise((resolve) => {
 
 const saveTestResults = (win, payloadToSend) =>
 new Promise( (resolve, reject) => {
+    browserStackLog(`In saveTestResults function`);
     try {
         const isHttpOrHttps = /^(http|https):$/.test(win.location.protocol);
         if (!isHttpOrHttps) {
@@ -243,6 +244,7 @@ new Promise( (resolve, reject) => {
             function onResultsSaved(event) {
                 return resolve();
             }
+            browserStackLog(`Dispatching event to save results`);
             win.addEventListener("A11Y_RESULTS_SAVED", onResultsSaved);
             const e = new CustomEvent("A11Y_SAVE_RESULTS", {
             detail: payloadToSend,
@@ -267,6 +269,7 @@ new Promise( (resolve, reject) => {
 })
 
 const shouldScanForAccessibility = (attributes) => {
+    browserStackLog(`In shouldScanForAccessibility function`);
     if (Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED") !== "true") return false;
 
     const extensionPath = Cypress.env("ACCESSIBILITY_EXTENSION_PATH");
@@ -300,6 +303,7 @@ const shouldScanForAccessibility = (attributes) => {
 }
 
 commandToOverwrite.forEach((command) => {
+    browserStackLog(`Overwriting command: ${command}`);
     Cypress.Commands.overwrite(command, (originalFn, ...args) => {
             const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
             const shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
@@ -317,7 +321,9 @@ commandToOverwrite.forEach((command) => {
 });
 
 afterEach(() => {
+    browserStackLog(`In afterEach hook`);
     const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
+    browserStackLog(`attributes: ${attributes}`);
     cy.window().then(async (win) => {
         let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
         if (!shouldScanTestForAccessibility) return cy.wrap({});
@@ -370,6 +376,7 @@ afterEach(() => {
 })
 
 Cypress.Commands.add('performScan', () => {
+    browserStackLog(`In performScan command`);
     try {
         const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
         const shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
@@ -387,6 +394,7 @@ Cypress.Commands.add('performScan', () => {
 })
 
 Cypress.Commands.add('getAccessibilityResultsSummary', () => {
+    browserStackLog(`In getAccessibilityResultsSummary command`);
     try {
         const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
         const shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
@@ -406,6 +414,7 @@ Cypress.Commands.add('getAccessibilityResultsSummary', () => {
 });
 
 Cypress.Commands.add('getAccessibilityResults', () => {
+    browserStackLog(`In getAccessibilityResults command`);
     try {
         const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
         const shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
