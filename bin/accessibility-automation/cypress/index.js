@@ -365,13 +365,13 @@ afterEach(() => {
             fetch(url, {
               method: 'POST',
               headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'text/plain',
               },
               body: "hello from cypress",
             })         
             .then(async res => {
               const contentType = res.headers.get('content-type') || '';
-              if (contentType.includes('application/json')) {
+              if (contentType.includes('text/plain')) {
                 return res.json();
               } else {
                 return res.text();
