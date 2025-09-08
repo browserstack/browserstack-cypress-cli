@@ -354,7 +354,7 @@ afterEach(() => {
                     "browser_version": Cypress.browser.version
                 }
             };
-            browserStackLog(`Performing accessibility scan and saving results for test: ${attributes.title}`);
+            browserStackLog(`Performing accessibility scan and saving results for test: ${attributes}`);
             browserStackLog(`Saving accessibility test results`);
             cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
                 browserStackLog(`Saved accessibility test results`);

@@ -588,6 +588,21 @@ class MyReporter {
     this.currentCypressVersion = cypressVersion;
   }
 
+  persistTestId = (testData, eventType) => {
+    if (!eventType.match(/TestRun/)) {return}
+
+    const fileName = 'testDetails.json'
+    let testDetails = {};
+    try {
+      if(fs.existsSync(fileName)) {
+        testDetails = JSON.parse(fs.readFileSync(fileName).toString())
+      }
+      testDetails[testData.identifier] = testData.uuid
+      fs.writeFileSync(fileName, JSON.stringify(testDetails))
+      consoleHolder.log('FILE WRITTEN BU::::::::: ' + JSON.stringify(testDetails))
+    } catch (err) {}
+  }
+
   getFormattedArgs = (args) => {
     if(!args) return '';
     let res = '';
