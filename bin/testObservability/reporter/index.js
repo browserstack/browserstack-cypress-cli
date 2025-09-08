@@ -346,6 +346,7 @@ class MyReporter {
       console.log("inside sendTestRunEvent")
       console.log(`testrunUuid: ${testData.uuid}`);
       console.log(`testIdentifier: ${testData.identifier}`);
+      console.log(`eventType: ${eventType}`);
 
       this.persistTestId(testData, eventType);
 

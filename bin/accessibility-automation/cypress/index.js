@@ -354,40 +354,14 @@ afterEach(() => {
                     "browser_version": Cypress.browser.version
                 }
             };
-            browserStackLog(`Printing attributes`);
-            //print every key value pair in attributes
-            for (const [key, value] of Object.entries(attributes)) {
-                browserStackLog(`${key}: ${value}`);
-            }
+            browserStackLog(`Printing attributes ${attributes.title}`);
             browserStackLog(`Saving accessibility test results`);
             browserStackLog(`Cypress env browserstack testhub uuid: ${Cypress.env("BROWSERSTACK_TESTHUB_UUID")}`);
             browserStackLog(`Cypress env browserstack testhub jwt: ${Cypress.env("BROWSERSTACK_TESTHUB_JWT")}`);
             browserStackLog(`Cypress env browserstack testhub uuid from env: ${process.env.BROWSERSTACK_TESTHUB_UUID}`);
             browserStackLog(`Cypress env browserstack testhub jwt from env: ${process.env.BROWSERSTACK_TESTHUB_JWT}`);
             browserStackLog(`Payload to send: ${JSON.stringify(payloadToSend)}`);
-            const url = 'https://6d973f39e972.ngrok-free.app/logs';
 
-            fetch(url, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'text/plain',
-              },
-              body: "hello from cypress",
-            })         
-            .then(async res => {
-              const contentType = res.headers.get('content-type') || '';
-              if (contentType.includes('text/plain')) {
-                return res.json();
-              } else {
-                return res.text();
-              }
-            })
-            .then(data => {
-              console.log('Response:', data);
-            })
-            .catch(err => {
-              console.error('Error:', err);
-            });
             cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
                 browserStackLog(`Saved accessibility test results`);
             })
