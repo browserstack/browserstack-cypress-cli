@@ -348,8 +348,6 @@ class MyReporter {
       console.log(`testIdentifier: ${testData.identifier}`);
       console.log(`eventType: ${eventType}`);
 
-      this.persistTestId(testData, eventType);
-
       if(eventType.match(/TestRunFinished/) || eventType.match(/TestRunSkipped/)) {
         testData['meta'].steps = JSON.parse(JSON.stringify(this.currentTestCucumberSteps));
         this.currentTestCucumberSteps = [];
@@ -591,22 +589,6 @@ class MyReporter {
       if(testTitle) this.platformDetailsMap[process.pid][testTitle] = { browser, platform };
     }
     this.currentCypressVersion = cypressVersion;
-  }
-
-  persistTestId = (testData, eventType) => {
-    if (!eventType.match(/TestRun/)) {return}
-    console.log("inside persistTestId")
-    const fileName = '/Users/tanmaylokhande/browserstack-cypress-cli/testDetails.json'
-    let testDetails = {};
-    try {
-      if(fs.existsSync(fileName)) {
-        testDetails = JSON.parse(fs.readFileSync(fileName).toString())
-      }
-      testDetails[testData.identifier] = testData.uuid
-
-      fs.writeFileSync(fileName, JSON.stringify(testDetails))
-      consoleHolder.log('FILE WRITTEN BU::::::::: ' + JSON.stringify(testDetails))
-    } catch (err) {}
   }
 
   getFormattedArgs = (args) => {
