@@ -1,4 +1,5 @@
 /* Event listeners + custom commands for Cypress */
+const axios = require('axios');
 
 const browserStackLog = (message) => {
     if (!Cypress.env('BROWSERSTACK_LOGS')) return;
