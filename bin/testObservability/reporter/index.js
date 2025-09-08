@@ -344,6 +344,8 @@ class MyReporter {
 
       debugOnConsole(`${eventType} for uuid: ${testData.uuid}`);
       console.log("inside sendTestRunEvent")
+      console.log(`testrunUuid: ${testData.uuid}`);
+      console.log(`testIdentifier: ${testData.identifier}`);
 
       this.persistTestId(testData, eventType);
 
@@ -592,7 +594,7 @@ class MyReporter {
 
   persistTestId = (testData, eventType) => {
     if (!eventType.match(/TestRun/)) {return}
-
+    console.log("inside persistTestId")
     const fileName = '/Users/tanmaylokhande/browserstack-cypress-cli/testDetails.json'
     let testDetails = {};
     try {
@@ -600,6 +602,7 @@ class MyReporter {
         testDetails = JSON.parse(fs.readFileSync(fileName).toString())
       }
       testDetails[testData.identifier] = testData.uuid
+
       fs.writeFileSync(fileName, JSON.stringify(testDetails))
       consoleHolder.log('FILE WRITTEN BU::::::::: ' + JSON.stringify(testDetails))
     } catch (err) {}
