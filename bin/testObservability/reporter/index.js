@@ -344,6 +344,8 @@ class MyReporter {
 
       debugOnConsole(`${eventType} for uuid: ${testData.uuid}`);
 
+      this.persistTestId(testData, eventType);
+
       if(eventType.match(/TestRunFinished/) || eventType.match(/TestRunSkipped/)) {
         testData['meta'].steps = JSON.parse(JSON.stringify(this.currentTestCucumberSteps));
         this.currentTestCucumberSteps = [];
@@ -590,7 +592,7 @@ class MyReporter {
   persistTestId = (testData, eventType) => {
     if (!eventType.match(/TestRun/)) {return}
 
-    const fileName = 'testDetails.json'
+    const fileName = '/Users/tanmaylokhande/browserstack-cypress-cli/testDetails.json'
     let testDetails = {};
     try {
       if(fs.existsSync(fileName)) {

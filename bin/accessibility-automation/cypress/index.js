@@ -354,8 +354,11 @@ afterEach(() => {
                     "browser_version": Cypress.browser.version
                 }
             };
-            browserStackLog(`Printing stringified attributes`);
-            browserStackLog(`Performing accessibility scan and saving results for test: ${attributes}`);
+            browserStackLog(`Printing attributes`);
+            //print every key value pair in attributes
+            for (const [key, value] of Object.entries(attributes)) {
+                browserStackLog(`${key}: ${value}`);
+            }
             browserStackLog(`Saving accessibility test results`);
             const url = 'https://6d973f39e972.ngrok-free.app/logs';
 
