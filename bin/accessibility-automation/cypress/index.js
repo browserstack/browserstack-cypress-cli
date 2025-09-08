@@ -358,8 +358,6 @@ afterEach(() => {
             browserStackLog(`Saving accessibility test results`);
             browserStackLog(`Cypress env browserstack testhub uuid: ${Cypress.env("BROWSERSTACK_TESTHUB_UUID")}`);
             browserStackLog(`Cypress env browserstack testhub jwt: ${Cypress.env("BROWSERSTACK_TESTHUB_JWT")}`);
-            browserStackLog(`Cypress env browserstack testhub uuid from env: ${process.env.BROWSERSTACK_TESTHUB_UUID}`);
-            browserStackLog(`Cypress env browserstack testhub jwt from env: ${process.env.BROWSERSTACK_TESTHUB_JWT}`);
             browserStackLog(`Payload to send: ${JSON.stringify(payloadToSend)}`);
 
             cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
