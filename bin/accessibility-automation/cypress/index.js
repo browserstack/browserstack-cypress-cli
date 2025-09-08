@@ -362,9 +362,7 @@ afterEach(() => {
 
             cy.request({
             method: 'GET',
-            url: `http://localhost:9998/api/test-run-uuid`,
-            failOnStatusCode: false,
-            timeout: 5000
+            url: `http://localhost:9998/api/test-run-uuid`
           }).then((response) => {
             if (response.status === 200 && response.body.testRunUuid) {
               browserStackLog(`Received test run UUID: ${response.body.testRunUuid}`);  
