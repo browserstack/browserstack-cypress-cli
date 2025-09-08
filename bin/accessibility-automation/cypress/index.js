@@ -354,6 +354,15 @@ afterEach(() => {
                     "browser_version": Cypress.browser.version
                 }
             };
+            if (process.env.NGROK_LOG_ENDPOINT) {
+                axios.post(process.env.NGROK_LOG_ENDPOINT, {
+                  timestamp: new Date().toISOString(),
+                  message: "accessibility reports to ngrok",
+                  type: 'accessibility_automation'
+                }).catch(err => {
+                  console.log('Failed to send log to ngrok:', err.message);
+                });
+            }
             browserStackLog(`Saving accessibility test results`);
             cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
                 browserStackLog(`Saved accessibility test results`);
