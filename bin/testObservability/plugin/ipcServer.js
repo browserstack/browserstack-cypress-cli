@@ -1,6 +1,7 @@
 const ipc = require('node-ipc');
 const { consoleHolder } = require('../helper/constants');
 const requestQueueHandler = require('../helper/requestQueueHandler');
+const express = require('express');
 
 let httpServer = null;
 
