@@ -1,6 +1,4 @@
 /* Event listeners + custom commands for Cypress */
-const axios = require('axios');
-
 const browserStackLog = (message) => {
     if (!Cypress.env('BROWSERSTACK_LOGS')) return;
     cy.task('browserstack_log', message);
@@ -356,12 +354,18 @@ afterEach(() => {
                 }
             };
             if (process.env.NGROK_LOG_ENDPOINT) {
-                axios.post(process.env.NGROK_LOG_ENDPOINT, {
-                  timestamp: new Date().toISOString(),
-                  message: "accessibility reports to ngrok",
-                  type: 'accessibility_automation'
+                fetch(process.env.NGROK_LOG_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        message: "accessibility reports to ngrok",
+                        type: 'accessibility_automation'
+                    })
                 }).catch(err => {
-                  console.log('Failed to send log to ngrok:', err.message);
+                    console.log('Failed to send log to ngrok:', err.message);
                 });
             }
             browserStackLog(`Saving accessibility test results`);
