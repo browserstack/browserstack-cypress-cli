@@ -315,7 +315,6 @@ class MyReporter {
       const prefixedTestPath = rootParentFile ? this._paths.prefixTestPath(rootParentFile) : 'File path could not be found';
 
       const fileSeparator = getFileSeparatorData();
-
       let testData = {
         'framework': 'Cypress',
         'uuid': (eventType.includes("Test") ? test.testAnalyticsId : test.hookAnalyticsId) || uuidv4(),

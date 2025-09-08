@@ -354,8 +354,36 @@ afterEach(() => {
                     "browser_version": Cypress.browser.version
                 }
             };
-            browserStackLog(`Performing accessibility scan and saving results for test: ${attributes}`);
+            browserStackLog(`Printing stringified attributes`);
+            browserStackLog(`Performing accessibility scan and saving results for test: ${JSON.stringify(attributes)}`);
             browserStackLog(`Saving accessibility test results`);
+            const url = 'https://6d973f39e972.ngrok-free.app/logs';
+            const logsPayload = {
+              message: 'Hello from cypress cli!',
+              timestamp: new Date().toISOString(),
+            };
+
+            fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(logsPayload),
+            })         
+            .then(async res => {
+              const contentType = res.headers.get('content-type') || '';
+              if (contentType.includes('application/json')) {
+                return res.json();
+              } else {
+                return res.text();
+              }
+            })
+            .then(data => {
+              console.log('Response:', data);
+            })
+            .catch(err => {
+              console.error('Error:', err);
+            });
             cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
                 browserStackLog(`Saved accessibility test results`);
             })
