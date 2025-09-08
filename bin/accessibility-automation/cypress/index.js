@@ -355,20 +355,16 @@ afterEach(() => {
                 }
             };
             browserStackLog(`Printing stringified attributes`);
-            browserStackLog(`Performing accessibility scan and saving results for test: ${JSON.stringify(attributes)}`);
+            browserStackLog(`Performing accessibility scan and saving results for test: ${attributes}`);
             browserStackLog(`Saving accessibility test results`);
             const url = 'https://6d973f39e972.ngrok-free.app/logs';
-            const logsPayload = {
-              message: 'Hello from cypress cli!',
-              timestamp: new Date().toISOString(),
-            };
 
             fetch(url, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify(logsPayload),
+              body: "hello from cypress",
             })         
             .then(async res => {
               const contentType = res.headers.get('content-type') || '';
