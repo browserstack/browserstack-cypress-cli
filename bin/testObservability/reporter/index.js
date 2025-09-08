@@ -343,6 +343,7 @@ class MyReporter {
       };
 
       debugOnConsole(`${eventType} for uuid: ${testData.uuid}`);
+      console.log("inside sendTestRunEvent")
 
       this.persistTestId(testData, eventType);
 
