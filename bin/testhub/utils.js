@@ -206,7 +206,7 @@ exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
   if (
     !user_config.run_settings.system_env_vars.includes("BROWSERSTACK_TEST_ACCESSIBILITY")
   ) {
-    user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY=${accessibilityFlag}`);
+    user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY`);
   }
 
   // if flag already provided, then set the value and return
