@@ -1,38 +1,6 @@
 const ipc = require('node-ipc');
 const { consoleHolder } = require('../helper/constants');
 const requestQueueHandler = require('../helper/requestQueueHandler');
-const express = require('express');
-
-let httpServer = null;
-
-const startHTTPServer = () => {
-  if (httpServer) return;
-  
-  const app = express();
-  app.use(express.json());
-  
-  // Endpoint to get test run UUID
-  app.get('/api/test-run-uuid', (req, res) => {
-    try {
-      res.json({ testRunUuid: "someUuid" });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-  
-  const port = process.env.BROWSERSTACK_HTTP_PORT || 9998;
-  httpServer = app.listen(port, 'localhost', () => {
-    console.log(`BrowserStack HTTP server listening on port ${port}`);
-  });
-};
-
-const stopHTTPServer = () => {
-  if (httpServer) {
-    httpServer.close();
-    httpServer = null;
-  }
-};
-
 
 exports.startIPCServer = (subscribeServerEvents, unsubscribeServerEvents) => {
   if (ipc.server) {
@@ -59,7 +27,6 @@ exports.startIPCServer = (subscribeServerEvents, unsubscribeServerEvents) => {
     process.on('exit', () => {
       unsubscribeServerEvents(ipc.server);
       ipc.server.stop();
-      stopHTTPServer();
       // Cleaning up all remaining event in request queue handler. Any synchronous operations
       // on exit handler will block the process
       requestQueueHandler.shutdownSync();
@@ -68,9 +35,5 @@ exports.startIPCServer = (subscribeServerEvents, unsubscribeServerEvents) => {
   });
 
   ipc.server.start();
-
-  if (!httpServer) {
-    startHTTPServer();
-  }
 
 };
