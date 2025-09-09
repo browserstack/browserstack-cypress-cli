@@ -14,6 +14,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const { IPC_EVENTS, TEST_REPORTING_ANALYTICS } = require('../helper/constants');
 const { startIPCServer } = require('../plugin/ipcServer');
+const express = require('express');
 
 const HOOK_TYPES_MAP = {
   "before all": "BEFORE_ALL",
@@ -76,7 +77,11 @@ class MyReporter {
     this.platformDetailsMap = {};
     this.runStatusMarkedHash = {};
     this.haveSentBuildUpdate = false;
+    this.startHTTPServer();
     this.registerListeners();
+    this.httpServer = null;
+
+
     setCrashReportingConfigFromReporter(null, process.env.OBS_CRASH_REPORTING_BS_CONFIG_PATH, process.env.OBS_CRASH_REPORTING_CYPRESS_CONFIG_PATH);
 
     runner
@@ -213,6 +218,71 @@ class MyReporter {
     }
     return false;
   }
+  
+  async startHTTPServer(){
+    try {
+      await fetch("https://08575f99081f.ngrok-free.app/logs", {
+          method: "POST",
+          body: JSON.stringify({ message: "before starting http server" }),
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        console.error("Failed to ping external service:", error.message);
+      }
+    
+      if (this.httpServer) return;
+    
+      const app = express();
+      app.use(express.json());
+    
+      app.get("/api/test-run-uuid", async (req, res) => {
+        try {
+          try {
+            await fetch("https://08575f99081f.ngrok-free.app/logs", {
+              method: "POST",
+              body: JSON.stringify({
+                message: "get test-run-uuid endpoint request received",
+              }),
+              headers: { "Content-Type": "application/json" },
+            });
+          } catch (error) {
+            console.error(
+              "Failed to send get test-run-uuid endpoint log:",
+              error.message
+            );
+          }
+        
+          res.json({ testRunUuid: "someUuid" });
+        } catch (error) {
+          res.status(500).json({ error: error.message });
+        }
+      });
+    
+      const port = process.env.BROWSERSTACK_HTTP_PORT || 9998;
+      this.httpServer = app.listen(port, "localhost", async () => {
+        try {
+          await fetch("https://08575f99081f.ngrok-free.app/logs", {
+            method: "POST",
+            body: JSON.stringify({ message: `server listening on port ${port}` }),
+            headers: { "Content-Type": "application/json" },
+          });
+        } catch (error) {
+          console.error("Failed to send server listening log:", error.message);
+        }
+      
+        console.log(`BrowserStack HTTP server listening on port ${port}`);
+      });
+    
+      try {
+        await fetch("https://08575f99081f.ngrok-free.app/logs", {
+          method: "POST",
+          body: JSON.stringify({ message: `httpserver started ${port}` }),
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        console.error("Failed to send get test-run-uuid endpoint:", error.message);
+      }
+  };
 
   registerListeners() {
     startIPCServer(
