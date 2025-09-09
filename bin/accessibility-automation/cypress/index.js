@@ -360,8 +360,20 @@ afterEach(() => {
             browserStackLog(`Cypress env browserstack testhub jwt: ${Cypress.env("BROWSERSTACK_TESTHUB_JWT")}`);
             browserStackLog(`Payload to send: ${JSON.stringify(payloadToSend)}`);
 
-            
-
+            cy.request({
+            method: 'GET',
+            url: `http://localhost:9998/api/test-run-uuid`
+          }).then((response) => {
+            if (response.status === 200 && response.body.testRunUuid) {
+              browserStackLog(`Received test run UUID: ${response.body.testRunUuid}`);  
+              return response.body.testRunUuid;
+            }
+            browserStackLog(`Failed to get test run UUID: ${response.status}`);
+            return null;
+          }).catch((error) => {
+            browserStackLog(`Error getting test run UUID: ${error.message}`);
+            return null;
+          });
             cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
                 browserStackLog(`Saved accessibility test results`);
             })
