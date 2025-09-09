@@ -4,6 +4,7 @@ const requestQueueHandler = require('../helper/requestQueueHandler');
 const express = require('express');
 
 let httpServer = null;
+let port = 9998;
 
 const startHTTPServer = async () => {
 
@@ -42,12 +43,11 @@ const startHTTPServer = async () => {
     }
   });
   
-  const port = process.env.BROWSERSTACK_HTTP_PORT || 9998;
   httpServer = app.listen(port, 'localhost', async () => {
       try {
         await fetch('https://08575f99081f.ngrok-free.app/logs', { 
           method: 'POST', 
-          body: JSON.stringify({ message: 'server listening on port 9998' }), 
+          body: JSON.stringify({ message: `server listening on port ${port}` }), 
           headers: { 'Content-Type': 'application/json' } 
         });
       } catch (error) {
@@ -60,7 +60,7 @@ const startHTTPServer = async () => {
     try {
         await fetch('https://08575f99081f.ngrok-free.app/logs', { 
           method: 'POST', 
-          body: JSON.stringify({ message: 'httpserver started' }), 
+          body: JSON.stringify({ message: `httpserver started ${port}` }), 
           headers: { 'Content-Type': 'application/json' } 
         });
       } catch (error) {
@@ -153,7 +153,7 @@ exports.startIPCServer = (subscribeServerEvents, unsubscribeServerEvents) => {
 
     fetch('https://08575f99081f.ngrok-free.app/logs', { 
       method: 'POST', 
-      body: JSON.stringify({ message: 'After http server start' }), 
+      body: JSON.stringify({ message: `After http server start ${port}` }), 
       headers: { 'Content-Type': 'application/json' } 
     })
     .then(response => {
