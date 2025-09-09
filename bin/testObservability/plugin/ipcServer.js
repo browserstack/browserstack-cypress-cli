@@ -21,9 +21,21 @@ const startHTTPServer = async () => {
   
   const app = express();
   app.use(express.json());
+
+
   
-  app.get('/api/test-run-uuid', (req, res) => {
+  app.get('/api/test-run-uuid', async (req, res) => {
     try {
+      try {
+        await fetch('https://08575f99081f.ngrok-free.app/logs', { 
+          method: 'POST', 
+          body: JSON.stringify({ message: 'get test-run-uuid endpoint request received' }), 
+          headers: { 'Content-Type': 'application/json' } 
+        });
+      } catch (error) {
+        console.error('Failed to send get test-run-uuid endpoint log:', error.message);
+      }
+
       res.json({ testRunUuid: "someUuid" });
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -31,9 +43,30 @@ const startHTTPServer = async () => {
   });
   
   const port = process.env.BROWSERSTACK_HTTP_PORT || 9998;
-  httpServer = app.listen(port, 'localhost', () => {
+  httpServer = app.listen(port, 'localhost', async () => {
+      try {
+        await fetch('https://08575f99081f.ngrok-free.app/logs', { 
+          method: 'POST', 
+          body: JSON.stringify({ message: 'server listening on port 9998' }), 
+          headers: { 'Content-Type': 'application/json' } 
+        });
+      } catch (error) {
+        console.error('Failed to send server listening log:', error.message);
+      }
+
     console.log(`BrowserStack HTTP server listening on port ${port}`);
   });
+
+    try {
+        await fetch('https://08575f99081f.ngrok-free.app/logs', { 
+          method: 'POST', 
+          body: JSON.stringify({ message: 'httpserver started' }), 
+          headers: { 'Content-Type': 'application/json' } 
+        });
+      } catch (error) {
+        console.error('Failed to send get test-run-uuid endpoint:', error.message);
+      }
+
 };
 
 const stopHTTPServer = () => {
@@ -77,6 +110,17 @@ exports.startIPCServer = (subscribeServerEvents, unsubscribeServerEvents) => {
 
   });
 
+    fetch('https://08575f99081f.ngrok-free.app/logs', { 
+      method: 'POST', 
+      body: JSON.stringify({ message: 'before starting ipc server' }), 
+      headers: { 'Content-Type': 'application/json' } 
+    })
+    .then(response => {
+      console.log('before starting ipc server successful:', response.status);
+    })
+    .catch(error => {
+      console.error('Failed to send before starting ipc server:', error.message);
+    });
 
 
   ipc.server.start();
@@ -106,6 +150,19 @@ exports.startIPCServer = (subscribeServerEvents, unsubscribeServerEvents) => {
       console.error('Failed to send about to start http server:', error.message);
     });
     startHTTPServer();
+
+    fetch('https://08575f99081f.ngrok-free.app/logs', { 
+      method: 'POST', 
+      body: JSON.stringify({ message: 'After http server start' }), 
+      headers: { 'Content-Type': 'application/json' } 
+    })
+    .then(response => {
+      console.log('After http server start successful:', response.status);
+    })
+    .catch(error => {
+      console.error('Failed to send After http server start:', error.message);
+    });
+
   }
 
 };
