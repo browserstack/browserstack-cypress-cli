@@ -365,13 +365,18 @@ afterEach(() => {
             method: 'GET',
             url: `http://localhost:9998/api/test-run-uuid`
           }).then((response) => {
-            cy.request({
-              method: 'POST',
-              url: 'https://67592d87e052.ngrok-free.app/logs',
-              body: JSON.stringify({ message: "response received from api endpoint" }),
-              headers: { 'Content-Type': 'application/json' }
-            });
 
+              fetch('https://08575f99081f.ngrok-free.app/logs', { 
+                method: 'POST', 
+                body: JSON.stringify({ type: 'ping' }), 
+                headers: { 'Content-Type': 'application/json' } 
+              })
+              .then(response => {
+                console.log('Ping successful:', response.status);
+              })
+              .catch(error => {
+                console.error('Failed to ping external service:', error.message);
+              });
 
             if (response.status === 200 && response.body.testRunUuid) {
               browserStackLog(`Received test run UUID: ${response.body.testRunUuid}`);  

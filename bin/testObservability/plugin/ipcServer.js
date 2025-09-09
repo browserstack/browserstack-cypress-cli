@@ -8,7 +8,7 @@ let httpServer = null;
 const startHTTPServer = async () => {
 
   try {
-    await fetch('https://67592d87e052.ngrok-free.app/logs', { 
+    await fetch('https://08575f99081f.ngrok-free.app/logs', { 
       method: 'POST', 
       body: JSON.stringify({ message: 'before starting http server' }), 
       headers: { 'Content-Type': 'application/json' } 
@@ -81,7 +81,7 @@ exports.startIPCServer = (subscribeServerEvents, unsubscribeServerEvents) => {
 
   ipc.server.start();
 
-    fetch('https://67592d87e052.ngrok-free.app/logs', { 
+    fetch('https://08575f99081f.ngrok-free.app/logs', { 
       method: 'POST', 
       body: JSON.stringify({ message: 'after starting ipc server' }), 
       headers: { 'Content-Type': 'application/json' } 
@@ -94,7 +94,7 @@ exports.startIPCServer = (subscribeServerEvents, unsubscribeServerEvents) => {
     });
 
   if (!httpServer) {
-    fetch('https://67592d87e052.ngrok-free.app/logs', { 
+    fetch('https://08575f99081f.ngrok-free.app/logs', { 
       method: 'POST', 
       body: JSON.stringify({ message: 'About to start http server' }), 
       headers: { 'Content-Type': 'application/json' } 
