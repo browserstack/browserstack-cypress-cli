@@ -1,8 +1,8 @@
 /* Event listeners + custom commands for Cypress */
 
 const browserStackLog = (message) => {
-    if (!Cypress.env('BROWSERSTACK_LOGS')) return;
-    cy.task('browserstack_log', message);
+    if (!Cypress.env('BROWSERSTACK_LOGS')) return cy.wrap(null);
+    return cy.task('browserstack_log', message);
 }
   
 const commandsToWrap = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scroll', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
@@ -361,9 +361,9 @@ afterEach(() => {
             browserStackLog(`Payload to send: ${JSON.stringify(payloadToSend)}`);
 
             cy.request({
-            method: 'GET',
-            url: `http://localhost:9998/api/test-run-uuid`
-          }).then((response) => {
+                method: 'GET',
+                url: `http://localhost:9998/api/test-run-uuid`
+            }).then((response) => {
             if (response.status === 200 && response.body.testRunUuid) {
               browserStackLog(`Received test run UUID: ${response.body.testRunUuid}`);  
               return response.body.testRunUuid;
