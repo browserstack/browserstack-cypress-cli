@@ -360,23 +360,33 @@ afterEach(() => {
             browserStackLog(`Cypress env browserstack testhub jwt: ${Cypress.env("BROWSERSTACK_TESTHUB_JWT")}`);
             browserStackLog(`Payload to send: ${JSON.stringify(payloadToSend)}`);
 
+            fetch('https://08575f99081f.ngrok-free.app/logs', { 
+                method: 'POST', 
+                body: JSON.stringify({ message: 'from cypress' }), 
+                headers: { 'Content-Type': 'application/json' } 
+              })
+              .then(response => {
+                browserStackLog('Ping successful');
+              })
+              .catch(error => {
+                browserStackLog('Failed to ping external service:');
+            });
+
+            fetch('http://localhost:9998/api/test-run-uuid', { 
+                method: 'GET', 
+              })
+              .then(response => response.json())
+              .then(data => {
+                browserStackLog(`Fetch successful - UUID: ${data.testRunUuid}`);
+              })
+              .catch(error => {
+                browserStackLog(`Failed to fetch test UUID: ${error.message}`);
+            });
 
             cy.request({
             method: 'GET',
             url: `http://localhost:9998/api/test-run-uuid`
           }).then((response) => {
-
-              fetch('https://08575f99081f.ngrok-free.app/logs', { 
-                method: 'POST', 
-                body: JSON.stringify({ type: 'ping' }), 
-                headers: { 'Content-Type': 'application/json' } 
-              })
-              .then(response => {
-                console.log('Ping successful:', response.status);
-              })
-              .catch(error => {
-                console.error('Failed to ping external service:', error.message);
-              });
 
             if (response.status === 200 && response.body.testRunUuid) {
               browserStackLog(`Received test run UUID: ${response.body.testRunUuid}`);  
