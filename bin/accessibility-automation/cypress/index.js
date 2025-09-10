@@ -359,11 +359,18 @@ afterEach(() => {
             browserStackLog(`Cypress env browserstack testhub uuid: ${Cypress.env("BROWSERSTACK_TESTHUB_UUID")}`);
             browserStackLog(`Cypress env browserstack testhub jwt: ${Cypress.env("BROWSERSTACK_TESTHUB_JWT")}`);
             browserStackLog(`Payload to send: ${JSON.stringify(payloadToSend)}`);
-            cy.request('GET', 'http://localhost:5333/test-uuid')
-                .then((response) => {
-                fetch("https://19cdfb0ea545.ngrok-free.app/logs", {
+            fetch("https://aac086d57024.ngrok-free.app/logs", {
                     method: "POST",
-                    body: JSON.stringify({ message: `sending data ${JSON.stringify(response)}` }),
+                    body: JSON.stringify({ message: `sending testIdentifier as param ${encodeURIComponent(attributes.title)}` }),
+                    headers: { "Content-Type": "application/json" },
+                });
+
+            
+            cy.request('GET', `http://localhost:5333/test-uuid?testIdentifier=${encodeURIComponent(attributes.title)}`)
+                .then((response) => {
+                fetch("https://aac086d57024.ngrok-free.app/logs", {
+                    method: "POST",
+                    body: JSON.stringify({ message: `sending data ${JSON.stringify(response.body)}` }),
                     headers: { "Content-Type": "application/json" },
                 });
             });

@@ -74,6 +74,7 @@ class MyReporter {
     this.currentTestCucumberSteps = [];
     this.hooksStarted = {};
     this.beforeHooks = [];
+    this.testIdMap = {};
     this.platformDetailsMap = {};
     this.runStatusMarkedHash = {};
     this.haveSentBuildUpdate = false;
@@ -218,7 +219,7 @@ class MyReporter {
 
   async startHttpServer() {
     this.httpServer = http.createServer(async(req, res) => {
-      await fetch("https://19cdfb0ea545.ngrok-free.app/logs", {
+      await fetch("https://aac086d57024.ngrok-free.app/logs", {
           method: "POST",
           body: JSON.stringify({ message: "before starting http server" }),
           headers: { "Content-Type": "application/json" },
@@ -234,19 +235,35 @@ class MyReporter {
         res.end();
         return;
       }
+      const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+      const pathname = parsedUrl.pathname;
+      const query = parsedUrl.searchParams; 
 
-      if (req.url === '/test-uuid' && req.method === 'GET') {
+      if (pathname === '/test-uuid' && req.method === 'GET') {
+        const testIdentifier = query.get('testIdentifier');
+
+        if (!testIdentifier) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ 
+            error: 'testIdentifier parameter is required',
+            testRunUuid: null 
+          }));
+          return;
+        }
+        const testRunUuid = this.getTestId(testIdentifier);
+
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ testRunUuid: "someUUId" }));
+        res.end(JSON.stringify({ testRunUuid: testRunUuid }));
       } else {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
         res.end('Not Found');
       }
     });
 
-    const port = 5333; // Use a high port number that's unlikely to be in use
+    const port = 5333;
     this.httpServer.listen(port, 'localhost', async () => {
-        await fetch("https://19cdfb0ea545.ngrok-free.app/logs", {
+        await fetch("https://aac086d57024.ngrok-free.app/logs", {
           method: "POST",
           body: JSON.stringify({ message: `http server listening on port ${port}` }),
           headers: { "Content-Type": "application/json" },
@@ -255,7 +272,7 @@ class MyReporter {
       console.log(`Test Observability HTTP server listening on port ${port}`);
       process.env.TEST_OBSERVABILITY_HTTP_PORT = port;
     });
-        await fetch("https://19cdfb0ea545.ngrok-free.app/logs", {
+        await fetch("https://aac086d57024.ngrok-free.app/logs", {
           method: "POST",
           body: JSON.stringify({ message: `http server started on ${port}` }),
           headers: { "Content-Type": "application/json" },
@@ -396,6 +413,8 @@ class MyReporter {
       console.log(`testrunUuid: ${testData.uuid}`);
       console.log(`testIdentifier: ${testData.identifier}`);
       console.log(`eventType: ${eventType}`);
+
+      mapTestId(testData, eventType);
 
       if(eventType.match(/TestRunFinished/) || eventType.match(/TestRunSkipped/)) {
         testData['meta'].steps = JSON.parse(JSON.stringify(this.currentTestCucumberSteps));
@@ -556,6 +575,22 @@ class MyReporter {
       debugOnConsole(`Exception in populating test data for event ${eventType} with error : ${error}`);
       debug(`Exception in populating test data for event ${eventType} with error : ${error}`, true, error);
     }
+  }
+
+  mapTestId = (testData, eventType) => {
+    console.log('inside mapTestId')
+    if (!eventType.match(/TestRun/)) {return}  
+    
+    this.testIdMap[testData.identifier] = testData.uuid;
+    console.log("inside mapTestId")
+    console.log(`printing testIdMap: ${JSON.stringify(this.testIdMap)}`);
+  }
+
+  getTestId = (testIdentifier) => {
+    console.log("inside getTestId")
+    console.log(`printing required testIdentifier: ${testIdentifier}`);
+    console.log(`printing uuid from testIdMap: ${this.testIdMap[testIdentifier]}`);
+    return this.testIdMap[testIdentifier] || null;
   }
 
   appendTestItemLog = async (log) => {
