@@ -582,7 +582,7 @@ class MyReporter {
     console.log('inside mapTestId')
     if (!eventType.match(/TestRun/)) {return}  
     
-    this.testIdMap[testData.title] = testData.uuid;
+    this.testIdMap[testData.name] = testData.uuid;
     console.log("inside mapTestId")
     console.log(`printing testIdMap: ${JSON.stringify(this.testIdMap)}`);
   }
