@@ -11,6 +11,7 @@ const Mocha = requireModule('mocha');
 // const Runnable = requireModule('mocha/lib/runnable');
 const Runnable = require('mocha/lib/runnable'); // need to handle as this isn't present in older mocha versions
 const { v4: uuidv4 } = require('uuid');
+const http = require('http');
 
 const { IPC_EVENTS, TEST_REPORTING_ANALYTICS } = require('../helper/constants');
 const { startIPCServer } = require('../plugin/ipcServer');
