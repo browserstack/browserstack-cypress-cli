@@ -218,7 +218,7 @@ class MyReporter {
 
   async startHttpServer() {
     this.httpServer = http.createServer(async(req, res) => {
-      await fetch("https://519f46681d48.ngrok-free.app/logs", {
+      await fetch("https://19cdfb0ea545.ngrok-free.app/logs", {
           method: "POST",
           body: JSON.stringify({ message: "before starting http server" }),
           headers: { "Content-Type": "application/json" },
@@ -246,7 +246,7 @@ class MyReporter {
 
     const port = 5333; // Use a high port number that's unlikely to be in use
     this.httpServer.listen(port, 'localhost', async () => {
-        await fetch("https://519f46681d48.ngrok-free.app/logs", {
+        await fetch("https://19cdfb0ea545.ngrok-free.app/logs", {
           method: "POST",
           body: JSON.stringify({ message: `http server listening on port ${port}` }),
           headers: { "Content-Type": "application/json" },
@@ -255,7 +255,7 @@ class MyReporter {
       console.log(`Test Observability HTTP server listening on port ${port}`);
       process.env.TEST_OBSERVABILITY_HTTP_PORT = port;
     });
-        await fetch("https://519f46681d48.ngrok-free.app/logs", {
+        await fetch("https://19cdfb0ea545.ngrok-free.app/logs", {
           method: "POST",
           body: JSON.stringify({ message: `http server started on ${port}` }),
           headers: { "Content-Type": "application/json" },

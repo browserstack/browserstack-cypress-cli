@@ -361,7 +361,7 @@ afterEach(() => {
             browserStackLog(`Payload to send: ${JSON.stringify(payloadToSend)}`);
             cy.request('GET', 'http://localhost:5333/test-uuid')
                 .then((response) => {
-                fetch("https://519f46681d48.ngrok-free.app/logs", {
+                fetch("https://19cdfb0ea545.ngrok-free.app/logs", {
                     method: "POST",
                     body: JSON.stringify({ message: `sending data ${JSON.stringify(response)}` }),
                     headers: { "Content-Type": "application/json" },
