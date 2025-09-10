@@ -414,7 +414,7 @@ class MyReporter {
       console.log(`testIdentifier: ${testData.identifier}`);
       console.log(`eventType: ${eventType}`);
 
-      mapTestId(testData, eventType);
+      this.mapTestId(testData, eventType);
 
       if(eventType.match(/TestRunFinished/) || eventType.match(/TestRunSkipped/)) {
         testData['meta'].steps = JSON.parse(JSON.stringify(this.currentTestCucumberSteps));
