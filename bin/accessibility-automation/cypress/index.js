@@ -358,16 +358,16 @@ afterEach(() => {
                     body: JSON.stringify({ message: `sending data ${JSON.stringify(testRunUuid)}` }),
                     headers: { "Content-Type": "application/json" },
                 });
-            });
 
-            const payloadToSend = {
-                "thTestRunUuid": testRunUuid,
-                "thBuildUuid": Cypress.env("BROWSERSTACK_TESTHUB_UUID"),
-                "thJwtToken": Cypress.env("BROWSERSTACK_TESTHUB_JWT")
-            };
-            browserStackLog(`Payload to send: ${JSON.stringify(payloadToSend)}`);
+                const payloadToSend = {
+                    "thTestRunUuid": testRunUuid,
+                    "thBuildUuid": Cypress.env("BROWSERSTACK_TESTHUB_UUID"),
+                    "thJwtToken": Cypress.env("BROWSERSTACK_TESTHUB_JWT")
+                };
+                browserStackLog(`Payload to send: ${JSON.stringify(payloadToSend)}`);
 
-            cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
+                return cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000});
+            }).then(() => {
                 browserStackLog(`Saved accessibility test results`);
             })
 
