@@ -14,7 +14,6 @@ const { v4: uuidv4 } = require('uuid');
 
 const { IPC_EVENTS, TEST_REPORTING_ANALYTICS } = require('../helper/constants');
 const { startIPCServer } = require('../plugin/ipcServer');
-const express = require('express');
 
 const HOOK_TYPES_MAP = {
   "before all": "BEFORE_ALL",
