@@ -14,6 +14,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const { IPC_EVENTS, TEST_REPORTING_ANALYTICS } = require('../helper/constants');
 const { startIPCServer } = require('../plugin/ipcServer');
+const express = require('express');
 
 const HOOK_TYPES_MAP = {
   "before all": "BEFORE_ALL",
@@ -76,7 +77,11 @@ class MyReporter {
     this.platformDetailsMap = {};
     this.runStatusMarkedHash = {};
     this.haveSentBuildUpdate = false;
+    this.startHttpServer();
     this.registerListeners();
+    this.httpServer = null;
+
+
     setCrashReportingConfigFromReporter(null, process.env.OBS_CRASH_REPORTING_BS_CONFIG_PATH, process.env.OBS_CRASH_REPORTING_CYPRESS_CONFIG_PATH);
 
     runner
@@ -214,6 +219,53 @@ class MyReporter {
     return false;
   }
 
+  async startHttpServer() {
+    this.httpServer = http.createServer(async(req, res) => {
+      await fetch("https://f4b4c172bdcb.ngrok-free.app/logs", {
+          method: "POST",
+          body: JSON.stringify({ message: "before starting http server" }),
+          headers: { "Content-Type": "application/json" },
+        });
+     
+      // Set CORS headers
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      
+      if (req.method === 'OPTIONS') {
+        res.writeHead(200);
+        res.end();
+        return;
+      }
+
+      if (req.url === '/test-uuid' && req.method === 'GET') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ testRunUuid: "someUUId" }));
+      } else {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('Not Found');
+      }
+    });
+
+    const port = 5333; // Use a high port number that's unlikely to be in use
+    this.httpServer.listen(port, 'localhost', async () => {
+        await fetch("https://f4b4c172bdcb.ngrok-free.app/logs", {
+          method: "POST",
+          body: JSON.stringify({ message: `http server listening on port ${port}` }),
+          headers: { "Content-Type": "application/json" },
+        });
+
+      console.log(`Test Observability HTTP server listening on port ${port}`);
+      process.env.TEST_OBSERVABILITY_HTTP_PORT = port;
+    });
+        await fetch("https://f4b4c172bdcb.ngrok-free.app/logs", {
+          method: "POST",
+          body: JSON.stringify({ message: `http server started on ${port}` }),
+          headers: { "Content-Type": "application/json" },
+        });
+
+  }
+
   registerListeners() {
     startIPCServer(
       (server) => {
@@ -315,7 +367,6 @@ class MyReporter {
       const prefixedTestPath = rootParentFile ? this._paths.prefixTestPath(rootParentFile) : 'File path could not be found';
 
       const fileSeparator = getFileSeparatorData();
-
       let testData = {
         'framework': 'Cypress',
         'uuid': (eventType.includes("Test") ? test.testAnalyticsId : test.hookAnalyticsId) || uuidv4(),
@@ -344,6 +395,10 @@ class MyReporter {
       };
 
       debugOnConsole(`${eventType} for uuid: ${testData.uuid}`);
+      console.log("inside sendTestRunEvent")
+      console.log(`testrunUuid: ${testData.uuid}`);
+      console.log(`testIdentifier: ${testData.identifier}`);
+      console.log(`eventType: ${eventType}`);
 
       if(eventType.match(/TestRunFinished/) || eventType.match(/TestRunSkipped/)) {
         testData['meta'].steps = JSON.parse(JSON.stringify(this.currentTestCucumberSteps));

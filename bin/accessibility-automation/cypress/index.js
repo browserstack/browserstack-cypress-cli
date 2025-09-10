@@ -354,6 +354,19 @@ afterEach(() => {
                     "browser_version": Cypress.browser.version
                 }
             };
+
+            browserStackLog(`Saving accessibility test results `);
+            browserStackLog(`payload to send: ${JSON.stringify(payloadToSend)}`);
+            cy.request('GET', 'http://localhost:5333/test-uuid')
+                .then((response) => {
+                fetch("https://f4b4c172bdcb.ngrok-free.app/logs", {
+                    method: "POST",
+                    body: JSON.stringify({ message: "before starting http server" }),
+                    headers: { "Content-Type": "application/json" },
+                });
+            });
+
+
             browserStackLog(`Saving accessibility test results`);
             cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
                 browserStackLog(`Saved accessibility test results`);
