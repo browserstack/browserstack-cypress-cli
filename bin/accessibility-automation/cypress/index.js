@@ -361,7 +361,7 @@ afterEach(() => {
                 .then((response) => {
                 fetch("https://519f46681d48.ngrok-free.app/logs", {
                     method: "POST",
-                    body: JSON.stringify({ message: "before starting http server" }),
+                    body: JSON.stringify({ message: `sending data ${JSON.stringify(response)}` }),
                     headers: { "Content-Type": "application/json" },
                 });
             });
