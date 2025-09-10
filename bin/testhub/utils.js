@@ -208,7 +208,7 @@ exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
   if (
     !user_config.run_settings.system_env_vars.includes("BROWSERSTACK_TEST_ACCESSIBILITY")
   ) {
-    user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY`);
+    user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY=${accessibilityFlag}`);
     console.log(`printing user_config: ${JSON.stringify(user_config, null, 2)}`);
   }
 
