@@ -34,6 +34,7 @@ exports.setAccessibilityCypressCapabilities = async (user_config, accessibilityR
   user_config.run_settings.accessibilityOptions["scannerVersion"] = accessibilityResponse.data.scannerVersion;
   user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_AUTH=${accessibilityResponse.data.accessibilityToken}`)
   user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_SCANNERVERSION=${accessibilityResponse.data.scannerVersion}`)
+  console.log(`after setting accessibility cypress capabilities: ${JSON.stringify(user_config, null, 2)}`);
 }
 
 exports.isAccessibilitySupportedCypressVersion = (cypress_config_filename) => {
