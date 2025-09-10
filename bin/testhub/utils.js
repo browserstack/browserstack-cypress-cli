@@ -140,6 +140,8 @@ const setAccessibilityCypressCapabilities = (user_config, responseData) => {
   user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_AUTH=${accessibilityToken}`)
   user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_SCANNERVERSION=${scannerVersion}`)
   this.checkAndSetAccessibility(user_config, true);
+  console.log(`after setting accessibility cypress capabilities: ${JSON.stringify(user_config, null, 2)}`);
+
 };
 
 // To handle array of json, eg: [{keyName : '', valueName : ''}]
