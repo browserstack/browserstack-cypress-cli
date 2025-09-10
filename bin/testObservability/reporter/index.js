@@ -219,7 +219,7 @@ class MyReporter {
 
   async startHttpServer() {
     this.httpServer = http.createServer(async(req, res) => {
-      await fetch("https://aac086d57024.ngrok-free.app/logs", {
+      await fetch("https://71c6bb3bf65e.ngrok-free.app/logs", {
           method: "POST",
           body: JSON.stringify({ message: "before starting http server" }),
           headers: { "Content-Type": "application/json" },
@@ -263,7 +263,7 @@ class MyReporter {
 
     const port = 5333;
     this.httpServer.listen(port, 'localhost', async () => {
-        await fetch("https://aac086d57024.ngrok-free.app/logs", {
+        await fetch("https://71c6bb3bf65e.ngrok-free.app/logs", {
           method: "POST",
           body: JSON.stringify({ message: `http server listening on port ${port}` }),
           headers: { "Content-Type": "application/json" },
@@ -272,7 +272,7 @@ class MyReporter {
       console.log(`Test Observability HTTP server listening on port ${port}`);
       process.env.TEST_OBSERVABILITY_HTTP_PORT = port;
     });
-        await fetch("https://aac086d57024.ngrok-free.app/logs", {
+        await fetch("https://71c6bb3bf65e.ngrok-free.app/logs", {
           method: "POST",
           body: JSON.stringify({ message: `http server started on ${port}` }),
           headers: { "Content-Type": "application/json" },
@@ -412,6 +412,7 @@ class MyReporter {
       console.log("inside sendTestRunEvent")
       console.log(`testrunUuid: ${testData.uuid}`);
       console.log(`testIdentifier: ${testData.identifier}`);
+      console.log(`testTitle: ${test.title}`);
       console.log(`eventType: ${eventType}`);
 
       this.mapTestId(testData, eventType);
@@ -581,7 +582,7 @@ class MyReporter {
     console.log('inside mapTestId')
     if (!eventType.match(/TestRun/)) {return}  
     
-    this.testIdMap[testData.identifier] = testData.uuid;
+    this.testIdMap[testData.title] = testData.uuid;
     console.log("inside mapTestId")
     console.log(`printing testIdMap: ${JSON.stringify(this.testIdMap)}`);
   }
