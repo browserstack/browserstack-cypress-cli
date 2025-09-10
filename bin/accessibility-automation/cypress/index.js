@@ -346,7 +346,7 @@ afterEach(() => {
                     headers: { "Content-Type": "application/json" },
                 });
 
-            const testRunUuid = null;
+            let testRunUuid = null;
             cy.request('GET', `http://localhost:5333/test-uuid?testIdentifier=${encodeURIComponent(attributes.title)}`)
                 .then((response) => {
                 if (response.status === 200 && response.body && response.body.testRunUuid) {
@@ -355,7 +355,7 @@ afterEach(() => {
                 }
                 fetch("https://71c6bb3bf65e.ngrok-free.app/logs", {
                     method: "POST",
-                    body: JSON.stringify({ message: `sending data ${testRunUuid}` }),
+                    body: JSON.stringify({ message: `sending data ${JSON.stringify(testRunUuid)}` }),
                     headers: { "Content-Type": "application/json" },
                 });
             });
