@@ -194,8 +194,8 @@ exports.logBuildError = (error, product = "") => {
 exports.setTestHubCommonMetaInfo = (user_config, responseData) => {
   process.env.BROWSERSTACK_TESTHUB_JWT = responseData.jwt;
   process.env.BROWSERSTACK_TESTHUB_UUID = responseData.build_hashed_id;
-  user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_JWT`);
-  user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_UUID`);
+  user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_JWT=${responseData.jwt}`);
+  user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_UUID=${responseData.build_hashed_id}`);
 };
 
 exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
@@ -203,16 +203,16 @@ exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
     user_config.run_settings.system_env_vars = [];
   }
 
-  if (
-    !user_config.run_settings.system_env_vars.includes("BROWSERSTACK_TEST_ACCESSIBILITY")
-  ) {
-    user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY`);
-  }
 
   // if flag already provided, then set the value and return
   if (!isUndefined(accessibilityFlag)) {
     process.env.BROWSERSTACK_TEST_ACCESSIBILITY = accessibilityFlag.toString();
     user_config.run_settings.accessibility = accessibilityFlag;
+    if (
+      !user_config.run_settings.system_env_vars.includes("BROWSERSTACK_TEST_ACCESSIBILITY")
+    ) {
+      user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY=${accessibilityFlag}`);
+    }
     return;
   }
 
