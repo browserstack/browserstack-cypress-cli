@@ -37,7 +37,7 @@ const {
   supportFileCleanup
 } = require('../accessibility-automation/helper');
 const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
-const { checkAndSetAccessibility, shouldProcessEventForTesthub } = require('../testhub/utils');
+const { shouldProcessEventForTesthub, checkIfAccessibilityIsSupported } = require('../testhub/utils');
 const TestHubHandler = require('../testhub/testHubHandler');
 
 
@@ -74,7 +74,6 @@ module.exports = function run(args, rawArgs) {
     const turboScaleSession = isTurboScaleSession(bsConfig);
     Constants.turboScaleObj.enabled = turboScaleSession;
 
-    checkAndSetAccessibility(bsConfig, isAccessibilitySession);
     utils.setUsageReportingFlag(bsConfig, args.disableUsageReporting);
 
     utils.setDefaults(bsConfig, args);
@@ -113,6 +112,8 @@ module.exports = function run(args, rawArgs) {
 
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
+
+    checkIfAccessibilityIsSupported(bsConfig, isAccessibilitySession);
 
     // Send build start to TEST REPORTING AND ANALYTICS
     if(shouldProcessEventForTesthub()) {

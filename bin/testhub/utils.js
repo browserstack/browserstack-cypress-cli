@@ -116,9 +116,7 @@ exports.setAccessibilityVariables = (user_config, responseData) => {
     );
     setAccessibilityCypressCapabilities(user_config, responseData);
     helper.setBrowserstackCypressCliDependency(user_config);
-    return [process.env.ACCESSIBILITY_AUTH, responseData.build_hashed_id];
   }
-  return [null, null];
 };
 
 const setAccessibilityCypressCapabilities = (user_config, responseData) => {
@@ -134,12 +132,15 @@ const setAccessibilityCypressCapabilities = (user_config, responseData) => {
   process.env.BS_A11Y_JWT = accessibilityToken;
   process.env.ACCESSIBILITY_SCANNERVERSION = scannerVersion;
 
+  if (accessibilityToken && responseData.build_hashed_id) {
+    this.checkIfAccessibilityIsSupported(user_config, true);
+  }
+
   user_config.run_settings.accessibilityOptions["authToken"] = accessibilityToken;
   user_config.run_settings.accessibilityOptions["auth"] = accessibilityToken;
   user_config.run_settings.accessibilityOptions["scannerVersion"] = scannerVersion;
   user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_AUTH=${accessibilityToken}`)
   user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_SCANNERVERSION=${scannerVersion}`)
-  this.checkAndSetAccessibility(user_config, true);
 };
 
 // To handle array of json, eg: [{keyName : '', valueName : ''}]
@@ -194,8 +195,24 @@ exports.logBuildError = (error, product = "") => {
 exports.setTestHubCommonMetaInfo = (user_config, responseData) => {
   process.env.BROWSERSTACK_TESTHUB_JWT = responseData.jwt;
   process.env.BROWSERSTACK_TESTHUB_UUID = responseData.build_hashed_id;
-  user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_JWT`);
-  user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_UUID`);
+  user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_JWT=${responseData.jwt}`);
+  user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_UUID=${responseData.build_hashed_id}`);
+};
+
+exports.checkIfAccessibilityIsSupported = (user_config, accessibilityFlag) => {
+  if (!accessibilityHelper.isAccessibilitySupportedCypressVersion(user_config.run_settings.cypress_config_file)) 
+  {
+    logger.warn(`Accessibility Testing is not supported on Cypress version 9 and below.`);
+    process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'false';
+    user_config.run_settings.accessibility = false;
+    return;
+  }
+
+  if (!isUndefined(accessibilityFlag)) {
+    process.env.BROWSERSTACK_TEST_ACCESSIBILITY = accessibilityFlag.toString();
+    user_config.run_settings.accessibility = accessibilityFlag;
+    return;
+  }
 };
 
 exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {

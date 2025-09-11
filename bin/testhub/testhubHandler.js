@@ -105,19 +105,10 @@ class TestHubHandler {
     }
 
     if(testhubUtils.isAccessibilityEnabled()) {
-      const [authToken, buildHashedId] = testhubUtils.setAccessibilityVariables(user_config, response.data);
-      if (authToken && buildHashedId) {
-        launchData[TESTHUB_CONSTANTS.ACCESSIBILITY] = {authToken, buildHashedId};
-        process.env.BROWSERSTACK_ACCESSIBILITY = 'true';
-        testhubUtils.checkAndSetAccessibility(user_config, true);
-      } else {
-        launchData[TESTHUB_CONSTANTS.ACCESSIBILITY] = {};
-        process.env.BROWSERSTACK_ACCESSIBILITY = 'false';
-        testhubUtils.checkAndSetAccessibility(user_config, false);
-      }
+      testhubUtils.setAccessibilityVariables(user_config, response.data);
     } else {
       process.env.BROWSERSTACK_ACCESSIBILITY = 'false';
-      testhubUtils.checkAndSetAccessibility(user_config, false)
+      testhubUtils.checkIfAccessibilityIsSupported(user_config, false)
     }    
 
     if (testhubUtils.shouldProcessEventForTesthub()) {
