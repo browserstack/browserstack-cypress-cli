@@ -229,7 +229,7 @@ exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
     return;
   }
 
-  isAccessibilityTestEnabled =
+  const isAccessibilityTestEnabled =
     (user_config.run_settings.accessibility ||
       accessibilityHelper.checkAccessibilityPlatform(user_config)) &&
     testObservabilityHelper.isBrowserstackInfra();
