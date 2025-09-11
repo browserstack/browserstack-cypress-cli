@@ -336,7 +336,10 @@ afterEach(() => {
             } else if (attributes.prevAttempts && attributes.prevAttempts.length > 0) {
                 filePath = (attributes.prevAttempts[0].invocationDetails && attributes.prevAttempts[0].invocationDetails.relativeFile) || '';
             }
-            browserStackLog(`printing current ctx ${JSON.stringify(attributes, null, 2)}`);
+            browserStackLog(`printing attributes`);
+            for (const prop in attributes) {
+                browserStackLog(`Attribute ${prop}: ${attributes[prop]}`);
+            }
             browserStackLog(`Printing attributes ${attributes.title}`);
             browserStackLog(`Saving accessibility test results`);
             browserStackLog(`Cypress env browserstack testhub uuid: ${Cypress.env("BROWSERSTACK_TESTHUB_UUID")}`);
