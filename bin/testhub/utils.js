@@ -154,7 +154,7 @@ const jsonifyAccessibilityArray = (dataArray, keyName, valueName) => {
 };
 
 exports.handleErrorForAccessibility = (user_config, error = null) => {
-  this.checkAndSetAccessibility(user_config, false);
+  exports.checkIfAccessibilityIsSupported(user_config, false);
   process.env.BROWSERSTACK_TESTHUB_UUID = "null";
   process.env.BROWSERSTACK_TESTHUB_JWT = "null";
   exports.logBuildError(error, TESTHUB_CONSTANTS.ACCESSIBILITY);
@@ -208,11 +208,21 @@ exports.checkIfAccessibilityIsSupported = (user_config, accessibilityFlag) => {
     return;
   }
 
+  if (!user_config.run_settings.system_env_vars) {
+    user_config.run_settings.system_env_vars = [];
+  }
+
   if (!isUndefined(accessibilityFlag)) {
     process.env.BROWSERSTACK_TEST_ACCESSIBILITY = accessibilityFlag.toString();
     user_config.run_settings.accessibility = accessibilityFlag;
+    if (
+      !user_config.run_settings.system_env_vars.includes("BROWSERSTACK_TEST_ACCESSIBILITY")
+    ) {
+      user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY=${accessibilityFlag}`);
+    }
     return;
   }
+  return;
 };
 
 exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
