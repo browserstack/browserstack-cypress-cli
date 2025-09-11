@@ -219,13 +219,6 @@ class MyReporter {
 
   async startHttpServer() {
     this.httpServer = http.createServer(async(req, res) => {
-      await fetch("https://71c6bb3bf65e.ngrok-free.app/logs", {
-          method: "POST",
-          body: JSON.stringify({ message: "before starting http server" }),
-          headers: { "Content-Type": "application/json" },
-        });
-
-      // Set CORS headers
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -263,21 +256,9 @@ class MyReporter {
 
     const port = 5333;
     this.httpServer.listen(port, 'localhost', async () => {
-        await fetch("https://71c6bb3bf65e.ngrok-free.app/logs", {
-          method: "POST",
-          body: JSON.stringify({ message: `http server listening on port ${port}` }),
-          headers: { "Content-Type": "application/json" },
-        });
-
       console.log(`Test Observability HTTP server listening on port ${port}`);
       process.env.TEST_OBSERVABILITY_HTTP_PORT = port;
     });
-        await fetch("https://71c6bb3bf65e.ngrok-free.app/logs", {
-          method: "POST",
-          body: JSON.stringify({ message: `http server started on ${port}` }),
-          headers: { "Content-Type": "application/json" },
-        });
-
   }
 
   registerListeners() {
@@ -409,11 +390,6 @@ class MyReporter {
       };
 
       debugOnConsole(`${eventType} for uuid: ${testData.uuid}`);
-      console.log("inside sendTestRunEvent")
-      console.log(`testrunUuid: ${testData.uuid}`);
-      console.log(`testIdentifier: ${testData.identifier}`);
-      console.log(`testTitle: ${test.title}`);
-      console.log(`eventType: ${eventType}`);
 
       this.mapTestId(testData, eventType);
 
@@ -579,18 +555,12 @@ class MyReporter {
   }
 
   mapTestId = (testData, eventType) => {
-    console.log('inside mapTestId')
     if (!eventType.match(/TestRun/)) {return}  
     
     this.testIdMap[testData.name] = testData.uuid;
-    console.log("inside mapTestId")
-    console.log(`printing testIdMap: ${JSON.stringify(this.testIdMap)}`);
   }
 
   getTestId = (testIdentifier) => {
-    console.log("inside getTestId")
-    console.log(`printing required testIdentifier: ${testIdentifier}`);
-    console.log(`printing uuid from testIdMap: ${this.testIdMap[testIdentifier]}`);
     return this.testIdMap[testIdentifier] || null;
   }
 
