@@ -219,12 +219,6 @@ class MyReporter {
 
   async startHttpServer() {
     this.httpServer = http.createServer(async(req, res) => {
-      await fetch("https://71c6bb3bf65e.ngrok-free.app/logs", {
-          method: "POST",
-          body: JSON.stringify({ message: "before starting http server" }),
-          headers: { "Content-Type": "application/json" },
-        });
-
       // Set CORS headers
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -263,21 +257,9 @@ class MyReporter {
 
     const port = 5333;
     this.httpServer.listen(port, 'localhost', async () => {
-        await fetch("https://71c6bb3bf65e.ngrok-free.app/logs", {
-          method: "POST",
-          body: JSON.stringify({ message: `http server listening on port ${port}` }),
-          headers: { "Content-Type": "application/json" },
-        });
-
       console.log(`Test Observability HTTP server listening on port ${port}`);
       process.env.TEST_OBSERVABILITY_HTTP_PORT = port;
     });
-        await fetch("https://71c6bb3bf65e.ngrok-free.app/logs", {
-          method: "POST",
-          body: JSON.stringify({ message: `http server started on ${port}` }),
-          headers: { "Content-Type": "application/json" },
-        });
-
   }
 
   registerListeners() {

@@ -340,11 +340,6 @@ afterEach(() => {
             browserStackLog(`Saving accessibility test results`);
             browserStackLog(`Cypress env browserstack testhub uuid: ${Cypress.env("BROWSERSTACK_TESTHUB_UUID")}`);
             browserStackLog(`Cypress env browserstack testhub jwt: ${Cypress.env("BROWSERSTACK_TESTHUB_JWT")}`);
-            fetch("https://71c6bb3bf65e.ngrok-free.app/logs", {
-                    method: "POST",
-                    body: JSON.stringify({ message: `sending testIdentifier as param ${encodeURIComponent(attributes.title)}` }),
-                    headers: { "Content-Type": "application/json" },
-                });
 
             let testRunUuid = null;
             cy.request('GET', `http://localhost:5333/test-uuid?testIdentifier=${encodeURIComponent(attributes.title)}`)
@@ -353,11 +348,6 @@ afterEach(() => {
                     testRunUuid = response.body.testRunUuid;
                     browserStackLog(`Fetched testRunId: ${testRunUuid} for test: ${attributes.title}`);
                 }
-                fetch("https://71c6bb3bf65e.ngrok-free.app/logs", {
-                    method: "POST",
-                    body: JSON.stringify({ message: `sending data ${JSON.stringify(testRunUuid)}` }),
-                    headers: { "Content-Type": "application/json" },
-                });
 
                 const payloadToSend = {
                     "thTestRunUuid": testRunUuid,
