@@ -168,6 +168,7 @@ const getAccessibilityPlatforms = (bsConfig) => {
     rootLevelAccessibility = bsConfig.run_settings.accessibility.toString() === 'true';
   }
   browserList.forEach((browserDetails, idx) => {
+    console.log(' - browserDetails', browserDetails);
     accessibilityPlatforms[idx] = (browserDetails.accessibility === undefined) ? rootLevelAccessibility : browserDetails.accessibility;
     if (Utils.isUndefined(bsConfig.run_settings.headless) || !(String(bsConfig.run_settings.headless) === "false")) {
       logger.warn(`Accessibility Automation will not run on legacy headless mode. Switch to new headless mode or avoid using headless mode for ${browserDetails.platform}.`);
