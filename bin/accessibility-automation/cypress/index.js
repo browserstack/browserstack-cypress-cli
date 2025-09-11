@@ -340,6 +340,14 @@ afterEach(() => {
             for (const prop in attributes) {
                 browserStackLog(`Attribute ${prop}: ${attributes[prop]}`);
             }
+            const parent = attributes.parent;
+            for (const prop in parent) {
+                browserStackLog(`Attribute ${prop}: ${parent[prop]}`);
+            }
+            const ctx = attributes.ctx;
+            for (const prop in ctx) {
+                browserStackLog(`Attribute ${prop}: ${ctx[prop]}`);
+            }
             browserStackLog(`Printing attributes ${attributes.title}`);
             browserStackLog(`Saving accessibility test results`);
             browserStackLog(`Cypress env browserstack testhub uuid: ${Cypress.env("BROWSERSTACK_TESTHUB_UUID")}`);
