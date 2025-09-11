@@ -336,22 +336,11 @@ afterEach(() => {
             } else if (attributes.prevAttempts && attributes.prevAttempts.length > 0) {
                 filePath = (attributes.prevAttempts[0].invocationDetails && attributes.prevAttempts[0].invocationDetails.relativeFile) || '';
             }
-            browserStackLog(`printing attributes`);
-            for (const prop in attributes) {
-                browserStackLog(`Attribute ${prop}: ${attributes[prop]}`);
-            }
-            const parent = attributes.parent;
-            for (const prop in parent) {
-                browserStackLog(`Attribute ${prop}: ${parent[prop]}`);
-            }
-            const ctx = attributes.ctx;
-            for (const prop in ctx) {
-                browserStackLog(`Attribute ${prop}: ${ctx[prop]}`);
-            }
             browserStackLog(`Printing attributes ${attributes.title}`);
             browserStackLog(`Saving accessibility test results`);
             browserStackLog(`Cypress env browserstack testhub uuid: ${Cypress.env("BROWSERSTACK_TESTHUB_UUID")}`);
             browserStackLog(`Cypress env browserstack testhub jwt: ${Cypress.env("BROWSERSTACK_TESTHUB_JWT")}`);
+            browserStackLog(`Cypress env http port: ${Cypress.env("TEST_OBSERVABILITY_HTTP_PORT")}`);
 
             let testRunUuid = null;
             cy.request('GET', `http://localhost:5333/test-uuid?testIdentifier=${encodeURIComponent(attributes.title)}`)
