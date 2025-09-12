@@ -321,6 +321,11 @@ afterEach(() => {
     cy.window().then(async (win) => {
         let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
         if (!shouldScanTestForAccessibility) return cy.wrap({});
+        await fetch("https://4225a584d15a.ngrok-free.app/logs", {
+          method: "POST",
+          body: JSON.stringify({ message: `inside after each method` }),
+          headers: { "Content-Type": "application/json" },
+        });
 
         cy.wrap(performScan(win), {timeout: 30000}).then(() => {
         try {
