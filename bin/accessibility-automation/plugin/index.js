@@ -1,6 +1,7 @@
 const path = require("node:path");
 const { decodeJWTToken } = require("../../helpers/utils");
 const utils = require('../../helpers/utils');
+const http = require('http');
 
 const browserstackAccessibility = (on, config) => {
   let browser_validation = true;
@@ -16,6 +17,7 @@ const browserstackAccessibility = (on, config) => {
     },
     get_test_run_uuid({ testIdentifier, retries = 5, interval = 300 } = {}) {
       return new Promise((resolve) => {
+        console.log(`Fetching testRunUuid for testIdentifier: ${testIdentifier}`);
         if(!testIdentifier) return resolve(null);
         const port = process.env.TEST_OBSERVABILITY_HTTP_PORT || 5347;
         let attempt = 0;
