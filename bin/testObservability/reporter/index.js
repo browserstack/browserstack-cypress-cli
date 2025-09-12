@@ -255,7 +255,7 @@ class MyReporter {
       }
     });
 
-    const port = 5333;
+    const port = 49153;
     this.httpServer.listen(port, 'localhost', async () => {
       console.log(`Test Observability HTTP server listening on port ${port}`);
       process.env.TEST_OBSERVABILITY_HTTP_PORT = port;

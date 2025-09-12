@@ -343,7 +343,7 @@ afterEach(() => {
             browserStackLog(`Cypress env http port: ${Cypress.env("TEST_OBSERVABILITY_HTTP_PORT")}`);
 
             let testRunUuid = null;
-            cy.request('GET', `http://localhost:5333/test-uuid?testIdentifier=${encodeURIComponent(attributes.title)}`)
+            cy.request('GET', `http://localhost:49153/test-uuid?testIdentifier=${encodeURIComponent(attributes.title)}`)
                 .then((response) => {
                 if (response.status === 200 && response.body && response.body.testRunUuid) {
                     testRunUuid = response.body.testRunUuid;
