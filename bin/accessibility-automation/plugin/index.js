@@ -15,7 +15,7 @@ const browserstackAccessibility = (on, config) => {
       
       return null
     },
-    get_test_run_uuid({ testIdentifier, retries = 5, interval = 300 } = {}) {
+    get_test_run_uuid({ testIdentifier, retries = 15, interval = 300 } = {}) {
       return new Promise((resolve) => {
         console.log(`Fetching testRunUuid for testIdentifier: ${testIdentifier}`);
         if(!testIdentifier) return resolve(null);
@@ -36,7 +36,7 @@ const browserstackAccessibility = (on, config) => {
               if(res.statusCode === 200) {
                 try {
                   const json = JSON.parse(data || '{}');
-                  return resolve(json.testRunUuid || null);
+                  return resolve({ testRunUuid: json.testRunUuid || null });
                 } catch(e) {
                   return resolve(null);
                 }
@@ -54,7 +54,7 @@ const browserstackAccessibility = (on, config) => {
         };
         const retryOrResolve = () => {
           attempt += 1;
-            if(attempt > retries) return resolve(null);
+            if(attempt >= retries) return resolve(null);
             setTimeout(fetchUuid, interval);
         };
         fetchUuid();
