@@ -100,6 +100,7 @@ const browserstackAccessibility = (on, config) => {
   config.env.BROWSERSTACK_TESTHUB_UUID = process.env.BROWSERSTACK_TESTHUB_UUID
   config.env.BROWSERSTACK_TESTHUB_JWT = process.env.BROWSERSTACK_TESTHUB_JWT
   config.env.BROWSERSTACK_TESTHUB_API_PORT = process.env.BROWSERSTACK_TESTHUB_API_PORT
+  config.env.TEST_ENV = process.env.TEST_ENV
 
   config.env.IS_ACCESSIBILITY_EXTENSION_LOADED = browser_validation.toString()
 
