@@ -66,7 +66,7 @@ module.exports = function run(args, rawArgs) {
 
     // set cypress config filename
     utils.setCypressConfigFilename(bsConfig, args);
-
+    process.env.TEST_ENV = "from-runs";
     /* Set testObservability & browserstackAutomation flags */
     const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
     const checkAccessibility = checkAccessibilityPlatform(bsConfig);
