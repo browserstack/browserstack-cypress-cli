@@ -198,7 +198,6 @@ exports.setTestHubCommonMetaInfo = (user_config, responseData) => {
   process.env.BROWSERSTACK_TESTHUB_API_PORT = 3332;
   user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_JWT`);
   user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_UUID`);
-  user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_API_PORT=3332`);
 };
 
 exports.checkIfAccessibilityIsSupported = (user_config, accessibilityFlag) => {
