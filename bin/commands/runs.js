@@ -38,7 +38,7 @@ const {
   supportFileCleanup
 } = require('../accessibility-automation/helper');
 const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
-const { shouldProcessEventForTesthub, checkIfAccessibilityIsSupported } = require('../testhub/utils');
+const { shouldProcessEventForTesthub, checkIfAccessibilityIsSupported, findAvailablePort } = require('../testhub/utils');
 const TestHubHandler = require('../testhub/testHubHandler');
 
 
@@ -116,20 +116,9 @@ module.exports = function run(args, rawArgs) {
 
     checkIfAccessibilityIsSupported(bsConfig, isAccessibilitySession);
 
-    const port = 5347;
-    detect(port)
-      .then(realPort => {
-        if (port == realPort) {
-          console.log(`port: ${port} was not occupied`);
-          process.env.REPORTER_API = port
-        } else {
-          console.log(`port: ${port} was occupied, try port: ${realPort}`);
-        }
-      }) 
-      .catch(err => {
-        console.log(err);
-      });
-
+    const preferredPort = 5348;
+    const port = findAvailablePort(preferredPort);
+    process.env.REPORTER_API = port
 
     // Send build start to TEST REPORTING AND ANALYTICS
     if(shouldProcessEventForTesthub()) {

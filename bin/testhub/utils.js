@@ -5,6 +5,8 @@ const TESTHUB_CONSTANTS = require("./constants");
 const testObservabilityHelper = require("../../bin/testObservability/helper/helper");
 const helper = require("../helpers/helper");
 const accessibilityHelper = require("../accessibility-automation/helper");
+const { detect } = require('detect-port');
+
 
 const isUndefined = (value) => value === undefined || value === null;
 
@@ -191,6 +193,44 @@ exports.logBuildError = (error, product = "") => {
     logger.error(error);
   }
 };
+
+exports.findAvailablePort = async (preferredPort, maxAttempts = 10) => {  
+  let port = preferredPort;
+
+  for (let attempts = 0; attempts < maxAttempts; attempts++) {
+    try {
+      const availablePort = await detect(port);
+
+      if (availablePort === port) {
+        // Re-check to avoid race condition
+        const verify = await detect(port);
+        if (verify === port) {
+          console.log(`✓ Port ${port} is available and will be used`);
+          return port;
+        }
+      } else {
+        // Double-check suggested port
+        const verify = await detect(availablePort);
+        if (verify === availablePort) {
+          console.log(`✓ Port ${availablePort} is available and will be used`);
+          return availablePort;
+        }
+      }
+
+      // Try next port
+      port++;
+    } catch (err) {
+      console.warn(`Error checking port ${port}:`, err.message);
+
+      // If permission denied, jump to dynamic range
+      if (err.code === "EACCES") {
+        port = 49152;
+      } else {
+        port++;
+      }
+    }
+  }
+}
 
 exports.setTestHubCommonMetaInfo = (user_config, responseData) => {
   process.env.BROWSERSTACK_TESTHUB_JWT = responseData.jwt;
