@@ -21,6 +21,7 @@ const archiver = require("../helpers/archiver"),
   pkg = require('../../package.json'),
   packageDiff = require('../helpers/package-diff');
 const { getStackTraceUrl } = require('../helpers/sync/syncSpecsLogs');
+const { detect } = require('detect-port');
 
 const { 
   launchTestSession, 
@@ -114,6 +115,21 @@ module.exports = function run(args, rawArgs) {
     utils.setBuildTags(bsConfig, args);
 
     checkIfAccessibilityIsSupported(bsConfig, isAccessibilitySession);
+
+    const port = 5347;
+    detect(port)
+      .then(realPort => {
+        if (port == realPort) {
+          console.log(`port: ${port} was not occupied`);
+          process.env.REPORTER_API = port
+        } else {
+          console.log(`port: ${port} was occupied, try port: ${realPort}`);
+        }
+      }) 
+      .catch(err => {
+        console.log(err);
+      });
+
 
     // Send build start to TEST REPORTING AND ANALYTICS
     if(shouldProcessEventForTesthub()) {

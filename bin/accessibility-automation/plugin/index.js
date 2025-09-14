@@ -17,7 +17,14 @@ const browserstackAccessibility = (on, config) => {
     },
     get_test_run_uuid({ testIdentifier, retries = 15, interval = 300 } = {}) {
       return new Promise((resolve) => {
+        console.log(`printing env variables`);
+        console.log(`Cypress env browserstack testhub uuid from plugin: ${Cypress.env("BROWSERSTACK_TESTHUB_UUID")}`);
+        console.log(`Cypress env http port: ${Cypress.env("REPORTER_API")}`);
+        console.log(`test env: ${Cypress.env("TEST_ENV")}`);
+        console.log(`reporter api: ${Cypress.env("REPORTER_API")}`);
         console.log(`Fetching testRunUuid for testIdentifier: ${testIdentifier}`);
+        console.log(`Config env variables`);
+        console.log(`config env browserstack http port from plugin: ${config.env.REPORTER_API}`);
         if(!testIdentifier) return resolve(null);
         const port = process.env.TEST_OBSERVABILITY_HTTP_PORT || 5347;
         let attempt = 0;
@@ -100,6 +107,7 @@ const browserstackAccessibility = (on, config) => {
   config.env.BROWSERSTACK_TESTHUB_UUID = process.env.BROWSERSTACK_TESTHUB_UUID
   config.env.BROWSERSTACK_TESTHUB_JWT = process.env.BROWSERSTACK_TESTHUB_JWT
   config.env.BROWSERSTACK_TESTHUB_API_PORT = process.env.BROWSERSTACK_TESTHUB_API_PORT
+  config.env.REPORTER_API = process.env.REPORTER_API
   config.env.TEST_ENV = process.env.TEST_ENV
 
   config.env.IS_ACCESSIBILITY_EXTENSION_LOADED = browser_validation.toString()

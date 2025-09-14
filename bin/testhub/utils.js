@@ -200,6 +200,7 @@ exports.setTestHubCommonMetaInfo = (user_config, responseData) => {
   user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_UUID`);
   user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_API_PORT`);
   user_config.run_settings.system_env_vars.push(`TEST_ENV`);
+  user_config.run_settings.system_env_vars.push(`REPORTER_API`);
 };
 
 exports.checkIfAccessibilityIsSupported = (user_config, accessibilityFlag) => {
