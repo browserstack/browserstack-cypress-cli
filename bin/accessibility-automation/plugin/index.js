@@ -24,7 +24,7 @@ const browserstackAccessibility = (on, config) => {
         console.log(`reporter api from process: ${process.env.REPORTER_API}`);
         console.log(`Fetching testRunUuid for testIdentifier: ${testIdentifier}`);
         if(!testIdentifier) return resolve(null);
-        const port = process.env.TEST_OBSERVABILITY_HTTP_PORT || 5347;
+        const port = process.env.REPORTER_API || 5347;
         let attempt = 0;
         const fetchUuid = () => {
           const options = {
