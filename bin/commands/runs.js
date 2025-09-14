@@ -117,7 +117,7 @@ module.exports = function run(args, rawArgs) {
     checkIfAccessibilityIsSupported(bsConfig, isAccessibilitySession);
 
     const preferredPort = 5348;
-    const port = findAvailablePort(preferredPort);
+    const port = await findAvailablePort(preferredPort);
     process.env.REPORTER_API = port
 
     // Send build start to TEST REPORTING AND ANALYTICS

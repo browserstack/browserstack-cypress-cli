@@ -235,10 +235,8 @@ exports.findAvailablePort = async (preferredPort, maxAttempts = 10) => {
 exports.setTestHubCommonMetaInfo = (user_config, responseData) => {
   process.env.BROWSERSTACK_TESTHUB_JWT = responseData.jwt;
   process.env.BROWSERSTACK_TESTHUB_UUID = responseData.build_hashed_id;
-  process.env.BROWSERSTACK_TESTHUB_API_PORT = 3332;
   user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_JWT`);
   user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_UUID`);
-  user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_API_PORT`);
   user_config.run_settings.system_env_vars.push(`TEST_ENV`);
   user_config.run_settings.system_env_vars.push(`REPORTER_API`);
 };
