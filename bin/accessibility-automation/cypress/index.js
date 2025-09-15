@@ -340,10 +340,8 @@ afterEach(() => {
             let testRunUuid = null;
             cy.task('get_test_run_uuid', { testIdentifier: attributes.title })
                 .then((response) => {
-                browserStackLog(`Response from get_test_run_uuid task`);
                 if (response && response.testRunUuid) {
                     testRunUuid = response.testRunUuid;
-                    browserStackLog(`Fetched testRunId: ${testRunUuid} for test: ${attributes.title}`);
                 }
 
                 const payloadToSend = {
