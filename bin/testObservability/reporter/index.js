@@ -62,6 +62,7 @@ const {
 } = require('../helper/helper');
 
 const { consoleHolder } = require('../helper/constants');
+const { shouldProcessEventForTesthub } = require('../../testhub/utils');
 
 // this reporter outputs test results, indenting two spaces per suite
 class MyReporter {
@@ -92,7 +93,7 @@ class MyReporter {
       .on(EVENT_HOOK_BEGIN, async (hook) => {
         if (this.isInternalHook(hook)) return;
         debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_BEGIN`);
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!hook.hookAnalyticsId) {
             hook.hookAnalyticsId = uuidv4();
           } else if(this.runStatusMarkedHash[hook.hookAnalyticsId]) {
@@ -110,7 +111,7 @@ class MyReporter {
       .on(EVENT_HOOK_END, async (hook) => {
         if (this.isInternalHook(hook)) return;
         debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_END`);
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!this.runStatusMarkedHash[hook.hookAnalyticsId]) {
             if(!hook.hookAnalyticsId) {
               /* Hook objects don't maintain uuids in Cypress-Mocha */
@@ -135,7 +136,7 @@ class MyReporter {
 
       .on(EVENT_TEST_PASS, async (test) => {
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_PASS`);
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           debugOnConsole(`[MOCHA EVENT] EVENT_TEST_PASS for uuid: ${test.testAnalyticsId}`);
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
@@ -146,7 +147,7 @@ class MyReporter {
 
       .on(EVENT_TEST_FAIL, async (test, err) => {
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_FAIL`);
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           debugOnConsole(`[MOCHA EVENT] EVENT_TEST_FAIL for uuid: ${test.testAnalyticsId}`);
           if((test.testAnalyticsId && !this.runStatusMarkedHash[test.testAnalyticsId]) || (test.hookAnalyticsId && !this.runStatusMarkedHash[test.hookAnalyticsId])) {
             if(test.testAnalyticsId) {
@@ -162,7 +163,7 @@ class MyReporter {
 
       .on(EVENT_TEST_PENDING, async (test) => {
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_PENDING`);
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
           debugOnConsole(`[MOCHA EVENT] EVENT_TEST_PENDING for uuid: ${test.testAnalyticsId}`);
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
@@ -175,7 +176,7 @@ class MyReporter {
       .on(EVENT_TEST_BEGIN, async (test) => {
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           await this.testStarted(test);
         }
       })
@@ -183,7 +184,7 @@ class MyReporter {
       .on(EVENT_TEST_END, async (test) => {
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
             await this.sendTestRunEvent(test);
@@ -194,7 +195,7 @@ class MyReporter {
       .once(EVENT_RUN_END, async () => {
         try {
           debugOnConsole(`[MOCHA EVENT] EVENT_RUN_END`);
-          if(this.testObservability == true) {
+          if(shouldProcessEventForTesthub()) {
             const hookSkippedTests = getHookSkippedTests(this.runner.suite);
             for(const test of hookSkippedTests) {
               if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();

@@ -196,23 +196,16 @@ exports.logBuildError = (error, product = "") => {
 
 exports.findAvailablePort = async (preferredPort, maxAttempts = 10) => {  
   let port = preferredPort;
-
   for (let attempts = 0; attempts < maxAttempts; attempts++) {
     try {
       const availablePort = await detect(port);
 
       if (availablePort === port) {
-        // Re-check to avoid race condition
-        const verify = await detect(port);
-        if (verify === port) {
-          console.log(`✓ Port ${port} is available and will be used`);
           return port;
-        }
       } else {
         // Double-check suggested port
         const verify = await detect(availablePort);
         if (verify === availablePort) {
-          console.log(`✓ Port ${availablePort} is available and will be used`);
           return availablePort;
         }
       }
@@ -220,7 +213,7 @@ exports.findAvailablePort = async (preferredPort, maxAttempts = 10) => {
       // Try next port
       port++;
     } catch (err) {
-      console.warn(`Error checking port ${port}:`, err.message);
+      logger.warn(`Error checking port ${port}:`, err.message);
 
       // If permission denied, jump to dynamic range
       if (err.code === "EACCES") {
@@ -230,6 +223,10 @@ exports.findAvailablePort = async (preferredPort, maxAttempts = 10) => {
       }
     }
   }
+  
+  const fallbackPort = Math.floor(Math.random() * (65535 - 49152)) + 49152;
+  logger.warn(`Could not find available port. Using fallback port: ${fallbackPort}`);
+  return fallbackPort;
 }
 
 exports.setTestHubCommonMetaInfo = (user_config, responseData) => {
@@ -237,7 +234,6 @@ exports.setTestHubCommonMetaInfo = (user_config, responseData) => {
   process.env.BROWSERSTACK_TESTHUB_UUID = responseData.build_hashed_id;
   user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_JWT`);
   user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_UUID`);
-  user_config.run_settings.system_env_vars.push(`TEST_ENV`);
   user_config.run_settings.system_env_vars.push(`REPORTER_API`);
 };
 
