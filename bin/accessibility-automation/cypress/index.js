@@ -336,26 +336,33 @@ afterEach(() => {
             } else if (attributes.prevAttempts && attributes.prevAttempts.length > 0) {
                 filePath = (attributes.prevAttempts[0].invocationDetails && attributes.prevAttempts[0].invocationDetails.relativeFile) || '';
             }
-            const payloadToSend = {
-                "saveResults": shouldScanTestForAccessibility,
-                "testDetails": {
-                    "name": attributes.title,
-                    "testRunId": '5058', // variable not consumed, shouldn't matter what we send
-                    "filePath": filePath,
-                    "scopeList": [
-                    filePath,
-                    attributes.title
-                    ]
-                },
-                "platform": {
-                    "os_name": os_data,
-                    "os_version": Cypress.env("OS_VERSION"),
-                    "browser_name": Cypress.browser.name,
-                    "browser_version": Cypress.browser.version
-                }
-            };
+
+            browserStackLog(`Printing attributes ${attributes.title}`);
             browserStackLog(`Saving accessibility test results`);
-            cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
+            browserStackLog(`Cypress env browserstack testhub uuid: ${Cypress.env("BROWSERSTACK_TESTHUB_UUID")}`);
+            browserStackLog(`Cypress env browserstack testhub jwt: ${Cypress.env("BROWSERSTACK_TESTHUB_JWT")}`);
+            browserStackLog(`Cypress env http port: ${Cypress.env("BROWSERSTACK_TESTHUB_API_PORT")}`);
+            browserStackLog(`test env: ${Cypress.env("TEST_ENV")}`);
+            browserStackLog(`reporter api: ${Cypress.env("REPORTER_API")}`);
+
+            let testRunUuid = null;
+            cy.task('get_test_run_uuid', { testIdentifier: attributes.title })
+                .then((response) => {
+                browserStackLog(`Response from get_test_run_uuid task`);
+                if (response && response.testRunUuid) {
+                    testRunUuid = response.testRunUuid;
+                    browserStackLog(`Fetched testRunId: ${testRunUuid} for test: ${attributes.title}`);
+                }
+
+                const payloadToSend = {
+                    "thTestRunUuid": testRunUuid,
+                    "thBuildUuid": Cypress.env("BROWSERSTACK_TESTHUB_UUID"),
+                    "thJwtToken": Cypress.env("BROWSERSTACK_TESTHUB_JWT")
+                };
+                browserStackLog(`Payload to send: ${JSON.stringify(payloadToSend)}`);
+
+                return cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000});
+            }).then(() => {
                 browserStackLog(`Saved accessibility test results`);
             })
 
