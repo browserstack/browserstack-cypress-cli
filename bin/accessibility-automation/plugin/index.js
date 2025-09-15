@@ -17,11 +17,6 @@ const browserstackAccessibility = (on, config) => {
     },
     get_test_run_uuid({ testIdentifier, retries = 15, interval = 300 } = {}) {
       return new Promise((resolve) => {
-        console.log(`printing env variables take 7`);
-        console.log(`Cypress env browserstack testhub uuid from plugin: ${config.env.BROWSERSTACK_TESTHUB_UUID}`);
-        console.log(`Cypress env http port: ${config.env.REPORTER_API_PORT_NO}`);
-        console.log(`reporter api from process: ${process.env.REPORTER_API_PORT_NO}`);
-        console.log(`Fetching testRunUuid for testIdentifier: ${testIdentifier}`);
         if(!testIdentifier) return resolve(null);
         const port = process.env.REPORTER_API_PORT_NO;
         let attempt = 0;

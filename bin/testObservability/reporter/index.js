@@ -393,11 +393,6 @@ class MyReporter {
       };
 
       debugOnConsole(`${eventType} for uuid: ${testData.uuid}`);
-      console.log("inside sendTestRunEvent")
-      console.log(`testrunUuid: ${testData.uuid}`);
-      console.log(`testIdentifier: ${testData.identifier}`);
-      console.log(`testTitle: ${test.title}`);
-      console.log(`eventType: ${eventType}`);
 
       this.mapTestId(testData, eventType);
 

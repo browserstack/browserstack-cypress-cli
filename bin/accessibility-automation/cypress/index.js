@@ -337,13 +337,6 @@ afterEach(() => {
                 filePath = (attributes.prevAttempts[0].invocationDetails && attributes.prevAttempts[0].invocationDetails.relativeFile) || '';
             }
 
-            browserStackLog(`Printing attributes ${attributes.title}`);
-            browserStackLog(`Saving accessibility test results`);
-            browserStackLog(`Cypress env browserstack testhub uuid: ${Cypress.env("BROWSERSTACK_TESTHUB_UUID")}`);
-            browserStackLog(`Cypress env browserstack testhub jwt: ${Cypress.env("BROWSERSTACK_TESTHUB_JWT")}`);
-            browserStackLog(`Cypress env http port: ${Cypress.env("BROWSERSTACK_TESTHUB_API_PORT")}`);
-            browserStackLog(`reporter api: ${Cypress.env("REPORTER_API_PORT_NO")}`);
-
             let testRunUuid = null;
             cy.task('get_test_run_uuid', { testIdentifier: attributes.title })
                 .then((response) => {
