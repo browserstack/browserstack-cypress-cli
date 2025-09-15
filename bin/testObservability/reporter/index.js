@@ -256,8 +256,7 @@ class MyReporter {
       }
     });
 
-    const port = process.env.REPORTER_API;
-    process.env.TEST_ENV = 'from-reporter';
+    const port = process.env.REPORTER_API_PORT_NO;
 
     this.httpServer.listen(port, '127.0.0.1', async () => {
       console.log(`Test Observability HTTP server listening on port ${port}`);

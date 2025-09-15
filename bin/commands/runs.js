@@ -117,7 +117,7 @@ module.exports = function run(args, rawArgs) {
 
     const preferredPort = 5348;
     const port = await findAvailablePort(preferredPort);
-    process.env.REPORTER_API = port
+    process.env.REPORTER_API_PORT_NO = port
 
     // Send build start to TEST REPORTING AND ANALYTICS
     if(shouldProcessEventForTesthub()) {

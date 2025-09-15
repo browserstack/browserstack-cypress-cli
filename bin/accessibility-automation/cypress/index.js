@@ -342,8 +342,7 @@ afterEach(() => {
             browserStackLog(`Cypress env browserstack testhub uuid: ${Cypress.env("BROWSERSTACK_TESTHUB_UUID")}`);
             browserStackLog(`Cypress env browserstack testhub jwt: ${Cypress.env("BROWSERSTACK_TESTHUB_JWT")}`);
             browserStackLog(`Cypress env http port: ${Cypress.env("BROWSERSTACK_TESTHUB_API_PORT")}`);
-            browserStackLog(`test env: ${Cypress.env("TEST_ENV")}`);
-            browserStackLog(`reporter api: ${Cypress.env("REPORTER_API")}`);
+            browserStackLog(`reporter api: ${Cypress.env("REPORTER_API_PORT_NO")}`);
 
             let testRunUuid = null;
             cy.task('get_test_run_uuid', { testIdentifier: attributes.title })
