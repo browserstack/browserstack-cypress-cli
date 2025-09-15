@@ -343,7 +343,7 @@ exports.setCrashReportingConfigFromReporter = (credentialsStr, bsConfigPath, cyp
   }
 }
 
-const setCrashReportingConfig = (bsConfig, bsConfigPath) => {
+exports.setCrashReportingConfig = (bsConfig, bsConfigPath) => {
   try {
     const browserstackConfigFile = utils.readBsConfigJSON(bsConfigPath);
     const cypressConfigFile = getCypressConfigFileContent(bsConfig, null);
