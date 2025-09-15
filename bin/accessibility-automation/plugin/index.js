@@ -1,6 +1,7 @@
 const path = require("node:path");
 const { decodeJWTToken } = require("../../helpers/utils");
 const utils = require('../../helpers/utils');
+const http = require('http');
 
 const browserstackAccessibility = (on, config) => {
   let browser_validation = true;
