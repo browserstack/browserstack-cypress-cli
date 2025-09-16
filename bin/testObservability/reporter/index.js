@@ -259,7 +259,7 @@ class MyReporter {
     const port = process.env.REPORTER_API_PORT_NO;
 
     this.httpServer.listen(port, '127.0.0.1', async () => {
-      console.log(`Test Observability HTTP server listening on port ${port}`);
+      console.log(`Reporter HTTP server listening on port ${port}`);
     });
   }  
 
