@@ -108,7 +108,7 @@ class TestHubHandler {
       testhubUtils.setAccessibilityVariables(user_config, response.data);
     } else {
       process.env.BROWSERSTACK_ACCESSIBILITY = 'false';
-      testhubUtils.checkIfAccessibilityIsSupported(user_config, false)
+      testhubUtils.checkAndSetAccessibility(user_config, false)
     }    
 
     if (testhubUtils.shouldProcessEventForTesthub()) {

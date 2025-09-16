@@ -72,6 +72,7 @@ class MyReporter {
     this._testEnv = getTestEnv();
     this._paths = new PathHelper({ cwd: process.cwd() }, this._testEnv.location_prefix);
     this.currentTestSteps = [];
+    this.httpServer = null;
     this.currentTestCucumberSteps = [];
     this.hooksStarted = {};
     this.beforeHooks = [];
@@ -219,48 +220,62 @@ class MyReporter {
   }
 
   async startHttpServer() {
-    this.httpServer = http.createServer(async(req, res) => {
-      // Set CORS headers
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    if(this.httpServer !== null) return;
+    
+    try {
+      this.httpServer = http.createServer(async(req, res) => {
+        try {  
+          // Set CORS headers
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-      if (req.method === 'OPTIONS') {
-        res.writeHead(200);
-        res.end();
-        return;
-      }
-      const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
-      const pathname = parsedUrl.pathname;
-      const query = parsedUrl.searchParams; 
+          if (req.method === 'OPTIONS') {
+            res.writeHead(200);
+            res.end();
+            return;
+          }
+          const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+          const pathname = parsedUrl.pathname;
+          const query = parsedUrl.searchParams; 
 
-      if (pathname === '/test-uuid' && req.method === 'GET') {
-        const testIdentifier = query.get('testIdentifier');
+          if (pathname === '/test-uuid' && req.method === 'GET') {
+            const testIdentifier = query.get('testIdentifier');
 
-        if (!testIdentifier) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ 
-            error: 'testIdentifier parameter is required',
-            testRunUuid: null 
-          }));
-          return;
+            if (!testIdentifier) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ 
+                error: 'testIdentifier parameter is required',
+                testRunUuid: null 
+              }));
+              return;
+            }
+            const testRunUuid = this.getTestId(testIdentifier);
+
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ testRunUuid: testRunUuid }));
+          } else {
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('Not Found');
+          }
+        } catch (error) {
+          debugOnConsole(`Exception in handling HTTP request : ${error}`);
+          debug(`Exception in handling HTTP request : ${error}`, true, error);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ testRunUuid: null }));
         }
-        const testRunUuid = this.getTestId(testIdentifier);
+      });
 
+      const port = process.env.REPORTER_API_PORT_NO;
 
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ testRunUuid: testRunUuid }));
-      } else {
-        res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('Not Found');
-      }
-    });
-
-    const port = process.env.REPORTER_API_PORT_NO;
-
-    this.httpServer.listen(port, '127.0.0.1', async () => {
-      console.log(`Reporter HTTP server listening on port ${port}`);
-    });
+      this.httpServer.listen(port, '127.0.0.1', async () => {
+        console.log(`Reporter HTTP server listening on port ${port}`);
+      });
+    } catch (error) {
+      debugOnConsole(`Exception in starting reporter server : ${error}`);
+      debug(`Exception in starting reporter server : ${error}`, true, error);
+    }
   }  
 
   registerListeners() {

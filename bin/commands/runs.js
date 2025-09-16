@@ -37,7 +37,7 @@ const {
   supportFileCleanup
 } = require('../accessibility-automation/helper');
 const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
-const { shouldProcessEventForTesthub, checkIfAccessibilityIsSupported, findAvailablePort } = require('../testhub/utils');
+const { shouldProcessEventForTesthub, checkAndSetAccessibility, findAvailablePort } = require('../testhub/utils');
 const TestHubHandler = require('../testhub/testhubHandler');
 
 module.exports = function run(args, rawArgs) {
@@ -113,7 +113,7 @@ module.exports = function run(args, rawArgs) {
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
 
-    checkIfAccessibilityIsSupported(bsConfig, isAccessibilitySession);
+    checkAndSetAccessibility(bsConfig, isAccessibilitySession);
 
     const preferredPort = 5348;
     const port = await findAvailablePort(preferredPort);

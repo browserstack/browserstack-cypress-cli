@@ -30,6 +30,7 @@ exports.isAccessibilityEnabled = () => {
   if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY !== undefined) {
     return process.env.BROWSERSTACK_TEST_ACCESSIBILITY === "true";
   }
+  logger.debug('Accessibility is disabled');
   return false;
 };
 
@@ -135,7 +136,7 @@ const setAccessibilityCypressCapabilities = (user_config, responseData) => {
   process.env.ACCESSIBILITY_SCANNERVERSION = scannerVersion;
 
   if (accessibilityToken && responseData.build_hashed_id) {
-    this.checkIfAccessibilityIsSupported(user_config, true);
+    this.checkAndSetAccessibility(user_config, true);
   }
 
   user_config.run_settings.accessibilityOptions["authToken"] = accessibilityToken;
@@ -156,7 +157,7 @@ const jsonifyAccessibilityArray = (dataArray, keyName, valueName) => {
 };
 
 exports.handleErrorForAccessibility = (user_config, error = null) => {
-  exports.checkIfAccessibilityIsSupported(user_config, false);
+  exports.checkAndSetAccessibility(user_config, false);
   process.env.BROWSERSTACK_TESTHUB_UUID = "null";
   process.env.BROWSERSTACK_TESTHUB_JWT = "null";
   exports.logBuildError(error, TESTHUB_CONSTANTS.ACCESSIBILITY);
@@ -237,7 +238,7 @@ exports.setTestHubCommonMetaInfo = (user_config, responseData) => {
   user_config.run_settings.system_env_vars.push(`REPORTER_API_PORT_NO`);
 };
 
-exports.checkIfAccessibilityIsSupported = (user_config, accessibilityFlag) => {
+exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
   if (!accessibilityHelper.isAccessibilitySupportedCypressVersion(user_config.run_settings.cypress_config_file)) 
   {
     logger.warn(`Accessibility Testing is not supported on Cypress version 9 and below.`);
