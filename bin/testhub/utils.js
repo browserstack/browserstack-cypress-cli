@@ -12,7 +12,7 @@ const isUndefined = (value) => value === undefined || value === null;
 
 exports.getFrameworkDetails = (user_config) => {
   return {
-    frameworkName: "Cypress",
+    frameworkName: "Cypres",
     frameworkVersion: testObservabilityHelper.getPackageVersion(
       "cypress",
       user_config
