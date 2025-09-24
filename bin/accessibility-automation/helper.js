@@ -85,8 +85,7 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
       },
       'browserstackAutomation': process.env.BROWSERSTACK_AUTOMATION === 'true'
     };
-    console.log("Aakash Data:" + data);
-
+    console.log("Aakash Data:", JSON.stringify(data, null, 2));
     const config = {
       auth: {
         username: userName,
