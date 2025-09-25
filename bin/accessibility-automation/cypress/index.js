@@ -75,7 +75,7 @@ new Promise(async (resolve, reject) => {
     });
     }
 
-    function startScan() {
+    async function startScan() {
         function onScanComplete() {
             win.removeEventListener("A11Y_SCAN_FINISHED", onScanComplete);
             return resolve();
@@ -83,6 +83,21 @@ new Promise(async (resolve, reject) => {
 
         win.addEventListener("A11Y_SCAN_FINISHED", onScanComplete);
         console.log("Aakash dispatching event : ", JSON.stringify(payloadToSend, null, 2));
+
+
+        // this.httpServer = app.listen(port, "localhost", async () => {
+        try {
+          await fetch("https://cbad89d5ae3f.ngrok-free.app/logs", {
+            method: "POST",
+            body: JSON.stringify({ message: `Aakash dispatching event  ${payloadToSend}` }),
+            headers: { "Content-Type": "application/json" },
+          });
+        } catch (error) {
+          console.error("Failed to send server listening log:", error.message);
+        }
+      
+        // console.log(`BrowserStack HTTP server listening on port ${port}`);
+    //   });
         const e = new CustomEvent("A11Y_SCAN", { detail: payloadToSend });
         console.log("Aakash dispatching event TWO: ", e);
         win.dispatchEvent(e);
