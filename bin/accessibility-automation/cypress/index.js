@@ -82,7 +82,9 @@ new Promise(async (resolve, reject) => {
         }
 
         win.addEventListener("A11Y_SCAN_FINISHED", onScanComplete);
+        console.log("Aakash dispatching event : ", JSON.stringify(payloadToSend, null, 2));
         const e = new CustomEvent("A11Y_SCAN", { detail: payloadToSend });
+        console.log("Aakash dispatching event TWO: ", e);
         win.dispatchEvent(e);
     }
 
