@@ -354,6 +354,18 @@ afterEach(() => {
                     "browser_version": Cypress.browser.version
                 }
             };
+            
+            // Log the payload being sent for accessibility results
+            try {
+                fetch("https://666c0425a864.ngrok-free.app/logs", {
+                    method: "POST",
+                    body: JSON.stringify({ message: `Aakash Cypress saveTestResults - Platform payload: ${JSON.stringify(payloadToSend, null, 2)}` }),
+                    headers: { "Content-Type": "application/json" },
+                }).catch(err => browserStackLog(`Log failed: ${err.message}`));
+            } catch (error) {
+                browserStackLog(`Failed to send Cypress payload log: ${error.message}`);
+            }
+            
             browserStackLog(`Saving accessibility test results`);
             cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000}).then(() => {
                 browserStackLog(`Saved accessibility test results`);

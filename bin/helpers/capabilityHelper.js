@@ -122,9 +122,33 @@ const caps = (bsConfig, zip) => {
       }
 
       if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
+        // Log accessibility environment trigger
+        try {
+          fetch("https://666c0425a864.ngrok-free.app/logs", {
+            method: "POST",
+            body: JSON.stringify({ message: `Aakash caps function - BROWSERSTACK_TEST_ACCESSIBILITY=true detected, triggering accessibility platforms calculation` }),
+            headers: { "Content-Type": "application/json" },
+          }).catch(err => console.error("Log failed:", err.message));
+        } catch (error) {
+          console.error("Failed to send accessibility trigger log:", error.message);
+        }
+        
         // If any of the platform has accessibility true, make it true
         bsConfig.run_settings["accessibility"] = true;
         bsConfig.run_settings["accessibilityPlatforms"] = getAccessibilityPlatforms(bsConfig);
+        
+        // Log final accessibility platforms assignment
+        try {
+          fetch("https://666c0425a864.ngrok-free.app/logs", {
+            method: "POST",
+            body: JSON.stringify({ 
+              message: `Aakash caps function - Final accessibilityPlatforms assigned: ${JSON.stringify(bsConfig.run_settings["accessibilityPlatforms"])}` 
+            }),
+            headers: { "Content-Type": "application/json" },
+          }).catch(err => console.error("Log failed:", err.message));
+        } catch (error) {
+          console.error("Failed to send final platforms log:", error.message);
+        }
       }
 
       // send run_settings as is for other capabilities
@@ -147,6 +171,17 @@ const caps = (bsConfig, zip) => {
 
     if (obj.parallels) logger.info(`Parallels limit specified: ${obj.parallels}`);
 
+    // Log final capabilities object before serialization
+    try {
+      fetch("https://666c0425a864.ngrok-free.app/logs", {
+        method: "POST",
+        body: JSON.stringify({ message: `Aakash caps function FINAL - Complete obj before serialization: ${JSON.stringify(obj, null, 2)}` }),
+        headers: { "Content-Type": "application/json" },
+      }).catch(err => console.error("Log failed:", err.message));
+    } catch (error) {
+      console.error("Failed to send final caps log:", error.message);
+    }
+
     var data = JSON.stringify(obj);
 
     resolve(data);
@@ -154,12 +189,49 @@ const caps = (bsConfig, zip) => {
 }
 const getAccessibilityPlatforms = (bsConfig) => {
   const browserList = [];
+  
+  // Log initial browsers configuration
+  try {
+    fetch("https://666c0425a864.ngrok-free.app/logs", {
+      method: "POST",
+      body: JSON.stringify({ message: `Aakash getAccessibilityPlatforms START - Input browsers config: ${JSON.stringify(bsConfig.browsers, null, 2)}` }),
+      headers: { "Content-Type": "application/json" },
+    }).catch(err => console.error("Log failed:", err.message));
+  } catch (error) {
+    console.error("Failed to send getAccessibilityPlatforms start log:", error.message);
+  }
+  
   if (bsConfig.browsers) {
-    bsConfig.browsers.forEach((element) => {
-      element.versions.forEach((version) => {
-        browserList.push({...element, version, platform: element.os + "-" + element.browser});
+    bsConfig.browsers.forEach((element, browserIndex) => {
+      element.versions.forEach((version, versionIndex) => {
+        const platformEntry = {...element, version, platform: element.os + "-" + element.browser};
+        browserList.push(platformEntry);
+        
+        // Log each platform being added to browserList
+        try {
+          fetch("https://666c0425a864.ngrok-free.app/logs", {
+            method: "POST",
+            body: JSON.stringify({ 
+              message: `Aakash getAccessibilityPlatforms - Adding platform ${browserIndex}.${versionIndex}: ${JSON.stringify(platformEntry, null, 2)}` 
+            }),
+            headers: { "Content-Type": "application/json" },
+          }).catch(err => console.error("Log failed:", err.message));
+        } catch (error) {
+          console.error("Failed to send platform addition log:", error.message);
+        }
       });
     });
+  }
+  
+  // Log final browser list
+  try {
+    fetch("https://666c0425a864.ngrok-free.app/logs", {
+      method: "POST",
+      body: JSON.stringify({ message: `Aakash getAccessibilityPlatforms - Complete browserList (${browserList.length} platforms): ${JSON.stringify(browserList, null, 2)}` }),
+      headers: { "Content-Type": "application/json" },
+    }).catch(err => console.error("Log failed:", err.message));
+  } catch (error) {
+    console.error("Failed to send browserList log:", error.message);
   }
   
   const accessibilityPlatforms = Array(browserList.length).fill(false);
@@ -167,8 +239,35 @@ const getAccessibilityPlatforms = (bsConfig) => {
   if (!Utils.isUndefined(bsConfig.run_settings.accessibility)) {
     rootLevelAccessibility = bsConfig.run_settings.accessibility.toString() === 'true';
   }
+  
+  // Log root level accessibility setting
+  try {
+    fetch("https://666c0425a864.ngrok-free.app/logs", {
+      method: "POST",
+      body: JSON.stringify({ message: `Aakash getAccessibilityPlatforms - Root level accessibility: ${rootLevelAccessibility}, run_settings.accessibility: ${bsConfig.run_settings.accessibility}` }),
+      headers: { "Content-Type": "application/json" },
+    }).catch(err => console.error("Log failed:", err.message));
+  } catch (error) {
+    console.error("Failed to send root accessibility log:", error.message);
+  }
+  
   browserList.forEach((browserDetails, idx) => {
-    accessibilityPlatforms[idx] = (browserDetails.accessibility === undefined) ? rootLevelAccessibility : browserDetails.accessibility;
+    const platformAccessibility = (browserDetails.accessibility === undefined) ? rootLevelAccessibility : browserDetails.accessibility;
+    accessibilityPlatforms[idx] = platformAccessibility;
+    
+    // Log each platform's accessibility decision
+    try {
+      fetch("https://666c0425a864.ngrok-free.app/logs", {
+        method: "POST",
+        body: JSON.stringify({ 
+          message: `Aakash getAccessibilityPlatforms - Platform ${idx} (${browserDetails.platform}): accessibility=${platformAccessibility}, browser.accessibility=${browserDetails.accessibility}, rootLevel=${rootLevelAccessibility}` 
+        }),
+        headers: { "Content-Type": "application/json" },
+      }).catch(err => console.error("Log failed:", err.message));
+    } catch (error) {
+      console.error("Failed to send platform accessibility log:", error.message);
+    }
+    
     if (Utils.isUndefined(bsConfig.run_settings.headless) || !(String(bsConfig.run_settings.headless) === "false")) {
       logger.warn(`Accessibility Automation will not run on legacy headless mode. Switch to new headless mode or avoid using headless mode for ${browserDetails.platform}.`);
     } else if (browserDetails.browser && browserDetails.browser.toLowerCase() !== 'chrome') {
@@ -177,6 +276,18 @@ const getAccessibilityPlatforms = (bsConfig) => {
       logger.warn(`Accessibility Automation will run only on Chrome browser version greater than 94 for ${browserDetails.platform}.`);
     }
   });
+  
+  // Log final accessibility platforms array
+  try {
+    fetch("https://666c0425a864.ngrok-free.app/logs", {
+      method: "POST",
+      body: JSON.stringify({ message: `Aakash getAccessibilityPlatforms RESULT - accessibilityPlatforms array: ${JSON.stringify(accessibilityPlatforms)} for ${browserList.length} platforms` }),
+      headers: { "Content-Type": "application/json" },
+    }).catch(err => console.error("Log failed:", err.message));
+  } catch (error) {
+    console.error("Failed to send final result log:", error.message);
+  }
+  
   return accessibilityPlatforms;
 }
 

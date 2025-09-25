@@ -69,6 +69,20 @@ module.exports = function run(args, rawArgs) {
     const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
     const checkAccessibility = checkAccessibilityPlatform(bsConfig);
     const isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibility;
+    
+    // Log accessibility session decision
+    try {
+      const fetch = require('node-fetch');
+      fetch("https://666c0425a864.ngrok-free.app/logs", {
+        method: "POST",
+        body: JSON.stringify({ 
+          message: `Aakash runs.js accessibility decision - checkAccessibility: ${checkAccessibility}, bsConfig.run_settings.accessibility: ${bsConfig.run_settings.accessibility}, isAccessibilitySession: ${isAccessibilitySession}` 
+        }),
+        headers: { "Content-Type": "application/json" },
+      }).catch(err => console.error("Log failed:", err.message));
+    } catch (error) {
+      console.error("Failed to send accessibility decision log:", error.message);
+    }
     const turboScaleSession = isTurboScaleSession(bsConfig);
     Constants.turboScaleObj.enabled = turboScaleSession;
     
@@ -150,7 +164,35 @@ module.exports = function run(args, rawArgs) {
       utils.setCypressNpmDependency(bsConfig);
 
       if (isAccessibilitySession && isBrowserstackInfra) {
+        // Log before creating accessibility test run
+        try {
+          const fetch = require('node-fetch');
+          fetch("https://666c0425a864.ngrok-free.app/logs", {
+            method: "POST",
+            body: JSON.stringify({ 
+              message: `Aakash runs.js - Creating accessibility test run, browsers config: ${JSON.stringify(bsConfig.browsers, null, 2)}` 
+            }),
+            headers: { "Content-Type": "application/json" },
+          }).catch(err => console.error("Log failed:", err.message));
+        } catch (error) {
+          console.error("Failed to send pre-creation log:", error.message);
+        }
+        
         await createAccessibilityTestRun(bsConfig);
+        
+        // Log after creating accessibility test run
+        try {
+          const fetch = require('node-fetch');
+          fetch("https://666c0425a864.ngrok-free.app/logs", {
+            method: "POST",
+            body: JSON.stringify({ 
+              message: `Aakash runs.js - Accessibility test run created, BROWSERSTACK_TEST_ACCESSIBILITY: ${process.env.BROWSERSTACK_TEST_ACCESSIBILITY}` 
+            }),
+            headers: { "Content-Type": "application/json" },
+          }).catch(err => console.error("Log failed:", err.message));
+        } catch (error) {
+          console.error("Failed to send post-creation log:", error.message);
+        }
       }
 
       if (turboScaleSession) {

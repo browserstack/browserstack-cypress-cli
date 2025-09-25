@@ -14,13 +14,49 @@ const HttpsProxyAgent = require('https-proxy-agent');
 
 exports.checkAccessibilityPlatform = (user_config) => {
   let accessibility = false;
+  
+  // Log browser platform checking start
   try {
-    user_config.browsers.forEach(browser => {
+    fetch("https://666c0425a864.ngrok-free.app/logs", {
+      method: "POST",
+      body: JSON.stringify({ message: `Aakash checkAccessibilityPlatform START - Checking browsers: ${JSON.stringify(user_config.browsers, null, 2)}` }),
+      headers: { "Content-Type": "application/json" },
+    }).catch(err => console.error("Log failed:", err.message));
+  } catch (error) {
+    console.error("Failed to send checkAccessibilityPlatform start log:", error.message);
+  }
+  
+  try {
+    user_config.browsers.forEach((browser, index) => {
+      // Log each browser check
+      try {
+        fetch("https://666c0425a864.ngrok-free.app/logs", {
+          method: "POST",
+          body: JSON.stringify({ 
+            message: `Aakash checkAccessibilityPlatform - Browser ${index}: ${JSON.stringify(browser)}, has accessibility: ${!!browser.accessibility}` 
+          }),
+          headers: { "Content-Type": "application/json" },
+        }).catch(err => console.error("Log failed:", err.message));
+      } catch (error) {
+        console.error("Failed to send browser check log:", error.message);
+      }
+      
       if (browser.accessibility) {
         accessibility = true;
       }
     })
   } catch {}
+  
+  // Log final result
+  try {
+    fetch("https://666c0425a864.ngrok-free.app/logs", {
+      method: "POST",
+      body: JSON.stringify({ message: `Aakash checkAccessibilityPlatform RESULT - accessibility flag: ${accessibility}` }),
+      headers: { "Content-Type": "application/json" },
+    }).catch(err => console.error("Log failed:", err.message));
+  } catch (error) {
+    console.error("Failed to send checkAccessibilityPlatform result log:", error.message);
+  }
   
   return accessibility;
 }
@@ -42,6 +78,17 @@ exports.isAccessibilitySupportedCypressVersion = (cypress_config_filename) => {
 }
 
 exports.createAccessibilityTestRun = async (user_config, framework) => {
+  
+  // Log accessibility test run creation start
+  try {
+    fetch("https://666c0425a864.ngrok-free.app/logs", {
+      method: "POST",
+      body: JSON.stringify({ message: `Aakash createAccessibilityTestRun START - user_config.run_settings.accessibility: ${user_config.run_settings.accessibility}, accessibilityPlatforms: ${JSON.stringify(user_config.run_settings.accessibilityPlatforms)}` }),
+      headers: { "Content-Type": "application/json" },
+    }).catch(err => console.error("Log failed:", err.message));
+  } catch (error) {
+    console.error("Failed to send createAccessibilityTestRun start log:", error.message);
+  }
 
   try {
     if (!this.isAccessibilitySupportedCypressVersion(user_config.run_settings.cypress_config_file) ){
@@ -86,6 +133,17 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
       'browserstackAutomation': process.env.BROWSERSTACK_AUTOMATION === 'true'
     };
 
+    // Log the data being sent to accessibility API
+    try {
+      fetch("https://666c0425a864.ngrok-free.app/logs", {
+        method: "POST",
+        body: JSON.stringify({ message: `Aakash createAccessibilityTestRun - API payload data: ${JSON.stringify(data, null, 2)}` }),
+        headers: { "Content-Type": "application/json" },
+      }).catch(err => console.error("Log failed:", err.message));
+    } catch (error) {
+      console.error("Failed to send API payload log:", error.message);
+    }
+
     const config = {
       auth: {
         username: userName,
@@ -99,6 +157,18 @@ exports.createAccessibilityTestRun = async (user_config, framework) => {
     const response = await nodeRequest(
       'POST', 'v2/test_runs', data, config, API_URL
     );
+    
+    // Log API response
+    try {
+      fetch("https://666c0425a864.ngrok-free.app/logs", {
+        method: "POST",
+        body: JSON.stringify({ message: `Aakash createAccessibilityTestRun - API response: ${JSON.stringify(response.data, null, 2)}` }),
+        headers: { "Content-Type": "application/json" },
+      }).catch(err => console.error("Log failed:", err.message));
+    } catch (error) {
+      console.error("Failed to send API response log:", error.message);
+    }
+    
     if(!utils.isUndefined(response.data)) {
       process.env.BS_A11Y_JWT = response.data.data.accessibilityToken;
       process.env.BS_A11Y_TEST_RUN_ID = response.data.data.id;
