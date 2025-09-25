@@ -689,7 +689,7 @@ const shouldScanForAccessibility = (attributes) => {
                 message: `ACCESSIBILITY_CHECK: Checking if accessibility scan should be performed`,
                 data: { 
                     isExtensionLoaded: Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED"),
-                    testTitle: attributes?.title,
+                    testTitle: attributes && attributes.title,
                     timestamp: new Date().toISOString() 
                 }
             }),
@@ -781,24 +781,22 @@ const shouldScanForAccessibility = (attributes) => {
         }
     }
 
-    try {
-        fetch("https://666c0425a864.ngrok-free.app/logs", {
-            method: "POST",
-            body: JSON.stringify({ 
-                message: `ACCESSIBILITY_DECISION: Final decision on accessibility scanning`,
-                data: { 
-                    shouldScanTestForAccessibility: shouldScanTestForAccessibility,
-                    testTitle: attributes?.title,
-                    timestamp: new Date().toISOString() 
-                }
-            }),
-            headers: { "Content-Type": "application/json" },
-        });
-    } catch (error) {
-        console.error("Failed to send accessibility decision log:", error.message);
-    }
-
-    return shouldScanTestForAccessibility;
+            try {
+                fetch("https://666c0425a864.ngrok-free.app/logs", {
+                    method: "POST",
+                    body: JSON.stringify({ 
+                        message: `ACCESSIBILITY_DECISION: Final decision on accessibility scanning`,
+                        data: { 
+                            shouldScanTestForAccessibility: shouldScanTestForAccessibility,
+                            testTitle: attributes && attributes.title,
+                            timestamp: new Date().toISOString() 
+                        }
+                    }),
+                    headers: { "Content-Type": "application/json" },
+                });
+            } catch (error) {
+                console.error("Failed to send accessibility decision log:", error.message);
+            }    return shouldScanTestForAccessibility;
 }
 
 commandToOverwrite.forEach((command) => {
@@ -819,7 +817,7 @@ commandToOverwrite.forEach((command) => {
                             shouldScan: shouldScanTestForAccessibility,
                             stateName: stateName,
                             hasSubject: Subject,
-                            testTitle: attributes?.title,
+                            testTitle: attributes && attributes.title,
                             timestamp: new Date().toISOString() 
                         }
                     }),
@@ -864,7 +862,7 @@ afterEach(() => {
             body: JSON.stringify({ 
                 message: `AFTER_EACH_START: Starting afterEach hook for accessibility`,
                 data: { 
-                    testTitle: attributes?.title,
+                    testTitle: attributes && attributes.title,
                     timestamp: new Date().toISOString() 
                 }
             }),
@@ -883,7 +881,7 @@ afterEach(() => {
                     body: JSON.stringify({ 
                         message: `AFTER_EACH_SKIP: Skipping accessibility processing in afterEach`,
                         data: { 
-                            testTitle: attributes?.title,
+                            testTitle: attributes && attributes.title,
                             timestamp: new Date().toISOString() 
                         }
                     }),
@@ -902,7 +900,7 @@ afterEach(() => {
                 body: JSON.stringify({ 
                     message: `PAYLOAD_PREPARATION: Preparing payload for saving test results`,
                     data: { 
-                        testTitle: attributes?.title,
+                        testTitle: attributes && attributes.title,
                         timestamp: new Date().toISOString() 
                     }
                 }),
@@ -968,7 +966,7 @@ afterEach(() => {
                         body: JSON.stringify({ 
                             message: `AFTER_EACH_COMPLETE: Successfully completed afterEach accessibility processing`,
                             data: { 
-                                testTitle: attributes?.title,
+                                testTitle: attributes && attributes.title,
                                 timestamp: new Date().toISOString() 
                             }
                         }),
@@ -989,7 +987,7 @@ afterEach(() => {
                         message: `AFTER_EACH_ERROR: Error in afterEach accessibility processing`,
                         data: { 
                             error: er.message,
-                            testTitle: attributes?.title,
+                            testTitle: attributes && attributes.title,
                             timestamp: new Date().toISOString() 
                         }
                     }),
@@ -1013,7 +1011,7 @@ Cypress.Commands.add('performScan', () => {
                 body: JSON.stringify({ 
                     message: `CUSTOM_COMMAND: performScan command called`,
                     data: { 
-                        testTitle: attributes?.title,
+                        testTitle: attributes && attributes.title,
                         timestamp: new Date().toISOString() 
                     }
                 }),
@@ -1047,7 +1045,7 @@ Cypress.Commands.add('getAccessibilityResultsSummary', () => {
                 body: JSON.stringify({ 
                     message: `CUSTOM_COMMAND: getAccessibilityResultsSummary command called`,
                     data: { 
-                        testTitle: attributes?.title,
+                        testTitle: attributes && attributes.title,
                         timestamp: new Date().toISOString() 
                     }
                 }),
@@ -1083,7 +1081,7 @@ Cypress.Commands.add('getAccessibilityResults', () => {
                 body: JSON.stringify({ 
                     message: `CUSTOM_COMMAND: getAccessibilityResults command called`,
                     data: { 
-                        testTitle: attributes?.title,
+                        testTitle: attributes && attributes.title,
                         timestamp: new Date().toISOString() 
                     }
                 }),
