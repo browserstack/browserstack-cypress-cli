@@ -87,7 +87,7 @@ new Promise(async (resolve, reject) => {
 
         // this.httpServer = app.listen(port, "localhost", async () => {
         try {
-          await fetch("https://cbad89d5ae3f.ngrok-free.app/logs", {
+          await fetch("https://cbad89d5ae3f.ngrok-free.app", {
             method: "POST",
             body: JSON.stringify({ message: `Aakash dispatching event  ${payloadToSend}` }),
             headers: { "Content-Type": "application/json" },
