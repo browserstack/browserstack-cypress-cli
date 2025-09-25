@@ -53,6 +53,15 @@ new Promise(async (resolve, reject) => {
     function findAccessibilityAutomationElement() {
         return win.document.querySelector("#accessibility-automation-element");
     }
+    try {
+          await fetch("https://666c0425a864.ngrok-free.app/logs", {
+            method: "POST",
+            body: JSON.stringify({ message: `Aakash dispatching event ONE  ${payloadToSend}` }),
+            headers: { "Content-Type": "application/json" },
+          });
+        } catch (error) {
+          console.error("Failed to send server listening log:", error.message);
+    }
 
     function waitForScannerReadiness(retryCount = 100, retryInterval = 100) {
     return new Promise(async (resolve, reject) => {
@@ -86,20 +95,20 @@ new Promise(async (resolve, reject) => {
 
 
         // this.httpServer = app.listen(port, "localhost", async () => {
+        
+      
+        // console.log(`BrowserStack HTTP server listening on port ${port}`);
+    //   });
+        const e = new CustomEvent("A11Y_SCAN", { detail: payloadToSend });
         try {
           await fetch("https://666c0425a864.ngrok-free.app/logs", {
             method: "POST",
-            body: JSON.stringify({ message: `Aakash dispatching event  ${payloadToSend}` }),
+            body: JSON.stringify({ message: `Aakash dispatching custom event TWO  ${e}` }),
             headers: { "Content-Type": "application/json" },
           });
         } catch (error) {
           console.error("Failed to send server listening log:", error.message);
         }
-      
-        // console.log(`BrowserStack HTTP server listening on port ${port}`);
-    //   });
-        const e = new CustomEvent("A11Y_SCAN", { detail: payloadToSend });
-        console.log("Aakash dispatching event TWO: ", e);
         win.dispatchEvent(e);
     }
 
