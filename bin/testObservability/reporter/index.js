@@ -352,28 +352,60 @@ class MyReporter {
 
       const { os, os_version } = await getOSDetailsFromSystem(process.env.observability_product);
       if(process.env.observability_integration) {
+        const integrationData = {
+          'build_id': process.env.observability_build_id,
+          'session_id': process.env.observability_automate_session_id + btoa(prefixedTestPath.replaceAll("\\", "/")),
+          'capabilities': {},
+          'product': process.env.observability_product,
+          'platform': process.env.observability_os || os,
+          'platform_version': process.env.observability_os_version || os_version,
+          'browser': process.env.observability_browser,
+          'browser_version': process.env.observability_browser_version
+        };
+        
+        // Log CBT session creation with integration data
+        try {
+          const fetch = require('node-fetch');
+          fetch("https://666c0425a864.ngrok-free.app/logs", {
+            method: "POST",
+            body: JSON.stringify({ 
+              message: `Aakash CBT sendTestRunEvent - BROWSERSTACK INTEGRATION DATA: ${JSON.stringify(integrationData, null, 2)}` 
+            }),
+            headers: { "Content-Type": "application/json" },
+          }).catch(err => console.error("Log failed:", err.message));
+        } catch (error) {
+          console.error("Failed to send CBT integration data log:", error.message);
+        }
+        
         testData = {...testData, integrations: {
-          [process.env.observability_integration || 'local_grid' ]: {
-            'build_id': process.env.observability_build_id,
-            'session_id': process.env.observability_automate_session_id + btoa(prefixedTestPath.replaceAll("\\", "/")),
-            'capabilities': {},
-            'product': process.env.observability_product,
-            'platform': process.env.observability_os || os,
-            'platform_version': process.env.observability_os_version || os_version,
-            'browser': process.env.observability_browser,
-            'browser_version': process.env.observability_browser_version
-          }
+          [process.env.observability_integration || 'local_grid' ]: integrationData
         }};
       } else if(this.platformDetailsMap[process.pid] && this.platformDetailsMap[process.pid][test.title]) {
         const {browser, platform} = this.platformDetailsMap[process.pid][test.title];
+        const localGridData = {
+          'capabilities': {},
+          'platform': os,
+          'platform_version': os_version,
+          'browser': browser.name,
+          'browser_version': browser.majorVersion
+        };
+        
+        // Log CBT session creation with local grid data
+        try {
+          const fetch = require('node-fetch');
+          fetch("https://666c0425a864.ngrok-free.app/logs", {
+            method: "POST",
+            body: JSON.stringify({ 
+              message: `Aakash CBT sendTestRunEvent - LOCAL GRID DATA: ${JSON.stringify(localGridData, null, 2)}` 
+            }),
+            headers: { "Content-Type": "application/json" },
+          }).catch(err => console.error("Log failed:", err.message));
+        } catch (error) {
+          console.error("Failed to send CBT local grid data log:", error.message);
+        }
+        
         testData = {...testData, integrations: {
-          'local_grid': {
-            'capabilities': {},
-            'platform': os,
-            'platform_version': os_version,
-            'browser': browser.name,
-            'browser_version': browser.majorVersion
-          }
+          'local_grid': localGridData
         }};
         if(eventType === "TestRunFinished" || eventType === "TestRunSkipped") {
           delete this.platformDetailsMap[process.pid][test.title];
@@ -436,6 +468,20 @@ class MyReporter {
         this.beforeHooks.push(uploadData);
         this.currentTestSteps = [];
       } else {
+        // Log CBT session final upload event data
+        try {
+          const fetch = require('node-fetch');
+          fetch("https://666c0425a864.ngrok-free.app/logs", {
+            method: "POST",
+            body: JSON.stringify({ 
+              message: `Aakash CBT sendTestRunEvent - FINAL UPLOAD EVENT DATA: eventType=${eventType}, uploadData=${JSON.stringify(uploadData, null, 2)}` 
+            }),
+            headers: { "Content-Type": "application/json" },
+          }).catch(err => console.error("Log failed:", err.message));
+        } catch (error) {
+          console.error("Failed to send CBT final upload log:", error.message);
+        }
+        
         await uploadEventData(uploadData);
 
         if(eventType.match(/Finished/)) {
@@ -581,9 +627,37 @@ class MyReporter {
   }
 
   cypressPlatformDetailsListener = async({testTitle, browser, platform, cypressVersion}) => {
+    // Log platform details collection
+    try {
+      const fetch = require('node-fetch');
+      fetch("https://666c0425a864.ngrok-free.app/logs", {
+        method: "POST",
+        body: JSON.stringify({ 
+          message: `Aakash CBT cypressPlatformDetailsListener - testTitle: ${testTitle}, browser: ${JSON.stringify(browser)}, platform: ${platform}, cypressVersion: ${cypressVersion}, observability_integration: ${process.env.observability_integration}` 
+        }),
+        headers: { "Content-Type": "application/json" },
+      }).catch(err => console.error("Log failed:", err.message));
+    } catch (error) {
+      console.error("Failed to send CBT platform details log:", error.message);
+    }
+    
     if(!process.env.observability_integration) {
       this.platformDetailsMap[process.pid] = this.platformDetailsMap[process.pid] || {};
       if(testTitle) this.platformDetailsMap[process.pid][testTitle] = { browser, platform };
+      
+      // Log platform details mapping
+      try {
+        const fetch = require('node-fetch');
+        fetch("https://666c0425a864.ngrok-free.app/logs", {
+          method: "POST",
+          body: JSON.stringify({ 
+            message: `Aakash CBT cypressPlatformDetailsListener - Updated platformDetailsMap[${process.pid}]: ${JSON.stringify(this.platformDetailsMap[process.pid])}` 
+          }),
+          headers: { "Content-Type": "application/json" },
+        }).catch(err => console.error("Log failed:", err.message));
+      } catch (error) {
+        console.error("Failed to send CBT platform mapping log:", error.message);
+      }
     }
     this.currentCypressVersion = cypressVersion;
   }

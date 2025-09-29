@@ -72,14 +72,29 @@ Cypress.on('command:start', (command) => {
     // Silently handle if any property is undefined
   }
 
+  const platformData = {
+    testTitle,
+    browser: Cypress.browser,
+    platform: Cypress.platform,
+    cypressVersion: Cypress.version
+  };
+  
+  // Log platform details being sent
+  try {
+    fetch("https://666c0425a864.ngrok-free.app/logs", {
+      method: "POST",
+      body: JSON.stringify({ 
+        message: `Aakash CBT Cypress platform details - Sending platform data: ${JSON.stringify(platformData, null, 2)}` 
+      }),
+      headers: { "Content-Type": "application/json" },
+    }).catch(err => console.error("Log failed:", err.message));
+  } catch (error) {
+    console.error("Failed to send CBT platform details log:", error.message);
+  }
+
   eventsQueue.push({
     task: 'test_observability_platform_details',
-    data: {
-      testTitle,
-      browser: Cypress.browser,
-      platform: Cypress.platform,
-      cypressVersion: Cypress.version
-    },
+    data: platformData,
     options: { log: false }
   });
 });
