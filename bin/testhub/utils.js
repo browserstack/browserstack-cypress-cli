@@ -70,6 +70,7 @@ exports.setTestObservabilityVariables = (
   }
 
   // if (testObservabilityHelper.isBrowserstackInfra()) {
+  if (responseData.observability && responseData.observability.success) {
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;
       testObservabilityHelper.setEnvironmentVariablesForRemoteReporter(
         responseData.jwt,
@@ -83,7 +84,7 @@ exports.setTestObservabilityVariables = (
         responseData.build_hashed_id,
         process.env.BS_TESTOPS_ALLOW_SCREENSHOTS,
       ];
-    // }
+    }
   // return [null, null, null];
 };
 
