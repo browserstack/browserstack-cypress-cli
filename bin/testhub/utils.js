@@ -69,7 +69,7 @@ exports.setTestObservabilityVariables = (
     return [null, null, null];
   }
 
-  if (testObservabilityHelper.isBrowserstackInfra()) {
+  if (responseData.observability && responseData.observability.success) {
     process.env.BS_TESTOPS_BUILD_COMPLETED = true;
     testObservabilityHelper.setEnvironmentVariablesForRemoteReporter(
       responseData.jwt,
