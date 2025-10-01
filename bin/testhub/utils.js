@@ -69,22 +69,22 @@ exports.setTestObservabilityVariables = (
     return [null, null, null];
   }
 
-  if (testObservabilityHelper.isBrowserstackInfra()) {
-    process.env.BS_TESTOPS_BUILD_COMPLETED = true;
-    testObservabilityHelper.setEnvironmentVariablesForRemoteReporter(
-      responseData.jwt,
-      responseData.build_hashed_id,
-      responseData.observability.options.allow_screenshots.toString(),
-      requestData.framework_details.sdkVersion
-    );
-    helper.setBrowserstackCypressCliDependency(user_config);
-    return [
-      responseData.jwt,
-      responseData.build_hashed_id,
-      process.env.BS_TESTOPS_ALLOW_SCREENSHOTS,
-    ];
-  }
-  return [null, null, null];
+  // if (testObservabilityHelper.isBrowserstackInfra()) {
+      process.env.BS_TESTOPS_BUILD_COMPLETED = true;
+      testObservabilityHelper.setEnvironmentVariablesForRemoteReporter(
+        responseData.jwt,
+        responseData.build_hashed_id,
+        responseData.observability.options.allow_screenshots.toString(),
+        requestData.framework_details.sdkVersion
+      );
+      helper.setBrowserstackCypressCliDependency(user_config);
+      return [
+        responseData.jwt,
+        responseData.build_hashed_id,
+        process.env.BS_TESTOPS_ALLOW_SCREENSHOTS,
+      ];
+    // }
+  // return [null, null, null];
 };
 
 exports.handleErrorForObservability = (error = null) => {
