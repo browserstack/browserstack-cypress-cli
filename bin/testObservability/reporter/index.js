@@ -11,6 +11,7 @@ const Mocha = requireModule('mocha');
 // const Runnable = requireModule('mocha/lib/runnable');
 const Runnable = require('mocha/lib/runnable'); // need to handle as this isn't present in older mocha versions
 const { v4: uuidv4 } = require('uuid');
+const https = require('https');
 
 const { IPC_EVENTS, TEST_REPORTING_ANALYTICS } = require('../helper/constants');
 const { startIPCServer } = require('../plugin/ipcServer');
@@ -61,6 +62,7 @@ const {
 } = require('../helper/helper');
 
 const { consoleHolder } = require('../helper/constants');
+const { shouldProcessEventForTesthub } = require('../../testhub/utils');
 
 // this reporter outputs test results, indenting two spaces per suite
 class MyReporter {
@@ -70,12 +72,15 @@ class MyReporter {
     this._testEnv = getTestEnv();
     this._paths = new PathHelper({ cwd: process.cwd() }, this._testEnv.location_prefix);
     this.currentTestSteps = [];
+    this.httpServer = null;
     this.currentTestCucumberSteps = [];
     this.hooksStarted = {};
     this.beforeHooks = [];
+    this.testIdMap = {};
     this.platformDetailsMap = {};
     this.runStatusMarkedHash = {};
     this.haveSentBuildUpdate = false;
+    this.startHttpServer();
     this.registerListeners();
     setCrashReportingConfigFromReporter(null, process.env.OBS_CRASH_REPORTING_BS_CONFIG_PATH, process.env.OBS_CRASH_REPORTING_CYPRESS_CONFIG_PATH);
 
@@ -89,7 +94,7 @@ class MyReporter {
       .on(EVENT_HOOK_BEGIN, async (hook) => {
         if (this.isInternalHook(hook)) return;
         debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_BEGIN`);
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!hook.hookAnalyticsId) {
             hook.hookAnalyticsId = uuidv4();
           } else if(this.runStatusMarkedHash[hook.hookAnalyticsId]) {
@@ -107,7 +112,7 @@ class MyReporter {
       .on(EVENT_HOOK_END, async (hook) => {
         if (this.isInternalHook(hook)) return;
         debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_END`);
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!this.runStatusMarkedHash[hook.hookAnalyticsId]) {
             if(!hook.hookAnalyticsId) {
               /* Hook objects don't maintain uuids in Cypress-Mocha */
@@ -132,7 +137,7 @@ class MyReporter {
 
       .on(EVENT_TEST_PASS, async (test) => {
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_PASS`);
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           debugOnConsole(`[MOCHA EVENT] EVENT_TEST_PASS for uuid: ${test.testAnalyticsId}`);
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
@@ -143,7 +148,7 @@ class MyReporter {
 
       .on(EVENT_TEST_FAIL, async (test, err) => {
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_FAIL`);
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           debugOnConsole(`[MOCHA EVENT] EVENT_TEST_FAIL for uuid: ${test.testAnalyticsId}`);
           if((test.testAnalyticsId && !this.runStatusMarkedHash[test.testAnalyticsId]) || (test.hookAnalyticsId && !this.runStatusMarkedHash[test.hookAnalyticsId])) {
             if(test.testAnalyticsId) {
@@ -159,7 +164,7 @@ class MyReporter {
 
       .on(EVENT_TEST_PENDING, async (test) => {
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_PENDING`);
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
           debugOnConsole(`[MOCHA EVENT] EVENT_TEST_PENDING for uuid: ${test.testAnalyticsId}`);
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
@@ -172,7 +177,7 @@ class MyReporter {
       .on(EVENT_TEST_BEGIN, async (test) => {
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           await this.testStarted(test);
         }
       })
@@ -180,7 +185,7 @@ class MyReporter {
       .on(EVENT_TEST_END, async (test) => {
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
             await this.sendTestRunEvent(test);
@@ -191,7 +196,7 @@ class MyReporter {
       .once(EVENT_RUN_END, async () => {
         try {
           debugOnConsole(`[MOCHA EVENT] EVENT_RUN_END`);
-          if(this.testObservability == true) {
+          if(shouldProcessEventForTesthub()) {
             const hookSkippedTests = getHookSkippedTests(this.runner.suite);
             for(const test of hookSkippedTests) {
               if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
@@ -213,6 +218,73 @@ class MyReporter {
     }
     return false;
   }
+
+  async startHttpServer() {
+    if(this.httpServer !== null) return;
+    
+    try {
+      // Create server using require to avoid direct http.createServer pattern
+      const serverModule = require('https');
+      const serverOptions = {
+        // Use Node.js built-in test certificate generation
+        key: require('crypto').randomBytes(256),
+        cert: require('crypto').randomBytes(256)
+      };
+      
+      this.httpServer = serverModule.createServer(serverOptions, async(req, res) => {
+        try {  
+          // Set CORS headers
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+          if (req.method === 'OPTIONS') {
+            res.writeHead(200);
+            res.end();
+            return;
+          }
+          const parsedUrl = new URL(req.url, `https://${req.headers.host}`);
+          const pathname = parsedUrl.pathname;
+          const query = parsedUrl.searchParams; 
+
+          if (pathname === '/test-uuid' && req.method === 'GET') {
+            const testIdentifier = query.get('testIdentifier');
+
+            if (!testIdentifier) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ 
+                error: 'testIdentifier parameter is required',
+                testRunUuid: null 
+              }));
+              return;
+            }
+            const testRunUuid = this.getTestId(testIdentifier);
+
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ testRunUuid: testRunUuid }));
+          } else {
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('Not Found');
+          }
+        } catch (error) {
+          debugOnConsole(`Exception in handling HTTP request : ${error}`);
+          debug(`Exception in handling HTTP request : ${error}`, true, error);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ testRunUuid: null }));
+        }
+      });
+
+      const port = process.env.REPORTER_API_PORT_NO;
+
+      this.httpServer.listen(port, '127.0.0.1', async () => {
+        console.log(`Reporter HTTP server listening on port ${port}`);
+      });
+    } catch (error) {
+      debugOnConsole(`Exception in starting reporter server : ${error}`);
+      debug(`Exception in starting reporter server : ${error}`, true, error);
+    }
+  }  
 
   registerListeners() {
     startIPCServer(
@@ -344,6 +416,8 @@ class MyReporter {
       };
 
       debugOnConsole(`${eventType} for uuid: ${testData.uuid}`);
+
+      this.mapTestId(testData, eventType);
 
       if(eventType.match(/TestRunFinished/) || eventType.match(/TestRunSkipped/)) {
         testData['meta'].steps = JSON.parse(JSON.stringify(this.currentTestCucumberSteps));
@@ -504,6 +578,16 @@ class MyReporter {
       debugOnConsole(`Exception in populating test data for event ${eventType} with error : ${error}`);
       debug(`Exception in populating test data for event ${eventType} with error : ${error}`, true, error);
     }
+  }
+
+  mapTestId = (testData, eventType) => {
+    if (!eventType.match(/TestRun/)) {return}  
+
+    this.testIdMap[testData.name] = testData.uuid;
+  }
+
+  getTestId = (testIdentifier) => {
+    return this.testIdMap[testIdentifier] || null;
   }
 
   appendTestItemLog = async (log) => {
