@@ -1,7 +1,7 @@
 const path = require("node:path");
 const { decodeJWTToken } = require("../../helpers/utils");
 const utils = require('../../helpers/utils');
-const https = require('https');
+const http = require('http');
 
 const browserstackAccessibility = (on, config) => {
   let browser_validation = true;
@@ -26,15 +26,7 @@ const browserstackAccessibility = (on, config) => {
             port,
             path: `/test-uuid?testIdentifier=${encodeURIComponent(testIdentifier)}`,
             method: 'GET',
-            timeout: 2000,
-            // Use proper certificate validation for localhost
-            checkServerIdentity: (host, cert) => {
-              // Allow localhost connections
-              if (host === '127.0.0.1' || host === 'localhost') {
-                return undefined;
-              }
-              return new Error('Hostname verification failed');
-            }
+            timeout: 2000
           };
           const httpModule = http;
           const req = httpModule.request(options, (res) => {
