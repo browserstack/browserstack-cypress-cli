@@ -28,7 +28,8 @@ const browserstackAccessibility = (on, config) => {
             method: 'GET',
             timeout: 2000
           };
-          const req = http.request(options, (res) => {
+          const httpModule = http;
+          const req = httpModule.request(options, (res) => {
             let data = '';
             res.on('data', (chunk) => data += chunk);
             res.on('end', () => {
