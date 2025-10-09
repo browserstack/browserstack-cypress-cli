@@ -251,13 +251,22 @@ exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
     user_config.run_settings.system_env_vars = [];
   }
 
-  if (!isUndefined(accessibilityFlag)) {
-    process.env.BROWSERSTACK_TEST_ACCESSIBILITY = accessibilityFlag.toString();
-    user_config.run_settings.accessibility = accessibilityFlag;
-    if (
-      !user_config.run_settings.system_env_vars.includes("BROWSERSTACK_TEST_ACCESSIBILITY")
-    ) {
-      user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY=${accessibilityFlag}`);
+  // Handle accessibility flag setting - improved logic for auto-enable
+  if (accessibilityFlag !== undefined && accessibilityFlag !== null) {
+    const accessibilityEnabled = Boolean(accessibilityFlag);
+    process.env.BROWSERSTACK_TEST_ACCESSIBILITY = accessibilityEnabled.toString();
+    user_config.run_settings.accessibility = accessibilityEnabled;
+    
+    // Remove existing accessibility env var if present
+    user_config.run_settings.system_env_vars = user_config.run_settings.system_env_vars.filter(
+      envVar => !envVar.startsWith('BROWSERSTACK_TEST_ACCESSIBILITY=')
+    );
+    
+    // Add the current accessibility setting
+    user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY=${accessibilityEnabled}`);
+    
+    if (accessibilityEnabled) {
+      logger.debug("Accessibility enabled for session");
     }
     return;
   }

@@ -40,6 +40,26 @@ const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileCon
 const { shouldProcessEventForTesthub, checkAndSetAccessibility, findAvailablePort } = require('../testhub/utils');
 const TestHubHandler = require('../testhub/testhubHandler');
 
+// Helper function to process accessibility response from server - matches C# SDK pattern
+const processAccessibilityResponse = (bsConfig, buildResponse) => {
+  // Check if server response indicates accessibility should be enabled
+  if (buildResponse && buildResponse.accessibility && buildResponse.accessibility.success === true) {
+    logger.debug("Server response indicates accessibility should be auto-enabled");
+    bsConfig.run_settings.accessibility = true;
+    process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'true';
+    
+    if (!bsConfig.run_settings.system_env_vars) {
+      bsConfig.run_settings.system_env_vars = [];
+    }
+    if (!bsConfig.run_settings.system_env_vars.includes("BROWSERSTACK_TEST_ACCESSIBILITY")) {
+      bsConfig.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY=true`);
+    }
+    
+    return true;
+  }
+  return false;
+};
+
 module.exports = function run(args, rawArgs) {
   utils.normalizeTestReportingEnvVars();
   markBlockStart('preBuild');
@@ -68,8 +88,44 @@ module.exports = function run(args, rawArgs) {
 
     /* Set testObservability & browserstackAutomation flags */
     const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
-    const checkAccessibility = checkAccessibilityPlatform(bsConfig);
-    const isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibility;
+    
+    // Auto-enable A11y logic - similar to C# SDK implementation
+    const determineAccessibilitySession = (bsConfig) => {
+      const userAccessibilitySetting = bsConfig.run_settings.accessibility;
+      const platformSupportsAccessibility = checkAccessibilityPlatform(bsConfig);
+      
+      // If user explicitly set accessibility to true, enable it
+      if (userAccessibilitySetting === true) {
+        return true;
+      }
+      
+      // If user explicitly set accessibility to false, disable it  
+      if (userAccessibilitySetting === false) {
+        return false;
+      }
+      
+      // If user didn't specify (null/undefined), auto-enable based on platform support
+      // This matches the C# SDK logic where server can auto-enable based on platform
+      if (userAccessibilitySetting === null || userAccessibilitySetting === undefined) {
+        return platformSupportsAccessibility; // Auto-enable if platform supports it
+      }
+      
+      return false;
+    };
+
+    const isAccessibilitySession = determineAccessibilitySession(bsConfig);
+    
+    // Log the accessibility decision for debugging
+    if (bsConfig.run_settings.accessibility === true) {
+      logger.debug("Accessibility explicitly enabled by user");
+    } else if (bsConfig.run_settings.accessibility === false) {
+      logger.debug("Accessibility explicitly disabled by user");
+    } else if (isAccessibilitySession) {
+      logger.debug("Accessibility auto-enabled based on platform support");
+    } else {
+      logger.debug("Accessibility not enabled - platform may not support it");
+    }
+    
     const turboScaleSession = isTurboScaleSession(bsConfig);
     Constants.turboScaleObj.enabled = turboScaleSession;
     
@@ -323,6 +379,13 @@ module.exports = function run(args, rawArgs) {
                 logger.debug("Completed build creation");
                 markBlockEnd('createBuild');
                 markBlockEnd('total');
+                
+                // Process accessibility response from server - matches C# SDK logic
+                const accessibilityAutoEnabled = processAccessibilityResponse(bsConfig, data);
+                if (accessibilityAutoEnabled) {
+                  logger.info("Accessibility has been auto-enabled based on server response");
+                }
+                
                 utils.setProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
                 if(isTestObservabilitySession) {
                   utils.setO11yProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
