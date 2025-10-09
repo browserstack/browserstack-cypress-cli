@@ -13,16 +13,25 @@ const supportFileContentMap = {}
 const HttpsProxyAgent = require('https-proxy-agent');
 
 exports.checkAccessibilityPlatform = (user_config) => {
-  let accessibility = false;
+  let hasExplicitAccessibility = false;
+  let hasImplicitAccessibility = false;
+  
   try {
     user_config.browsers.forEach(browser => {
-      if (browser.accessibility) {
-        accessibility = true;
+      if (browser.accessibility === true) {
+        hasExplicitAccessibility = true;
+      }
+      // Track browsers without explicit accessibility config for potential auto-enable
+      if (browser.accessibility === undefined) {
+        hasImplicitAccessibility = true;
       }
     })
   } catch {}
   
-  return accessibility;
+  return {
+    explicit: hasExplicitAccessibility,
+    implicit: hasImplicitAccessibility && !hasExplicitAccessibility
+  };
 }
 
 exports.setAccessibilityCypressCapabilities = async (user_config, accessibilityResponse) => {

@@ -107,8 +107,15 @@ class TestHubHandler {
     if(testhubUtils.isAccessibilityEnabled()) {
       testhubUtils.setAccessibilityVariables(user_config, response.data);
     } else {
-      process.env.BROWSERSTACK_ACCESSIBILITY = 'false';
-      testhubUtils.checkAndSetAccessibility(user_config, false)
+      // NEW: Check for auto-enable scenario
+      const shouldAutoEnable = testhubUtils.shouldAutoEnableAccessibility(user_config, response.data);
+      if (shouldAutoEnable) {
+        logger.debug("Auto-enabling accessibility based on server response");
+        testhubUtils.setAccessibilityVariables(user_config, response.data);
+      } else {
+        process.env.BROWSERSTACK_ACCESSIBILITY = 'false';
+        testhubUtils.checkAndSetAccessibility(user_config, false);
+      }
     }    
 
     if (testhubUtils.shouldProcessEventForTesthub()) {

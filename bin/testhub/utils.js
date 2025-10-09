@@ -97,6 +97,27 @@ exports.handleErrorForObservability = (error = null) => {
   exports.logBuildError(error, TESTHUB_CONSTANTS.OBSERVABILITY);
 };
 
+exports.shouldAutoEnableAccessibility = (user_config, responseData) => {
+  // Check if user has explicitly configured accessibility
+  const hasExplicitConfig = !isUndefined(user_config.run_settings.accessibility);
+  const hasExplicitBrowserConfig = user_config.browsers && 
+    user_config.browsers.some(browser => !isUndefined(browser.accessibility));
+  
+  if (hasExplicitConfig || hasExplicitBrowserConfig) {
+    logger.debug("User has explicit accessibility configuration, skipping auto-enable");
+    return false;
+  }
+
+  // Check if server response indicates accessibility should be enabled
+  if (responseData && responseData.accessibility && responseData.accessibility.success) {
+    logger.debug("Server response indicates accessibility should be auto-enabled");
+    return true;
+  }
+
+  logger.debug("Server response does not support accessibility auto-enable");
+  return false;
+};
+
 exports.setAccessibilityVariables = (user_config, responseData) => {
   if (!responseData.accessibility) {
     exports.handleErrorForAccessibility(user_config);
@@ -111,6 +132,25 @@ exports.setAccessibilityVariables = (user_config, responseData) => {
     );
 
     return [null, null];
+  }
+
+  // NEW: Check if this is an auto-enable scenario
+  const isAutoEnable = exports.shouldAutoEnableAccessibility(user_config, responseData) && 
+                      !exports.isAccessibilityEnabled();
+
+  if (isAutoEnable) {
+    logger.info("Accessibility has been auto-enabled by BrowserStack based on your account settings");
+    // Enable accessibility for browsers that don't have explicit config
+    user_config.browsers.forEach(browser => {
+      if (browser.accessibility === undefined) {
+        browser.accessibility = true;
+      }
+    });
+    
+    // Set root level accessibility if not explicitly configured
+    if (isUndefined(user_config.run_settings.accessibility)) {
+      user_config.run_settings.accessibility = true;
+    }
   }
 
   if (responseData.accessibility.options) {
@@ -136,7 +176,7 @@ const setAccessibilityCypressCapabilities = (user_config, responseData) => {
   process.env.ACCESSIBILITY_SCANNERVERSION = scannerVersion;
 
   if (accessibilityToken && responseData.build_hashed_id) {
-    this.checkAndSetAccessibility(user_config, true);
+    exports.checkAndSetAccessibility(user_config, true);
   }
 
   user_config.run_settings.accessibilityOptions["authToken"] = accessibilityToken;
@@ -249,6 +289,14 @@ exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
 
   if (!user_config.run_settings.system_env_vars) {
     user_config.run_settings.system_env_vars = [];
+  }
+
+  // Handle auto-enable case
+  if (accessibilityFlag === 'auto-enable') {
+    logger.debug("Processing auto-enable accessibility");
+    process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'true';
+    user_config.run_settings.accessibility = true;
+    accessibilityFlag = true;
   }
 
   if (!isUndefined(accessibilityFlag)) {

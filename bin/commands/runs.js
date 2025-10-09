@@ -68,8 +68,14 @@ module.exports = function run(args, rawArgs) {
 
     /* Set testObservability & browserstackAutomation flags */
     const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
-    const checkAccessibility = checkAccessibilityPlatform(bsConfig);
-    const isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibility;
+    const accessibilityPlatformCheck = checkAccessibilityPlatform(bsConfig);
+    const hasExplicitAccessibility = bsConfig.run_settings.accessibility || accessibilityPlatformCheck.explicit;
+    const canAutoEnable = accessibilityPlatformCheck.implicit || 
+      (utils.isUndefined(bsConfig.run_settings.accessibility) && !accessibilityPlatformCheck.explicit);
+
+    // Store auto-enable eligibility for later use
+    bsConfig.run_settings._accessibilityAutoEnableEligible = canAutoEnable;
+    const isAccessibilitySession = hasExplicitAccessibility;
     const turboScaleSession = isTurboScaleSession(bsConfig);
     Constants.turboScaleObj.enabled = turboScaleSession;
     
