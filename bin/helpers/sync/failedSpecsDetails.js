@@ -21,7 +21,7 @@ const tablePrinter = require('table'), // { table, getBorderCharacters }
 let failedSpecsDetails = (data) => {
   return new Promise((resolve, reject) => {
     if (!data.exitCode) data.exitCode = 0;
-
+    logger.info(`spec data received: ${JSON.stringify(data.specs)}`);
     if (data.specs.length === 0) resolve(data); // return if no failed/skipped tests.
 
     let failedSpecs = false;
@@ -29,7 +29,7 @@ let failedSpecsDetails = (data) => {
       return chalk.blueBright(col);
     });
 
-    let specData = [specResultHeader]; // 2-D array
+    let specData = [specResultHeader]; // 2-D arra
 
     data.specs.forEach((spec) => {
       if (spec.status.toLowerCase() === 'passed') {

@@ -336,8 +336,10 @@ exports.deleteSupportFileOrDir = (fileOrDirPath) => {
           const currentPath = path.join(resolvedPath, sanitizedFile);
           fs.unlinkSync(currentPath);
         });
+        logger.info("we are calling here to delete 2");
         fs.rmdirSync(resolvedPath);
       } else {
+        logger.info("we are calling here to delete 3");
         fs.unlinkSync(resolvedPath);
       }
     }

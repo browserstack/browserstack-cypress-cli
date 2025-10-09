@@ -149,10 +149,11 @@ let whileProcess = async (whilstCallback) => {
       headers: options.headers 
     };
     setAxiosProxy(axiosConfig);
-
+    winstonLogger.info(`url: ${options.url}`);
     const response = await axios.post(options.url, {}, axiosConfig);
     whileTries = config.retries; // reset to default after every successful request
-    switch (response.status) {
+    winstonLogger.info(`Response for the api call is ${response.status} - ${JSON.stringify(response.data)}`);
+switch (response.status) {
       case 202: // get data here and print it
         n = 2
         showSpecsStatus(response.data, 202);

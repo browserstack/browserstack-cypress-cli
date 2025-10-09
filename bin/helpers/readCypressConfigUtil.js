@@ -18,6 +18,7 @@ exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_module
     const working_dir = path.dirname(cypress_config_filepath);
     const complied_js_dir = path.join(working_dir, config.compiledConfigJsDirName)
     if (fs.existsSync(complied_js_dir)) {
+        logger.info("we are calling here to delete 4");
         fs.rmdirSync(complied_js_dir, { recursive: true })
     }
     fs.mkdirSync(complied_js_dir, { recursive: true })
@@ -110,6 +111,8 @@ exports.readCypressConfigFile = (bsConfig) => {
         const working_dir = path.dirname(cypress_config_filepath)
         const complied_js_dir = path.join(working_dir, config.compiledConfigJsDirName)
         if (fs.existsSync(complied_js_dir)) {
+           logger.info("deleting config.compiledConfigJs");
+           logger.info(complied_js_dir);
             fs.rmdirSync(complied_js_dir, { recursive: true })
         }
     }

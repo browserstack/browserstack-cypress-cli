@@ -75,6 +75,7 @@ const createDirectories = async (buildId, data) => {
   let buildDir = path.join('./', 'build_artifacts', buildId);
   if (fs.existsSync(buildDir)){
     // remove dir in case already exists
+    logger.info("we are calling here to delete 1");
     fs.rmdirSync(buildDir, { recursive: true, force: true });
   }
   fs.mkdirSync(buildDir);
