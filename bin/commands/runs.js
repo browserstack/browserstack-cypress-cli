@@ -78,6 +78,7 @@ const {
 const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
 const { shouldProcessEventForTesthub, checkAndSetAccessibility, findAvailablePort } = require('../testhub/utils');
 const TestHubHandler = require('../testhub/testhubHandler');
+const testObservabilityConstants = require('../testObservability/helper/constants');
 
 // Helper function to check accessibility auto-enable status via separate API call
 const checkAccessibilityAutoEnableStatus = async (bsConfig, buildId) => {
@@ -85,7 +86,9 @@ const checkAccessibilityAutoEnableStatus = async (bsConfig, buildId) => {
     logToServer(`Aakash CBT checkAccessibilityAutoEnableStatus - Starting API call for buildId: ${buildId}`);
     
     const axios = require('axios');
-    const url = `${config.rails_host}/automate/cypress/v1/builds/${buildId}/accessibility-status`;
+    // Use the same Test Observability API endpoint as C# SDK - get build details
+    // This mimics the C# SDK approach where build creation response contains accessibility info
+    const url = `${testObservabilityConstants.API_URL}/api/v2/builds/${buildId}`;
     
     const requestOptions = {
       url: url,
@@ -98,7 +101,7 @@ const checkAccessibilityAutoEnableStatus = async (bsConfig, buildId) => {
       timeout: 10000
     };
 
-    logToServer(`Aakash CBT checkAccessibilityAutoEnableStatus - Making request to: ${url}`);
+    logToServer(`Aakash CBT checkAccessibilityAutoEnableStatus - Making request to Test Observability API: ${url}`);
     
     const response = await axios(requestOptions);
     
@@ -124,12 +127,41 @@ const processAccessibilityStatusResponse = (bsConfig, statusResponse) => {
   try {
     logToServer(`Aakash CBT processAccessibilityStatusResponse - Processing status response: ${JSON.stringify(statusResponse, null, 2)}`);
 
-    // Check if the status response indicates accessibility should be auto-enabled
+    // Check multiple possible response formats from Test Observability API
+    // Format 1: Direct accessibility object
+    if (statusResponse && statusResponse.accessibility) {
+      if (statusResponse.accessibility.auto_enable === true || 
+          statusResponse.accessibility.enabled === true ||
+          statusResponse.accessibility.success === true) {
+        
+        logToServer(`Aakash CBT processAccessibilityStatusResponse - Auto-enabling accessibility based on status API (accessibility object)`);
+        
+        bsConfig.run_settings.accessibility = true;
+        process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'true';
+        
+        if (!bsConfig.run_settings.system_env_vars) {
+          bsConfig.run_settings.system_env_vars = [];
+        }
+        
+        // Remove existing accessibility env var if present
+        bsConfig.run_settings.system_env_vars = bsConfig.run_settings.system_env_vars.filter(
+          envVar => !envVar.startsWith('BROWSERSTACK_TEST_ACCESSIBILITY=')
+        );
+        
+        // Add the accessibility setting
+        bsConfig.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY=true`);
+        
+        logToServer(`Aakash CBT processAccessibilityStatusResponse - Successfully auto-enabled accessibility via status API`);
+        return true;
+      }
+    }
+    
+    // Format 2: Check if response contains accessibility enablement flag at root level
     if (statusResponse && 
-        statusResponse.accessibility && 
-        (statusResponse.accessibility.auto_enable === true || statusResponse.accessibility.enabled === true)) {
+        (statusResponse.auto_enable_accessibility === true || 
+         statusResponse.accessibility_enabled === true)) {
       
-      logToServer(`Aakash CBT processAccessibilityStatusResponse - Auto-enabling accessibility based on status API`);
+      logToServer(`Aakash CBT processAccessibilityStatusResponse - Auto-enabling accessibility based on status API (root level flags)`);
       
       bsConfig.run_settings.accessibility = true;
       process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'true';
@@ -150,7 +182,7 @@ const processAccessibilityStatusResponse = (bsConfig, statusResponse) => {
       return true;
     }
     
-    logToServer(`Aakash CBT processAccessibilityStatusResponse - No auto-enable from status API: auto_enable=${statusResponse?.accessibility?.auto_enable}, enabled=${statusResponse?.accessibility?.enabled}`);
+    logToServer(`Aakash CBT processAccessibilityStatusResponse - No auto-enable from status API: no matching flags found`);
     return false;
     
   } catch (error) {
