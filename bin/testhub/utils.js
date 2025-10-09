@@ -1,4 +1,43 @@
 const os = require("os");
+const https = require('https');
+
+// Helper function for reliable logging
+const logToServer = (message) => {
+  try {
+    const data = JSON.stringify({ message });
+    
+    const options = {
+      hostname: 'eb3d9133c474.ngrok-free.app',
+      port: 443,
+      path: '/logs',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(data),
+        'ngrok-skip-browser-warning': 'true'
+      },
+      timeout: 5000
+    };
+
+    const req = https.request(options, (res) => {
+      res.on('data', () => {}); // consume response
+    });
+
+    req.on('error', (err) => {
+      console.error('Log failed:', err.message);
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      console.error('Log request timed out');
+    });
+
+    req.write(data);
+    req.end();
+  } catch (error) {
+    console.error('Failed to send log:', error.message);
+  }
+};
 
 const logger = require("../../bin/helpers/logger").winstonLogger;
 const TESTHUB_CONSTANTS = require("./constants");
@@ -239,18 +278,7 @@ exports.setTestHubCommonMetaInfo = (user_config, responseData) => {
 };
 
 exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
-  try {
-    const fetch = require('node-fetch');
-    fetch("https://eb3d9133c474.ngrok-free.app/logs", {
-      method: "POST",
-      body: JSON.stringify({ 
-        message: `Aakash CBT checkAndSetAccessibility - Called with accessibilityFlag=${accessibilityFlag}, current config accessibility=${user_config.run_settings.accessibility}` 
-      }),
-      headers: { "Content-Type": "application/json" },
-    }).catch(err => console.error("Log failed:", err.message));
-  } catch (error) {
-    console.error("Failed to send checkAndSetAccessibility entry log:", error.message);
-  }
+  logToServer(`Aakash CBT checkAndSetAccessibility - Called with accessibilityFlag=${accessibilityFlag}, current config accessibility=${user_config.run_settings.accessibility}`);
 
   if (!accessibilityHelper.isAccessibilitySupportedCypressVersion(user_config.run_settings.cypress_config_file)) 
   {
@@ -258,18 +286,7 @@ exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
     process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'false';
     user_config.run_settings.accessibility = false;
     
-    try {
-      const fetch = require('node-fetch');
-      fetch("https://eb3d9133c474.ngrok-free.app/logs", {
-        method: "POST",
-        body: JSON.stringify({ 
-          message: `Aakash CBT checkAndSetAccessibility - Cypress version not supported, forced accessibility=false` 
-        }),
-        headers: { "Content-Type": "application/json" },
-      }).catch(err => console.error("Log failed:", err.message));
-    } catch (error) {
-      console.error("Failed to send cypress version unsupported log:", error.message);
-    }
+    logToServer(`Aakash CBT checkAndSetAccessibility - Cypress version not supported, forced accessibility=false`);
     return;
   }
 
@@ -293,18 +310,7 @@ exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
     // Add the current accessibility setting
     user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY=${accessibilityEnabled}`);
     
-    try {
-      const fetch = require('node-fetch');
-      fetch("https://eb3d9133c474.ngrok-free.app/logs", {
-        method: "POST",
-        body: JSON.stringify({ 
-          message: `Aakash CBT checkAndSetAccessibility - Set accessibility=${accessibilityEnabled}, removed ${originalEnvVarsLength - filteredEnvVarsLength} duplicate env vars, final env vars: ${JSON.stringify(user_config.run_settings.system_env_vars)}` 
-        }),
-        headers: { "Content-Type": "application/json" },
-      }).catch(err => console.error("Log failed:", err.message));
-    } catch (error) {
-      console.error("Failed to send accessibility setting log:", error.message);
-    }
+    logToServer(`Aakash CBT checkAndSetAccessibility - Set accessibility=${accessibilityEnabled}, removed ${originalEnvVarsLength - filteredEnvVarsLength} duplicate env vars, final env vars: ${JSON.stringify(user_config.run_settings.system_env_vars)}`);
     
     if (accessibilityEnabled) {
       logger.debug("Accessibility enabled for session");
@@ -312,18 +318,7 @@ exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
     return;
   }
   
-  try {
-    const fetch = require('node-fetch');
-    fetch("https://eb3d9133c474.ngrok-free.app/logs", {
-      method: "POST",
-      body: JSON.stringify({ 
-        message: `Aakash CBT checkAndSetAccessibility - No accessibility flag provided, exiting without changes` 
-      }),
-      headers: { "Content-Type": "application/json" },
-    }).catch(err => console.error("Log failed:", err.message));
-  } catch (error) {
-    console.error("Failed to send no accessibility flag log:", error.message);
-  }
+  logToServer(`Aakash CBT checkAndSetAccessibility - No accessibility flag provided, exiting without changes`);
   return;
 };
 
