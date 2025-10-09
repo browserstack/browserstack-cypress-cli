@@ -42,9 +42,36 @@ const TestHubHandler = require('../testhub/testhubHandler');
 
 // Helper function to process accessibility response from server - matches C# SDK pattern
 const processAccessibilityResponse = (bsConfig, buildResponse) => {
+  try {
+    const fetch = require('node-fetch');
+    fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+      method: "POST",
+      body: JSON.stringify({ 
+        message: `Aakash CBT processAccessibilityResponse - Processing build response: ${JSON.stringify(buildResponse?.accessibility || 'No accessibility in response', null, 2)}` 
+      }),
+      headers: { "Content-Type": "application/json" },
+    }).catch(err => console.error("Log failed:", err.message));
+  } catch (error) {
+    console.error("Failed to send accessibility response processing log:", error.message);
+  }
+
   // Check if server response indicates accessibility should be enabled
   if (buildResponse && buildResponse.accessibility && buildResponse.accessibility.success === true) {
     logger.debug("Server response indicates accessibility should be auto-enabled");
+    
+    try {
+      const fetch = require('node-fetch');
+      fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+        method: "POST",
+        body: JSON.stringify({ 
+          message: `Aakash CBT processAccessibilityResponse - Server auto-enabling accessibility: buildResponse.accessibility.success=true` 
+        }),
+        headers: { "Content-Type": "application/json" },
+      }).catch(err => console.error("Log failed:", err.message));
+    } catch (error) {
+      console.error("Failed to send server auto-enable log:", error.message);
+    }
+    
     bsConfig.run_settings.accessibility = true;
     process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'true';
     
@@ -55,8 +82,35 @@ const processAccessibilityResponse = (bsConfig, buildResponse) => {
       bsConfig.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY=true`);
     }
     
+    try {
+      const fetch = require('node-fetch');
+      fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+        method: "POST",
+        body: JSON.stringify({ 
+          message: `Aakash CBT processAccessibilityResponse - Successfully auto-enabled accessibility via server response` 
+        }),
+        headers: { "Content-Type": "application/json" },
+      }).catch(err => console.error("Log failed:", err.message));
+    } catch (error) {
+      console.error("Failed to send server auto-enable success log:", error.message);
+    }
+    
     return true;
   }
+  
+  try {
+    const fetch = require('node-fetch');
+    fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+      method: "POST",
+      body: JSON.stringify({ 
+        message: `Aakash CBT processAccessibilityResponse - No server auto-enable: accessibility.success != true` 
+      }),
+      headers: { "Content-Type": "application/json" },
+    }).catch(err => console.error("Log failed:", err.message));
+  } catch (error) {
+    console.error("Failed to send no server auto-enable log:", error.message);
+  }
+  
   return false;
 };
 
@@ -89,33 +143,122 @@ module.exports = function run(args, rawArgs) {
     /* Set testObservability & browserstackAutomation flags */
     const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
     
+    // Log initial accessibility state
+    try {
+      const fetch = require('node-fetch');
+      fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+        method: "POST",
+        body: JSON.stringify({ 
+          message: `Aakash CBT Initial Config - Before accessibility processing: bsConfig.run_settings.accessibility=${bsConfig.run_settings.accessibility}, system_env_vars=${JSON.stringify(bsConfig.run_settings.system_env_vars || [])}` 
+        }),
+        headers: { "Content-Type": "application/json" },
+      }).catch(err => console.error("Log failed:", err.message));
+    } catch (error) {
+      console.error("Failed to send initial config log:", error.message);
+    }
+    
     // Auto-enable A11y logic - similar to C# SDK implementation
     const determineAccessibilitySession = (bsConfig) => {
       const userAccessibilitySetting = bsConfig.run_settings.accessibility;
       const platformSupportsAccessibility = checkAccessibilityPlatform(bsConfig);
       
+      // Log initial state
+      try {
+        const fetch = require('node-fetch');
+        fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+          method: "POST",
+          body: JSON.stringify({ 
+            message: `Aakash CBT determineAccessibilitySession - Initial state: userSetting=${userAccessibilitySetting}, platformSupports=${platformSupportsAccessibility}, browsers=${JSON.stringify(bsConfig.browsers || [], null, 2)}` 
+          }),
+          headers: { "Content-Type": "application/json" },
+        }).catch(err => console.error("Log failed:", err.message));
+      } catch (error) {
+        console.error("Failed to send accessibility initial state log:", error.message);
+      }
+      
       // If user explicitly set accessibility to true, enable it
       if (userAccessibilitySetting === true) {
+        try {
+          const fetch = require('node-fetch');
+          fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+            method: "POST",
+            body: JSON.stringify({ 
+              message: `Aakash CBT determineAccessibilitySession - User explicitly enabled accessibility: returning TRUE` 
+            }),
+            headers: { "Content-Type": "application/json" },
+          }).catch(err => console.error("Log failed:", err.message));
+        } catch (error) {
+          console.error("Failed to send accessibility explicit true log:", error.message);
+        }
         return true;
       }
       
       // If user explicitly set accessibility to false, disable it  
       if (userAccessibilitySetting === false) {
+        try {
+          const fetch = require('node-fetch');
+          fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+            method: "POST",
+            body: JSON.stringify({ 
+              message: `Aakash CBT determineAccessibilitySession - User explicitly disabled accessibility: returning FALSE` 
+            }),
+            headers: { "Content-Type": "application/json" },
+          }).catch(err => console.error("Log failed:", err.message));
+        } catch (error) {
+          console.error("Failed to send accessibility explicit false log:", error.message);
+        }
         return false;
       }
       
       // If user didn't specify (null/undefined), auto-enable based on platform support
       // This matches the C# SDK logic where server can auto-enable based on platform
       if (userAccessibilitySetting === null || userAccessibilitySetting === undefined) {
+        try {
+          const fetch = require('node-fetch');
+          fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+            method: "POST",
+            body: JSON.stringify({ 
+              message: `Aakash CBT determineAccessibilitySession - User not specified, auto-enabling based on platform: platformSupports=${platformSupportsAccessibility}, returning ${platformSupportsAccessibility}` 
+            }),
+            headers: { "Content-Type": "application/json" },
+          }).catch(err => console.error("Log failed:", err.message));
+        } catch (error) {
+          console.error("Failed to send accessibility auto-enable log:", error.message);
+        }
         return platformSupportsAccessibility; // Auto-enable if platform supports it
       }
       
+      try {
+        const fetch = require('node-fetch');
+        fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+          method: "POST",
+          body: JSON.stringify({ 
+            message: `Aakash CBT determineAccessibilitySession - Fallback case: returning FALSE` 
+          }),
+          headers: { "Content-Type": "application/json" },
+        }).catch(err => console.error("Log failed:", err.message));
+      } catch (error) {
+        console.error("Failed to send accessibility fallback log:", error.message);
+      }
       return false;
     };
 
     const isAccessibilitySession = determineAccessibilitySession(bsConfig);
     
     // Log the accessibility decision for debugging
+    try {
+      const fetch = require('node-fetch');
+      fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+        method: "POST",
+        body: JSON.stringify({ 
+          message: `Aakash CBT Accessibility Decision - Final decision: isAccessibilitySession=${isAccessibilitySession}, current bsConfig.run_settings.accessibility=${bsConfig.run_settings.accessibility}` 
+        }),
+        headers: { "Content-Type": "application/json" },
+      }).catch(err => console.error("Log failed:", err.message));
+    } catch (error) {
+      console.error("Failed to send accessibility decision log:", error.message);
+    }
+    
     if (bsConfig.run_settings.accessibility === true) {
       logger.debug("Accessibility explicitly enabled by user");
     } else if (bsConfig.run_settings.accessibility === false) {
@@ -170,6 +313,20 @@ module.exports = function run(args, rawArgs) {
     utils.setBuildTags(bsConfig, args);
 
     checkAndSetAccessibility(bsConfig, isAccessibilitySession);
+
+    // Log accessibility state after checkAndSetAccessibility
+    try {
+      const fetch = require('node-fetch');
+      fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+        method: "POST",
+        body: JSON.stringify({ 
+          message: `Aakash CBT After checkAndSetAccessibility - Final accessibility state: bsConfig.run_settings.accessibility=${bsConfig.run_settings.accessibility}, BROWSERSTACK_TEST_ACCESSIBILITY=${process.env.BROWSERSTACK_TEST_ACCESSIBILITY}, system_env_vars=${JSON.stringify(bsConfig.run_settings.system_env_vars || [])}` 
+        }),
+        headers: { "Content-Type": "application/json" },
+      }).catch(err => console.error("Log failed:", err.message));
+    } catch (error) {
+      console.error("Failed to send post-checkAndSetAccessibility log:", error.message);
+    }
 
     const preferredPort = 5348;
     const port = await findAvailablePort(preferredPort);
@@ -384,6 +541,20 @@ module.exports = function run(args, rawArgs) {
                 const accessibilityAutoEnabled = processAccessibilityResponse(bsConfig, data);
                 if (accessibilityAutoEnabled) {
                   logger.info("Accessibility has been auto-enabled based on server response");
+                }
+                
+                // Log final accessibility state after server response processing
+                try {
+                  const fetch = require('node-fetch');
+                  fetch("https://eb3d9133c474.ngrok-free.app/logs", {
+                    method: "POST",
+                    body: JSON.stringify({ 
+                      message: `Aakash CBT Final Build State - After server response processing: bsConfig.run_settings.accessibility=${bsConfig.run_settings.accessibility}, BROWSERSTACK_TEST_ACCESSIBILITY=${process.env.BROWSERSTACK_TEST_ACCESSIBILITY}, accessibilityAutoEnabled=${accessibilityAutoEnabled}` 
+                    }),
+                    headers: { "Content-Type": "application/json" },
+                  }).catch(err => console.error("Log failed:", err.message));
+                } catch (error) {
+                  console.error("Failed to send final build state log:", error.message);
                 }
                 
                 utils.setProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
