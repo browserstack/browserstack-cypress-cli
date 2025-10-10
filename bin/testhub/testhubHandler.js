@@ -25,7 +25,7 @@ class TestHubHandler {
         process.env.BS_TESTOPS_BUILD_COMPLETED = false;
       }
 
-      if (testhubUtils.isAccessibilityEnabled()) {
+      if (testhubUtils.isAccessibilityEnabled(user_config)) {
         logger.debug(
           "Exception while creating test run for BrowserStack Accessibility Automation: Missing authentication token"
         );
@@ -53,6 +53,8 @@ class TestHubHandler {
   static async generateBuildUpstreamData(user_config) {
     const { buildName, projectName, buildDescription, buildTags } = helper.getBuildDetails(user_config, true);
     const productMap = testhubUtils.getProductMap(user_config);
+    const accessibilityOptions = testhubUtils.getAccessibilityOptions(user_config);
+    
     const data = {
       project_name: projectName,
       name: buildName,
@@ -65,12 +67,15 @@ class TestHubHandler {
       build_run_identifier: process.env.BROWSERSTACK_BUILD_RUN_IDENTIFIER,
       failed_tests_rerun: process.env.BROWSERSTACK_RERUN || false,
       version_control: await helper.getGitMetaData(),
-      accessibility: testhubUtils.getAccessibilityOptions(user_config),
+      accessibility: accessibilityOptions,
       framework_details: testhubUtils.getFrameworkDetails(),
       product_map: productMap,
       browserstackAutomation: productMap["automate"],
     };
 
+    // Log what accessibility data is being sent to server
+    console.log(`[TestHub] Sending accessibility data to server: ${JSON.stringify(accessibilityOptions, null, 2)}`);
+    
     return data;
   }
 
@@ -104,7 +109,7 @@ class TestHubHandler {
       process.env.BROWSERSTACK_TEST_OBSERVABILITY = "false";
     }
 
-    if(testhubUtils.isAccessibilityEnabled()) {
+    if(testhubUtils.isAccessibilityEnabled(user_config)) {
       testhubUtils.setAccessibilityVariables(user_config, response.data);
     } else {
       process.env.BROWSERSTACK_ACCESSIBILITY = 'false';

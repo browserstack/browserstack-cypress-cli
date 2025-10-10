@@ -75,74 +75,8 @@ const {
   supportFileCleanup
 } = require('../accessibility-automation/helper');
 const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
-const { shouldProcessEventForTesthub, checkAndSetAccessibility, findAvailablePort } = require('../testhub/utils');
+const { shouldProcessEventForTesthub, findAvailablePort } = require('../testhub/utils');
 const TestHubHandler = require('../testhub/testhubHandler');
-
-// Helper function to determine final accessibility setting matching C# SDK logic
-const shouldAutoEnableAccessibility = (userSetting, buildResponse) => {
-  // If user has explicit setting (true/false), respect it
-  if (userSetting !== null && userSetting !== undefined) {
-    logToServer(`[Accessibility] Using explicit user setting: ${userSetting}`);
-    return userSetting;
-  }
-  
-  // User setting is null - check server response for auto-enable decision
-  if (buildResponse && buildResponse.accessibility && buildResponse.accessibility.success === true) {
-    logToServer(`[Accessibility] Server decided to auto-enable accessibility`);
-    return true;
-  }
-  
-  // Fallback if no server auto-enable decision
-  logToServer('[Accessibility] No server auto-enable decision, defaulting to false');
-  return false;
-};
-
-// Helper function to process accessibility response from server - matches C# SDK pattern
-const processAccessibilityResponse = (bsConfig, buildResponse, userAccessibilitySetting) => {
-  logToServer(`[Accessibility] Processing build response: ${JSON.stringify(buildResponse?.accessibility || 'No accessibility in response', null, 2)}`);
-
-  // Use C# SDK logic to determine final accessibility setting
-  const finalAccessibility = shouldAutoEnableAccessibility(userAccessibilitySetting, buildResponse);
-  
-  logToServer(`[Accessibility] Final decision: userSetting=${userAccessibilitySetting}, serverResponse=${buildResponse?.accessibility?.success}, finalAccessibility=${finalAccessibility}`);
-  
-  // If final decision is to enable accessibility, update configuration
-  if (finalAccessibility === true) {
-    logger.debug("Accessibility enabled (user explicit or server auto-enable)");
-    
-    // Update configuration
-    bsConfig.run_settings.accessibility = true;
-    process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'true';
-    
-    // Ensure system_env_vars array exists
-    if (!bsConfig.run_settings.system_env_vars) {
-      bsConfig.run_settings.system_env_vars = [];
-    }
-    
-    // Remove existing accessibility env var if present to avoid duplicates
-    bsConfig.run_settings.system_env_vars = bsConfig.run_settings.system_env_vars.filter(
-      envVar => !envVar.startsWith('BROWSERSTACK_TEST_ACCESSIBILITY=')
-    );
-    
-    // Add the accessibility setting
-    bsConfig.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY=true`);
-    
-    logToServer(`[Accessibility] Successfully enabled accessibility`);
-    
-    return true;
-  } else if (finalAccessibility === false) {
-    // Explicitly set to false
-    bsConfig.run_settings.accessibility = false;
-    process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'false';
-    
-    logToServer(`[Accessibility] Accessibility set to false`);
-    return false;
-  }
-  
-  // Should not reach here with proper logic
-  logToServer(`[Accessibility] Unexpected state: finalAccessibility=${finalAccessibility}`);
-  return false;
-};
 
 module.exports = function run(args, rawArgs) {
   utils.normalizeTestReportingEnvVars();
@@ -173,78 +107,8 @@ module.exports = function run(args, rawArgs) {
     /* Set testObservability & browserstackAutomation flags */
     const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
     
-    // Log initial accessibility state
-    logToServer(`Aakash CBT Initial Config - Before accessibility processing: bsConfig.run_settings.accessibility=${bsConfig.run_settings.accessibility}, system_env_vars=${JSON.stringify(bsConfig.run_settings.system_env_vars || [])}`);
-    
-    // Helper functions to match C# SDK logic for accessibility auto-enable
-    const getUserAccessibilitySetting = (bsConfig) => {
-      logToServer(`[Accessibility] Getting user setting from config:`, {
-        runSettings: bsConfig.run_settings.accessibility,
-        environment: process.env.BROWSERSTACK_TEST_ACCESSIBILITY
-      });
-
-      // Priority order: run_settings.accessibility > environment variable > null (let server decide)
-      
-      // Check run_settings.accessibility first
-      if (bsConfig.run_settings.accessibility !== undefined && bsConfig.run_settings.accessibility !== null) {
-        logToServer(`[Accessibility] Using run_settings setting: ${bsConfig.run_settings.accessibility}`);
-        return bsConfig.run_settings.accessibility;
-      }
-      
-      // Check environment variable
-      if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
-        logToServer('[Accessibility] Using environment variable setting: true');
-        return true;
-      }
-      
-      if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'false') {
-        logToServer('[Accessibility] Using environment variable setting: false');
-        return false;
-      }
-      
-      // Return null to let server decide (matches C# SDK behavior)
-      logToServer('[Accessibility] No explicit setting found, returning null for server decision');
-      return null;
-    };
-
-    const shouldAutoEnableAccessibility = (userSetting, buildResponse) => {
-      // If user has explicit setting (true/false), respect it
-      if (userSetting !== null && userSetting !== undefined) {
-        logToServer(`[Accessibility] Using explicit user setting: ${userSetting}`);
-        return userSetting;
-      }
-      
-      // User setting is null - check server response for auto-enable decision
-      if (buildResponse && buildResponse.accessibility && buildResponse.accessibility.success === true) {
-        logToServer(`[Accessibility] Server decided to auto-enable accessibility`);
-        return true;
-      }
-      
-      // Fallback if no server decision available
-      logToServer('[Accessibility] No server auto-enable decision, defaulting to false');
-      return false;
-    };
-
-    // Get user's explicit accessibility setting (null means let server decide)
-    const userAccessibilitySetting = getUserAccessibilitySetting(bsConfig);
-    
-    // Set initial accessibility value based on user setting (null if not explicitly set)
-    if (userAccessibilitySetting !== null) {
-      bsConfig.run_settings.accessibility = userAccessibilitySetting;
-      logToServer(`[Accessibility] Set initial accessibility to user setting: ${userAccessibilitySetting}`);
-    } else {
-      // Keep accessibility as null to let server decide
-      bsConfig.run_settings.accessibility = null;
-      logToServer(`[Accessibility] Keeping accessibility as null for server decision`);
-    }
-    
-    if (bsConfig.run_settings.accessibility === true) {
-      logger.debug("Accessibility explicitly enabled by user");
-    } else if (bsConfig.run_settings.accessibility === false) {
-      logger.debug("Accessibility explicitly disabled by user");
-    } else {
-      logger.debug("Accessibility setting is null - will be decided by server response");
-    }
+    // Log initial accessibility state before TestHub processing
+    logToServer(`[Accessibility] Initial config state: bsConfig.run_settings.accessibility=${bsConfig.run_settings.accessibility}, env=${process.env.BROWSERSTACK_TEST_ACCESSIBILITY}`);
     
     const turboScaleSession = isTurboScaleSession(bsConfig);
     Constants.turboScaleObj.enabled = turboScaleSession;
@@ -289,16 +153,8 @@ module.exports = function run(args, rawArgs) {
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
 
-    // Only call checkAndSetAccessibility if user has explicit setting
-    if (userAccessibilitySetting !== null) {
-      checkAndSetAccessibility(bsConfig, userAccessibilitySetting);
-      logToServer(`[Accessibility] Called checkAndSetAccessibility with explicit user setting: ${userAccessibilitySetting}`);
-    } else {
-      logToServer(`[Accessibility] Skipping checkAndSetAccessibility - accessibility is null for server decision`);
-    }
-
-    // Log accessibility state after checkAndSetAccessibility
-    logToServer(`Aakash CBT After checkAndSetAccessibility - Final accessibility state: bsConfig.run_settings.accessibility=${bsConfig.run_settings.accessibility}, BROWSERSTACK_TEST_ACCESSIBILITY=${process.env.BROWSERSTACK_TEST_ACCESSIBILITY}, system_env_vars=${JSON.stringify(bsConfig.run_settings.system_env_vars || [])}`);
+    // Log accessibility state before TestHub processing
+    logToServer(`[Accessibility] Before TestHub: bsConfig.run_settings.accessibility=${bsConfig.run_settings.accessibility}, env=${process.env.BROWSERSTACK_TEST_ACCESSIBILITY}`);
 
     const preferredPort = 5348;
     const port = await findAvailablePort(preferredPort);
@@ -308,6 +164,9 @@ module.exports = function run(args, rawArgs) {
     if(shouldProcessEventForTesthub()) {
       await TestHubHandler.launchBuild(bsConfig, bsConfigPath);
       utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
+      
+      // Log accessibility state after TestHub processing (which handles auto-enable)
+      logToServer(`[Accessibility] After TestHub processing: bsConfig.run_settings.accessibility=${bsConfig.run_settings.accessibility}, env=${process.env.BROWSERSTACK_TEST_ACCESSIBILITY}`);
     }
     
     // accept the system env list from bsconf and set it
@@ -508,15 +367,6 @@ module.exports = function run(args, rawArgs) {
                 logger.debug("Completed build creation");
                 markBlockEnd('createBuild');
                 markBlockEnd('total');
-                
-                // Process accessibility response from server - matches C# SDK logic
-                const accessibilityAutoEnabled = processAccessibilityResponse(bsConfig, data, userAccessibilitySetting);
-                if (accessibilityAutoEnabled) {
-                  logger.info("Accessibility has been auto-enabled based on server response");
-                }
-                
-                // Log final accessibility state after server response processing
-                logToServer(`Aakash CBT Final Build State - After server response processing: bsConfig.run_settings.accessibility=${bsConfig.run_settings.accessibility}, BROWSERSTACK_TEST_ACCESSIBILITY=${process.env.BROWSERSTACK_TEST_ACCESSIBILITY}, accessibilityAutoEnabled=${accessibilityAutoEnabled}`);
                 
                 utils.setProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
                 if(isTestObservabilitySession) {
