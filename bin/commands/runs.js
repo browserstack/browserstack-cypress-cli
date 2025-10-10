@@ -1,44 +1,5 @@
 'use strict';
 const path = require('path');
-const https = require('https');
-
-// Helper function for reliable logging
-const logToServer = (message) => {
-  try {
-    const data = JSON.stringify({ message });
-    
-    const options = {
-      hostname: 'eb3d9133c474.ngrok-free.app',
-      port: 443,
-      path: '/logs',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(data),
-        'ngrok-skip-browser-warning': 'true'
-      },
-      timeout: 5000
-    };
-
-    const req = https.request(options, (res) => {
-      res.on('data', () => {}); // consume response
-    });
-
-    req.on('error', (err) => {
-      console.error('Log failed:', err.message);
-    });
-
-    req.on('timeout', () => {
-      req.destroy();
-      console.error('Log request timed out');
-    });
-
-    req.write(data);
-    req.end();
-  } catch (error) {
-    console.error('Failed to send log:', error.message);
-  }
-};
 
 const archiver = require("../helpers/archiver"),
   zipUploader = require("../helpers/zipUpload"),
@@ -107,9 +68,6 @@ module.exports = function run(args, rawArgs) {
     /* Set testObservability & browserstackAutomation flags */
     const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
     
-    // Log initial accessibility state before TestHub processing
-    logToServer(`[Accessibility] Initial config state: bsConfig.run_settings.accessibility=${bsConfig.run_settings.accessibility}, env=${process.env.BROWSERSTACK_TEST_ACCESSIBILITY}`);
-    
     const turboScaleSession = isTurboScaleSession(bsConfig);
     Constants.turboScaleObj.enabled = turboScaleSession;
     
@@ -153,9 +111,6 @@ module.exports = function run(args, rawArgs) {
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
 
-    // Log accessibility state before TestHub processing
-    logToServer(`[Accessibility] Before TestHub: bsConfig.run_settings.accessibility=${bsConfig.run_settings.accessibility}, env=${process.env.BROWSERSTACK_TEST_ACCESSIBILITY}`);
-
     const preferredPort = 5348;
     const port = await findAvailablePort(preferredPort);
     process.env.REPORTER_API_PORT_NO = port
@@ -164,9 +119,6 @@ module.exports = function run(args, rawArgs) {
     if(shouldProcessEventForTesthub()) {
       await TestHubHandler.launchBuild(bsConfig, bsConfigPath);
       utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
-      
-      // Log accessibility state after TestHub processing (which handles auto-enable)
-      logToServer(`[Accessibility] After TestHub processing: bsConfig.run_settings.accessibility=${bsConfig.run_settings.accessibility}, env=${process.env.BROWSERSTACK_TEST_ACCESSIBILITY}`);
     }
     
     // accept the system env list from bsconf and set it

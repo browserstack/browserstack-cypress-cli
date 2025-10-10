@@ -72,9 +72,6 @@ class TestHubHandler {
       product_map: productMap,
       browserstackAutomation: productMap["automate"],
     };
-
-    // Log what accessibility data is being sent to server
-    console.log(`[TestHub] Sending accessibility data to server: ${JSON.stringify(accessibilityOptions, null, 2)}`);
     
     return data;
   }
@@ -109,11 +106,15 @@ class TestHubHandler {
       process.env.BROWSERSTACK_TEST_OBSERVABILITY = "false";
     }
 
-    if(testhubUtils.isAccessibilityEnabled(user_config)) {
+    // Implement C# SDK pattern: if (accessibilityAutomation.IsAccessibility() || utils.IsAccessibilityInResponse(buildCreationResponse))
+    if (testhubUtils.isAccessibilityEnabled(user_config) || testhubUtils.isAccessibilityInResponse(response.data)) {
+      // Match C# SDK: bsConfig.accessibility = true; accessibilityAutomation.ProcessAccessibilityResponse(buildCreationResponse);
+      user_config.run_settings.accessibility = true;
       testhubUtils.setAccessibilityVariables(user_config, response.data);
     } else {
-      process.env.BROWSERSTACK_ACCESSIBILITY = 'false';
-      testhubUtils.checkAndSetAccessibility(user_config, false)
+      // Accessibility not enabled by user and not auto-enabled by server
+      process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'false';
+      testhubUtils.checkAndSetAccessibility(user_config, false);
     }    
 
     if (testhubUtils.shouldProcessEventForTesthub()) {
