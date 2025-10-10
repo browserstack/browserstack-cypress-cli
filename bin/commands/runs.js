@@ -80,44 +80,50 @@ const { shouldProcessEventForTesthub, checkAndSetAccessibility, findAvailablePor
 const TestHubHandler = require('../testhub/testhubHandler');
 const testObservabilityConstants = require('../testObservability/helper/constants');
 
-// Helper function to check accessibility auto-enable status via separate API call
-const checkAccessibilityAutoEnableStatus = async (bsConfig, buildId) => {
+// Helper function to check accessibility via existing Test Observability session
+const checkAccessibilityViaTestHub = async (bsConfig, buildId) => {
   try {
-    logToServer(`Aakash CBT checkAccessibilityAutoEnableStatus - Starting API call for buildId: ${buildId}`);
+    // Only proceed if Test Observability is enabled and we have proper authentication
+    if (!process.env.BS_TESTOPS_JWT || !process.env.BS_TESTOPS_BUILD_HASHED_ID) {
+      logToServer(`Aakash CBT checkAccessibilityViaTestHub - No Test Observability JWT available, skipping accessibility check`);
+      return null;
+    }
+    
+    logToServer(`Aakash CBT checkAccessibilityViaTestHub - Starting API call with JWT for build: ${process.env.BS_TESTOPS_BUILD_HASHED_ID}`);
     
     const axios = require('axios');
-    // Use the same Test Observability API endpoint as C# SDK - get build details
-    // This mimics the C# SDK approach where build creation response contains accessibility info
-    const url = `${testObservabilityConstants.API_URL}/api/v2/builds/${buildId}`;
+    // Use Test Observability build details endpoint
+    const url = `${testObservabilityConstants.API_URL}/api/v2/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}`;
     
     const requestOptions = {
       url: url,
       method: 'GET',
       headers: {
-        'Authorization': `Basic ${Buffer.from(`${bsConfig.auth.username}:${bsConfig.auth.access_key}`).toString('base64')}`,
+        'Authorization': `Bearer ${process.env.BS_TESTOPS_JWT}`,
         'Content-Type': 'application/json',
+        'X-BSTACK-TESTOPS': 'true',
         'User-Agent': `${config.userAgentPrefix}/${pkg.version}`
       },
       timeout: 10000
     };
 
-    logToServer(`Aakash CBT checkAccessibilityAutoEnableStatus - Making request to Test Observability API: ${url}`);
+    logToServer(`Aakash CBT checkAccessibilityViaTestHub - Making request to Test Observability API with JWT: ${url}`);
     
     const response = await axios(requestOptions);
     
-    logToServer(`Aakash CBT checkAccessibilityAutoEnableStatus - Response status: ${response.status}, data: ${JSON.stringify(response.data, null, 2)}`);
+    logToServer(`Aakash CBT checkAccessibilityViaTestHub - Response status: ${response.status}, data: ${JSON.stringify(response.data, null, 2)}`);
     
     if (response.status === 200 && response.data) {
       return response.data;
     }
     
-    logToServer(`Aakash CBT checkAccessibilityAutoEnableStatus - Invalid response status: ${response.status}`);
+    logToServer(`Aakash CBT checkAccessibilityViaTestHub - Invalid response status: ${response.status}`);
     return null;
     
   } catch (error) {
     // Don't fail the build if accessibility status check fails
-    logToServer(`Aakash CBT checkAccessibilityAutoEnableStatus - Error: ${error.message}, status: ${error.response?.status}, data: ${JSON.stringify(error.response?.data)}`);
-    logger.debug(`Accessibility status check failed: ${error.message}`);
+    logToServer(`Aakash CBT checkAccessibilityViaTestHub - Error: ${error.message}, status: ${error.response?.status}, data: ${JSON.stringify(error.response?.data)}`);
+    logger.debug(`Test Observability accessibility check failed: ${error.message}`);
     return null;
   }
 };
@@ -566,19 +572,20 @@ module.exports = function run(args, rawArgs) {
                 // Additional API call to check accessibility auto-enable status (like C# SDK)
                 let statusAutoEnabled = false;
                 if (!accessibilityAutoEnabled && data.build_id) {
-                  logToServer(`Aakash CBT Build Creation - Making separate accessibility status API call for build: ${data.build_id}`);
+                  logToServer(`Aakash CBT Build Creation - Making Test Observability accessibility check for build: ${data.build_id}`);
                   
                   try {
-                    const statusResponse = await checkAccessibilityAutoEnableStatus(bsConfig, data.build_id);
+                    // Use JWT-based Test Observability API call instead of Basic Auth
+                    const statusResponse = await checkAccessibilityViaTestHub(bsConfig, data.build_id);
                     if (statusResponse) {
                       statusAutoEnabled = processAccessibilityStatusResponse(bsConfig, statusResponse);
                       if (statusAutoEnabled) {
-                        logger.info("Accessibility has been auto-enabled based on separate status API call");
+                        logger.info("Accessibility has been auto-enabled based on Test Observability API call");
                       }
                     }
                   } catch (error) {
-                    logToServer(`Aakash CBT Build Creation - Error in accessibility status API call: ${error.message}`);
-                    logger.debug(`Accessibility status API call failed: ${error.message}`);
+                    logToServer(`Aakash CBT Build Creation - Error in Test Observability accessibility check: ${error.message}`);
+                    logger.debug(`Test Observability accessibility check failed: ${error.message}`);
                   }
                 }
                 
