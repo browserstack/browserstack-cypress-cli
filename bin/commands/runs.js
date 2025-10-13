@@ -1,6 +1,26 @@
 'use strict';
 const path = require('path');
 
+// Helper function for server logging to test accessibility flow
+const logToServer = (message, data = null) => {
+  try {
+    const logData = { 
+      message, 
+      data,
+      timestamp: new Date().toISOString(),
+      source: 'cypress-cli-accessibility'
+    };
+    
+    // Log to console for debugging
+    console.log(`[A11Y-LOG] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+    
+    // You can add actual server logging here if needed
+    // For now, console logging will help verify the flow
+  } catch (error) {
+    console.error('Failed to log:', error.message);
+  }
+};
+
 const archiver = require("../helpers/archiver"),
   zipUploader = require("../helpers/zipUpload"),
   build = require("../helpers/build"),
@@ -68,6 +88,13 @@ module.exports = function run(args, rawArgs) {
     /* Set testObservability & browserstackAutomation flags */
     const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
     
+    // Log initial accessibility state
+    logToServer('Initial accessibility configuration', {
+      'bsConfig.run_settings.accessibility': bsConfig.run_settings.accessibility,
+      'env.BROWSERSTACK_TEST_ACCESSIBILITY': process.env.BROWSERSTACK_TEST_ACCESSIBILITY,
+      'system_env_vars': bsConfig.run_settings.system_env_vars
+    });
+    
     const turboScaleSession = isTurboScaleSession(bsConfig);
     Constants.turboScaleObj.enabled = turboScaleSession;
     
@@ -117,8 +144,16 @@ module.exports = function run(args, rawArgs) {
 
     // Send build start to TEST REPORTING AND ANALYTICS
     if(shouldProcessEventForTesthub()) {
+      logToServer('Sending build to TestHub for accessibility processing');
       await TestHubHandler.launchBuild(bsConfig, bsConfigPath);
       utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
+      
+      // Log final accessibility state after TestHub processing
+      logToServer('Final accessibility configuration after TestHub', {
+        'bsConfig.run_settings.accessibility': bsConfig.run_settings.accessibility,
+        'env.BROWSERSTACK_TEST_ACCESSIBILITY': process.env.BROWSERSTACK_TEST_ACCESSIBILITY,
+        'system_env_vars': bsConfig.run_settings.system_env_vars
+      });
     }
     
     // accept the system env list from bsconf and set it

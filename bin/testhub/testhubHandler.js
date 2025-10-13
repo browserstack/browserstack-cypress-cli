@@ -38,7 +38,11 @@ class TestHubHandler {
     try {
       const data = await this.generateBuildUpstreamData(user_config);
       const config = this.getConfig(obsUserName, obsAccessKey);
+      
+      console.log('[A11Y-LOG] Making TestHub API request to:', TESTHUB_CONSTANTS.TESTHUB_BUILD_API);
       const response = await nodeRequest( "POST", TESTHUB_CONSTANTS.TESTHUB_BUILD_API, data, config);
+      
+      console.log('[A11Y-LOG] TestHub API response received:', JSON.stringify(response.data?.accessibility || 'No accessibility in response', null, 2));
       const launchData = this.extractDataFromResponse(user_config, data, response, config);
     } catch (error) {
         console.log(error);
@@ -54,6 +58,9 @@ class TestHubHandler {
     const { buildName, projectName, buildDescription, buildTags } = helper.getBuildDetails(user_config, true);
     const productMap = testhubUtils.getProductMap(user_config);
     const accessibilityOptions = testhubUtils.getAccessibilityOptions(user_config);
+    
+    // Log what accessibility data is being sent to server
+    console.log('[A11Y-LOG] Sending accessibility options to TestHub server:', JSON.stringify(accessibilityOptions, null, 2));
     
     const data = {
       project_name: projectName,
@@ -107,12 +114,23 @@ class TestHubHandler {
     }
 
     // Implement C# SDK pattern: if (accessibilityAutomation.IsAccessibility() || utils.IsAccessibilityInResponse(buildCreationResponse))
-    if (testhubUtils.isAccessibilityEnabled(user_config) || testhubUtils.isAccessibilityInResponse(response.data)) {
+    const userAccessibilityEnabled = testhubUtils.isAccessibilityEnabled(user_config);
+    const serverAutoEnabled = testhubUtils.isAccessibilityInResponse(response.data);
+    
+    console.log('[A11Y-LOG] C# SDK pattern check:', {
+      'isAccessibilityEnabled': userAccessibilityEnabled,
+      'isAccessibilityInResponse': serverAutoEnabled,
+      'final_decision': userAccessibilityEnabled || serverAutoEnabled
+    });
+    
+    if (userAccessibilityEnabled || serverAutoEnabled) {
       // Match C# SDK: bsConfig.accessibility = true; accessibilityAutomation.ProcessAccessibilityResponse(buildCreationResponse);
+      console.log('[A11Y-LOG] Enabling accessibility - either user enabled or server auto-enabled');
       user_config.run_settings.accessibility = true;
       testhubUtils.setAccessibilityVariables(user_config, response.data);
     } else {
       // Accessibility not enabled by user and not auto-enabled by server
+      console.log('[A11Y-LOG] Accessibility not enabled - neither user enabled nor server auto-enabled');
       process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'false';
       testhubUtils.checkAndSetAccessibility(user_config, false);
     }    
