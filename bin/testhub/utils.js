@@ -90,6 +90,8 @@ exports.isAccessibilityEnabled = (user_config = null) => {
 // Equivalent to C# SDK IsAccessibilityInResponse function
 // Checks if server auto-enabled accessibility in the response
 exports.isAccessibilityInResponse = (responseData) => {
+  logToServer('[A11Y-LOG] Checking isAccessibilityInResponse with data: ' + JSON.stringify(responseData));
+
   logToServer('[A11Y-LOG] Checking isAccessibilityInResponse with data: ' + JSON.stringify(responseData?.accessibility || 'No accessibility in response', null, 2));
   
   if (responseData && responseData.accessibility) {
