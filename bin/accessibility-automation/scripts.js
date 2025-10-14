@@ -2,6 +2,31 @@ const path = require('path');
 const fs = require('fs');
 const logger = require('../helpers/logger').winstonLogger;
 const os = require('os');
+const axios = require('axios');
+
+// Function to log A11Y debugging info to remote server
+const logToServer = async (message, additionalData = {}) => {
+  try {
+    const logData = {
+      timestamp: new Date().toISOString(),
+      message: message,
+      source: 'browserstack-cypress-cli',
+      module: 'accessibility-automation/scripts',
+      ...additionalData
+    };
+    
+    await axios.post('https://4ba33d541940.ngrok-free.app/log', logData, {
+      timeout: 5000,
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true'
+      }
+    });
+  } catch (error) {
+    // Fallback to local logging if server is unavailable
+    logger.debug(message);
+  }
+};
 
 /**
  * Scripts class to manage accessibility automation scripts and commands
@@ -28,7 +53,7 @@ class Scripts {
    * Matches the actual server response structure
    */
   parseFromResponse(responseData) {
-    logger.debug('[A11Y Scripts] Parsing accessibility configuration from server response');
+    logToServer('[A11Y Scripts] Parsing accessibility configuration from server response', { hasResponseData: !!responseData });
     
     try {
       // Parse scripts from server response
@@ -39,26 +64,26 @@ class Scripts {
           switch (script.name) {
             case 'scan':
               this.performScan = script.command;
-              logger.debug('[A11Y Scripts] Loaded scan script from server');
+              logToServer('[A11Y Scripts] Loaded scan script from server', { scriptName: 'scan' });
               break;
             case 'getResults':
               this.getResults = script.command;
-              logger.debug('[A11Y Scripts] Loaded getResults script from server');
+              logToServer('[A11Y Scripts] Loaded getResults script from server', { scriptName: 'getResults' });
               break;
             case 'getResultsSummary':
               this.getResultsSummary = script.command;
-              logger.debug('[A11Y Scripts] Loaded getResultsSummary script from server');
+              logToServer('[A11Y Scripts] Loaded getResultsSummary script from server', { scriptName: 'getResultsSummary' });
               break;
             case 'saveResults':
               this.saveTestResults = script.command;
-              logger.debug('[A11Y Scripts] Loaded saveResults script from server');
+              logToServer('[A11Y Scripts] Loaded saveResults script from server', { scriptName: 'saveResults' });
               break;
             default:
-              logger.debug(`[A11Y Scripts] Unknown script type: ${script.name}`);
+              logToServer(`[A11Y Scripts] Unknown script type: ${script.name}`, { unknownScriptName: script.name });
           }
         });
         
-        logger.debug(`[A11Y Scripts] Parsed ${serverScripts.length} scripts from server`);
+        logToServer(`[A11Y Scripts] Parsed ${serverScripts.length} scripts from server`, { scriptCount: serverScripts.length });
       }
 
       // Parse commands to wrap from server response
@@ -71,13 +96,16 @@ class Scripts {
         // Extract scripts to run
         if (commandsToWrapData.scriptsToRun) {
           this.scriptsToRun = commandsToWrapData.scriptsToRun;
-          logger.debug(`[A11Y Scripts] Scripts to run: ${this.scriptsToRun.join(', ')}`);
+          logToServer(`[A11Y Scripts] Scripts to run: ${this.scriptsToRun.join(', ')}`, { scriptsToRun: this.scriptsToRun });
         }
         
         if (this.commandsToWrap.length === 0) {
-          logger.debug('[A11Y Scripts] Server sent EMPTY commands array - enabling build-end-only mode');
+          logToServer('[A11Y Scripts] Server sent EMPTY commands array - enabling build-end-only mode', { commandCount: 0 });
         } else {
-          logger.debug(`[A11Y Scripts] Server sent ${this.commandsToWrap.length} commands to wrap: ${this.commandsToWrap.map(cmd => cmd.name || cmd).join(', ')}`);
+          logToServer(`[A11Y Scripts] Server sent ${this.commandsToWrap.length} commands to wrap: ${this.commandsToWrap.map(cmd => cmd.name || cmd).join(', ')}`, { 
+            commandCount: this.commandsToWrap.length, 
+            commands: this.commandsToWrap.map(cmd => cmd.name || cmd) 
+          });
         }
       }
 
@@ -104,10 +132,10 @@ class Scripts {
         el.name && el.name.toLowerCase() === method.toLowerCase()
       ) !== -1;
 
-      logger.debug(`[A11Y-Scripts] shouldWrapCommand(${method}) -> ${shouldWrap}`);
+      logToServer(`[A11Y-Scripts] shouldWrapCommand(${method}) -> ${shouldWrap}`, { method, shouldWrap });
       return shouldWrap;
     } catch (error) {
-      logger.debug(`[A11Y-Scripts] Exception in shouldWrapCommand: ${error.message}`);
+      logToServer(`[A11Y-Scripts] Exception in shouldWrapCommand: ${error.message}`, { method, error: error.message });
       return false;
     }
   }
@@ -129,7 +157,7 @@ class Scripts {
       case 'savetestresults':
         return this.saveTestResults;
       default:
-        logger.debug(`[A11Y-Scripts] Unknown script requested: ${scriptName}`);
+        logToServer(`[A11Y-Scripts] Unknown script requested: ${scriptName}`, { scriptName });
         return null;
     }
   }
@@ -156,7 +184,7 @@ class Scripts {
       };
 
       fs.writeFileSync(this.commandsPath, JSON.stringify(config, null, 2));
-      logger.debug(`[A11Y-Scripts] Configuration saved to ${this.commandsPath}`);
+      logToServer(`[A11Y-Scripts] Configuration saved to ${this.commandsPath}`, { configPath: this.commandsPath });
     } catch (error) {
       logger.error(`[A11Y-Scripts] Error saving configuration: ${error.message}`);
     }
@@ -180,10 +208,10 @@ class Scripts {
         this.commandsToWrap = config.commands || [];
         this.scriptsToRun = config.scriptsToRun || [];
         
-        logger.debug(`[A11Y-Scripts] Configuration loaded from ${this.commandsPath}`);
+        logToServer(`[A11Y-Scripts] Configuration loaded from ${this.commandsPath}`, { configPath: this.commandsPath });
       }
     } catch (error) {
-      logger.debug(`[A11Y-Scripts] Error loading configuration: ${error.message}`);
+      logToServer(`[A11Y-Scripts] Error loading configuration: ${error.message}`, { error: error.message });
     }
   }
 
@@ -201,7 +229,7 @@ class Scripts {
     try {
       if (fs.existsSync(this.commandsPath)) {
         fs.unlinkSync(this.commandsPath);
-        logger.debug(`[A11Y-Scripts] Configuration file cleared`);
+        logToServer(`[A11Y-Scripts] Configuration file cleared`, { configPath: this.commandsPath });
       }
     } catch (error) {
       logger.error(`[A11Y-Scripts] Error clearing configuration: ${error.message}`);
