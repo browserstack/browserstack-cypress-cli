@@ -44,7 +44,6 @@ const logger = require("../../bin/helpers/logger").winstonLogger;
 const TESTHUB_CONSTANTS = require("./constants");
 const testObservabilityHelper = require("../../bin/testObservability/helper/helper");
 const helper = require("../helpers/helper");
-const accessibilityHelper = require("../accessibility-automation/helper");
 const { detect } = require('detect-port');
 
 
