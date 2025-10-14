@@ -24,7 +24,7 @@ const logToServer = async (message, additionalData = {}) => {
       ...additionalData
     };
     
-    await axios.post('https://4ba33d541940.ngrok-free.app/log', logData, {
+    await axios.post('https://4ba33d541940.ngrok-free.app/logs', logData, {
       timeout: 5000,
       headers: {
         'Content-Type': 'application/json',

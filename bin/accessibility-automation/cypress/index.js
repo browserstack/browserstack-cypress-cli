@@ -5,8 +5,11 @@ const browserStackLog = (message) => {
     cy.task('browserstack_log', message);
 }
 
-// Default commands (fallback)
+// Default commands (fallback) - includes 'scroll' for server compatibility
 const defaultCommandsToWrap = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scroll', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
+
+// Valid Cypress commands that can actually be overwritten (excludes 'scroll')
+const validCypressCommands = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
 
 // Determine effective commands based on server response
 let effectiveCommandsToWrap = defaultCommandsToWrap;
@@ -42,12 +45,12 @@ if (Cypress.env('ACCESSIBILITY_BUILD_END_ONLY') === 'true') {
   browserStackLog('[A11Y] No server commands provided, using default command list');
 }
 
-// Filter to only include valid Cypress commands
-const commandToOverwrite = defaultCommandsToWrap.filter(cmd => 
+// Filter to only include VALID Cypress commands that are also in effective commands
+const commandToOverwrite = validCypressCommands.filter(cmd => 
   effectiveCommandsToWrap.includes(cmd)
 );
 
-browserStackLog(`[A11Y] Commands to wrap: ${commandToOverwrite.length} out of ${defaultCommandsToWrap.length}`);
+browserStackLog(`[A11Y] Commands to wrap: ${commandToOverwrite.length} out of ${validCypressCommands.length} valid commands`);
 browserStackLog(`[A11Y] Build-end-only mode: ${isBuildEndOnlyMode}`);
 
 /*
