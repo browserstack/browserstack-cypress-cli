@@ -27,7 +27,6 @@ const usageReporting = require("./usageReporting"),
   { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER } = require('../testObservability/helper/constants');
 
 const { default: axios } = require("axios");
-const { shouldProcessEventForTesthub } = require("../testhub/utils");
 
 exports.validateBstackJson = (bsConfigPath) => {
   return new Promise(function (resolve, reject) {
@@ -1500,7 +1499,7 @@ exports.splitStringByCharButIgnoreIfWithinARange = (str, splitChar, leftLimiter,
 
 // blindly send other passed configs with run_settings and handle at backend
 exports.setOtherConfigs = (bsConfig, args) => {
-  if(shouldProcessEventForTesthub()) {
+  if(o11yHelpers.isTestObservabilitySession() && process.env.BS_TESTOPS_JWT) {
     bsConfig["run_settings"]["reporter"] = TEST_OBSERVABILITY_REPORTER;
     return;
   }
