@@ -182,17 +182,6 @@ exports.getGitMetaData = () => {
     }
   })
 }
-
-exports.getHostInfo = () => {
-  return {
-    hostname: os.hostname(),
-    platform: os.platform(),
-    type: os.type(),
-    version: os.version(),
-    arch: os.arch()
-  }
-}
-
 exports.getCiInfo = () => {
   var env = process.env;
   // Jenkins
