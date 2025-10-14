@@ -1,5 +1,6 @@
 const os = require("os");
 const https = require('https');
+const accessibilityHelper = require('../accessibility-automation/helper');
 
 // Helper function for reliable logging
 const logToServer = (message) => {
@@ -203,11 +204,31 @@ exports.setAccessibilityVariables = (user_config, responseData) => {
     if (responseData.accessibility.options) {
       logToServer('[A11Y-LOG] Processing accessibility options from server');
       logger.debug(`BrowserStack Accessibility Automation Build Hashed ID: ${responseData.build_hashed_id}`);
+      
+      // Process server commands and scripts similar to Node Agent
+      processServerCommandsAndScripts(responseData);
+      
       setAccessibilityCypressCapabilities(user_config, responseData);
       helper.setBrowserstackCypressCliDependency(user_config);
     } else {
       logToServer('[A11Y-LOG] No accessibility options in server response');
     }
+  }
+};
+
+// Process server commands and scripts similar to Node Agent
+const processServerCommandsAndScripts = (responseData) => {
+  logToServer('[A11Y-LOG] Processing server commands and scripts');
+  
+  try {
+    // Use the helper function to process server accessibility configuration
+    const processingResult = accessibilityHelper.processServerAccessibilityConfig(responseData);
+    
+    logToServer(`[A11Y-LOG] Successfully processed server commands and scripts: ${JSON.stringify(processingResult || {})}`);
+  } catch (error) {
+    logToServer(`[A11Y-LOG] Error processing server commands and scripts: ${error.message}`);
+    // Fallback to default behavior
+    process.env.ACCESSIBILITY_BUILD_END_ONLY = 'false';
   }
 };
 
