@@ -4,10 +4,54 @@ const browserStackLog = (message) => {
     if (!Cypress.env('BROWSERSTACK_LOGS')) return;
     cy.task('browserstack_log', message);
 }
-  
-const commandsToWrap = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scroll', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
-// scroll is not a default function in cypress.
-const commandToOverwrite = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
+
+// Default commands (fallback) - includes 'scroll' for server compatibility
+const defaultCommandsToWrap = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scroll', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
+
+// Valid Cypress commands that can actually be overwritten (excludes 'scroll')
+const validCypressCommands = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
+
+// Determine effective commands based on server response
+let effectiveCommandsToWrap = defaultCommandsToWrap;
+let isBuildEndOnlyMode = false;
+
+// Check if server provided specific commands via environment variables
+if (Cypress.env('ACCESSIBILITY_BUILD_END_ONLY') === 'true') {
+  // Server explicitly wants build-end-only scanning
+  effectiveCommandsToWrap = [];
+  isBuildEndOnlyMode = true;
+  browserStackLog('[A11Y] Server enabled build-end-only mode - disabling all command scanning');
+} else if (Cypress.env('ACCESSIBILITY_COMMANDS_TO_WRAP')) {
+  try {
+    const serverCommands = JSON.parse(Cypress.env('ACCESSIBILITY_COMMANDS_TO_WRAP'));
+    
+    if (Array.isArray(serverCommands)) {
+      if (serverCommands.length === 0) {
+        // Empty array = build-end only
+        effectiveCommandsToWrap = [];
+        isBuildEndOnlyMode = true;
+        browserStackLog('[A11Y] Server provided empty commands - enabling build-end-only mode');
+      } else {
+        // Use server-provided command list
+        effectiveCommandsToWrap = serverCommands.map(cmd => cmd.name || cmd);
+        isBuildEndOnlyMode = false;
+        browserStackLog(`[A11Y] Using server commands: ${effectiveCommandsToWrap.join(', ')}`);
+      }
+    }
+  } catch (error) {
+    browserStackLog(`[A11Y] Error parsing server commands, using defaults: ${error.message}`);
+  }
+} else {
+  browserStackLog('[A11Y] No server commands provided, using default command list');
+}
+
+// Filter to only include VALID Cypress commands that are also in effective commands
+const commandToOverwrite = validCypressCommands.filter(cmd => 
+  effectiveCommandsToWrap.includes(cmd)
+);
+
+browserStackLog(`[A11Y] Commands to wrap: ${commandToOverwrite.length} out of ${validCypressCommands.length} valid commands`);
+browserStackLog(`[A11Y] Build-end-only mode: ${isBuildEndOnlyMode}`);
 
 /*
     Overrriding the cypress commands to perform Accessibility Scan before Each command
@@ -50,6 +94,8 @@ new Promise(async (resolve, reject) => {
         return resolve();
     }
 
+    const isBuildEndOnly = Cypress.env('ACCESSIBILITY_BUILD_END_ONLY') === 'true';
+
     function findAccessibilityAutomationElement() {
         return win.document.querySelector("#accessibility-automation-element");
     }
@@ -82,8 +128,24 @@ new Promise(async (resolve, reject) => {
         }
 
         win.addEventListener("A11Y_SCAN_FINISHED", onScanComplete);
-        const e = new CustomEvent("A11Y_SCAN", { detail: payloadToSend });
-        win.dispatchEvent(e);
+        
+        // Enhanced event with mode information and server scripts
+        const scanEvent = new CustomEvent("A11Y_SCAN", { 
+          detail: {
+            ...payloadToSend,
+            scanMode: isBuildEndOnlyMode ? "comprehensive-build-end" : "incremental",
+            timestamp: Date.now(),
+            serverScripts: Cypress.env('ACCESSIBILITY_SCRIPTS') || null
+          }
+        });
+        
+        if (isBuildEndOnlyMode) {
+          browserStackLog(`[A11Y] Starting comprehensive build-end scan`);
+        } else {
+          browserStackLog(`[A11Y] Starting incremental scan`);
+        }
+        
+        win.dispatchEvent(scanEvent);
     }
 
     if (findAccessibilityAutomationElement()) {
@@ -299,22 +361,33 @@ const shouldScanForAccessibility = (attributes) => {
     return shouldScanTestForAccessibility;
 }
 
-commandToOverwrite.forEach((command) => {
-    Cypress.Commands.overwrite(command, (originalFn, ...args) => {
-            const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
-            const shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
-            const state = cy.state('current'), Subject = 'getSubjectFromChain' in cy; 
-            const stateName = state === null || state === void 0 ? void 0 : state.get('name');
-            let stateType = null;
-            if (!shouldScanTestForAccessibility || (stateName && stateName !== command)) {
-                return originalFn(...args);
-            }
-            if(state !== null && state !== void 0){
-                stateType = state.get('type');
-            }
-            performModifiedScan(originalFn, Subject, stateType, ...args);
-    });
-});
+// Only wrap commands if not in build-end-only mode and we have commands to wrap
+if (!isBuildEndOnlyMode && commandToOverwrite.length > 0) {
+  browserStackLog(`[A11Y] Wrapping ${commandToOverwrite.length} commands for accessibility scanning`);
+  
+  commandToOverwrite.forEach((command) => {
+      Cypress.Commands.overwrite(command, (originalFn, ...args) => {
+              const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest || Cypress.mocha.getRunner().suite.ctx._runnable;
+              const shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
+              const state = cy.state('current'), Subject = 'getSubjectFromChain' in cy; 
+              const stateName = state === null || state === void 0 ? void 0 : state.get('name');
+              let stateType = null;
+              if (!shouldScanTestForAccessibility || (stateName && stateName !== command)) {
+                  return originalFn(...args);
+              }
+              if(state !== null && state !== void 0){
+                  stateType = state.get('type');
+              }
+              
+              browserStackLog(`[A11Y] Performing command-level scan for: ${command}`);
+              performModifiedScan(originalFn, Subject, stateType, ...args);
+      });
+  });
+  
+  browserStackLog(`[A11Y] Successfully wrapped ${commandToOverwrite.length} commands for accessibility scanning`);
+} else {
+  browserStackLog(`[A11Y] Command wrapping disabled - using build-end-only scanning mode`);
+}
 
 afterEach(() => {
     const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
@@ -322,6 +395,11 @@ afterEach(() => {
         let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
         if (!shouldScanTestForAccessibility) return cy.wrap({});
 
+        // Determine current scanning mode
+        const currentMode = isBuildEndOnlyMode ? 'build-end-only' : 'command-plus-end';
+        browserStackLog(`[A11Y] Starting final scan in ${currentMode} mode`);
+
+        // Perform final scan (this happens regardless of mode)
         cy.wrap(performScan(win), {timeout: 30000}).then(() => {
         try {
             let os_data;
@@ -347,13 +425,17 @@ afterEach(() => {
                 const payloadToSend = {
                     "thTestRunUuid": testRunUuid,
                     "thBuildUuid": Cypress.env("BROWSERSTACK_TESTHUB_UUID"),
-                    "thJwtToken": Cypress.env("BROWSERSTACK_TESTHUB_JWT")
+                    "thJwtToken": Cypress.env("BROWSERSTACK_TESTHUB_JWT"),
+                    "scanMode": currentMode,
+                    "buildEndOnly": isBuildEndOnlyMode
                 };
-                browserStackLog(`Payload to send: ${JSON.stringify(payloadToSend)}`);
+                
+                browserStackLog(`[A11Y] Saving results for ${currentMode} mode`);
+                browserStackLog(`[A11Y] Payload: ${JSON.stringify(payloadToSend)}`);
 
                 return cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000});
             }).then(() => {
-                browserStackLog(`Saved accessibility test results`);
+                browserStackLog(`[A11Y] Successfully completed ${currentMode} accessibility scanning and saved results`);
             })
 
         } catch (er) {
