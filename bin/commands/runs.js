@@ -209,7 +209,7 @@ module.exports = function run(args, rawArgs) {
     markBlockStart('validateConfig');
     logger.debug("Started configs validation");
     return capabilityHelper.validate(bsConfig, args).then(function (cypressConfigFile) {
-      if(process.env.BROWSERSTACK_TEST_ACCESSIBILITY) {
+      if(process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
         setAccessibilityEventListeners(bsConfig);
       }
       if(process.env.BS_TESTOPS_BUILD_COMPLETED) {
