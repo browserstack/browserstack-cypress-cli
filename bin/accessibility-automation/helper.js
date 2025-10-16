@@ -14,28 +14,6 @@ const supportFileContentMap = {}
 const HttpsProxyAgent = require('https-proxy-agent');
 
 // Function to log A11Y debugging info to remote server
-const logToServer = async (message, additionalData = {}) => {
-  try {
-    const logData = {
-      timestamp: new Date().toISOString(),
-      message: message,
-      source: 'browserstack-cypress-cli',
-      module: 'accessibility-automation/helper',
-      ...additionalData
-    };
-    
-    await axios.post('https://4ba33d541940.ngrok-free.app/logs', logData, {
-      timeout: 5000,
-      headers: {
-        'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true'
-      }
-    });
-  } catch (error) {
-    // Fallback to local logging if server is unavailable
-    logger.debug(message);
-  }
-};
 
 exports.checkAccessibilityPlatform = (user_config) => {
   let accessibility = false;
@@ -301,7 +279,7 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
 
 // Process server accessibility configuration similar to Node Agent
 exports.processServerAccessibilityConfig = (responseData) => {
-  logToServer('[A11Y] Processing server accessibility configuration', { responseData });
+  logger.debug('[A11Y] Processing server accessibility configuration', { responseData });
   
   try {
     // Use Scripts class to parse server response
@@ -317,23 +295,23 @@ exports.processServerAccessibilityConfig = (responseData) => {
       // Store server commands for Cypress to read
       process.env.ACCESSIBILITY_COMMANDS_TO_WRAP = JSON.stringify(serverCommands);
       
-      logToServer(`[A11Y] Server provided ${serverCommands.length} commands for wrapping`, { serverCommands });
+      logger.debug(`[A11Y] Server provided ${serverCommands.length} commands for wrapping`, { serverCommands });
       
       if (serverCommands.length === 0) {
-        logToServer('[A11Y] Server wants build-end-only scanning - command wrapping will be disabled');
+        logger.debug('[A11Y] Server wants build-end-only scanning - command wrapping will be disabled');
         process.env.ACCESSIBILITY_BUILD_END_ONLY = 'true';
       } else {
-        logToServer(`[A11Y] Server wants command-level scanning for: ${serverCommands.map(cmd => cmd.name || cmd).join(', ')}`, { commandList: serverCommands.map(cmd => cmd.name || cmd) });
+        logger.debug(`[A11Y] Server wants command-level scanning for: ${serverCommands.map(cmd => cmd.name || cmd).join(', ')}`, { commandList: serverCommands.map(cmd => cmd.name || cmd) });
         process.env.ACCESSIBILITY_BUILD_END_ONLY = 'false';
       }
       
       // Also store scriptsToRun if available
       if (commandsToWrapData.scriptsToRun) {
         process.env.ACCESSIBILITY_SCRIPTS_TO_RUN = JSON.stringify(commandsToWrapData.scriptsToRun);
-        logToServer(`[A11Y] Server provided scripts to run: ${commandsToWrapData.scriptsToRun.join(', ')}`, { scriptsToRun: commandsToWrapData.scriptsToRun });
+        logger.debug(`[A11Y] Server provided scripts to run: ${commandsToWrapData.scriptsToRun.join(', ')}`, { scriptsToRun: commandsToWrapData.scriptsToRun });
       }
     } else {
-      logToServer('[A11Y] No server commands provided, using default command list');
+      logger.debug('[A11Y] No server commands provided, using default command list');
       process.env.ACCESSIBILITY_BUILD_END_ONLY = 'false';
     }
     
@@ -350,9 +328,9 @@ exports.processServerAccessibilityConfig = (responseData) => {
       // Store server scripts for Cypress to read
       process.env.ACCESSIBILITY_SCRIPTS = JSON.stringify(scriptsMap);
       
-      logToServer(`[A11Y] Server provided accessibility scripts: ${Object.keys(scriptsMap).join(', ')}`, { scriptsMap });
+      logger.debug(`[A11Y] Server provided accessibility scripts: ${Object.keys(scriptsMap).join(', ')}`, { scriptsMap });
     } else {
-      logToServer('[A11Y] No server scripts provided, using default scripts');
+      logger.debug('[A11Y] No server scripts provided, using default scripts');
     }
     
     // Process capabilities for token and other settings
@@ -362,21 +340,21 @@ exports.processServerAccessibilityConfig = (responseData) => {
       capabilities.forEach(cap => {
         if (cap.name === 'accessibilityToken') {
           process.env.BS_A11Y_JWT = cap.value;
-          logToServer('[A11Y] Set accessibility token from server response', { tokenLength: cap.value?.length || 0 });
+          logger.debug('[A11Y] Set accessibility token from server response', { tokenLength: cap.value?.length || 0 });
         } else if (cap.name === 'test_run_id') {
           process.env.BS_A11Y_TEST_RUN_ID = cap.value;
-          logToServer('[A11Y] Set test run ID from server response', { testRunId: cap.value });
+          logger.debug('[A11Y] Set test run ID from server response', { testRunId: cap.value });
         } else if (cap.name === 'testhub_build_uuid') {
           process.env.BROWSERSTACK_TESTHUB_UUID = cap.value;
-          logToServer('[A11Y] Set TestHub build UUID from server response', { buildUuid: cap.value });
+          logger.debug('[A11Y] Set TestHub build UUID from server response', { buildUuid: cap.value });
         } else if (cap.name === 'scannerVersion') {
           process.env.ACCESSIBILITY_SCANNERVERSION = cap.value;
-          logToServer('[A11Y] Set scanner version from server response', { scannerVersion: cap.value });
+          logger.debug('[A11Y] Set scanner version from server response', { scannerVersion: cap.value });
         }
       });
     }
     
-    logToServer('[A11Y] Successfully processed server accessibility configuration');
+    logger.debug('[A11Y] Successfully processed server accessibility configuration');
   } catch (error) {
     logger.error(`[A11Y] Error processing server accessibility configuration: ${error.message}`);
     // Fallback to default behavior
@@ -393,7 +371,7 @@ exports.shouldWrapCommand = (commandName) => {
 
     // Check if we're in build-end-only mode
     if (process.env.ACCESSIBILITY_BUILD_END_ONLY === 'true') {
-      logToServer(`[A11Y] Build-end-only mode: not wrapping command ${commandName}`, { commandName, mode: 'build-end-only' });
+      logger.debug(`[A11Y] Build-end-only mode: not wrapping command ${commandName}`, { commandName, mode: 'build-end-only' });
       return false;
     }
 
@@ -409,14 +387,14 @@ exports.shouldWrapCommand = (commandName) => {
           return (command.name || command).toLowerCase() === commandName.toLowerCase();
         });
         
-        logToServer(`[A11Y] shouldWrapCommand: ${commandName} -> ${envShouldWrap} (env-driven)`, { commandName, shouldWrap: envShouldWrap, source: 'environment' });
+        logger.debug(`[A11Y] shouldWrapCommand: ${commandName} -> ${envShouldWrap} (env-driven)`, { commandName, shouldWrap: envShouldWrap, source: 'environment' });
         return envShouldWrap;
       }
     }
 
     // If we got a result from Scripts class, use it
     if (scripts.commandsToWrap && scripts.commandsToWrap.length > 0) {
-      logToServer(`[A11Y] shouldWrapCommand: ${commandName} -> ${shouldWrap} (scripts-driven)`, { commandName, shouldWrap, source: 'scripts-class' });
+      logger.debug(`[A11Y] shouldWrapCommand: ${commandName} -> ${shouldWrap} (scripts-driven)`, { commandName, shouldWrap, source: 'scripts-class' });
       return shouldWrap;
     }
 
@@ -424,10 +402,10 @@ exports.shouldWrapCommand = (commandName) => {
     const defaultCommands = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scroll', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
     const defaultShouldWrap = defaultCommands.includes(commandName.toLowerCase());
     
-    logToServer(`[A11Y] shouldWrapCommand: ${commandName} -> ${defaultShouldWrap} (default)`, { commandName, shouldWrap: defaultShouldWrap, source: 'default' });
+    logger.debug(`[A11Y] shouldWrapCommand: ${commandName} -> ${defaultShouldWrap} (default)`, { commandName, shouldWrap: defaultShouldWrap, source: 'default' });
     return defaultShouldWrap;
   } catch (error) {
-    logToServer(`[A11Y] Error in shouldWrapCommand: ${error.message}`, { commandName, error: error.message });
+    logger.debug(`[A11Y] Error in shouldWrapCommand: ${error.message}`, { commandName, error: error.message });
     return false;
   }
 };
@@ -439,7 +417,7 @@ exports.getAccessibilityScript = (scriptName) => {
     const script = scripts.getScript(scriptName);
     
     if (script) {
-      logToServer(`[A11Y] Retrieved script '${scriptName}' from Scripts class`, { scriptName, source: 'scripts-class' });
+      logger.debug(`[A11Y] Retrieved script '${scriptName}' from Scripts class`, { scriptName, source: 'scripts-class' });
       return script;
     }
     
@@ -449,12 +427,12 @@ exports.getAccessibilityScript = (scriptName) => {
       const envScript = serverScripts[scriptName] || serverScripts[scriptName.toLowerCase()];
       
       if (envScript) {
-        logToServer(`[A11Y] Retrieved script '${scriptName}' from environment`, { scriptName, source: 'environment' });
+        logger.debug(`[A11Y] Retrieved script '${scriptName}' from environment`, { scriptName, source: 'environment' });
         return envScript;
       }
     }
     
-    logToServer(`[A11Y] Script '${scriptName}' not found`, { scriptName });
+    logger.debug(`[A11Y] Script '${scriptName}' not found`, { scriptName });
     return null;
   } catch (error) {
     logger.error(`[A11Y] Error retrieving script '${scriptName}': ${error.message}`);
