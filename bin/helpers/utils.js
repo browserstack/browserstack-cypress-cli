@@ -1755,15 +1755,15 @@ exports.getVideoConfig = (cypressConfig, bsConfig = {}) => {
     video: true,
     videoUploadOnPasses: true
   }
-   // Reading bsconfig in case of enforce_settings
-  if ( this.isUndefined(bsConfig.run_settings) || this.isUndefinedOrFalse(bsConfig.run_settings.enforce_settings) ) {
-    if (!this.isUndefined(cypressConfig.video)) conf.video = cypressConfig.video;
-    if (!this.isUndefined(cypressConfig.videoUploadOnPasses)) conf.videoUploadOnPasses = cypressConfig.videoUploadOnPasses;
-  }
-  else {
-    if (!this.isUndefined(bsConfig.run_settings) && !this.isUndefined(bsConfig.run_settings.video)) conf.video = bsConfig.run_settings.video;
-    if (!this.isUndefined(bsConfig.run_settings) && !this.isUndefined(bsConfig.run_settings.videoUploadOnPasses)) conf.videoUploadOnPasses = bsConfig.run_settings.videoUploadOnPasses;
-  }
+  logger.debug(`dkbkdb mnbdkab`);
+  logger.debug(cypressConfig);
+  if (!this.isUndefined(bsConfig.run_settings) && !this.isUndefined(bsConfig.run_settings.video)) conf.video = bsConfig.run_settings.video;
+  if (!this.isUndefined(bsConfig.run_settings) && !this.isUndefined(bsConfig.run_settings.videoUploadOnPasses)) conf.videoUploadOnPasses = bsConfig.run_settings.videoUploadOnPasses;
+  if (!this.isUndefined(cypressConfig.video)) { conf.video = cypressConfig.video;}
+  if (!this.isUndefined(cypressConfig.videoUploadOnPasses)){ conf.videoUploadOnPasses = cypressConfig.videoUploadOnPasses;}
+  if (!this.isUndefined(cypressConfig.e2e) && !this.isUndefined(cypressConfig.e2e.video)) { conf.video = cypressConfig.e2e.video;}
+  if (!this.isUndefined(cypressConfig.e2e) && !this.isUndefined(cypressConfig.e2e.videoUploadOnPasses)){ conf.videoUploadOnPasses = cypressConfig.e2e.videoUploadOnPasses;}
+
 
   // set video in cli config in case of cypress 13 or above as default value is false there.
   this.setVideoCliConfig(bsConfig,conf);
