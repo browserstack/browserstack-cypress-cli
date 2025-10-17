@@ -305,9 +305,8 @@ exports.processServerAccessibilityConfig = (responseData) => {
         process.env.ACCESSIBILITY_BUILD_END_ONLY = 'false';
       }
       
-      // Also store scriptsToRun if available
+      // Log scriptsToRun if available (Scripts class handles the actual storage)
       if (commandsToWrapData.scriptsToRun) {
-        process.env.ACCESSIBILITY_SCRIPTS_TO_RUN = JSON.stringify(commandsToWrapData.scriptsToRun);
         logger.debug(`[A11Y] Server provided scripts to run: ${commandsToWrapData.scriptsToRun.join(', ')}`, { scriptsToRun: commandsToWrapData.scriptsToRun });
       }
     } else {
