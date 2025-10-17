@@ -129,13 +129,12 @@ new Promise(async (resolve, reject) => {
 
         win.addEventListener("A11Y_SCAN_FINISHED", onScanComplete);
         
-        // Enhanced event with mode information and server scripts
+        // Enhanced event with mode information
         const scanEvent = new CustomEvent("A11Y_SCAN", { 
           detail: {
             ...payloadToSend,
             scanMode: isBuildEndOnlyMode ? "comprehensive-build-end" : "incremental",
-            timestamp: Date.now(),
-            serverScripts: Cypress.env('ACCESSIBILITY_SCRIPTS') || null
+            timestamp: Date.now()
           }
         });
         

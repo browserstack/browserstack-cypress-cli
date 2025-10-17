@@ -325,9 +325,6 @@ exports.processServerAccessibilityConfig = (responseData) => {
         scriptsMap[script.name] = script.command;
       });
       
-      // Store server scripts for Cypress to read
-      process.env.ACCESSIBILITY_SCRIPTS = JSON.stringify(scriptsMap);
-      
       logger.debug(`[A11Y] Server provided accessibility scripts: ${Object.keys(scriptsMap).join(', ')}`, { scriptsMap });
     } else {
       logger.debug('[A11Y] No server scripts provided, using default scripts');
@@ -407,36 +404,6 @@ exports.shouldWrapCommand = (commandName) => {
   } catch (error) {
     logger.debug(`[A11Y] Error in shouldWrapCommand: ${error.message}`, { commandName, error: error.message });
     return false;
-  }
-};
-
-// Get accessibility script by name
-exports.getAccessibilityScript = (scriptName) => {
-  try {
-    // Try to get script from Scripts class first
-    const script = scripts.getScript(scriptName);
-    
-    if (script) {
-      logger.debug(`[A11Y] Retrieved script '${scriptName}' from Scripts class`, { scriptName, source: 'scripts-class' });
-      return script;
-    }
-    
-    // Fallback to environment variable
-    if (process.env.ACCESSIBILITY_SCRIPTS) {
-      const serverScripts = JSON.parse(process.env.ACCESSIBILITY_SCRIPTS);
-      const envScript = serverScripts[scriptName] || serverScripts[scriptName.toLowerCase()];
-      
-      if (envScript) {
-        logger.debug(`[A11Y] Retrieved script '${scriptName}' from environment`, { scriptName, source: 'environment' });
-        return envScript;
-      }
-    }
-    
-    logger.debug(`[A11Y] Script '${scriptName}' not found`, { scriptName });
-    return null;
-  } catch (error) {
-    logger.error(`[A11Y] Error retrieving script '${scriptName}': ${error.message}`);
-    return null;
   }
 };
 
