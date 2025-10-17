@@ -116,7 +116,7 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
   if(exitCode) process.exit(exitCode);
 }
 
-const nodeRequest = (type, url, data, config) => {
+exports.nodeRequest = (type, url, data, config) => {
   const requestQueueHandler = require('./requestQueueHandler');
     return new Promise(async (resolve, reject) => {
       const options = {
@@ -269,7 +269,7 @@ exports.getPackageVersion = (package_, bsConfig = null) => {
   return packageVersion;
 }
 
-const setEnvironmentVariablesForRemoteReporter = (BS_TESTOPS_JWT, BS_TESTOPS_BUILD_HASHED_ID, BS_TESTOPS_ALLOW_SCREENSHOTS, OBSERVABILITY_LAUNCH_SDK_VERSION) => {
+exports.setEnvironmentVariablesForRemoteReporter = (BS_TESTOPS_JWT, BS_TESTOPS_BUILD_HASHED_ID, BS_TESTOPS_ALLOW_SCREENSHOTS, OBSERVABILITY_LAUNCH_SDK_VERSION) => {
   process.env.BS_TESTOPS_JWT = BS_TESTOPS_JWT;
   process.env.BS_TESTOPS_BUILD_HASHED_ID = BS_TESTOPS_BUILD_HASHED_ID;
   process.env.BS_TESTOPS_ALLOW_SCREENSHOTS = BS_TESTOPS_ALLOW_SCREENSHOTS;
@@ -343,7 +343,7 @@ exports.setCrashReportingConfigFromReporter = (credentialsStr, bsConfigPath, cyp
   }
 }
 
-const setCrashReportingConfig = (bsConfig, bsConfigPath) => {
+exports.setCrashReportingConfig = (bsConfig, bsConfigPath) => {
   try {
     const browserstackConfigFile = utils.readBsConfigJSON(bsConfigPath);
     const cypressConfigFile = getCypressConfigFileContent(bsConfig, null);
@@ -414,10 +414,10 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
         }
       };
 
-      const response = await nodeRequest('POST','api/v1/builds',data,config);
+      const response = await exports.nodeRequest('POST','api/v1/builds',data,config);
       exports.debug('Build creation successfull!');
       process.env.BS_TESTOPS_BUILD_COMPLETED = true;
-      setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
+      exports.setEnvironmentVariablesForRemoteReporter(response.data.jwt, response.data.build_hashed_id, response.data.allow_screenshots, data.observability_version.sdkVersion);
       if(this.isBrowserstackInfra() && (user_config.run_settings.auto_import_dev_dependencies != true)) helper.setBrowserstackCypressCliDependency(user_config);
     } catch(error) {
       if(!error.errorType) {
@@ -444,7 +444,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
       }
 
       process.env.BS_TESTOPS_BUILD_COMPLETED = false;
-      setEnvironmentVariablesForRemoteReporter(null, null, null);
+      exports.setEnvironmentVariablesForRemoteReporter(null, null, null);
     }
   }
 }
@@ -503,7 +503,7 @@ exports.batchAndPostEvents = async (eventUrl, kind, data) => {
   try {
     const eventsUuids = data.map(eventData => `${eventData.event_type}:${eventData.test_run ? eventData.test_run.uuid : (eventData.hook_run ? eventData.hook_run.uuid : null)}`).join(', ');
     exports.debugOnConsole(`[Request Batch Send] for events:uuids ${eventsUuids}`);    
-    const response = await nodeRequest('POST',eventUrl,data,config);
+    const response = await exports.nodeRequest('POST',eventUrl,data,config);
     exports.debugOnConsole(`[Request Batch Response] for events:uuids ${eventsUuids}`);
     if(response.data.error) {
       throw({message: response.data.error});
@@ -570,7 +570,7 @@ exports.uploadEventData = async (eventData, run=0) => {
       try {
         const eventsUuids = data.map(eventData => `${eventData.event_type}:${eventData.test_run ? eventData.test_run.uuid : (eventData.hook_run ? eventData.hook_run.uuid : null)}`).join(', ');
         exports.debugOnConsole(`[Request Send] for events:uuids ${eventsUuids}`);
-        const response = await nodeRequest('POST',event_api_url,data,config);
+        const response = await exports.nodeRequest('POST',event_api_url,data,config);
         exports.debugOnConsole(`[Request Repsonse] ${util.format(response.data)} for events:uuids ${eventsUuids}`)
         if(response.data.error) {
           throw({message: response.data.error});
@@ -681,7 +681,7 @@ exports.stopBuildUpstream = async () => {
       };
 
       try {
-        const response = await nodeRequest('PUT',`api/v1/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}/stop`,data,config);
+        const response = await exports.nodeRequest('PUT',`api/v1/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}/stop`,data,config);
         if(response.data && response.data.error) {
           throw({message: response.data.error});
         } else {
