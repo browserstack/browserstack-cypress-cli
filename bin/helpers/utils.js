@@ -24,7 +24,8 @@ const usageReporting = require("./usageReporting"),
   pkg = require('../../package.json'),
   transports = require('./logger').transports,
   o11yHelpers = require('../testObservability/helper/helper'),
-  { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER } = require('../testObservability/helper/constants');
+  { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER } = require('../testObservability/helper/constants'),
+  { ACCESSIBILITY_ENV_VARS } = require('../accessibility-automation/constants');
 
 const { default: axios } = require("axios");
 const { shouldProcessEventForTesthub } = require("../testhub/utils");
@@ -601,6 +602,12 @@ exports.setSystemEnvs = (bsConfig) => {
       const relativePathFromGitConfig = path.relative(gitConfigPath, process.cwd());
       envKeys["OBSERVABILITY_GIT_CONFIG_PATH"] = relativePathFromGitConfig ? relativePathFromGitConfig : 'DEFAULT';
     }
+  } catch(e){}
+
+  try {
+    ACCESSIBILITY_ENV_VARS.forEach(key => {
+      envKeys[key] = process.env[key];
+    });
   } catch(e){}
 
   if (Object.keys(envKeys).length === 0) {

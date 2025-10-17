@@ -1,6 +1,8 @@
 'use strict';
 const path = require('path');
 
+// Helper function for server logging to test accessibility flow
+
 const archiver = require("../helpers/archiver"),
   zipUploader = require("../helpers/zipUpload"),
   build = require("../helpers/build"),
@@ -33,11 +35,10 @@ const {
 const { 
   createAccessibilityTestRun,
   setAccessibilityEventListeners,
-  checkAccessibilityPlatform,
   supportFileCleanup
 } = require('../accessibility-automation/helper');
 const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
-const { shouldProcessEventForTesthub, checkAndSetAccessibility, findAvailablePort } = require('../testhub/utils');
+const { shouldProcessEventForTesthub, findAvailablePort } = require('../testhub/utils');
 const TestHubHandler = require('../testhub/testhubHandler');
 
 module.exports = function run(args, rawArgs) {
@@ -68,8 +69,14 @@ module.exports = function run(args, rawArgs) {
 
     /* Set testObservability & browserstackAutomation flags */
     const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
-    const checkAccessibility = checkAccessibilityPlatform(bsConfig);
-    const isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibility;
+    
+    // Log initial accessibility state
+    logger.debug('Initial accessibility configuration', {
+      'bsConfig.run_settings.accessibility': bsConfig.run_settings.accessibility,
+      'env.BROWSERSTACK_TEST_ACCESSIBILITY': process.env.BROWSERSTACK_TEST_ACCESSIBILITY,
+      'system_env_vars': bsConfig.run_settings.system_env_vars
+    });
+    
     const turboScaleSession = isTurboScaleSession(bsConfig);
     Constants.turboScaleObj.enabled = turboScaleSession;
     
@@ -113,16 +120,22 @@ module.exports = function run(args, rawArgs) {
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
 
-    checkAndSetAccessibility(bsConfig, isAccessibilitySession);
-
     const preferredPort = 5348;
     const port = await findAvailablePort(preferredPort);
     process.env.REPORTER_API_PORT_NO = port
 
     // Send build start to TEST REPORTING AND ANALYTICS
     if(shouldProcessEventForTesthub()) {
+      logger.debug('Sending build to TestHub for accessibility processing');
       await TestHubHandler.launchBuild(bsConfig, bsConfigPath);
       utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
+      
+      // Log final accessibility state after TestHub processing
+      logger.debug('Final accessibility configuration after TestHub', {
+        'bsConfig.run_settings.accessibility': bsConfig.run_settings.accessibility,
+        'env.BROWSERSTACK_TEST_ACCESSIBILITY': process.env.BROWSERSTACK_TEST_ACCESSIBILITY,
+        'system_env_vars': bsConfig.run_settings.system_env_vars
+      });
     }
     
     // accept the system env list from bsconf and set it
@@ -323,6 +336,7 @@ module.exports = function run(args, rawArgs) {
                 logger.debug("Completed build creation");
                 markBlockEnd('createBuild');
                 markBlockEnd('total');
+                
                 utils.setProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
                 if(isTestObservabilitySession) {
                   utils.setO11yProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
