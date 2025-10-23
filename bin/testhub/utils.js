@@ -1,10 +1,12 @@
 const os = require("os");
+const https = require('https');
+const accessibilityHelper = require('../accessibility-automation/helper');
+
 
 const logger = require("../../bin/helpers/logger").winstonLogger;
 const TESTHUB_CONSTANTS = require("./constants");
 const testObservabilityHelper = require("../../bin/testObservability/helper/helper");
 const helper = require("../helpers/helper");
-const accessibilityHelper = require("../accessibility-automation/helper");
 const { detect } = require('detect-port');
 
 
@@ -26,11 +28,52 @@ exports.getFrameworkDetails = (user_config) => {
   };
 };
 
-exports.isAccessibilityEnabled = () => {
-  if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY !== undefined) {
-    return process.env.BROWSERSTACK_TEST_ACCESSIBILITY === "true";
+exports.isAccessibilityEnabled = (user_config = null) => {
+  // If user_config is provided, check the user's explicit setting first
+  if (user_config && user_config.run_settings) {
+    // Check run_settings.accessibility first (explicit user setting)
+    if (user_config.run_settings.accessibility !== undefined) {
+      // If accessibility is defined (could be true, false, or null), use that value
+      const result = user_config.run_settings.accessibility;
+      logger.debug('[A11Y] isAccessibilityEnabled from config: ' + result + ', raw value: ' + user_config.run_settings.accessibility);
+      return result;
+    } else {
+      // If accessibility is undefined, keep default to null
+      logger.debug('[A11Y] isAccessibilityEnabled from config: accessibility is undefined, returning null');
+      return null;
+    }
   }
-  logger.debug('Accessibility is disabled');
+  
+  // Fallback to environment variable check
+  if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY !== undefined) {
+    const result = process.env.BROWSERSTACK_TEST_ACCESSIBILITY === "true";
+    logger.debug('[A11Y] isAccessibilityEnabled from env:', result, 'env value:', process.env.BROWSERSTACK_TEST_ACCESSIBILITY);
+    return result;
+  }
+  
+  logger.debug('[A11Y] isAccessibilityEnabled: no setting found, returning false');
+  return false;
+};
+
+// Equivalent to C# SDK IsAccessibilityInResponse function
+// Checks if server auto-enabled accessibility in the response
+exports.isAccessibilityInResponse = (responseData) => {
+  logger.debug('[A11Y] Checking isAccessibilityInResponse with data: ' + JSON.stringify(responseData));
+
+  logger.debug('[A11Y] Checking isAccessibilityInResponse with data:', JSON.stringify(responseData?.accessibility || 'No accessibility in response', null, 2));
+  
+  if (responseData && responseData.accessibility) {
+    if (responseData.accessibility && typeof responseData.accessibility === 'object') {
+      const successValue = responseData.accessibility.success;
+      const result = successValue === true;
+      logger.debug('[A11Y] isAccessibilityInResponse result:', result, 'success value:', successValue);
+      return result;
+    }
+    // If accessibility is null or not an object, treat as false
+    logger.debug('[A11Y] isAccessibilityInResponse: accessibility is null or not object, returning false');
+    return false;
+  }
+  logger.debug('[A11Y] isAccessibilityInResponse: no accessibility in response, returning false');
   return false;
 };
 
@@ -48,7 +91,7 @@ exports.getProductMap = (user_config) => {
 exports.shouldProcessEventForTesthub = () => {
   return (
     testObservabilityHelper.isTestObservabilitySession() ||
-    exports.isAccessibilityEnabled()
+    exports.isAccessibilityEnabled() // No user_config available here, use env fallback
   );
 };
 
@@ -98,27 +141,56 @@ exports.handleErrorForObservability = (error = null) => {
 };
 
 exports.setAccessibilityVariables = (user_config, responseData) => {
+  logger.debug('[A11Y] setAccessibilityVariables called with response:', JSON.stringify(responseData?.accessibility || 'No accessibility', null, 2));
+  
+  // Match C# SDK ProcessAccessibilityResponse logic
   if (!responseData.accessibility) {
+    logger.debug('[A11Y] No accessibility in response, handling error');
     exports.handleErrorForAccessibility(user_config);
-
     return [null, null];
   }
 
   if (!responseData.accessibility.success) {
-    exports.handleErrorForAccessibility(
-      user_config,
-      responseData.accessibility
-    );
-
+    logger.debug('[A11Y] Accessibility success is false, handling error');
+    exports.handleErrorForAccessibility(user_config, responseData.accessibility);
     return [null, null];
   }
 
-  if (responseData.accessibility.options) {
-    logger.debug(
-      `BrowserStack Accessibility Automation Build Hashed ID: ${responseData.build_hashed_id}`
-    );
-    setAccessibilityCypressCapabilities(user_config, responseData);
-    helper.setBrowserstackCypressCliDependency(user_config);
+  // Match C# SDK: if (accessibilityResponse["success"].ToString() == "True")
+  if (responseData.accessibility.success === true) {
+    logger.debug('[A11Y] Server auto-enabled accessibility - processing response');
+    // Set configuration like C# SDK: isAccessibility = true;
+    user_config.run_settings.accessibility = true;
+    process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'true';
+    
+    if (responseData.accessibility.options) {
+      logger.debug('[A11Y] Processing accessibility options from server');
+      logger.debug(`BrowserStack Accessibility Automation Build Hashed ID: ${responseData.build_hashed_id}`);
+      
+      // Process server commands and scripts similar to Node Agent
+      processServerCommandsAndScripts(responseData);
+      
+      setAccessibilityCypressCapabilities(user_config, responseData);
+      helper.setBrowserstackCypressCliDependency(user_config);
+    } else {
+      logger.debug('[A11Y] No accessibility options in server response');
+    }
+  }
+};
+
+// Process server commands and scripts similar to Node Agent
+const processServerCommandsAndScripts = (responseData) => {
+  logger.debug('[A11Y] Processing server commands and scripts');
+  
+  try {
+    // Use the helper function to process server accessibility configuration
+    const processingResult = accessibilityHelper.processServerAccessibilityConfig(responseData);
+    
+    logger.debug(`[A11Y] Successfully processed server commands and scripts: ${JSON.stringify(processingResult || {})}`);
+  } catch (error) {
+    logger.debug(`[A11Y] Error processing server commands and scripts: ${error.message}`);
+    // Fallback to default behavior
+    process.env.ACCESSIBILITY_BUILD_END_ONLY = 'false';
   }
 };
 
@@ -239,11 +311,15 @@ exports.setTestHubCommonMetaInfo = (user_config, responseData) => {
 };
 
 exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
+  logger.debug(`[A11Y] checkAndSetAccessibility - Called with accessibilityFlag=${accessibilityFlag}, current config accessibility=${user_config.run_settings.accessibility}`);
+
   if (!accessibilityHelper.isAccessibilitySupportedCypressVersion(user_config.run_settings.cypress_config_file)) 
   {
     logger.warn(`Accessibility Testing is not supported on Cypress version 9 and below.`);
     process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'false';
     user_config.run_settings.accessibility = false;
+    
+    logger.debug(`[A11Y] checkAndSetAccessibility - Cypress version not supported, forced accessibility=false`);
     return;
   }
 
@@ -251,16 +327,31 @@ exports.checkAndSetAccessibility = (user_config, accessibilityFlag) => {
     user_config.run_settings.system_env_vars = [];
   }
 
-  if (!isUndefined(accessibilityFlag)) {
-    process.env.BROWSERSTACK_TEST_ACCESSIBILITY = accessibilityFlag.toString();
-    user_config.run_settings.accessibility = accessibilityFlag;
-    if (
-      !user_config.run_settings.system_env_vars.includes("BROWSERSTACK_TEST_ACCESSIBILITY")
-    ) {
-      user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY=${accessibilityFlag}`);
+  // Handle accessibility flag setting - improved logic for auto-enable
+  if (accessibilityFlag !== undefined && accessibilityFlag !== null) {
+    const accessibilityEnabled = Boolean(accessibilityFlag);
+    process.env.BROWSERSTACK_TEST_ACCESSIBILITY = accessibilityEnabled.toString();
+    user_config.run_settings.accessibility = accessibilityEnabled;
+    
+    // Remove existing accessibility env var if present
+    const originalEnvVarsLength = user_config.run_settings.system_env_vars.length;
+    user_config.run_settings.system_env_vars = user_config.run_settings.system_env_vars.filter(
+      envVar => !envVar.startsWith('BROWSERSTACK_TEST_ACCESSIBILITY=')
+    );
+    const filteredEnvVarsLength = user_config.run_settings.system_env_vars.length;
+    
+    // Add the current accessibility setting
+    user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TEST_ACCESSIBILITY=${accessibilityEnabled}`);
+    
+    logger.debug(`[A11Y] checkAndSetAccessibility - Set accessibility=${accessibilityEnabled}, removed ${originalEnvVarsLength - filteredEnvVarsLength} duplicate env vars, final env vars: ${JSON.stringify(user_config.run_settings.system_env_vars)}`);
+    
+    if (accessibilityEnabled) {
+      logger.debug("Accessibility enabled for session");
     }
     return;
   }
+  
+  logger.debug(`[A11Y] checkAndSetAccessibility - No accessibility flag provided, exiting without changes`);
   return;
 };
 
@@ -268,7 +359,38 @@ exports.getAccessibilityOptions = (user_config) => {
   const settings = isUndefined(user_config.run_settings.accessibilityOptions)
     ? {}
     : user_config.run_settings.accessibilityOptions;
-  return { settings: settings };
+  
+  // Get user's explicit accessibility preference (true/false/null) - matches C# SDK pattern
+  let enabled = null;
+  
+  // Check run_settings.accessibility first (highest priority)
+  if (user_config.run_settings.accessibility === true) {
+    enabled = true;
+    logger.debug('[A11Y] User explicitly enabled accessibility via run_settings');
+  } else if (user_config.run_settings.accessibility === false) {
+    enabled = false;
+    logger.debug('[A11Y] User explicitly disabled accessibility via run_settings');
+  }
+  // Check environment variable (fallback)
+  else if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
+    enabled = true;
+    logger.debug('[A11Y] User enabled accessibility via environment variable');
+  } else if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'false') {
+    enabled = false;
+    logger.debug('[A11Y] User disabled accessibility via environment variable');
+  }
+  // Otherwise keep as null for server auto-enable decision
+  else {
+    logger.debug('[A11Y] No explicit user setting - sending null for server auto-enable decision');
+  }
+  
+  const result = { 
+    settings: settings, // Send user preference to server (null = let server decide)
+  };
+  
+  logger.debug('[A11Y] Final accessibility options for server:', JSON.stringify(result, null, 2));
+  
+  return result;
 };
 
 exports.appendTestHubParams = (testData, eventType, accessibilityScanInfo) => {
