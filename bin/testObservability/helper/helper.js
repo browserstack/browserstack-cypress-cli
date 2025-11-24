@@ -284,6 +284,10 @@ const getCypressCommandEventListener = (isJS) => {
   )
 }
 
+const isE2ESupportFile = (file) => {
+  return file.includes('e2e.js') || file.includes('e2e.ts');
+}
+
 exports.setEventListeners = (bsConfig) => {
   try {
     const supportFilesData = helper.getSupportFiles(bsConfig, false);
@@ -292,7 +296,7 @@ exports.setEventListeners = (bsConfig) => {
       if(err) return exports.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
       files.forEach(file => {
         try {
-          if(!file.includes('commands.js')) {
+          if (isE2ESupportFile(file) || !files.some(f => isE2ESupportFile(f))) {
             const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
 
             let cypressCommandEventListener = getCypressCommandEventListener(file.includes('js'));
