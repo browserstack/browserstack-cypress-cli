@@ -32,7 +32,7 @@ exports.deleteZip = () => {
     return 0;
   } catch (err) {
     logger.info(Constants.userMessages.ZIP_DELETE_FAILED);
-    return 1;
+    throw err;
   }
 };
 
