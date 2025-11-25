@@ -471,8 +471,8 @@ module.exports = function run(args, rawArgs) {
                 utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.LOCAL_START_FAILED}`, Constants.messageTypes.ERROR, 'local_start_failed', buildReportData, rawArgs);
               } else {
                 logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED);
-                fileHelpers.deleteZip();
                 utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed', buildReportData, rawArgs);
+                fileHelpers.deleteZip();
                 try {
                   fileHelpers.deletePackageArchieve();
                 } catch (err) {
