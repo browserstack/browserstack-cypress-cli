@@ -5,7 +5,7 @@ const TESTHUB_CONSTANTS = require("./constants");
 const testObservabilityHelper = require("../../bin/testObservability/helper/helper");
 const helper = require("../helpers/helper");
 const accessibilityHelper = require("../accessibility-automation/helper");
-const { detect } = require('detect-port');
+const detect = require('detect-port');
 
 
 const isUndefined = (value) => value === undefined || value === null;
