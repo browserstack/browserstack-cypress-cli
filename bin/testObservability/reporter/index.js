@@ -209,6 +209,7 @@ class MyReporter {
         }
 
         await this.uploadTestSteps();
+        this.stopHttpServer();
       });
   }
 
@@ -286,6 +287,20 @@ class MyReporter {
     } catch (error) {
       debugOnConsole(`Exception in starting reporter server : ${error}`);
       debug(`Exception in starting reporter server : ${error}`, true, error);
+    }
+  }
+
+  stopHttpServer() {
+    if (this.httpServer) {
+      try {
+        this.httpServer.close(() => {
+          debugOnConsole('Reporter HTTP server closed');
+        });
+        this.httpServer = null;
+      } catch (error) {
+        debugOnConsole(`Exception in stopping reporter server : ${error}`);
+        debug(`Exception in stopping reporter server : ${error}`, true, error);
+      }
     }
   }  
 
