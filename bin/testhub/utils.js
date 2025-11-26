@@ -5,7 +5,7 @@ const TESTHUB_CONSTANTS = require("./constants");
 const testObservabilityHelper = require("../../bin/testObservability/helper/helper");
 const helper = require("../helpers/helper");
 const accessibilityHelper = require("../accessibility-automation/helper");
-const detect = require('detect-port');
+const detectPort = require('detect-port');
 
 
 const isUndefined = (value) => value === undefined || value === null;
@@ -195,17 +195,18 @@ exports.logBuildError = (error, product = "") => {
   }
 };
 
-exports.findAvailablePort = async (preferredPort, maxAttempts = 10) => {  
+exports.findAvailablePort = async (preferredPort, maxAttempts = 10) => {
+  const findPort = detectPort.detect || detectPort;
   let port = preferredPort;
   for (let attempts = 0; attempts < maxAttempts; attempts++) {
     try {
-      const availablePort = await detect(port);
+      const availablePort = await findPort(port);
 
       if (availablePort === port) {
           return port;
       } else {
         // Double-check suggested port
-        const verify = await detect(availablePort);
+        const verify = await findPort(availablePort);
         if (verify === availablePort) {
           return availablePort;
         }

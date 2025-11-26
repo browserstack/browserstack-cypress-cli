@@ -2,8 +2,6 @@
 
 /* Used to detect Gherkin steps */
 
-const util = require('util');
-
 let eventsQueue = [];
 let testRunStarted = false;
 
