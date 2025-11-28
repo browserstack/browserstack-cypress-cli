@@ -270,6 +270,16 @@ class MyReporter {
 
       const port = process.env.REPORTER_API_PORT_NO;
 
+      this.httpServer.on('error', (error) => {
+        if (error.code === 'EADDRINUSE') {
+          debugOnConsole(`Port ${port} is already in use. HTTP server could not start.`);
+          debug(`Port ${port} is already in use. HTTP server could not start.`, true, error);
+        } else {
+          debugOnConsole(`Exception in starting reporter server : ${error}`);
+          debug(`Exception in starting reporter server : ${error}`, true, error);
+        }
+      });
+
       this.httpServer.listen(port, '127.0.0.1', async () => {
         console.log(`Reporter HTTP server listening on port ${port}`);
       });
