@@ -472,7 +472,11 @@ module.exports = function run(args, rawArgs) {
               } else {
                 logger.error(Constants.userMessages.ZIP_UPLOAD_FAILED);
                 utils.sendUsageReport(bsConfig, args, `${err}\n${Constants.userMessages.ZIP_UPLOAD_FAILED}`, Constants.messageTypes.ERROR, 'zip_upload_failed', buildReportData, rawArgs);
-                fileHelpers.deleteZip();
+                try {
+                    fileHelpers.deleteZip();
+                } catch (err) {
+                  utils.sendUsageReport(bsConfig, args, Constants.userMessages.ZIP_DELETE_FAILED, Constants.messageTypes.ERROR, 'zip_deletion_failed', buildReportData, rawArgs);
+                }
                 try {
                   fileHelpers.deletePackageArchieve();
                 } catch (err) {

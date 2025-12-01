@@ -27,6 +27,9 @@ exports.fileExists = function (filePath, cb) {
 
 exports.deleteZip = () => {
   try {
+    if (!fs.existsSync(config.fileName)) {
+      return 0;
+    }
     fs.unlinkSync(config.fileName);
     logger.info(Constants.userMessages.ZIP_DELETED);
     return 0;
