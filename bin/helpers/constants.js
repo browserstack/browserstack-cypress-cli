@@ -197,6 +197,28 @@ const validationMessages = {
   NODE_VERSION_PARSING_ERROR:
     "We weren't able to successfully parse the specified nodeVersion. We will be using the default nodeVersion to run your tests.",
   GRID_NOT_FOUND: "Not Found",
+  AUTO_IMPORT_CONFLICT_ERROR:
+    "Cannot use both 'auto_import_dev_dependencies' and manual npm dependency configuration. Please either set 'auto_import_dev_dependencies' to false or remove manual 'npm_dependencies', 'win_npm_dependencies', and 'mac_npm_dependencies' configurations.",
+  AUTO_IMPORT_INVALID_TYPE:
+    "'auto_import_dev_dependencies' must be a boolean value (true or false).",
+  PACKAGE_JSON_NOT_FOUND:
+    "package.json not found in project directory. Cannot auto-import devDependencies.",
+  PACKAGE_JSON_PERMISSION_DENIED:
+    "Cannot read package.json due to permission issues. Please check file permissions.",
+  PACKAGE_JSON_MALFORMED:
+    "package.json contains invalid JSON syntax. Please fix the JSON format.",
+  PACKAGE_JSON_NOT_OBJECT:
+    "package.json must contain a JSON object, not an array or other type.",
+  DEVDEPS_INVALID_FORMAT:
+    "devDependencies field in package.json must be an object, not an array or other type.",
+  EXCLUDE_DEPS_INVALID_TYPE:
+    "'exclude_dependencies' must be an array of strings.",
+  EXCLUDE_DEPS_INVALID_PATTERNS:
+    "'exclude_dependencies' must contain only string values representing regex patterns.",
+  INVALID_REGEX_PATTERN:
+    "Invalid regex pattern found in 'exclude_dependencies': {pattern}. Please provide valid regex patterns.",
+  DEPENDENCIES_PARAM_INVALID:
+    "Dependencies parameter must be an object.",
 };
 
 const cliMessages = {

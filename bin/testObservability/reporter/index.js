@@ -11,8 +11,9 @@ const Mocha = requireModule('mocha');
 // const Runnable = requireModule('mocha/lib/runnable');
 const Runnable = require('mocha/lib/runnable'); // need to handle as this isn't present in older mocha versions
 const { v4: uuidv4 } = require('uuid');
+const http = require('http');
 
-const { IPC_EVENTS } = require('../helper/constants');
+const { IPC_EVENTS, TEST_REPORTING_ANALYTICS } = require('../helper/constants');
 const { startIPCServer } = require('../plugin/ipcServer');
 
 const HOOK_TYPES_MAP = {
@@ -52,7 +53,6 @@ const {
   mapTestHooks,
   debug,
   isBrowserstackInfra,
-  requestQueueHandler,
   getHookSkippedTests,
   getOSDetailsFromSystem,
   findGitConfig,
@@ -62,6 +62,7 @@ const {
 } = require('../helper/helper');
 
 const { consoleHolder } = require('../helper/constants');
+const { shouldProcessEventForTesthub } = require('../../testhub/utils');
 
 // this reporter outputs test results, indenting two spaces per suite
 class MyReporter {
@@ -71,12 +72,15 @@ class MyReporter {
     this._testEnv = getTestEnv();
     this._paths = new PathHelper({ cwd: process.cwd() }, this._testEnv.location_prefix);
     this.currentTestSteps = [];
+    this.httpServer = null;
     this.currentTestCucumberSteps = [];
     this.hooksStarted = {};
     this.beforeHooks = [];
+    this.testIdMap = {};
     this.platformDetailsMap = {};
     this.runStatusMarkedHash = {};
     this.haveSentBuildUpdate = false;
+    this.startHttpServer();
     this.registerListeners();
     setCrashReportingConfigFromReporter(null, process.env.OBS_CRASH_REPORTING_BS_CONFIG_PATH, process.env.OBS_CRASH_REPORTING_CYPRESS_CONFIG_PATH);
 
@@ -88,8 +92,9 @@ class MyReporter {
       })
 
       .on(EVENT_HOOK_BEGIN, async (hook) => {
+        if (this.isInternalHook(hook)) return;
         debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_BEGIN`);
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!hook.hookAnalyticsId) {
             hook.hookAnalyticsId = uuidv4();
           } else if(this.runStatusMarkedHash[hook.hookAnalyticsId]) {
@@ -105,8 +110,9 @@ class MyReporter {
       })
 
       .on(EVENT_HOOK_END, async (hook) => {
+        if (this.isInternalHook(hook)) return;
         debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_END`);
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!this.runStatusMarkedHash[hook.hookAnalyticsId]) {
             if(!hook.hookAnalyticsId) {
               /* Hook objects don't maintain uuids in Cypress-Mocha */
@@ -131,7 +137,7 @@ class MyReporter {
 
       .on(EVENT_TEST_PASS, async (test) => {
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_PASS`);
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           debugOnConsole(`[MOCHA EVENT] EVENT_TEST_PASS for uuid: ${test.testAnalyticsId}`);
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
@@ -142,7 +148,7 @@ class MyReporter {
 
       .on(EVENT_TEST_FAIL, async (test, err) => {
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_FAIL`);
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           debugOnConsole(`[MOCHA EVENT] EVENT_TEST_FAIL for uuid: ${test.testAnalyticsId}`);
           if((test.testAnalyticsId && !this.runStatusMarkedHash[test.testAnalyticsId]) || (test.hookAnalyticsId && !this.runStatusMarkedHash[test.hookAnalyticsId])) {
             if(test.testAnalyticsId) {
@@ -158,7 +164,7 @@ class MyReporter {
 
       .on(EVENT_TEST_PENDING, async (test) => {
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_PENDING`);
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
           debugOnConsole(`[MOCHA EVENT] EVENT_TEST_PENDING for uuid: ${test.testAnalyticsId}`);
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
@@ -171,7 +177,7 @@ class MyReporter {
       .on(EVENT_TEST_BEGIN, async (test) => {
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           await this.testStarted(test);
         }
       })
@@ -179,7 +185,7 @@ class MyReporter {
       .on(EVENT_TEST_END, async (test) => {
         debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
         if (this.runStatusMarkedHash[test.testAnalyticsId]) return;
-        if(this.testObservability == true) {
+        if(shouldProcessEventForTesthub()) {
           if(!this.runStatusMarkedHash[test.testAnalyticsId]) {
             if(test.testAnalyticsId) this.runStatusMarkedHash[test.testAnalyticsId] = true;
             await this.sendTestRunEvent(test);
@@ -190,7 +196,7 @@ class MyReporter {
       .once(EVENT_RUN_END, async () => {
         try {
           debugOnConsole(`[MOCHA EVENT] EVENT_RUN_END`);
-          if(this.testObservability == true) {
+          if(shouldProcessEventForTesthub()) {
             const hookSkippedTests = getHookSkippedTests(this.runner.suite);
             for(const test of hookSkippedTests) {
               if(!test.testAnalyticsId) test.testAnalyticsId = uuidv4();
@@ -205,6 +211,83 @@ class MyReporter {
         await this.uploadTestSteps();
       });
   }
+
+  isInternalHook(hook) {
+    if (hook && hook.body && hook.body.includes('/* browserstack internal helper hook */')) {
+      return true;
+    }
+    return false;
+  }
+
+  async startHttpServer() {
+    if(this.httpServer !== null) return;
+    
+    try {
+      const httpModule = http;
+      this.httpServer = httpModule.createServer(async(req, res) => {
+        try {  
+          // Set CORS headers
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+          if (req.method === 'OPTIONS') {
+            res.writeHead(200);
+            res.end();
+            return;
+          }
+          const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+          const pathname = parsedUrl.pathname;
+          const query = parsedUrl.searchParams; 
+
+          if (pathname === '/test-uuid' && req.method === 'GET') {
+            const testIdentifier = query.get('testIdentifier');
+
+            if (!testIdentifier) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ 
+                error: 'testIdentifier parameter is required',
+                testRunUuid: null 
+              }));
+              return;
+            }
+            const testRunUuid = this.getTestId(testIdentifier);
+
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ testRunUuid: testRunUuid }));
+          } else {
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('Not Found');
+          }
+        } catch (error) {
+          debugOnConsole(`Exception in handling HTTP request : ${error}`);
+          debug(`Exception in handling HTTP request : ${error}`, true, error);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ testRunUuid: null }));
+        }
+      });
+
+      const port = process.env.REPORTER_API_PORT_NO;
+
+      this.httpServer.on('error', (error) => {
+        if (error.code === 'EADDRINUSE') {
+          debugOnConsole(`Port ${port} is already in use. HTTP server could not start.`);
+          debug(`Port ${port} is already in use. HTTP server could not start.`, true, error);
+        } else {
+          debugOnConsole(`Exception in starting reporter server : ${error}`);
+          debug(`Exception in starting reporter server : ${error}`, true, error);
+        }
+      });
+
+      this.httpServer.listen(port, '127.0.0.1', async () => {
+        console.log(`Reporter HTTP server listening on port ${port}`);
+      });
+    } catch (error) {
+      debugOnConsole(`Exception in starting reporter server : ${error}`);
+      debug(`Exception in starting reporter server : ${error}`, true, error);
+    }
+  }  
 
   registerListeners() {
     startIPCServer(
@@ -247,7 +330,7 @@ class MyReporter {
     }
   }
 
-  uploadTestSteps = async (shouldClearCurrentSteps = true, cypressSteps = null) => {
+  uploadTestSteps = async (shouldClearCurrentSteps = true, cypressSteps = null) => {    
     const currentTestSteps = cypressSteps ? cypressSteps : JSON.parse(JSON.stringify(this.currentTestSteps));
     /* TODO - Send as test logs */
     const allStepsAsLogs = [];
@@ -336,6 +419,8 @@ class MyReporter {
       };
 
       debugOnConsole(`${eventType} for uuid: ${testData.uuid}`);
+
+      this.mapTestId(testData, eventType);
 
       if(eventType.match(/TestRunFinished/) || eventType.match(/TestRunSkipped/)) {
         testData['meta'].steps = JSON.parse(JSON.stringify(this.currentTestCucumberSteps));
@@ -498,6 +583,16 @@ class MyReporter {
     }
   }
 
+  mapTestId = (testData, eventType) => {
+    if (!eventType.match(/TestRun/)) {return}  
+
+    this.testIdMap[testData.name] = testData.uuid;
+  }
+
+  getTestId = (testIdentifier) => {
+    return this.testIdMap[testIdentifier] || null;
+  }
+
   appendTestItemLog = async (log) => {
     try {
       if(this.current_hook && ( this.current_hook.hookAnalyticsId && !this.runStatusMarkedHash[this.current_hook.hookAnalyticsId] )) {
@@ -511,14 +606,14 @@ class MyReporter {
         });
       }
     } catch(error) {
-      debug(`Exception in uploading log data to Observability with error : ${error}`, true, error);
+      debug(`Exception in uploading log data to ${TEST_REPORTING_ANALYTICS} with error : ${error}`, true, error);
     }
   }
 
   cypressConfigListener = async (config) => {
   }
 
-  cypressCucumberStepListener = async ({log}) => {
+  cypressCucumberStepListener = async ({log, started_at, finished_at}) => {
     if(log.name == 'step' && log.consoleProps && log.consoleProps.step && log.consoleProps.step.keyword) {
       this.currentTestCucumberSteps = [
         ...this.currentTestCucumberSteps,
@@ -526,8 +621,8 @@ class MyReporter {
           id: log.chainerId,
           keyword: log.consoleProps.step.keyword,
           text: log.consoleProps.step.text,
-          started_at: new Date().toISOString(),
-          finished_at: new Date().toISOString(),
+          started_at: started_at || new Date().toISOString(),
+          finished_at: finished_at || new Date().toISOString(),
           duration: 0,
           result: 'passed'
         }
@@ -537,8 +632,8 @@ class MyReporter {
         if(gherkinStep.id == log.chainerId) {
           this.currentTestCucumberSteps[idx] = {
             ...gherkinStep,
-            finished_at: new Date().toISOString(),
-            duration: Date.now() - (new Date(gherkinStep.started_at)).getTime(),
+            finished_at: finished_at || new Date().toISOString(),
+            duration: (finished_at ? new Date(finished_at).getTime() : Date.now()) - (new Date(gherkinStep.started_at)).getTime(),
             result: log.state,
             failure: log.err?.stack || log.err?.message,
             failure_reason: log.err?.stack || log.err?.message,
@@ -549,9 +644,9 @@ class MyReporter {
     }
   }
 
-  cypressLogListener = async ({level, message, file}) => {
+  cypressLogListener = async ({timestamp, level, message}) => {
     this.appendTestItemLog({
-      timestamp: new Date().toISOString(),
+      timestamp: timestamp || new Date().toISOString(),
       level: level.toUpperCase(),
       message,
       kind: 'TEST_LOG',
@@ -612,12 +707,12 @@ class MyReporter {
       const currentStepObj = {
         id: command.attributes.id,
         text: 'cy.' + command.attributes.name + '(' + this.getFormattedArgs(command.attributes.args) + ')',
-        started_at: new Date().toISOString(),
+        started_at: command.started_at || new Date().toISOString(),
         finished_at: null,
         duration: null,
         result: 'pending',
-        test_run_uuid: this.current_test?.testAnalyticsId && !this.runStatusMarkedHash[this.current_test.testAnalyticsId] ? this.current_test.testAnalyticsId : null,
-        hook_run_uuid : this.current_hook?.hookAnalyticsId && !this.runStatusMarkedHash[this.current_hook.hookAnalyticsId] ? this.current_hook.hookAnalyticsId : null
+        test_run_uuid: command.location === 'test' ? this.current_test?.testAnalyticsId : null,
+        hook_run_uuid : command.location === 'hook' ? this.current_hook?.hookAnalyticsId : null
       };
       if(currentStepObj.hook_run_uuid && currentStepObj.test_run_uuid) delete currentStepObj.test_run_uuid;
       this.currentTestSteps = [
@@ -630,8 +725,8 @@ class MyReporter {
         if(val.id == command.attributes.id) {
           this.currentTestSteps[idx] = {
             ...val,
-            finished_at: new Date().toISOString(),
-            duration: Date.now() - (new Date(val.started_at)).getTime(),
+            finished_at: command.finished_at || new Date().toISOString(),
+            duration: (command.finished_at ? new Date(command.finished_at).getTime() :  Date.now()) - (new Date(val.started_at)).getTime(),
             result: command.state
           };
           stepUpdated = true;
@@ -647,8 +742,8 @@ class MyReporter {
           finished_at: new Date().toISOString(),
           duration: 0,
           result: command.state,
-          test_run_uuid: this.current_test?.testAnalyticsId && !this.runStatusMarkedHash[this.current_test.testAnalyticsId] ? this.current_test.testAnalyticsId : null,
-          hook_run_uuid : this.current_hook?.hookAnalyticsId && !this.runStatusMarkedHash[this.current_hook.hookAnalyticsId] ? this.current_hook.hookAnalyticsId : null
+          test_run_uuid: command.location === 'test' ? this.current_test?.testAnalyticsId : null,
+          hook_run_uuid : command.location === 'hook' ? this.current_hook?.hookAnalyticsId : null
         };
         if(currentStepObj.hook_run_uuid && currentStepObj.test_run_uuid) delete currentStepObj.test_run_uuid;
         this.currentTestSteps = [
