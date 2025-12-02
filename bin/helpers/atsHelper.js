@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const { consoleHolder } = require('../testObservability/helper/constants');
 const HttpsProxyAgent = require('https-proxy-agent');
-
+const { v4: uuidv4 } = require('uuid');
 const axios = require('axios'),
       logger = require('./logger').winstonLogger,
       utils = require('./utils'),
@@ -82,6 +82,7 @@ exports.getTurboScaleGridDetails = async (bsConfig, args, rawArgs) => {
               }
               resolve(responseData);
             }).catch(error => {
+            logger.warn(`Grid with name - ${gridName} not found`);
             logger.warn(utils.formatRequest(error, null, null));
             utils.sendUsageReport(bsConfig, args, error, Constants.messageTypes.ERROR, 'get_ats_details_failed', null, rawArgs);
             resolve({});
@@ -108,7 +109,9 @@ exports.patchCypressConfigFileContent = (bsConfig) => {
 
     let confPath = bsConfig.run_settings.cypress_config_file;
     let patchedConfPathList = confPath.split(path.sep);
-    patchedConfPathList[patchedConfPathList.length - 1] = 'patched_ats_config_file.js'
+    const uniqueNamePatchFileName = `patched_ats_config_file_${uuidv4()}.js`;
+    patchedConfPathList[patchedConfPathList.length - 1] = uniqueNamePatchFileName;
+    logger.debug("Patch file name is " + uniqueNamePatchFileName);
     const patchedConfPath = patchedConfPathList.join(path.sep);
 
     bsConfig.run_settings.patched_cypress_config_file = patchedConfPath;

@@ -37,10 +37,11 @@ const {
   supportFileCleanup
 } = require('../accessibility-automation/helper');
 const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
-
+const { shouldProcessEventForTesthub, checkAndSetAccessibility, findAvailablePort } = require('../testhub/utils');
+const TestHubHandler = require('../testhub/testhubHandler');
 
 module.exports = function run(args, rawArgs) {
-
+  utils.normalizeTestReportingEnvVars();
   markBlockStart('preBuild');
   // set debug mode (--cli-debug)
   utils.setDebugMode(args);
@@ -112,9 +113,15 @@ module.exports = function run(args, rawArgs) {
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
 
-    // Send build start to Observability
-    if(isTestObservabilitySession) {
-      await launchTestSession(bsConfig, bsConfigPath);
+    checkAndSetAccessibility(bsConfig, isAccessibilitySession);
+
+    const preferredPort = 5348;
+    const port = await findAvailablePort(preferredPort);
+    process.env.REPORTER_API_PORT_NO = port
+
+    // Send build start to TEST REPORTING AND ANALYTICS
+    if(shouldProcessEventForTesthub()) {
+      await TestHubHandler.launchBuild(bsConfig, bsConfigPath);
       utils.setO11yProcessHooks(null, bsConfig, args, null, buildReportData);
     }
     
@@ -143,12 +150,11 @@ module.exports = function run(args, rawArgs) {
       // set the no-wrap
       utils.setNoWrap(bsConfig, args);
 
+      // process auto-import dev dependencies
+      utils.processAutoImportDependencies(bsConfig.run_settings);
+
       // add cypress dependency if missing
       utils.setCypressNpmDependency(bsConfig);
-
-      if (isAccessibilitySession && isBrowserstackInfra) {
-        await createAccessibilityTestRun(bsConfig);
-      }
 
       if (turboScaleSession) {
         const gridDetails = await getTurboScaleGridDetails(bsConfig, args, rawArgs);
@@ -192,6 +198,10 @@ module.exports = function run(args, rawArgs) {
     logger.debug("Completed setting the configs");
 
     if(!isBrowserstackInfra) {
+      if(process.env.BS_TESTOPS_BUILD_COMPLETED) {
+        setEventListeners(bsConfig);
+      }
+
       return runCypressTestsLocally(bsConfig, args, rawArgs);
     }
 
@@ -199,11 +209,11 @@ module.exports = function run(args, rawArgs) {
     markBlockStart('validateConfig');
     logger.debug("Started configs validation");
     return capabilityHelper.validate(bsConfig, args).then(function (cypressConfigFile) {
-      if(process.env.BROWSERSTACK_TEST_ACCESSIBILITY) {
+      if(process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
         setAccessibilityEventListeners(bsConfig);
       }
       if(process.env.BS_TESTOPS_BUILD_COMPLETED) {
-        // setEventListeners(bsConfig);
+        setEventListeners(bsConfig);
       }
       markBlockEnd('validateConfig');
       logger.debug("Completed configs validation");
@@ -365,10 +375,10 @@ module.exports = function run(args, rawArgs) {
                       }
 
                       // Generate custom report!
-                      reportGenerator(bsConfig, data.build_id, args, rawArgs, buildReportData, function(){
+                      reportGenerator(bsConfig, data.build_id, args, rawArgs, buildReportData, function(modifiedExitCode=exitCode){
                         utils.sendUsageReport(bsConfig, args, `${message}\n${dashboardLink}`, Constants.messageTypes.SUCCESS, null, buildReportData, rawArgs);
                         markBlockEnd('postBuild');
-                        utils.handleSyncExit(exitCode, data.dashboard_url);
+                        utils.handleSyncExit(modifiedExitCode, data.dashboard_url);
                       });
                     } else if(!turboScaleSession){
                       let stacktraceUrl = getStackTraceUrl();

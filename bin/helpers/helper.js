@@ -19,10 +19,11 @@ const { readCypressConfigFile } = require('./readCypressConfigUtil');
 const { MAX_GIT_META_DATA_SIZE_IN_BYTES, GIT_META_DATA_TRUNCATED } = require('./constants')
 const CrashReporter = require('../testObservability/crashReporter');
 const HttpsProxyAgent = require('https-proxy-agent');
+const { TEST_REPORTING_ANALYTICS } = require("../testObservability/helper/constants");
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
   if (process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "true" || process.env.BROWSERSTACK_OBSERVABILITY_DEBUG === "1") {
-    logger.info(`[ OBSERVABILITY ] ${text}`);
+    logger.info(`[ ${TEST_REPORTING_ANALYTICS} ] ${text}`);
   }
   if(shouldReport) {
     CrashReporter.getInstance().uploadCrashReport(text, throwable ? throwable && throwable.stack : null);
@@ -181,6 +182,17 @@ exports.getGitMetaData = () => {
     }
   })
 }
+
+exports.getHostInfo = () => {
+  return {
+    hostname: os.hostname(),
+    platform: os.platform(),
+    type: os.type(),
+    version: os.version(),
+    arch: os.arch()
+  }
+}
+
 exports.getCiInfo = () => {
   var env = process.env;
   // Jenkins
