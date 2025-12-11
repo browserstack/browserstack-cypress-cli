@@ -25,12 +25,14 @@ const caps = (bsConfig, zip) => {
     let browsersList = [];
     if (bsConfig.browsers) {
       bsConfig.browsers.forEach((element) => {
+       // const browser = element.browser || "chrome";
         osBrowser = element.os + "-" + element.browser;
         osAndBrowser = 
         (element.os ? element.os : "Any OS") + 
         " / " + 
-        (element.browser ? Utils.capitalizeFirstLetter(element.browser) : "Browser name not present");
+        (element.browser ? Utils.capitalizeFirstLetter(element.browser) : "Browser name not present running session on chrome");
         element.versions.forEach((version) => {
+          //const versionToUse = version || "latest";
           osBrowserArray.push(osBrowser + version);
           browsersList.push(`${osAndBrowser} (${version})`);
         });

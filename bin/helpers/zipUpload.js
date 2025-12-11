@@ -54,6 +54,7 @@ const uploadSuits = (bsConfig, filePath, opts, obj) => {
     });
 
     let options = utils.generateUploadParams(bsConfig, filePath, opts.md5Data, opts.fileDetails)
+    logger.info('options.url', options.url);
     let responseData = null;
     try {
       const formData = new FormData();
@@ -151,7 +152,7 @@ const uploadCypressZip = (bsConfig, md5data, packageData) => {
       size: fs.existsSync(config.packageFileName) ? fs.lstatSync(config.packageFileName).size : 0,
       startTime: null
     }
-
+    // print every detail
     let zipUpload = uploadSuits(bsConfig, config.fileName, zipOptions, testZipUploadObj);
     let npmPackageUpload = uploadSuits(bsConfig, config.packageFileName, npmOptions, npmPackageZipUploadObj);
     Promise.all([zipUpload, npmPackageUpload]).then(function (uploads) {

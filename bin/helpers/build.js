@@ -15,8 +15,8 @@ const createBuild = (bsConfig, zip) => {
       let options = {
         url: config.buildUrl,
         auth: {
-          user: bsConfig.auth.username,
-          password: bsConfig.auth.access_key
+          user: 'anonymousbrowser_0s1DIn',
+          password: 'zQvb7xpLdjhZBayGYxUT'
         },
         headers: {
           'Content-Type': 'application/json',
@@ -33,11 +33,17 @@ const createBuild = (bsConfig, zip) => {
           username: options.auth.user,
           password: options.auth.password
         },
-        headers: options.headers
+        headers: options.headers,
+        httpsAgent: new (require('https').Agent)({
+          rejectUnauthorized: false  // Allow self-signed certificates
+        })
       }
       setAxiosProxy(axiosConfig);
 
       try {
+        logger.info(`data being sent to create build: ${JSON.stringify(data)}`);
+        logger.info(`URL: ${options.url}`);
+        
         const response = await axios.post(options.url, data, axiosConfig);
         let build = null;
         try {
@@ -53,6 +59,8 @@ const createBuild = (bsConfig, zip) => {
             reject(Constants.userMessages.API_DEPRECATED);
           }
         } else if (response.status != 201) {
+          logger.info('Build creation failed');
+          //logger.info(`Response object: ${JSON.stringify(response.data)}`);
           logger.error(utils.formatRequest(response.statusText, response, response.data));
           if (build) {
             reject(`${Constants.userMessages.BUILD_FAILED} Error: ${build.message}`);
@@ -63,6 +71,7 @@ const createBuild = (bsConfig, zip) => {
         resolve(build);
       } catch (error) {
         if(error.response) {
+           logger.info(`Response object: ${JSON.stringify(error.response.data)}`);
           logger.error(utils.formatRequest(error.response.statusText, error.response, error.response.data));
           reject(`${Constants.userMessages.BUILD_FAILED} Error: ${error.response.data.message}`);
         } else {
