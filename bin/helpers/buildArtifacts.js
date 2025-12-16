@@ -9,7 +9,7 @@ const logger = require('./logger').winstonLogger,
       config = require("./config");
 
 const { default: axios } = require('axios');
-const HttpsProxyAgent = require('https-proxy-agent');
+const { HttpsProxyAgent = require('https-proxy-agent') } = require('https-proxy-agent');
 const FormData = require('form-data');
 const decompress = require('decompress');
 const unzipper = require("unzipper");

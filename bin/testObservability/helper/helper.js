@@ -9,7 +9,7 @@ const { spawn, execSync } = require('child_process');
 const glob = require('glob');
 const util = require('util');
 const axios = require('axios');
-const HttpsProxyAgent = require('https-proxy-agent');
+const { HttpsProxyAgent = require('https-proxy-agent') } = require('https-proxy-agent');
 
 const { runOptions } = require('../../helpers/runnerArgs')
 
