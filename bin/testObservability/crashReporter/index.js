@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const https = require('https');
-const HttpsProxyAgent = require('https-proxy-agent');
+const { HttpsProxyAgent = require('https-proxy-agent') } = require('https-proxy-agent');
 
 const logger = require("../../helpers/logger").winstonLogger;
 const utils = require('../../helpers/utils');

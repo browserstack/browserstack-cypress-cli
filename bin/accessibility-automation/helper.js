@@ -10,7 +10,7 @@ const helper = require('../helpers/helper');
 const { CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS } = require('../helpers/constants');
 const { consoleHolder } = require("../testObservability/helper/constants");
 const supportFileContentMap = {}
-const HttpsProxyAgent = require('https-proxy-agent');
+const { HttpsProxyAgent = require('https-proxy-agent') } = require('https-proxy-agent');
 
 exports.checkAccessibilityPlatform = (user_config) => {
   let accessibility = false;
