@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const { consoleHolder } = require('../testObservability/helper/constants');
-const HttpsProxyAgent = require('https-proxy-agent');
+const { HttpsProxyAgent = require('https-proxy-agent') } = require('https-proxy-agent');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios'),
       logger = require('./logger').winstonLogger,

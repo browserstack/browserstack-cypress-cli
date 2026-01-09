@@ -18,7 +18,7 @@ const pGitconfig = promisify(gitconfig);
 const { readCypressConfigFile } = require('./readCypressConfigUtil');
 const { MAX_GIT_META_DATA_SIZE_IN_BYTES, GIT_META_DATA_TRUNCATED } = require('./constants')
 const CrashReporter = require('../testObservability/crashReporter');
-const HttpsProxyAgent = require('https-proxy-agent');
+const { HttpsProxyAgent = require('https-proxy-agent') } = require('https-proxy-agent');
 const { TEST_REPORTING_ANALYTICS } = require("../testObservability/helper/constants");
 
 exports.debug = (text, shouldReport = false, throwable = null) => {
