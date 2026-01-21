@@ -1986,7 +1986,7 @@ exports.ensureBrowserstackCypressCliDependency = (npmDependencies) => {
   } catch (err) {
     logger.debug("Could not read package.json version, using 'latest'");
   }
-  
+
   npmDependencies['browserstack-cypress-cli'] = version;
   logger.warn(`Adding browserstack-cypress-cli version ${version} in npm_dependencies`);
 };
@@ -1996,7 +1996,7 @@ exports.processAutoImportDependencies = (runSettings) => {
   exports.validateAutoImportConflict(runSettings);
   
   // Skip processing if auto_import_dev_dependencies is not enabled
-  if (!runSettings.auto_import_dev_dependencies) {
+  if (runSettings.auto_import_dev_dependencies != true) {
     return;
   }
   

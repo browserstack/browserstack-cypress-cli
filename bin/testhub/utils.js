@@ -77,7 +77,7 @@ exports.setTestObservabilityVariables = (
       responseData.observability.options.allow_screenshots.toString(),
       requestData.framework_details.sdkVersion
     );
-    helper.setBrowserstackCypressCliDependency(user_config);
+    if(user_config.run_settings.auto_import_dev_dependencies != true) helper.setBrowserstackCypressCliDependency(user_config);
     return [
       responseData.jwt,
       responseData.build_hashed_id,
