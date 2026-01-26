@@ -118,6 +118,7 @@ exports.getGitMetaData = () => {
             info["committer"] = info["committer"] || `${commit["committer"]["name"].replace(/[“]+/g, '')} <${commit["committer"]["email"].replace(/[“]+/g, '')}>`;
             info["committerDate"] = info["committerDate"] || commit["committedOn"];
             info["commitMessage"] = info["commitMessage"] || commit["subject"];
+            info["branch"] = info["branch"] || commit["branch"];
 
             const { remote } = await pGitconfig(info.commonGitDir);
             const remotes = Object.keys(remote).map(remoteName =>  ({name: remoteName, url: remote[remoteName]['url']}));
