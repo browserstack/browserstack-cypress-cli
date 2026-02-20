@@ -65,7 +65,8 @@ Cypress.on('log:changed', (attrs) => {
     });
   }
 
-  const keyword = (attrs.name || '').trim();
+  const keyword = (attrs.displayName || attrs.name || '').trim();
+
   if (STEP_KEYWORDS.includes(keyword.toLowerCase())) {
     const text = (attrs.message || '')
 
