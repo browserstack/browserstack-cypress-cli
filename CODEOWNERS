@@ -1,1 +1,18 @@
+# Default ownership for all other files
 * @browserstack/automate-dev
+
+# Ownership for the CODEOWNERS file
+CODEOWNERS @browserstack/sdk-dev @browserstack/automate-dev
+
+# Ownership for SDK-related files
+bin/testhub/ @browserstack/sdk-dev
+bin/accessibility-automation/ @browserstack/sdk-dev
+bin/testObservability/ @browserstack/sdk-dev
+
+# Shared ownership for certain files
+/.gitignore @browserstack/sdk-dev @browserstack/automate-dev
+/package.json @browserstack/sdk-dev @browserstack/automate-dev
+bin/commands/runs.js @browserstack/sdk-dev @browserstack/automate-dev
+bin/helpers/helper.js @browserstack/sdk-dev @browserstack/automate-dev
+bin/helpers/logger.js @browserstack/sdk-dev @browserstack/automate-dev
+bin/helpers/utils.js @browserstack/sdk-dev @browserstack/automate-dev
