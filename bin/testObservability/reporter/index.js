@@ -104,7 +104,7 @@ class MyReporter {
           }
 
           if (hook.id) this.internalIdMap[hook.id] = hook.hookAnalyticsId;
-          debugOnConsole(`[MOCHA HOOK EVENT] EVENT_HOOK_BEGIN for uuid: ${hook.id}`);
+          debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_BEGIN for uuid: ${hook.hookAnalyticsId}`);
           hook.hook_started_at = (new Date()).toISOString();
           hook.started_at = (new Date()).toISOString();
           this.current_hook = hook;
@@ -338,7 +338,7 @@ class MyReporter {
       test.retryOf = null;
       test.testAnalyticsId = uuidv4();
       if (test.id) this.internalIdMap[test.id] = test.testAnalyticsId;
-      debugOnConsole(`[MOCHA TEST EVENT] EVENT_TEST_BEGIN for uuid: ${test.id}`);
+      debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
       test.started_at = (new Date()).toISOString();
       test.test_started_at = test.started_at;
       if(test._currentRetry > 0 && lastTest && lastTest.title == test.title) {
