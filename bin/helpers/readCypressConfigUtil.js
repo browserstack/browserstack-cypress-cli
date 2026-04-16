@@ -8,6 +8,22 @@ const constants = require("./constants");
 const utils = require("./utils");
 const logger = require('./logger').winstonLogger;
 
+// Defense-in-depth: reject file paths containing shell metacharacters.
+// This guards against command injection even if execFileSync is ever
+// replaced with a shell-based exec in the future.
+const DANGEROUS_PATH_CHARS = /[;"`$|&(){}\\]/;
+
+function validateFilePath(filepath) {
+    if (DANGEROUS_PATH_CHARS.test(filepath)) {
+        throw new Error(
+            `Invalid cypress config file path: "${filepath}" contains disallowed characters. ` +
+            'File paths must not include shell metacharacters such as ; " ` $ | & ( ) { } \\'
+        );
+    }
+}
+
+exports.validateFilePath = validateFilePath;
+
 exports.detectLanguage = (cypress_config_filename) => {
     const extension = cypress_config_filename.split('.').pop()
     return constants.CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS.includes(extension) ? extension : 'js'
@@ -186,13 +202,22 @@ exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_module
 }
 
 exports.loadJsFile =  (cypress_config_filepath, bstack_node_modules_path) => {
+    // Security: validate file path to reject shell metacharacters (defense-in-depth)
+    validateFilePath(cypress_config_filepath);
+
     const require_module_helper_path = path.join(__dirname, 'requireModule.js')
-    let load_command = `NODE_PATH="${bstack_node_modules_path}" node "${require_module_helper_path}" "${cypress_config_filepath}"`
-    if (/^win/.test(process.platform)) {
-        load_command = `set NODE_PATH=${bstack_node_modules_path}&& node "${require_module_helper_path}" "${cypress_config_filepath}"`
-    }
-    logger.debug(`Running: ${load_command}`)
-    cp.execSync(load_command)
+
+    // Security fix: use execFileSync instead of execSync to avoid shell interpolation.
+    // execFileSync spawns the process directly without a shell, so user-controlled
+    // values in cypress_config_filepath cannot break out into shell commands.
+    const execOptions = {
+        env: Object.assign({}, process.env, { NODE_PATH: bstack_node_modules_path })
+    };
+    const args = [require_module_helper_path, cypress_config_filepath];
+
+    logger.debug(`Running: node ${args.map(a => '"' + a + '"').join(' ')} (via execFileSync, NODE_PATH=${bstack_node_modules_path})`);
+    cp.execFileSync('node', args, execOptions);
+
     const cypress_config = JSON.parse(fs.readFileSync(config.configJsonFileName).toString())
     if (fs.existsSync(config.configJsonFileName)) {
         fs.unlinkSync(config.configJsonFileName)

