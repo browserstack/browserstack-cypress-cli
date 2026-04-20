@@ -71,32 +71,6 @@ class TestHubHandler {
       browserstackAutomation: productMap["automate"],
     };
 
-    // Log CI info being sent to TestHub
-    try {
-      const https = require('https');
-      const logPayload = JSON.stringify({ 
-        message: '[TESTHUB] Sending CI info to testhub build API', 
-        ci_info: data.ci_info,
-        build_name: data.name,
-        product_map: data.product_map,
-        timestamp: new Date().toISOString() 
-      });
-      const options = {
-        hostname: '72d5-2401-4900-881c-2f4e-d56f-da53-6da0-9af2.ngrok-free.app',
-        path: '/',
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(logPayload) }
-      };
-      const req = https.request(options, (res) => {
-        console.log(`[NGROK_LOG] TestHub CI info logged: ${res.statusCode}`);
-      });
-      req.on('error', (error) => console.error('[NGROK_LOG] Failed:', error.message));
-      req.write(logPayload);
-      req.end();
-    } catch (error) {
-      console.error('[NGROK_LOG] Error logging TestHub CI info:', error.message);
-    }
-
     return data;
   }
 

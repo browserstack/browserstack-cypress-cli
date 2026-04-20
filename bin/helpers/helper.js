@@ -195,156 +195,107 @@ exports.getHostInfo = () => {
 
 exports.getCiInfo = () => {
   var env = process.env;
-  
-  const logToNgrok = async (message, data) => {
-    try {
-      const https = require('https');
-      const payload = JSON.stringify({ message, data, timestamp: new Date().toISOString() });
-      const options = {
-        hostname: '72d5-2401-4900-881c-2f4e-d56f-da53-6da0-9af2.ngrok-free.app',
-        path: '/',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(payload)
-        }
-      };
-      const req = https.request(options, (res) => {
-        console.log(`[NGROK_LOG] Status: ${res.statusCode} - ${message}`);
-      });
-      req.on('error', (error) => {
-        console.error(`[NGROK_LOG] Failed to send: ${message}`, error.message);
-      });
-      req.write(payload);
-      req.end();
-    } catch (error) {
-      console.error('[NGROK_LOG] Error:', error.message);
-    }
-  };
 
   // Jenkins
   if ((typeof env.JENKINS_URL === "string" && env.JENKINS_URL.length > 0) || (typeof env.JENKINS_HOME === "string" && env.JENKINS_HOME.length > 0)) {
-    const ciInfo = {
+    return {
       name: "Jenkins",
       build_url: env.BUILD_URL,
       job_name: env.JOB_NAME,
       build_number: env.BUILD_NUMBER
     };
-    logToNgrok('[getCiInfo] Jenkins CI detected', ciInfo);
-    return ciInfo;
   }
   // CircleCI
   if (env.CI === "true" && env.CIRCLECI === "true") {
-    const ciInfo = {
+    return {
       name: "CircleCI",
       build_url: env.CIRCLE_BUILD_URL,
       job_name: env.CIRCLE_JOB,
       build_number: env.CIRCLE_BUILD_NUM
     };
-    logToNgrok('[getCiInfo] CircleCI detected', ciInfo);
-    return ciInfo;
   }
   // Travis CI
   if (env.CI === "true" && env.TRAVIS === "true") {
-    const ciInfo = {
+    return {
       name: "Travis CI",
       build_url: env.TRAVIS_BUILD_WEB_URL,
       job_name: env.TRAVIS_JOB_NAME,
       build_number: env.TRAVIS_BUILD_NUMBER
     };
-    logToNgrok('[getCiInfo] Travis CI detected', ciInfo);
-    return ciInfo;
   }
   // Codeship
   if (env.CI === "true" && env.CI_NAME === "codeship") {
-    const ciInfo = {
+    return {
       name: "Codeship",
       build_url: null,
       job_name: null,
       build_number: null
     };
-    logToNgrok('[getCiInfo] Codeship detected', ciInfo);
-    return ciInfo;
   }
   // Bitbucket
   if (env.BITBUCKET_BRANCH && env.BITBUCKET_COMMIT) {
-    const ciInfo = {
+    return {
       name: "Bitbucket",
       build_url: env.BITBUCKET_GIT_HTTP_ORIGIN,
       job_name: null,
       build_number: env.BITBUCKET_BUILD_NUMBER
     };
-    logToNgrok('[getCiInfo] Bitbucket detected', ciInfo);
-    return ciInfo;
   }
   // Drone
   if (env.CI === "true" && env.DRONE === "true") {
-    const ciInfo = {
+    return {
       name: "Drone",
       build_url: env.DRONE_BUILD_LINK,
       job_name: null,
       build_number: env.DRONE_BUILD_NUMBER
     };
-    logToNgrok('[getCiInfo] Drone detected', ciInfo);
-    return ciInfo;
   }
   // Semaphore
   if (env.CI === "true" && env.SEMAPHORE === "true") {
-    const ciInfo = {
+    return {
       name: "Semaphore",
       build_url: env.SEMAPHORE_ORGANIZATION_URL,
       job_name: env.SEMAPHORE_JOB_NAME,
       build_number: env.SEMAPHORE_JOB_ID
     };
-    logToNgrok('[getCiInfo] Semaphore detected', ciInfo);
-    return ciInfo;
   }
   // GitLab
   if (env.CI === "true" && env.GITLAB_CI === "true") {
-    const ciInfo = {
+    return {
       name: "GitLab",
       build_url: env.CI_JOB_URL,
       job_name: env.CI_JOB_NAME,
       build_number: env.CI_JOB_ID
     };
-    logToNgrok('[getCiInfo] GitLab detected', ciInfo);
-    return ciInfo;
   }
   // GitHub Actions
   if (env.GITHUB_ACTIONS === "true" || env.CI === "true" && env.GITHUB_RUN_ID) {
-    const ciInfo = {
+    return {
       name: "GitHub Actions",
       build_url: `${env.GITHUB_SERVER_URL || 'https://github.com'}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`,
       job_name: env.GITHUB_WORKFLOW || env.GITHUB_JOB,
       build_number: env.GITHUB_RUN_NUMBER
     };
-    logToNgrok('[getCiInfo] GitHub Actions detected', ciInfo);
-    return ciInfo;
   }
   // Buildkite
   if (env.CI === "true" && env.BUILDKITE === "true") {
-    const ciInfo = {
+    return {
       name: "Buildkite",
       build_url: env.BUILDKITE_BUILD_URL,
       job_name: env.BUILDKITE_LABEL || env.BUILDKITE_PIPELINE_NAME,
       build_number: env.BUILDKITE_BUILD_NUMBER
     };
-    logToNgrok('[getCiInfo] Buildkite detected', ciInfo);
-    return ciInfo;
   }
   // Visual Studio Team Services
   if (env.TF_BUILD === "True") {
-    const ciInfo = {
+    return {
       name: "Visual Studio Team Services",
       build_url: `${env.SYSTEM_TEAMFOUNDATIONSERVERURI}${env.SYSTEM_TEAMPROJECTID}`,
       job_name: env.SYSTEM_DEFINITIONID,
       build_number: env.BUILD_BUILDID
     };
-    logToNgrok('[getCiInfo] Visual Studio Team Services detected', ciInfo);
-    return ciInfo;
   }
   // if no matches, return null
-  logToNgrok('[getCiInfo] No CI platform detected', { env_keys: Object.keys(env).filter(k => k.includes('CI') || k.includes('BUILD')) });
   return null;
 }
 
