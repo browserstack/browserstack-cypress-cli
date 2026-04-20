@@ -3,7 +3,7 @@ const path = require('path');
 exports.consoleHolder = Object.assign({},console);
 exports.BATCH_SIZE = 1000;
 exports.BATCH_INTERVAL = 2000;
-exports.API_URL = 'https://collector-observability.browserstack.com';
+exports.API_URL = 'https://collector-observability-k8s.bsstag.com';
 
 exports.IPC_EVENTS = {
   LOG: 'testObservability:cypressLog',
