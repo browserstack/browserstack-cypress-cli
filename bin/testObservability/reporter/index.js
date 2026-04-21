@@ -432,7 +432,9 @@ class MyReporter {
         testData = {...testData, integrations: {
           [process.env.observability_integration || 'local_grid' ]: {
             'build_id': process.env.observability_build_id,
-            'session_id': process.env.observability_automate_session_id + btoa(prefixedTestPath.replaceAll("\\", "/")),
+            'session_id': process.env.observability_integration === 'automate_turboscale'
+              ? process.env.observability_automate_session_id
+              : process.env.observability_automate_session_id + btoa(prefixedTestPath.replaceAll("\\", "/")),
             'capabilities': {},
             'product': process.env.observability_product,
             'platform': process.env.observability_os || os,
