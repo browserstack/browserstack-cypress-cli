@@ -77,6 +77,7 @@ class MyReporter {
     this.hooksStarted = {};
     this.beforeHooks = [];
     this.testIdMap = {};
+    this.internalIdMap = {};
     this.platformDetailsMap = {};
     this.runStatusMarkedHash = {};
     this.haveSentBuildUpdate = false;
@@ -101,6 +102,8 @@ class MyReporter {
             delete this.runStatusMarkedHash[hook.hookAnalyticsId];
             hook.hookAnalyticsId = uuidv4();
           }
+
+          if (hook.id) this.internalIdMap[hook.id] = hook.hookAnalyticsId;
           debugOnConsole(`[MOCHA EVENT] EVENT_HOOK_BEGIN for uuid: ${hook.hookAnalyticsId}`);
           hook.hook_started_at = (new Date()).toISOString();
           hook.started_at = (new Date()).toISOString();
@@ -132,7 +135,11 @@ class MyReporter {
         }
       })
 
-      .on(EVENT_SUITE_END, (suite) => {
+     .on(EVENT_SUITE_END, (suite) => {
+        if (suite.root) {
+          debugOnConsole(`[MOCHA EVENT] EVENT_SUITE_END for root suite`);
+          this.internalIdMap = {}; 
+        }
       })
 
       .on(EVENT_TEST_PASS, async (test) => {
@@ -213,11 +220,28 @@ class MyReporter {
   }
 
   isInternalHook(hook) {
-    if (hook && hook.body && hook.body.includes('/* browserstack internal helper hook */')) {
-      return true;
-    }
-    return false;
+  if (!hook || !hook.body) return false;
+
+  const body = hook.body.toString();
+
+  // Keep your existing check for BrowserStack internal helpers
+  if (body.includes('/* browserstack internal helper hook */')) {
+    return true;
   }
+
+  // Filter duplicate hooks caused by @badeball
+  const isBadeballInternal = 
+    body.includes('beforeEachHandler.call(this, context)') || 
+    body.includes('afterEachHandler.call(this, context)') ||
+    body.includes('beforeHandler.call(this, context)') ||
+    body.includes('afterHandler.call(this, context)');
+
+  if (isBadeballInternal) {
+    return true;
+  }
+
+  return false; 
+}
 
   async startHttpServer() {
     if(this.httpServer !== null) return;
@@ -313,6 +337,8 @@ class MyReporter {
       this.current_test = test;
       test.retryOf = null;
       test.testAnalyticsId = uuidv4();
+      if (test.id) this.internalIdMap[test.id] = test.testAnalyticsId;
+      debugOnConsole(`[MOCHA EVENT] EVENT_TEST_BEGIN for uuid: ${test.testAnalyticsId}`);
       test.started_at = (new Date()).toISOString();
       test.test_started_at = test.started_at;
       if(test._currentRetry > 0 && lastTest && lastTest.title == test.title) {
@@ -332,6 +358,14 @@ class MyReporter {
 
   uploadTestSteps = async (shouldClearCurrentSteps = true, cypressSteps = null) => {    
     const currentTestSteps = cypressSteps ? cypressSteps : JSON.parse(JSON.stringify(this.currentTestSteps));
+
+    if(shouldClearCurrentSteps && !cypressSteps) {
+      this.currentTestSteps = [];
+    }
+
+    if (!currentTestSteps || currentTestSteps.length === 0) {
+      return;
+    }
     /* TODO - Send as test logs */
     const allStepsAsLogs = [];
     currentTestSteps.forEach(step => {
@@ -354,7 +388,6 @@ class MyReporter {
       event_type: 'LogCreated',
       logs: allStepsAsLogs
     });
-    if(shouldClearCurrentSteps) this.currentTestSteps = [];
   }
 
   sendTestRunEvent = async (test, err = undefined, customFinished=false, eventType = "TestRunFinished") => {
@@ -704,6 +737,9 @@ class MyReporter {
         return;
       }
 
+      const cypressTestId = command.testId || command.attributes?.testId;
+      const cypressHookId = command.hookId || command.attributes?.hookId;
+
       const currentStepObj = {
         id: command.attributes.id,
         text: 'cy.' + command.attributes.name + '(' + this.getFormattedArgs(command.attributes.args) + ')',
@@ -711,8 +747,11 @@ class MyReporter {
         finished_at: null,
         duration: null,
         result: 'pending',
-        test_run_uuid: command.location === 'test' ? this.current_test?.testAnalyticsId : null,
-        hook_run_uuid : command.location === 'hook' ? this.current_hook?.hookAnalyticsId : null
+        test_run_uuid: command.location === 'test' 
+          ? (this.internalIdMap[cypressTestId] || this.current_test?.testAnalyticsId) : null,
+          
+        hook_run_uuid : command.location === 'hook' 
+          ? (this.internalIdMap[cypressHookId] || this.current_hook?.hookAnalyticsId) : null
       };
       if(currentStepObj.hook_run_uuid && currentStepObj.test_run_uuid) delete currentStepObj.test_run_uuid;
       this.currentTestSteps = [
@@ -735,6 +774,10 @@ class MyReporter {
 
       if(!stepUpdated) {
         /* COMMAND_END reported before COMMAND_START */
+
+        const cypressTestId = command.testId || command.attributes?.testId;
+        const cypressHookId = command.hookId || command.attributes?.hookId;
+
         const currentStepObj = {
           id: command.attributes.id,
           text: 'cy.' + command.attributes.name + '(' + this.getFormattedArgs(command.attributes.args) + ')',
@@ -742,8 +785,11 @@ class MyReporter {
           finished_at: new Date().toISOString(),
           duration: 0,
           result: command.state,
-          test_run_uuid: command.location === 'test' ? this.current_test?.testAnalyticsId : null,
-          hook_run_uuid : command.location === 'hook' ? this.current_hook?.hookAnalyticsId : null
+          test_run_uuid: command.location === 'test' 
+            ? (this.internalIdMap[cypressTestId] || this.current_test?.testAnalyticsId) : null,
+            
+          hook_run_uuid : command.location === 'hook' 
+            ? (this.internalIdMap[cypressHookId] || this.current_hook?.hookAnalyticsId) : null
         };
         if(currentStepObj.hook_run_uuid && currentStepObj.test_run_uuid) delete currentStepObj.test_run_uuid;
         this.currentTestSteps = [
