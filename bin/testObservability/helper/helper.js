@@ -845,7 +845,7 @@ exports.resolveModule = (module) => {
 
       /* Find from node path */
       let node_path = null;
-      if (!exports.isUndefined(process.env.NODE_PATH)) {
+      if (!utils.isUndefined(process.env.NODE_PATH)) {
         node_path = path.join(process.env.NODE_PATH, module);
       }
       if (node_path && fs.existsSync(node_path)) {
