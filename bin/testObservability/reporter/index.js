@@ -462,13 +462,11 @@ class MyReporter {
 
       const { os, os_version } = await getOSDetailsFromSystem(process.env.observability_product);
       if(process.env.observability_integration) {
-        const isTurboscale = process.env.observability_product === 'turboscale'
-                          || process.env.observability_product === 'automate_turboscale';
         testData = {...testData, integrations: {
           [process.env.observability_integration || 'local_grid' ]: {
             'build_id': process.env.observability_build_id,
-            'session_id': isTurboscale
-              ? process.env.observability_automate_session_id
+            'session_id': process.env.observability_product === 'turboscale'
+              ? process.env.observability_automate_session_id + "_" + btoa(prefixedTestPath.replaceAll("\\", "/"))
               : process.env.observability_automate_session_id + btoa(prefixedTestPath.replaceAll("\\", "/")),
             'capabilities': {},
             'product': process.env.observability_product,
