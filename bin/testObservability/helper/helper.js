@@ -575,6 +575,22 @@ exports.uploadEventData = async (eventData, run=0) => {
       try {
         const eventsUuids = data.map(eventData => `${eventData.event_type}:${eventData.test_run ? eventData.test_run.uuid : (eventData.hook_run ? eventData.hook_run.uuid : null)}`).join(', ');
         exports.debugOnConsole(`[Request Send] for events:uuids ${eventsUuids}`);
+        // TEMP DEBUG: log what's being sent to TRA — focus on integrations block
+        try {
+          const arr = Array.isArray(data) ? data : [data];
+          for (const e of arr) {
+            const run = e.test_run || e.hook_run || {};
+            console.log('[TRA-PAYLOAD]', JSON.stringify({
+              event_type: e.event_type,
+              uuid: run.uuid,
+              name: run.name,
+              result: run.result,
+              integrations: run.integrations,
+            }));
+          }
+        } catch (logErr) {
+          console.log('[TRA-PAYLOAD-LOG-FAILED]', logErr && logErr.message);
+        }
         const response = await exports.nodeRequest('POST',event_api_url,data,config);
         exports.debugOnConsole(`[Request Repsonse] ${util.format(response.data)} for events:uuids ${eventsUuids}`)
         if(response.data.error) {
@@ -830,7 +846,7 @@ exports.resolveModule = (module) => {
 
       /* Find from node path */
       let node_path = null;
-      if (!exports.isUndefined(process.env.NODE_PATH)) {
+      if (!utils.isUndefined(process.env.NODE_PATH)) {
         node_path = path.join(process.env.NODE_PATH, module);
       }
       if (node_path && fs.existsSync(node_path)) {
