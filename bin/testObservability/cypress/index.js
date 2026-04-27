@@ -27,6 +27,7 @@ Cypress.on('log:changed', (attrs) => {
 
   if (attrs.name === 'assert') {
     const assertMessage = (attrs.message || '')
+    const actualLocation = (attrs.testId === attrs.hookId) ? 'test' : 'hook';
 
     eventsQueue.push({
       task: 'test_observability_command',
@@ -36,11 +37,13 @@ Cypress.on('log:changed', (attrs) => {
           attributes: {
             id: attrs.id,
             name: 'assert',
+            testId: attrs.testId,
+            hookId: attrs.hookId,
             args: [assertMessage]
           },
           state: 'pending',
           started_at: new Date(attrs.createdAtTimestamp).toISOString(),
-          location: testRunStarted ? 'test' : 'hook'
+          location: actualLocation
         }
       },
       options: { log: false }
@@ -54,11 +57,13 @@ Cypress.on('log:changed', (attrs) => {
           attributes: {
             id: attrs.id,
             name: 'assert',
+            testId: attrs.testId,
+            hookId: attrs.hookId,
             args: [assertMessage]
           },
           state: attrs.state,
           finished_at: new Date(attrs.updatedAtTimestamp).toISOString(),
-          location: testRunStarted ? 'test' : 'hook'
+          location: actualLocation
         }
       },
       options: { log: false }

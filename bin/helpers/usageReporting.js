@@ -160,6 +160,10 @@ function ci_environment() {
   if (env.CI === "true" && env.GITLAB_CI === "true") {
     return "GitLab";
   }
+  // GitHub Actions
+  if (env.GITHUB_ACTIONS === "true" || (env.CI === "true" && env.GITHUB_RUN_ID)) {
+    return "GitHub Actions";
+  }
   // Buildkite
   if (env.CI === "true" && env.BUILDKITE === "true") {
     return "Buildkite";
