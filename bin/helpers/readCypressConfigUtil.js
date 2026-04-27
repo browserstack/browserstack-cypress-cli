@@ -11,13 +11,17 @@ const logger = require('./logger').winstonLogger;
 // Defense-in-depth: reject file paths containing shell metacharacters.
 // This guards against command injection even if execFileSync is ever
 // replaced with a shell-based exec in the future.
-const DANGEROUS_PATH_CHARS = /[;"`$|&(){}\\]/;
+//
+// Note: backslash (\) is intentionally NOT included here because it is a
+// legitimate path separator on Windows (e.g. C:\Users\me\cypress.config.js).
+// The actual security boundary is execFileSync (no shell), not this regex.
+const DANGEROUS_PATH_CHARS = /[;"`$|&(){}]/;
 
 function validateFilePath(filepath) {
     if (DANGEROUS_PATH_CHARS.test(filepath)) {
         throw new Error(
             `Invalid cypress config file path: "${filepath}" contains disallowed characters. ` +
-            'File paths must not include shell metacharacters such as ; " ` $ | & ( ) { } \\'
+            'File paths must not include shell metacharacters such as ; " ` $ | & ( ) { }'
         );
     }
 }
@@ -204,6 +208,13 @@ exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_module
 exports.loadJsFile =  (cypress_config_filepath, bstack_node_modules_path) => {
     // Security: validate file path to reject shell metacharacters (defense-in-depth)
     validateFilePath(cypress_config_filepath);
+
+    // UX: surface a clear error if the cypress config file is missing.
+    // (This is purely a UX check — the security boundary is execFileSync above
+    // plus the metacharacter regex; existsSync alone would NOT prevent injection.)
+    if (!fs.existsSync(cypress_config_filepath)) {
+        throw new Error(`Cypress config file not found at: ${cypress_config_filepath}`);
+    }
 
     const require_module_helper_path = path.join(__dirname, 'requireModule.js')
 
