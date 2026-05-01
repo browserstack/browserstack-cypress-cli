@@ -407,6 +407,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
           sdkVersion: helper.getAgentVersion()
         }
       };
+
       const config = {
         auth: {
           username: obsUserName,
