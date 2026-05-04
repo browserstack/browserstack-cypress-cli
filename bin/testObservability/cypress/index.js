@@ -201,24 +201,37 @@ Cypress.on('command:end', (command) => {
   });
 });
 
-Cypress.Commands.overwrite('log', (originalFn, ...args) => {
+/*
+ * cy.log capture must happen at command-enqueue time, not command-execute time.
+ * If a test body throws synchronously (e.g. a failing chai assertion) before the
+ * Cypress queue drains, queued commands are dropped — so an execute-time wrapper
+ * never fires and pre-throw cy.log calls are lost from the timeline. Hooking
+ * command:enqueue runs synchronously at the user's cy.log() call site.
+ */
+Cypress.on('command:enqueue', (attrs) => {
+  if (!Cypress.env('BROWSERSTACK_O11Y_LOGS')) return;
+  if (!attrs || attrs.name !== 'log') return;
+  const args = attrs.args || [];
   if (args.includes('test_observability_log') || args.includes('test_observability_command')) return;
   const message = args.reduce((result, logItem) => {
     if (typeof logItem === 'object') {
       return [result, JSON.stringify(logItem)].join(' ');
     }
-
     return [result, logItem ? logItem.toString() : ''].join(' ');
   }, '');
   eventsQueue.push({
     task: 'test_observability_log',
     data: {
-      'level': 'info',
+      level: 'info',
       message,
       timestamp: new Date().toISOString()
     },
     options: { log: false }
   });
+});
+
+Cypress.Commands.overwrite('log', (originalFn, ...args) => {
+  if (args.includes('test_observability_log') || args.includes('test_observability_command')) return;
   originalFn(...args);
 });
 
