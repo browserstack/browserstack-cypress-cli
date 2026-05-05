@@ -201,16 +201,6 @@ Cypress.on('command:end', (command) => {
   });
 });
 
-/*
- * cy.log capture must happen at command-enqueue time, not at command-execute
- * time. When a test body throws synchronously (e.g. a failing chai assertion),
- * Cypress drops every pending command in the test queue — so an execute-time
- * wrapper on cy.log never fires for queued logs preceding the throw.
- * command:enqueued fires synchronously at the user's cy.log() call site,
- * before the throw, so the buffer is populated regardless of pass/fail.
- * The buffered entries are then flushed via cy.task in the SDK's afterEach,
- * which Mocha runs even on test failure.
- */
 Cypress.on('command:enqueued', (attrs) => {
   if (!Cypress.env('BROWSERSTACK_O11Y_LOGS')) return;
   if (!attrs || attrs.name !== 'log') return;
