@@ -205,10 +205,10 @@ Cypress.on('command:end', (command) => {
  * cy.log capture must happen at command-enqueue time, not command-execute time.
  * If a test body throws synchronously (e.g. a failing chai assertion) before the
  * Cypress queue drains, queued commands are dropped — so an execute-time wrapper
- * never fires and pre-throw cy.log calls are lost from the timeline. Hooking
- * command:enqueue runs synchronously at the user's cy.log() call site.
+ * never fires and pre-throw cy.log calls are lost from the timeline. The
+ * command:enqueued event runs synchronously at the user's cy.log() call site.
  */
-Cypress.on('command:enqueue', (attrs) => {
+Cypress.on('command:enqueued', (attrs) => {
   if (!Cypress.env('BROWSERSTACK_O11Y_LOGS')) return;
   if (!attrs || attrs.name !== 'log') return;
   const args = attrs.args || [];
