@@ -628,24 +628,10 @@ class MyReporter {
 
   appendTestItemLog = async (log) => {
     try {
-      /*
-       * SDK-5709: keep the hash gate on hook side (avoids attributing a log to
-       * a stale hook pointer between hooks). Drop it on the test side. In
-       * Cypress, EVENT_TEST_FAIL fires synchronously when a test body throws
-       * — *before* afterEach runs. The SDK's internal afterEach flushes its
-       * cy.log buffer via cy.task during afterEach, so by the time those logs
-       * reach this listener, runStatusMarkedHash[testAnalyticsId] is already
-       * set and the log gets dropped without ever attaching a test_run_uuid.
-       * Without the gate, the log uploads with test_run_uuid even after
-       * TestRunFinished — accepted by the analytics backend (uploadTestSteps
-       * takes the same path with no gate).
-       */
       if(this.current_hook && ( this.current_hook.hookAnalyticsId && !this.runStatusMarkedHash[this.current_hook.hookAnalyticsId] )) {
         log.hook_run_uuid = this.current_hook.hookAnalyticsId;
       }
-      if(!log.hook_run_uuid && this.current_test && this.current_test.testAnalyticsId) {
-        log.test_run_uuid = this.current_test.testAnalyticsId;
-      }
+      if(!log.hook_run_uuid && this.current_test && ( this.current_test.testAnalyticsId && !this.runStatusMarkedHash[this.current_test.testAnalyticsId] )) log.test_run_uuid = this.current_test.testAnalyticsId;
       if(log.hook_run_uuid || log.test_run_uuid) {
         await uploadEventData({
           event_type: 'LogCreated',

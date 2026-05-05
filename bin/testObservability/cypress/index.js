@@ -202,11 +202,18 @@ Cypress.on('command:end', (command) => {
 });
 
 /*
- * cy.log capture must happen at command-enqueue time, not command-execute time.
- * If a test body throws synchronously (e.g. a failing chai assertion) before the
- * Cypress queue drains, queued commands are dropped — so an execute-time wrapper
- * never fires and pre-throw cy.log calls are lost from the timeline. The
- * command:enqueued event runs synchronously at the user's cy.log() call site.
+ * cy.log capture must happen at command-enqueue time AND must bypass Cypress's
+ * test command queue. When a test body throws synchronously (e.g. a failing
+ * chai assertion), Cypress drops every pending command in the test queue —
+ * which means an execute-time wrapper on cy.log never runs, and even a
+ * deferred cy.task(...) inside the SDK's afterEach is just another queued
+ * command that won't survive the drop.
+ *
+ * Cypress.backend('task', ...) emits directly over the runner-to-Node
+ * websocket (see Cypress driver), bypassing the queue entirely. Combined
+ * with command:enqueued (which fires synchronously at the user's cy.log()
+ * call site, before the throw), the log reaches the Node-side task handler
+ * regardless of whether the test passes or fails.
  */
 Cypress.on('command:enqueued', (attrs) => {
   if (!Cypress.env('BROWSERSTACK_O11Y_LOGS')) return;
@@ -219,14 +226,16 @@ Cypress.on('command:enqueued', (attrs) => {
     }
     return [result, logItem ? logItem.toString() : ''].join(' ');
   }, '');
-  eventsQueue.push({
+  Cypress.backend('task', {
     task: 'test_observability_log',
-    data: {
+    arg: {
       level: 'info',
       message,
       timestamp: new Date().toISOString()
     },
-    options: { log: false }
+    timeout: 60000
+  }).catch(() => {
+    /* Don't let observability failures bubble into the test */
   });
 });
 
