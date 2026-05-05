@@ -631,9 +631,7 @@ class MyReporter {
       if(this.current_hook && ( this.current_hook.hookAnalyticsId && !this.runStatusMarkedHash[this.current_hook.hookAnalyticsId] )) {
         log.hook_run_uuid = this.current_hook.hookAnalyticsId;
       }
-      if(!log.hook_run_uuid && this.current_test && this.current_test.testAnalyticsId) {
-        log.test_run_uuid = this.current_test.testAnalyticsId;
-      }
+      if(!log.hook_run_uuid && this.current_test && ( this.current_test.testAnalyticsId && !this.runStatusMarkedHash[this.current_test.testAnalyticsId] )) log.test_run_uuid = this.current_test.testAnalyticsId;
       if(log.hook_run_uuid || log.test_run_uuid) {
         await uploadEventData({
           event_type: 'LogCreated',

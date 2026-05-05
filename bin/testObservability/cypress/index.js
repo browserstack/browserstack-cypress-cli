@@ -201,7 +201,10 @@ Cypress.on('command:end', (command) => {
   });
 });
 
-Cypress.Commands.overwrite('log', (originalFn, ...args) => {
+Cypress.on('command:enqueued', (attrs) => {
+  if (!Cypress.env('BROWSERSTACK_O11Y_LOGS')) return;
+  if (!attrs || attrs.name !== 'log') return;
+  const args = attrs.args || [];
   if (args.includes('test_observability_log') || args.includes('test_observability_command')) return;
   const message = args.reduce((result, logItem) => {
     if (typeof logItem === 'object') {
@@ -213,13 +216,16 @@ Cypress.Commands.overwrite('log', (originalFn, ...args) => {
   eventsQueue.push({
     task: 'test_observability_log',
     data: {
-      'level': 'info',
+      level: 'info',
       message,
       timestamp: new Date().toISOString()
     },
     options: { log: false }
   });
+});
 
+Cypress.Commands.overwrite('log', (originalFn, ...args) => {
+  if (args.includes('test_observability_log') || args.includes('test_observability_command')) return;
   originalFn(...args);
 });
 
