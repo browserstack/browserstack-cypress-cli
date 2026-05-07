@@ -930,7 +930,7 @@ exports.runCypressTestsLocally = (bsConfig, args, rawArgs) => {
     const cypressProcess = spawn(
       'npx',
       ['cypress', 'run', ...getReRunSpecs(rawArgs.slice(1)), ...getLocalSessionReporter()],
-      { stdio: 'inherit', cwd: process.cwd(), env: process.env, shell: true }
+      { stdio: 'inherit', cwd: process.cwd(), env: process.env }
     );
     cypressProcess.on('close', async (code) => {
       logger.info(`Cypress process exited with code ${code}`);
