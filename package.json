@@ -49,6 +49,9 @@
   "bugs": {
     "url": "https://github.com/browserstack/browserstack-cypress-cli/issues"
   },
+  "overrides": {
+    "serialize-javascript": ">=7.0.5"
+  },
   "devDependencies": {
     "chai": "4.3.6",
     "chai-as-promised": "7.1.1",
