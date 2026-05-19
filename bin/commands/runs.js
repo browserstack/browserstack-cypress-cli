@@ -361,8 +361,7 @@ module.exports = function run(args, rawArgs) {
                     markBlockStart('postBuild');
                     logger.debug("Completed polling of build status");
 
-                    // stop the Local instance
-                    if (!turboScaleSession) await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs, buildReportData);
+                    await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs, buildReportData);
 
                     // waiting for 5 secs for upload to complete (as a safety measure)
                     await new Promise(resolve => setTimeout(resolve, 5000));
