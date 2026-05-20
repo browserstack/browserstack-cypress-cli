@@ -27,9 +27,7 @@ let packages = {};
 
 exports.requireModule = (module, internal = false) => {
   let local_path = "";
-  if(process.env["browserStackCwd"]){
-   local_path = path.join(process.env["browserStackCwd"], 'node_modules', module);
-  } else if(internal) {
+  if(internal) {
     local_path = path.join(process.cwd(), 'node_modules', 'browserstack-cypress-cli', 'node_modules', module);
   } else {
     local_path = path.join(process.cwd(), 'node_modules', module);
