@@ -196,6 +196,7 @@ const validationMessages = {
     "You have specified '--record' flag but you've not provided the '--record-key' and we could not find any value in 'CYPRESS_RECORD_KEY' environment variable. Your record functionality on cypress.io dashboard might not work as it needs the key and projectId",
   NODE_VERSION_PARSING_ERROR:
     "We weren't able to successfully parse the specified nodeVersion. We will be using the default nodeVersion to run your tests.",
+  GRID_NOT_FOUND: "Not Found",
   AUTO_IMPORT_CONFLICT_ERROR:
     "Cannot use both 'auto_import_dev_dependencies' and manual npm dependency configuration. Please either set 'auto_import_dev_dependencies' to false or remove manual 'npm_dependencies', 'win_npm_dependencies', and 'mac_npm_dependencies' configurations.",
   AUTO_IMPORT_INVALID_TYPE:
