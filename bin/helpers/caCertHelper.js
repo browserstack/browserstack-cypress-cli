@@ -30,6 +30,21 @@ function _log(level, msg) {
   try { if (logger && typeof logger[level] === 'function') { logger[level](msg); } } catch (e) { /* ignore */ }
 }
 
+// Convert a DER (binary) certificate Buffer to a PEM string (base64, 64-char lines).
+function derToPem(der) {
+  const b64 = der.toString('base64').replace(/(.{64})/g, '$1\n');
+  return `-----BEGIN CERTIFICATE-----\n${b64}${b64.endsWith('\n') ? '' : '\n'}-----END CERTIFICATE-----\n`;
+}
+
+// Read a customer CA Buffer into an array of PEM cert strings, supporting BOTH PEM
+// (single or multi-cert bundle) and DER (binary) — any extension (.pem/.crt/.cer/.der).
+function loadCaCertsAsPem(buf) {
+  if (buf.includes('-----BEGIN CERTIFICATE-----')) {
+    return buf.toString('utf8').match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g) || [];
+  }
+  return [derToPem(buf)]; // DER (binary) single cert
+}
+
 function resolveCaCertPath(bsConfig) {
   let p = process.env.BROWSERSTACK_EXTRA_CA_CERTS;
   const cs = (bsConfig && bsConfig.connection_settings) || {};
@@ -51,17 +66,36 @@ function setupCaCertificate(bsConfig) {
   try {
     const certPath = resolveCaCertPath(bsConfig);
     if (!certPath) { return; }
-    const caPem = fs.readFileSync(certPath, 'utf8');
+    const buf = fs.readFileSync(certPath);
+    const isPem = buf.includes('-----BEGIN CERTIFICATE-----');
+    const pemCerts = loadCaCertsAsPem(buf);
+    if (!pemCerts.length) {
+      _log('warn', `proxyCaCertificate: no certificate found in ${certPath}; falling back to system trust store.`);
+      return;
+    }
 
     const originalCreateSecureContext = tls.createSecureContext;
     tls.createSecureContext = function (options = {}) {
       const context = originalCreateSecureContext(options);
-      try { context.context.addCACert(caPem); } catch (e) { /* best-effort merge */ }
+      // addCACert one cert at a time so multi-cert bundles are all trusted.
+      for (const pem of pemCerts) {
+        try { context.context.addCACert(pem); } catch (e) { /* best-effort merge */ }
+      }
       return context;
     };
 
+    // NODE_EXTRA_CA_CERTS must be a PEM file for child Node processes: reuse the
+    // customer's path when it's already PEM, else write a PEM-converted copy (Node
+    // can't load a raw DER file through that var).
     if (!process.env.NODE_EXTRA_CA_CERTS) {
-      process.env.NODE_EXTRA_CA_CERTS = certPath;
+      let nodeExtra = certPath;
+      if (!isPem) {
+        const os = require('os');
+        const path = require('path');
+        nodeExtra = path.join(os.tmpdir(), `browserstack_sdk_ca_${process.pid}.pem`);
+        fs.writeFileSync(nodeExtra, pemCerts.join(''));
+      }
+      process.env.NODE_EXTRA_CA_CERTS = nodeExtra;
     }
 
     _patched = true;
@@ -71,4 +105,4 @@ function setupCaCertificate(bsConfig) {
   }
 }
 
-module.exports = { resolveCaCertPath, setupCaCertificate };
+module.exports = { resolveCaCertPath, setupCaCertificate, loadCaCertsAsPem, derToPem };
