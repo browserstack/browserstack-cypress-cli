@@ -93,7 +93,16 @@ const supportFileCleanup = () => {
 exports.buildStopped = false;
 
 exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
-  if(!this.isTestObservabilitySession() || exports.buildStopped) return;
+  if(!this.isTestObservabilitySession()) return;
+  // SDK-6211: the build-stop may be sent early (runs.js fires it at poll-resolution, before the
+  // post-test 5s wait + artifact download + report generation, so builds_th.finished_at — which
+  // the collector stamps at stop-event receipt — reflects the test window rather than the full CLI
+  // wall-clock). A later call here must therefore still honor the exit code instead of returning
+  // silently, preserving the original failing-build exit behaviour.
+  if(exports.buildStopped) {
+    if(exitCode) process.exit(exitCode);
+    return;
+  }
   exports.buildStopped = true;
   try {
     if(shouldStopSession) {
