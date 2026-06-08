@@ -25,12 +25,18 @@ const getCircularReplacer = () => {
   };
 };
 
+/*
+ * Returns a decycled, JSON-safe plain object, or `null` if the payload still cannot be
+ * serialized for a non-circular reason (BigInt, a throwing toJSON, a Proxy trap, etc.).
+ * `null` is a "skip this event" sentinel — callers must NOT forward it to cy.task, because
+ * the Node o11y handler expects a structured event payload, not an error stub. Skipping keeps
+ * graceful degradation total: no crash, and no malformed event reaches the collector.
+ */
 const sanitizeForTask = (data) => {
   try {
     return JSON.parse(JSON.stringify(data, getCircularReplacer()));
   } catch (e) {
-    /* Never let serialization of o11y data break the user's test run (graceful degradation). */
-    return { serializationError: e && e.message ? e.message : String(e) };
+    return null;
   }
 };
 
@@ -236,7 +242,12 @@ Cypress.on('command:enqueued', (attrs) => {
   if (args.includes('test_observability_log') || args.includes('test_observability_command')) return;
   const message = args.reduce((result, logItem) => {
     if (typeof logItem === 'object') {
-      return [result, JSON.stringify(logItem, getCircularReplacer())].join(' ');
+      /* Route through sanitizeForTask so a non-circular serialization failure can never
+       * throw out of the command:enqueued handler (same graceful-degradation contract as
+       * the flush sites). sanitizeForTask returns a decycled plain object (safe to stringify)
+       * or null; on null, contribute nothing for this item rather than crash. */
+      const safeLog = sanitizeForTask(logItem);
+      return [result, safeLog === null ? '' : JSON.stringify(safeLog)].join(' ');
     }
     return [result, logItem ? logItem.toString() : ''].join(' ');
   }, '');
@@ -337,7 +348,8 @@ beforeEach(() => {
 
   if (eventsQueue.length > 0) {
     eventsQueue.forEach(event => {
-      cy.task(event.task, sanitizeForTask(event.data), event.options);
+      const payload = sanitizeForTask(event.data);
+      if (payload !== null) cy.task(event.task, payload, event.options);
     });
   }
   eventsQueue = [];
@@ -352,7 +364,8 @@ afterEach(function() {
 
   if (eventsQueue.length > 0) {
     eventsQueue.forEach(event => {
-      cy.task(event.task, sanitizeForTask(event.data), event.options);
+      const payload = sanitizeForTask(event.data);
+      if (payload !== null) cy.task(event.task, payload, event.options);
     });
   }
   
