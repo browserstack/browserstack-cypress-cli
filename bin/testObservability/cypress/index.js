@@ -6,6 +6,40 @@ const STEP_KEYWORDS = ['given', 'when', 'then', 'and', 'but', '*'];
 let eventsQueue = [];
 let testRunStarted = false;
 
+/*
+ * Command args (command.attributes.args) and cy.log items are captured raw and can hold
+ * circular Cypress runtime objects (e.g. a config-like object whose `renderOptions.host`
+ * points back to itself). cy.task() JSON-serializes its payload to ship it from the browser
+ * to the Node plugin process, so a circular arg makes Cypress throw
+ * "Converting circular structure to JSON" and aborts the run. Decycle the payload before
+ * handing it to cy.task so o11y instrumentation can never break the customer's tests. [SDK-6016]
+ */
+const getCircularReplacer = () => {
+  const seen = new WeakSet();
+  return (key, value) => {
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) return '[Circular]';
+      seen.add(value);
+    }
+    return value;
+  };
+};
+
+/*
+ * Returns a decycled, JSON-safe plain object, or `null` if the payload still cannot be
+ * serialized for a non-circular reason (BigInt, a throwing toJSON, a Proxy trap, etc.).
+ * `null` is a "skip this event" sentinel — callers must NOT forward it to cy.task, because
+ * the Node o11y handler expects a structured event payload, not an error stub. Skipping keeps
+ * graceful degradation total: no crash, and no malformed event reaches the collector.
+ */
+const sanitizeForTask = (data) => {
+  try {
+    return JSON.parse(JSON.stringify(data, getCircularReplacer()));
+  } catch (e) {
+    return null;
+  }
+};
+
 const browserStackLog = (message) => {
 
   if (!Cypress.env('BROWSERSTACK_LOGS')) return;
@@ -208,7 +242,12 @@ Cypress.on('command:enqueued', (attrs) => {
   if (args.includes('test_observability_log') || args.includes('test_observability_command')) return;
   const message = args.reduce((result, logItem) => {
     if (typeof logItem === 'object') {
-      return [result, JSON.stringify(logItem)].join(' ');
+      /* Route through sanitizeForTask so a non-circular serialization failure can never
+       * throw out of the command:enqueued handler (same graceful-degradation contract as
+       * the flush sites). sanitizeForTask returns a decycled plain object (safe to stringify)
+       * or null; on null, contribute nothing for this item rather than crash. */
+      const safeLog = sanitizeForTask(logItem);
+      return [result, safeLog === null ? '' : JSON.stringify(safeLog)].join(' ');
     }
     return [result, logItem ? logItem.toString() : ''].join(' ');
   }, '');
@@ -309,7 +348,8 @@ beforeEach(() => {
 
   if (eventsQueue.length > 0) {
     eventsQueue.forEach(event => {
-      cy.task(event.task, event.data, event.options);
+      const payload = sanitizeForTask(event.data);
+      if (payload !== null) cy.task(event.task, payload, event.options);
     });
   }
   eventsQueue = [];
@@ -324,7 +364,8 @@ afterEach(function() {
 
   if (eventsQueue.length > 0) {
     eventsQueue.forEach(event => {
-      cy.task(event.task, event.data, event.options);
+      const payload = sanitizeForTask(event.data);
+      if (payload !== null) cy.task(event.task, payload, event.options);
     });
   }
   
