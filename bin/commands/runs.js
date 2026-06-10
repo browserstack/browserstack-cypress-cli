@@ -364,6 +364,15 @@ module.exports = function run(args, rawArgs) {
                     // stop the Local instance
                     if (!turboScaleSession) await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs, buildReportData);
 
+                    // SDK-6211: send the Test Observability build-stop now — polling has resolved, so
+                    // the build has finished running on BrowserStack. builds_th.finished_at is stamped
+                    // server-side when the collector receives this stop event, so firing it here (before
+                    // the 5s safety wait, artifact download and HTML report generation below) keeps the
+                    // TRA build "Duration" aligned with the test window instead of the full CLI wall-clock.
+                    // printBuildLink no-ops on non-observability runs and is idempotent (buildStopped
+                    // guard); the later handleSyncExit stop becomes a no-op that still honors the exit code.
+                    await printBuildLink(true);
+
                     // waiting for 5 secs for upload to complete (as a safety measure)
                     await new Promise(resolve => setTimeout(resolve, 5000));
 
