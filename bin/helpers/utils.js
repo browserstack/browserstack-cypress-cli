@@ -35,6 +35,9 @@ exports.validateBstackJson = (bsConfigPath) => {
       logger.info(`Reading config from ${bsConfigPath}`);
       let bsConfig = require(bsConfigPath);
       bsConfig = exports.normalizeTestReportingConfig(bsConfig);
+      // SDK-5953: trust the customer CA (proxyCaCertificate / BROWSERSTACK_EXTRA_CA_CERTS)
+      // for all outbound HTTPS (axios) before any request fires. Merged with system roots.
+      try { require('./caCertHelper').setupCaCertificate(bsConfig); } catch (e) { /* never break the run */ }
       resolve(bsConfig);
     } catch (e) {
       reject(
