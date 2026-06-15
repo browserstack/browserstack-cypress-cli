@@ -274,7 +274,7 @@ exports.getCiInfo = () => {
       name: "GitHub Actions",
       build_url: `${env.GITHUB_SERVER_URL || 'https://github.com'}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`,
       job_name: env.GITHUB_WORKFLOW || env.GITHUB_JOB,
-      build_number: env.GITHUB_RUN_NUMBER
+      build_number: env.GITHUB_RUN_ID
     };
   }
   // Buildkite
