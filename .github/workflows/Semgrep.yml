@@ -27,7 +27,9 @@ jobs:
 
     container:
       # A Docker image with Semgrep installed. Do not change this.
-      image: returntocorp/semgrep
+      # Pinned to a digest for supply-chain integrity (APS-19017 / INF-007).
+      # returntocorp/semgrep:latest as of 2026-06-15.
+      image: returntocorp/semgrep@sha256:f4791a54c891eabe1188248135574e6e03dfc31dfd3f3b747c7bec7079bfed1b
 
     # Skip any PR created by dependabot to avoid permission issues:
     if: (github.actor != 'dependabot[bot]')
