@@ -307,11 +307,7 @@ exports.getBuildDetails = (bsConfig, isO11y = false) => {
       buildDescription = '',
       buildTags = [];
 
-  /* Pick from environment variables */
-  buildName = process.env.BROWSERSTACK_BUILD_NAME || buildName;
-  projectName = process.env.BROWSERSTACK_PROJECT_NAME || projectName;
-
-  /* Pick from testObservabilityOptions */
+  /* Pick from testObservabilityOptions (explicit config takes precedence) */
   if(isTestObservabilityOptionsPresent) {
     buildName = buildName || bsConfig["testObservabilityOptions"]["buildName"];
     projectName = projectName || bsConfig["testObservabilityOptions"]["projectName"];
@@ -319,10 +315,16 @@ exports.getBuildDetails = (bsConfig, isO11y = false) => {
     buildDescription = buildDescription || bsConfig["testObservabilityOptions"]["buildDescription"];
   }
 
-  /* Pick from run settings */
+  /* Pick from run settings (explicit config) */
   buildName = buildName || bsConfig["run_settings"]["build_name"];
   projectName = projectName || bsConfig["run_settings"]["project_name"];
   if(!utils.isUndefined(bsConfig["run_settings"]["build_tag"])) buildTags = [...buildTags, bsConfig["run_settings"]["build_tag"]];
+
+  /* Fall back to environment variables only when not explicitly configured.
+     Keeps the new dashboard (TestHub) consistent with the Automate capability
+     path, which honours run_settings.build_name over CI-derived env vars. [SDK-6431] */
+  buildName = buildName || process.env.BROWSERSTACK_BUILD_NAME;
+  projectName = projectName || process.env.BROWSERSTACK_PROJECT_NAME;
 
   buildName = buildName || path.basename(path.resolve(process.cwd()));
 
