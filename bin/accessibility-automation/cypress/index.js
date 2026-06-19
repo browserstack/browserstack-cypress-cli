@@ -354,11 +354,20 @@ afterEach(() => {
                 return cy.wrap(saveTestResults(win, payloadToSend), {timeout: 30000});
             }).then(() => {
                 browserStackLog(`Saved accessibility test results`);
+            }).catch((err) => {
+                // SDK-6463: a slow/hung results-save must not bubble up and fail the
+                // afterEach hook (which would make Cypress skip the rest of the spec).
+                browserStackLog(`Accessibility afterEach: saving results timed out or failed: ${err && err.message}`);
             })
 
         } catch (er) {
 			browserStackLog(`Error in saving results with error: ${er.message}`);
         }
+        }).catch((err) => {
+            // SDK-6463: a hung/slow accessibility scan must NOT fail the afterEach hook.
+            // A failing afterEach makes Cypress skip ALL remaining tests in the spec
+            // (they surface as "skipped" instead of running). Swallow + log instead.
+            browserStackLog(`Accessibility afterEach: scan timed out or failed: ${err && err.message}`);
         })
     });
 })
