@@ -304,9 +304,57 @@ describe("readCypressConfigUtil", () => {
             const writeFileSyncStub = sandbox.stub(fs, 'writeFileSync');
             
             const result = generateTscCommandAndTempTsConfig(bsConfig, 'path/to/tmpBstackPackages', 'path/to/tmpBstackCompiledJs', 'path/to/cypress.config.ts');
-            
+
             expect(result.tscCommand).to.include('NODE_PATH=path/to/tmpBstackPackages');
             expect(result.tscCommand).to.include('tsc-alias');
+        });
+
+        // SDK-6463: NX/monorepo base tsconfigs can set noEmit/emitDeclarationOnly/composite/
+        // noEmitOnError, which suppress or redirect the compiled cypress config JS and break
+        // the read. The extends temp tsconfig must force a clean self-contained JS emit.
+        it('should force emit-friendly compilerOptions overrides in extends approach (SDK-6463)', () => {
+            const bsConfig = { run_settings: { ts_config_file_path: 'existing/tsconfig.json' } };
+            const existsSyncStub = sandbox.stub(fs, 'existsSync');
+            existsSyncStub.withArgs(path.resolve('existing/tsconfig.json')).returns(true);
+            sandbox.stub(fs, 'readFileSync').returns('{}');
+            const writeFileSyncStub = sandbox.stub(fs, 'writeFileSync');
+
+            generateTscCommandAndTempTsConfig(bsConfig, 'path/to/tmpBstackPackages', 'path/to/tmpBstackCompiledJs', 'path/to/cypress.config.ts');
+
+            const tempConfig = JSON.parse(writeFileSyncStub.getCall(0).args[1]);
+            expect(tempConfig.extends).to.eql(path.resolve('existing/tsconfig.json'));
+            expect(tempConfig.compilerOptions.noEmit).to.be.false;
+            expect(tempConfig.compilerOptions.emitDeclarationOnly).to.be.false;
+            expect(tempConfig.compilerOptions.composite).to.be.false;
+            expect(tempConfig.compilerOptions.noEmitOnError).to.be.false;
+            expect(tempConfig.compilerOptions.declaration).to.be.false;
+        });
+
+        // SDK-6463: tsc returns a non-zero exit code on any type error (common when a single
+        // config file is compiled out of its monorepo context). With '&&', tsc-alias would be
+        // skipped and path aliases left un-rewritten. tsc-alias must run unconditionally.
+        it('should run tsc-alias unconditionally on Unix (";" not "&&") (SDK-6463)', () => {
+            sinon.stub(process, 'platform').value('linux');
+            const bsConfig = { run_settings: {} };
+            sandbox.stub(fs, 'existsSync').returns(false);
+            sandbox.stub(fs, 'writeFileSync');
+
+            const result = generateTscCommandAndTempTsConfig(bsConfig, 'path/to/tmpBstackPackages', 'path/to/tmpBstackCompiledJs', 'path/to/cypress.config.ts');
+
+            expect(result.tscCommand).to.not.include('&&');
+            expect(result.tscCommand).to.match(/--project "[^"]*" ; NODE_PATH=/);
+        });
+
+        it('should run tsc-alias unconditionally on Windows ("&" between tsc and tsc-alias) (SDK-6463)', () => {
+            sinon.stub(process, 'platform').value('win32');
+            const bsConfig = { run_settings: {} };
+            sandbox.stub(fs, 'existsSync').returns(false);
+            sandbox.stub(fs, 'writeFileSync');
+
+            const result = generateTscCommandAndTempTsConfig(bsConfig, 'path/to/tmpBstackPackages', 'path/to/tmpBstackCompiledJs', 'path/to/cypress.config.ts');
+
+            // unconditional '&' connects the tsc invocation to the tsc-alias invocation
+            expect(result.tscCommand).to.match(/--project "[^"]*" & set NODE_PATH=/);
         });
     });
 
