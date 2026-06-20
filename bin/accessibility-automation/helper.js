@@ -41,6 +41,53 @@ exports.isAccessibilitySupportedCypressVersion = (cypress_config_filename) => {
   return CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS.includes(extension);
 }
 
+// Fallback: scan the raw cypress config source for the accessibility plugin
+// import. Used only when the config could not be required (e.g. a TypeScript
+// config before BrowserStack packages are installed), so that such users are
+// not wrongly disabled. The substring matches require()/import of the plugin
+// regardless of path style or imported symbol name.
+const ACCESSIBILITY_PLUGIN_IMPORT_TOKEN = 'accessibility-automation/plugin';
+
+const scanConfigForAccessibilityPlugin = (user_config) => {
+  try {
+    const configPath = user_config.run_settings && user_config.run_settings.cypressConfigFilePath;
+    if (!configPath || !fs.existsSync(configPath)) return false;
+    const content = fs.readFileSync(configPath, { encoding: 'utf-8' });
+    return content.includes(ACCESSIBILITY_PLUGIN_IMPORT_TOKEN);
+  } catch (error) {
+    logger.debug(`Unable to scan cypress config for accessibility plugin: ${error.message || error}`);
+    return false;
+  }
+};
+
+/**
+ * Determines whether the BrowserStack accessibility plugin is loaded in the
+ * user's cypress config. Reading the cypress config executes its top-level
+ * requires; the accessibility plugin sets BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED
+ * when loaded, which readCypressConfigFile propagates back to this process as a
+ * definitive 'true'/'false'. If the config could not be required (env var stays
+ * undefined), we fall back to a raw-text scan so users are not wrongly disabled.
+ */
+exports.isAccessibilityPluginLoaded = (user_config) => {
+  try {
+    // Reset before reading so a stale value from a previous run cannot leak in.
+    delete process.env.BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED;
+    const { readCypressConfigFile } = require('../helpers/readCypressConfigUtil');
+    readCypressConfigFile(user_config);
+
+    const detection = process.env.BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED;
+    if (detection === 'true') return true;
+    if (detection === 'false') return false;
+
+    // Inconclusive (config could not be required) — fall back to a text scan.
+    logger.debug('Accessibility plugin detection inconclusive from config require; falling back to source scan.');
+    return scanConfigForAccessibilityPlugin(user_config);
+  } catch (error) {
+    logger.debug(`Unable to determine if accessibility plugin is loaded: ${error.message || error}`);
+    return scanConfigForAccessibilityPlugin(user_config);
+  }
+}
+
 exports.createAccessibilityTestRun = async (user_config, framework) => {
 
   try {

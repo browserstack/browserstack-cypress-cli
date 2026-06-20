@@ -233,6 +233,21 @@ exports.loadJsFile =  (cypress_config_filepath, bstack_node_modules_path) => {
     if (fs.existsSync(config.configJsonFileName)) {
         fs.unlinkSync(config.configJsonFileName)
     }
+
+    // Propagate accessibility-plugin detection (written by requireModule.js in the
+    // child process) back into the parent process via an env var. We set it
+    // explicitly to 'true'/'false' only when the config was actually required, so
+    // callers can distinguish a definitive result from "could not read".
+    try {
+        if (fs.existsSync(config.accessibilityPluginFlagFileName)) {
+            const flag = JSON.parse(fs.readFileSync(config.accessibilityPluginFlagFileName).toString());
+            process.env.BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED = (flag && flag.accessibilityPluginLoaded) ? 'true' : 'false';
+            fs.unlinkSync(config.accessibilityPluginFlagFileName);
+        }
+    } catch (err) {
+        logger.debug(`Unable to read accessibility plugin detection flag: ${err.message}`);
+    }
+
     return cypress_config
 }
 
