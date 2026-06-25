@@ -41,9 +41,18 @@ exports.isAccessibilitySupportedCypressVersion = (cypress_config_filename) => {
   return CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS.includes(extension);
 }
 
+// Token identifying the accessibility plugin module path in source.
+const ACCESSIBILITY_PLUGIN_PATH_TOKEN = 'accessibility-automation/plugin';
+
 // Strip JS/TS comments so that commented-out plugin imports/calls are ignored
-// by the static scans below. Best-effort: handles block and line comments while
-// avoiding `://` in URLs.
+// by the static scans below.
+//
+// NOTE: this is an intentionally best-effort / lossy scrubber, NOT a real parser.
+// It can also strip `//` or `/* */` sequences that appear inside string literals,
+// and the `[^:]` guard only avoids `://` (URLs). This is acceptable because these
+// static scans are a secondary signal: the authoritative "is the plugin imported"
+// check is the require-load marker (BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED), so a
+// mis-stripped string literal cannot cause a false import detection.
 const stripComments = (src) => {
   return src
     .replace(/\/\*[\s\S]*?\*\//g, ' ')        // block comments
@@ -59,11 +68,19 @@ const readConfigSource = (user_config) => {
 };
 
 // Finds the symbol the accessibility plugin is imported as, via require() or
-// import, regardless of path style. Returns the binding name or null.
+// import, regardless of path style. Handles `require()`, default `import X from`,
+// and namespace `import * as X from`. Returns the binding name or null. Named
+// (`import { X }`) and dynamic (`await import(...)`) forms are not parsed here —
+// the strict fallback biases toward keeping accessibility on for those (see
+// isAccessibilityPluginImportedAndCalledInSource).
 const getAccessibilityPluginBinding = (content) => {
   const requireMatch = content.match(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*require\(\s*['"][^'"]*accessibility-automation\/plugin['"]\s*\)/);
-  const importMatch = content.match(/import\s+([A-Za-z0-9_$]+)\s+from\s+['"][^'"]*accessibility-automation\/plugin['"]/);
-  return (requireMatch && requireMatch[1]) || (importMatch && importMatch[1]) || null;
+  const importNamespaceMatch = content.match(/import\s+\*\s+as\s+([A-Za-z0-9_$]+)\s+from\s+['"][^'"]*accessibility-automation\/plugin['"]/);
+  const importDefaultMatch = content.match(/import\s+([A-Za-z0-9_$]+)\s+from\s+['"][^'"]*accessibility-automation\/plugin['"]/);
+  return (requireMatch && requireMatch[1]) ||
+    (importNamespaceMatch && importNamespaceMatch[1]) ||
+    (importDefaultMatch && importDefaultMatch[1]) ||
+    null;
 };
 
 const isBindingCalled = (content, binding) => {
@@ -89,15 +106,25 @@ const isAccessibilityPluginInvokedInSource = (user_config) => {
   }
 };
 
-// Pure static fallback: confirm the plugin is BOTH imported AND invoked. Used
-// only when the config could not be required (e.g. a TypeScript config before
-// BrowserStack packages are installed), so such users are still evaluated.
+// Pure static fallback: used only when the config could not be required (e.g. a
+// TypeScript config before BrowserStack packages are installed), so such users
+// are still evaluated. Biased toward KEEPING accessibility enabled: if the plugin
+// path is present but we cannot confidently parse the import binding (e.g. named
+// `import { X }` or dynamic `await import(...)`), we do not disable — silently
+// turning off a billed feature based on a lossy source scan is worse than leaving
+// it on. We only return false when there is positive evidence the plugin is not
+// wired in (path absent, or binding parsed and demonstrably never called).
 const isAccessibilityPluginImportedAndCalledInSource = (user_config) => {
   try {
     const content = readConfigSource(user_config);
     if (content === null) return false;
+    // Plugin path not referenced at all -> definitely not imported.
+    if (!content.includes(ACCESSIBILITY_PLUGIN_PATH_TOKEN)) return false;
     const binding = getAccessibilityPluginBinding(content);
-    if (!binding) return false;
+    // Path present but binding not parseable (namespace/named/dynamic import) ->
+    // keep accessibility on rather than risk a false disable.
+    if (!binding) return true;
+    // Binding parsed: trust the precise call check (catches import-without-call).
     return isBindingCalled(content, binding);
   } catch (error) {
     logger.debug(`Unable to scan cypress config for accessibility plugin: ${error.message || error}`);

@@ -3,12 +3,6 @@ const { decodeJWTToken } = require("../../helpers/utils");
 const utils = require('../../helpers/utils');
 const http = require('http');
 
-// Marker set as soon as this plugin module is loaded by the user's cypress
-// config (via `require('browserstack-cypress-cli/bin/accessibility-automation/plugin')`).
-// The CLI reads the cypress config (which executes its top-level requires) before
-// sending the build start event, and uses this marker to determine whether the
-// accessibility plugin is actually wired in. Unlike a static text scan of the
-// config file, this does NOT false-positive on commented-out requires.
 process.env.BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED = 'true';
 
 const browserstackAccessibility = (on, config) => {
