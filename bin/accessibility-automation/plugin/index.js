@@ -3,7 +3,12 @@ const { decodeJWTToken } = require("../../helpers/utils");
 const utils = require('../../helpers/utils');
 const http = require('http');
 
+process.env.BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED = 'true';
+
 const browserstackAccessibility = (on, config) => {
+  // Also set on invocation, so that a runtime read of the plugin reflects that
+  // it was actually called within setupNodeEvents.
+  process.env.BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED = 'true';
   let browser_validation = true;
   if (process.env.BROWSERSTACK_ACCESSIBILITY_DEBUG === 'true') {
     config.env.BROWSERSTACK_LOGS = 'true';

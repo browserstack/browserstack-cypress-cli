@@ -41,6 +41,142 @@ exports.isAccessibilitySupportedCypressVersion = (cypress_config_filename) => {
   return CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS.includes(extension);
 }
 
+// Token identifying the accessibility plugin module path in source.
+const ACCESSIBILITY_PLUGIN_PATH_TOKEN = 'accessibility-automation/plugin';
+
+// Strip JS/TS comments so that commented-out plugin imports/calls are ignored
+// by the static scans below.
+//
+// NOTE: this is an intentionally best-effort / lossy scrubber, NOT a real parser.
+// It can also strip `//` or `/* */` sequences that appear inside string literals,
+// and the `[^:]` guard only avoids `://` (URLs). This is acceptable because these
+// static scans are a secondary signal: the authoritative "is the plugin imported"
+// check is the require-load marker (BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED), so a
+// mis-stripped string literal cannot cause a false import detection.
+const stripComments = (src) => {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')        // block comments
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1');     // line comments (skip URLs like http://)
+};
+
+// Reads the cypress config source (comments stripped). Returns null if it cannot
+// be read.
+const readConfigSource = (user_config) => {
+  const configPath = user_config.run_settings && user_config.run_settings.cypressConfigFilePath;
+  if (!configPath || !fs.existsSync(configPath)) return null;
+  return stripComments(fs.readFileSync(configPath, { encoding: 'utf-8' }));
+};
+
+// Finds the symbol the accessibility plugin is imported as, via require() or
+// import, regardless of path style. Handles `require()`, default `import X from`,
+// and namespace `import * as X from`. Returns the binding name or null. Named
+// (`import { X }`) and dynamic (`await import(...)`) forms are not parsed here —
+// the strict fallback biases toward keeping accessibility on for those (see
+// isAccessibilityPluginImportedAndCalledInSource).
+const getAccessibilityPluginBinding = (content) => {
+  const requireMatch = content.match(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*require\(\s*['"][^'"]*accessibility-automation\/plugin['"]\s*\)/);
+  const importNamespaceMatch = content.match(/import\s+\*\s+as\s+([A-Za-z0-9_$]+)\s+from\s+['"][^'"]*accessibility-automation\/plugin['"]/);
+  const importDefaultMatch = content.match(/import\s+([A-Za-z0-9_$]+)\s+from\s+['"][^'"]*accessibility-automation\/plugin['"]/);
+  return (requireMatch && requireMatch[1]) ||
+    (importNamespaceMatch && importNamespaceMatch[1]) ||
+    (importDefaultMatch && importDefaultMatch[1]) ||
+    null;
+};
+
+const isBindingCalled = (content, binding) => {
+  const callRegex = new RegExp('\\b' + binding.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*\\(');
+  return callRegex.test(content);
+};
+
+// Static check: confirm the (already-imported) accessibility plugin is actually
+// invoked in the config source. Lenient — if the import binding cannot be located
+// via static parsing (unusual syntax) or the source cannot be read, we do NOT
+// veto the require-based detection (return true), to avoid wrongly disabling
+// valid configs.
+const isAccessibilityPluginInvokedInSource = (user_config) => {
+  try {
+    const content = readConfigSource(user_config);
+    if (content === null) return true;
+    const binding = getAccessibilityPluginBinding(content);
+    if (!binding) return true;
+    return isBindingCalled(content, binding);
+  } catch (error) {
+    logger.debug(`Unable to verify accessibility plugin invocation: ${error.message || error}`);
+    return true;
+  }
+};
+
+// Pure static fallback: used only when the config could not be required (e.g. a
+// TypeScript config before BrowserStack packages are installed), so such users
+// are still evaluated. Biased toward KEEPING accessibility enabled: if the plugin
+// path is present but we cannot confidently parse the import binding (e.g. named
+// `import { X }` or dynamic `await import(...)`), we do not disable — silently
+// turning off a billed feature based on a lossy source scan is worse than leaving
+// it on. We only return false when there is positive evidence the plugin is not
+// wired in (path absent, or binding parsed and demonstrably never called).
+const isAccessibilityPluginImportedAndCalledInSource = (user_config) => {
+  try {
+    const content = readConfigSource(user_config);
+    if (content === null) return false;
+    // Plugin path not referenced at all -> definitely not imported.
+    if (!content.includes(ACCESSIBILITY_PLUGIN_PATH_TOKEN)) return false;
+    const binding = getAccessibilityPluginBinding(content);
+    // Path present but binding not parseable (namespace/named/dynamic import) ->
+    // keep accessibility on rather than risk a false disable.
+    if (!binding) return true;
+    // Binding parsed: trust the precise call check (catches import-without-call).
+    return isBindingCalled(content, binding);
+  } catch (error) {
+    logger.debug(`Unable to scan cypress config for accessibility plugin: ${error.message || error}`);
+    return false;
+  }
+};
+
+/**
+ * Determines whether the BrowserStack accessibility plugin is genuinely wired
+ * into the user's cypress config, i.e. both imported AND invoked.
+ *
+ * Detection combines two signals:
+ *  1) Require-load: reading the cypress config executes its top-level requires;
+ *     the plugin sets BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED on load, which
+ *     readCypressConfigFile propagates back as a definitive 'true'/'false'. This
+ *     tells us whether the plugin is imported (and does not false-positive on a
+ *     commented-out require, since commented code never executes).
+ *  2) Static source scan: confirms the imported plugin binding is actually called
+ *     in the config — so "imported but never called" is treated as not loaded.
+ *
+ * If the config could not be required (env var stays undefined, e.g. a TS config
+ * before packages are installed), we fall back to a pure static scan that checks
+ * for both import and invocation.
+ */
+exports.isAccessibilityPluginLoaded = (user_config) => {
+  try {
+    // Reset before reading so a stale value from a previous run cannot leak in.
+    delete process.env.BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED;
+    const { readCypressConfigFile } = require('../helpers/readCypressConfigUtil');
+    readCypressConfigFile(user_config);
+
+    const detection = process.env.BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED;
+    if (detection === 'true') {
+      // Imported via require — additionally require that it is actually invoked.
+      const called = isAccessibilityPluginInvokedInSource(user_config);
+      if (!called) {
+        logger.debug('Accessibility plugin is imported but not invoked in the cypress config; treating as not loaded.');
+      }
+      return called;
+    }
+    if (detection === 'false') return false;
+
+    // Inconclusive (config could not be required) — fall back to a static scan
+    // that checks for both import and invocation.
+    logger.debug('Accessibility plugin detection inconclusive from config require; falling back to source scan.');
+    return isAccessibilityPluginImportedAndCalledInSource(user_config);
+  } catch (error) {
+    logger.debug(`Unable to determine if accessibility plugin is loaded: ${error.message || error}`);
+    return isAccessibilityPluginImportedAndCalledInSource(user_config);
+  }
+}
+
 exports.createAccessibilityTestRun = async (user_config, framework) => {
 
   try {
