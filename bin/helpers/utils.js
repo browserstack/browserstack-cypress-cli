@@ -1103,7 +1103,29 @@ exports.getFilesToIgnore = (runSettings, excludeFiles, logging = true) => {
   return ignoreFiles;
 }
 
+// SDK-6463: glob.sync can throw deep inside minimatch (e.g. "expand is not a function" /
+// "brace_expansion_1.default is not a function") when a project force-resolves an
+// incompatible 'brace-expansion'/'minimatch' major (e.g. brace-expansion@5) across the
+// dependency tree via yarn resolutions / npm overrides. That crash used to abort spec
+// discovery in getNumberOfSpecFiles and produce a build with 0 executed tests (or crash the
+// run entirely). Degrade gracefully: log once and return no matches so the run still proceeds
+// (specs are resolved on BrowserStack regardless of the local count).
+let _loggedGlobFailure = false;
+const safeGlobSync = (pattern, options) => {
+  try {
+    return glob.sync(pattern, options);
+  } catch (err) {
+    if (!_loggedGlobFailure) {
+      _loggedGlobFailure = true;
+      logger.warn(`Could not enumerate spec files locally (glob failed: ${err && err.message}). This usually means an incompatible 'brace-expansion'/'minimatch' version was forced via package resolutions/overrides. Continuing — specs will be resolved on BrowserStack; local parallelisation may be reduced.`);
+    }
+    return [];
+  }
+};
+exports.safeGlobSync = safeGlobSync;
+
 exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession=false) => {
+  try {
   let defaultSpecFolder
   let testFolderPath
   let globCypressConfigSpecPatterns = []
@@ -1128,7 +1150,7 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
       const filesMatched = [];
       globCypressConfigSpecPatterns.forEach(specPattern => {
         filesMatched.push(
-          ...glob.sync(specPattern, {
+          ...safeGlobSync(specPattern, {
             cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles
           })
         );
@@ -1158,7 +1180,7 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
   let fileMatchedWithConfigSpecPattern = []
   globCypressConfigSpecPatterns.forEach(specPattern => {
     fileMatchedWithConfigSpecPattern.push(
-      ...glob.sync(specPattern, {
+      ...safeGlobSync(specPattern, {
         cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles
       })
     );
@@ -1167,7 +1189,7 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
 
   let files
   if (globSearchPattern) {
-    let fileMatchedWithBstackSpecPattern = glob.sync(globSearchPattern, {
+    let fileMatchedWithBstackSpecPattern = safeGlobSync(globSearchPattern, {
       cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles
     });
     fileMatchedWithBstackSpecPattern = fileMatchedWithBstackSpecPattern.map((file) => path.resolve(bsConfig.run_settings.cypressProjectDir, file))
@@ -1195,6 +1217,11 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
     bsConfig.run_settings.specs = files;
   }
   return files;
+  } catch (err) {
+    // SDK-6463 backstop: never let spec-counting crash the run. Proceed without a local count.
+    logger.warn(`Could not determine spec files locally: ${err && err.message}. Continuing; specs will be resolved on BrowserStack.`);
+    return [];
+  }
 };
 
 exports.sanitizeSpecsPattern = (pattern) => {
@@ -1349,6 +1376,10 @@ exports.isJSONInvalid = (err, args) => {
 }
 
 exports.deleteBaseUrlFromError = (err) => {
+  // SDK-6463: guard against non-string errors. This is called from the run's error handler
+  // (isJSONInvalid); if a real Error object reaches it, err.replace(...) throws a secondary
+  // TypeError that masks the original failure.
+  if (typeof err !== 'string') return err;
   return err.replace(/To test ([\s\S]*)on BrowserStack/g, 'To test on BrowserStack');
 }
 
@@ -1431,7 +1462,7 @@ exports.setEnforceSettingsConfig = (bsConfig, args) => {
       let specFilesMatched = [];
       specConfigs.forEach(specPattern => {
         specFilesMatched.push(
-          ...glob.sync(specPattern, {
+          ...safeGlobSync(specPattern, {
             cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles
           })
         );
