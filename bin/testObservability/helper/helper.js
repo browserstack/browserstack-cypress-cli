@@ -937,9 +937,9 @@ exports.runCypressTestsLocally = (bsConfig, args, rawArgs) => {
     rawArgs = cleanupTestObservabilityFlags(rawArgs);
     logger.info(`Running npx cypress run ${getReRunSpecs(rawArgs.slice(1)).join(' ')} ${getLocalSessionReporter().join(' ')}`);
     const cypressProcess = spawn(
-      /^win/.test(process.platform) ? 'npx.cmd' : 'npx',
+      'npx',
       ['cypress', 'run', ...getReRunSpecs(rawArgs.slice(1)), ...getLocalSessionReporter()],
-      { stdio: 'inherit', cwd: process.cwd(), env: process.env, shell: false }
+      { stdio: 'inherit', cwd: process.cwd(), env: process.env, shell: true }
     );
     cypressProcess.on('close', async (code) => {
       logger.info(`Cypress process exited with code ${code}`);
