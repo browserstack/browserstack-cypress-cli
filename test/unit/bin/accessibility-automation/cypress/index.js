@@ -38,11 +38,13 @@ function makeWin(mode) {
   const echo = { A11Y_SCAN: 'A11Y_SCAN_FINISHED', A11Y_SAVE_RESULTS: 'A11Y_RESULTS_SAVED' };
   const guard = () => { if (mode === 'crossorigin') throw new Error("Blocked a frame with origin from accessing a cross-origin frame."); };
   return {
+    dispatched: [], // records every event type dispatched at the page (A11Y_SCAN, ...)
     get location() { guard(); return { protocol: 'http:' }; },
     get document() { guard(); return { querySelector: () => ({ id: 'accessibility-automation-element' }) }; },
     addEventListener(type, cb) { (listeners[type] = listeners[type] || []).push(cb); },
     removeEventListener(type, cb) { listeners[type] = (listeners[type] || []).filter((f) => f !== cb); },
     dispatchEvent(e) {
+      this.dispatched.push(e.type);
       const done = echo[e.type];
       if (mode === 'ok' && done) (listeners[done] || []).forEach((cb) => cb({ detail: {} }));
       return true; // 'hang' echoes nothing -> relies on the internal always-settle timer
@@ -54,6 +56,7 @@ describe('accessibility-automation/cypress afterEach (SDK-6463)', () => {
   let capturedAfterEach;
   let theWin;
   const unhandled = [];
+  const failHandlers = [];
   const onUnhandled = (reason) => unhandled.push(reason && reason.message ? reason.message : String(reason));
 
   before(() => {
@@ -81,7 +84,8 @@ describe('accessibility-automation/cypress afterEach (SDK-6463)', () => {
       wrap: (value) => chain((value && typeof value.then === 'function') ? value : Promise.resolve(value)),
       window: () => chain(Promise.resolve(theWin)),
       task: () => chain(Promise.resolve({ testRunUuid: 'uuid-123' })),
-      on() {},
+      // capture per-test fail listeners the hook registers (cy.on('fail', ...))
+      on(evt, fn) { if (evt === 'fail') failHandlers.push(fn); },
     };
 
     const realAfterEach = global.afterEach, realBefore = global.before, realBeforeEach = global.beforeEach;
@@ -125,5 +129,28 @@ describe('accessibility-automation/cypress afterEach (SDK-6463)', () => {
   it('completes cleanly on the happy path', async () => {
     const rej = await runHook('ok');
     expect(rej).to.have.length(0);
+  });
+
+  // SDK-6463 hardening: any failure raised by the hook's own commands (cy.window on a
+  // cross-origin page, an unregistered cy.task, ...) must be suppressed via the per-test
+  // 'fail' listener so it cannot fail the user's test or abort the spec.
+  it('registers a per-test fail listener that suppresses hook failures (returns false)', async () => {
+    failHandlers.length = 0;
+    await runHook('ok');
+    expect(failHandlers.length, 'afterEach must register a cy.on("fail") guard').to.be.at.least(1);
+    const result = failHandlers[0](new Error("The task 'get_test_run_uuid' was not handled"));
+    expect(result, 'fail handler must return false to suppress the failure').to.equal(false);
+  });
+
+  // SDK-6463 hardening: after repeated scan/save timeouts, the circuit opens and the
+  // plugin stops dispatching A11Y_SCAN entirely so later tests are not stalled.
+  it('opens the circuit after repeated timeouts and stops dispatching scans', async () => {
+    // happy path above reset the consecutive-timeout counter; two hang runs produce
+    // 3 timeouts (scan+save, then scan) which reaches the default circuit limit of 3.
+    await runHook('hang');
+    await runHook('hang');
+    const rej = await runHook('hang'); // circuit open: must not dispatch, must not stall
+    expect(rej).to.have.length(0);
+    expect(theWin.dispatched, 'no A11Y_SCAN once the circuit is open').to.not.include('A11Y_SCAN');
   });
 });
