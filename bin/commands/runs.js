@@ -375,8 +375,7 @@ module.exports = function run(args, rawArgs) {
                     markBlockStart('postBuild');
                     logger.debug("Completed polling of build status");
 
-                    // stop the Local instance
-                    if (!turboScaleSession) await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs, buildReportData);
+                    await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs, buildReportData);
 
                     // SDK-6211: send the Test Observability build-stop now — polling has resolved, so
                     // the build has finished running on BrowserStack. builds_th.finished_at is stamped
