@@ -13,6 +13,7 @@ const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 const TIMEZONE = require("../helpers/timezone.json");
 const { setAxiosProxy } = require('./helper');
+const { isPathInsideBase } = require('./securityValidation');
 
 const usageReporting = require("./usageReporting"),
   logger = require("./logger").winstonLogger,
@@ -33,17 +34,30 @@ exports.validateBstackJson = (bsConfigPath) => {
   return new Promise(function (resolve, reject) {
     try {
       logger.info(`Reading config from ${bsConfigPath}`);
-      let bsConfig = require(bsConfigPath);
+      // browserstack.json is a pure-JSON config, so parse it as data rather than
+      // require()-ing it (require executes any JS the file contains — a
+      // PR-supplied .js config would run arbitrary code, APS-19008). Also require
+      // a .json extension and that the file resolves inside the project root so a
+      // crafted --config-file cannot point outside the project or at a script.
+      const resolvedPath = path.resolve(bsConfigPath);
+      if (path.extname(resolvedPath).toLowerCase() !== ".json") {
+        return reject(`Invalid browserstack.json file. Error : config file must be a .json file.`);
+      }
+      if (!isPathInsideBase(resolvedPath, process.cwd())) {
+        return reject(`Invalid browserstack.json file. Error : config file must be inside the project directory.`);
+      }
+      if (!fs.existsSync(resolvedPath)) {
+        return reject(
+          "Couldn't find the browserstack.json file at \"" +
+            bsConfigPath +
+            '". Please use --config-file <path to browserstack.json>.'
+        );
+      }
+      let bsConfig = JSON.parse(fs.readFileSync(resolvedPath, "utf8"));
       bsConfig = exports.normalizeTestReportingConfig(bsConfig);
       resolve(bsConfig);
     } catch (e) {
-      reject(
-        e.code === "MODULE_NOT_FOUND"
-          ? "Couldn't find the browserstack.json file at \"" +
-              bsConfigPath +
-              '". Please use --config-file <path to browserstack.json>.'
-          : `Invalid browserstack.json file. Error : ${e.message}`
-      );
+      reject(`Invalid browserstack.json file. Error : ${e.message}`);
     }
   });
 };

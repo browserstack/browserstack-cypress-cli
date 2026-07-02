@@ -467,6 +467,11 @@ exports.truncateString = (field, truncateSizeInBytes) => {
 exports.setAxiosProxy = (axiosConfig) => {
   if (process.env.HTTP_PROXY || process.env.HTTPS_PROXY) {
     const httpProxy = process.env.HTTP_PROXY || process.env.HTTPS_PROXY
+    // Warn that all API traffic (including Basic Auth credentials) is being
+    // routed through this proxy, which can read/rewrite it if it terminates TLS
+    // (APS-19011). We honour the proxy (corporate CIs need it) but no longer do
+    // so silently.
+    logger.warn(`An HTTP(S) proxy is configured (${httpProxy}); all BrowserStack API traffic, including credentials, will be routed through it.`);
     axiosConfig.proxy = false;
     axiosConfig.httpsAgent = new HttpsProxyAgent(httpProxy);
   };

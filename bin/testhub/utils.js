@@ -4,6 +4,7 @@ const logger = require("../../bin/helpers/logger").winstonLogger;
 const TESTHUB_CONSTANTS = require("./constants");
 const testObservabilityHelper = require("../../bin/testObservability/helper/helper");
 const helper = require("../helpers/helper");
+const { isWellFormedJwt } = require("../helpers/securityValidation");
 const accessibilityHelper = require("../accessibility-automation/helper");
 const detectPort = require('detect-port');
 
@@ -232,7 +233,15 @@ exports.findAvailablePort = async (preferredPort, maxAttempts = 10) => {
 }
 
 exports.setTestHubCommonMetaInfo = (user_config, responseData) => {
-  process.env.BROWSERSTACK_TESTHUB_JWT = responseData.jwt;
+  // Structural (not cryptographic) sanity check on the JWT from the API
+  // response. The CLI has no key to verify the signature, so this only rejects
+  // obviously-malformed / MITM-swapped garbage tokens — defence-in-depth, not
+  // an integrity guarantee (APS-19011).
+  if (responseData && responseData.jwt !== undefined && !isWellFormedJwt(responseData.jwt)) {
+    logger.warn('Received a malformed TestHub JWT from the API response; ignoring it.');
+  } else {
+    process.env.BROWSERSTACK_TESTHUB_JWT = responseData.jwt;
+  }
   process.env.BROWSERSTACK_TESTHUB_UUID = responseData.build_hashed_id;
   user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_JWT`);
   user_config.run_settings.system_env_vars.push(`BROWSERSTACK_TESTHUB_UUID`);
