@@ -1,15 +1,34 @@
 var config = require('./config.json');
+const { isAllowedBrowserstackUrl } = require('./securityValidation');
 
 config.env = process.env.BSTACK_CYPRESS_NODE_ENV || "production";
+
+// Only honour an env-var URL override if it points at a BrowserStack
+// (prod/staging) host or localhost. Without this allowlist an attacker who can
+// set CI env vars (BSTACK_CYPRESS_NODE_ENV + RAILS_HOST/UPLOAD_URL/...) could
+// redirect all API calls — including Basic Auth credentials and the tests.zip
+// upload — to their own server (APS-19010). Invalid overrides fall back to the
+// production defaults from config.json.
+const applyUrlOverride = (envValue, currentValue, label) => {
+  if (envValue === undefined || envValue === null || envValue === "") {
+    return currentValue;
+  }
+  if (isAllowedBrowserstackUrl(envValue)) {
+    return envValue;
+  }
+  // eslint-disable-next-line no-console
+  console.warn(`Ignoring ${label} override "${envValue}": only *.browserstack.com, *.bsstag.com or localhost URLs are allowed.`);
+  return currentValue;
+};
 
 if(config.env !== "production") {
   // load config based on env
   require('custom-env').env(config.env);
 
-  config.uploadUrl = process.env.UPLOAD_URL;
-  config.rails_host = process.env.RAILS_HOST;
-  config.dashboardUrl = process.env.DASHBOARD_URL;
-  config.usageReportingUrl = process.env.USAGE_REPORTING_URL;
+  config.uploadUrl = applyUrlOverride(process.env.UPLOAD_URL, config.uploadUrl, "UPLOAD_URL");
+  config.rails_host = applyUrlOverride(process.env.RAILS_HOST, config.rails_host, "RAILS_HOST");
+  config.dashboardUrl = applyUrlOverride(process.env.DASHBOARD_URL, config.dashboardUrl, "DASHBOARD_URL");
+  config.usageReportingUrl = applyUrlOverride(process.env.USAGE_REPORTING_URL, config.usageReportingUrl, "USAGE_REPORTING_URL");
 }
 
 config.cypress_v1 = `${config.rails_host}/automate/cypress/v1`;
