@@ -5593,4 +5593,34 @@ describe('utils', () => {
     });
   });
 
+  // SDK-6463: glob.sync can crash inside minimatch when a project force-resolves an
+  // incompatible brace-expansion/minimatch (e.g. brace-expansion@5) via resolutions/overrides.
+  // That must not abort spec discovery / crash the run.
+  describe('SDK-6463 glob resilience', () => {
+    afterEach(() => { if (glob.sync.restore) glob.sync.restore(); });
+
+    it('safeGlobSync returns [] and does not throw when glob.sync throws', () => {
+      sinon.stub(glob, 'sync').throws(new TypeError('expand is not a function'));
+      let result;
+      expect(() => { result = utils.safeGlobSync('**/*.{js,ts}', {}); }).to.not.throw();
+      expect(result).to.eql([]);
+    });
+
+    it('getNumberOfSpecFiles does not throw and returns [] when glob.sync crashes', () => {
+      sinon.stub(glob, 'sync').throws(new TypeError('expand is not a function'));
+      const bsConfig = { run_settings: { cypressProjectDir: '.', cypressTestSuiteType: CYPRESS_V10_AND_ABOVE_TYPE }, browsers: [] };
+      let result;
+      expect(() => { result = utils.getNumberOfSpecFiles(bsConfig, {}, { e2e: { specPattern: '**/*.cy.{js,ts}' } }); }).to.not.throw();
+      expect(result).to.eql([]);
+    });
+
+    it('deleteBaseUrlFromError returns non-string errors unchanged (no err.replace crash)', () => {
+      const errObj = new TypeError('some object error');
+      expect(() => utils.deleteBaseUrlFromError(errObj)).to.not.throw();
+      expect(utils.deleteBaseUrlFromError(errObj)).to.equal(errObj);
+      // strings are still transformed as before
+      expect(utils.deleteBaseUrlFromError('To test foo on BrowserStack')).to.equal('To test on BrowserStack');
+    });
+  });
+
 });
