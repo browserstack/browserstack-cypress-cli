@@ -577,6 +577,7 @@ class MyReporter {
           }
         };
         await uploadEventData(buildUpdateData);
+        this.haveSentBuildUpdate = true;
       }
 
       // Add started hooks to the hash
