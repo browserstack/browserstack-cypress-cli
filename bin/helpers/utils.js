@@ -889,7 +889,7 @@ exports.setLocalMode = (bsConfig, args) => {
     if (localModeInferred && localModeUndefined) {
       bsConfig.connection_settings.local_mode_inferred = local_mode;
     }
-    logger.debug(`local_mode set to ${bsConfig.connection_settings.local_mode_inferred}`);
+    logger.debug(`local_mode set to ${bsConfig.connection_settings.local_mode}`);
   }
 };
 
