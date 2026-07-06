@@ -1103,7 +1103,7 @@ exports.getFilesToIgnore = (runSettings, excludeFiles, logging = true) => {
   return ignoreFiles;
 }
 
-// SDK-6463: glob.sync can throw deep inside minimatch (e.g. "expand is not a function" /
+// glob.sync can throw deep inside minimatch (e.g. "expand is not a function" /
 // "brace_expansion_1.default is not a function") when a project force-resolves an
 // incompatible 'brace-expansion'/'minimatch' major (e.g. brace-expansion@5) across the
 // dependency tree via yarn resolutions / npm overrides. That crash used to abort spec
@@ -1218,7 +1218,7 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
   }
   return files;
   } catch (err) {
-    // SDK-6463 backstop: never let spec-counting crash the run. Proceed without a local count.
+    // Backstop: never let spec-counting crash the run. Proceed without a local count.
     logger.warn(`Could not determine spec files locally: ${err && err.message}. Continuing; specs will be resolved on BrowserStack.`);
     return [];
   }
@@ -1376,7 +1376,7 @@ exports.isJSONInvalid = (err, args) => {
 }
 
 exports.deleteBaseUrlFromError = (err) => {
-  // SDK-6463: guard against non-string errors. This is called from the run's error handler
+  // Guard against non-string errors. This is called from the run's error handler
   // (isJSONInvalid); if a real Error object reaches it, err.replace(...) throws a secondary
   // TypeError that masks the original failure.
   if (typeof err !== 'string') return err;

@@ -5593,10 +5593,10 @@ describe('utils', () => {
     });
   });
 
-  // SDK-6463: glob.sync can crash inside minimatch when a project force-resolves an
+  // glob.sync can crash inside minimatch when a project force-resolves an
   // incompatible brace-expansion/minimatch (e.g. brace-expansion@5) via resolutions/overrides.
   // That must not abort spec discovery / crash the run.
-  describe('SDK-6463 glob resilience', () => {
+  describe('glob resilience', () => {
     afterEach(() => { if (glob.sync.restore) glob.sync.restore(); });
 
     it('safeGlobSync returns [] and does not throw when glob.sync throws', () => {

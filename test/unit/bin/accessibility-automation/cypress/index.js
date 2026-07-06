@@ -2,7 +2,7 @@
 const chai = require('chai');
 const expect = chai.expect;
 
-// SDK-6463 regression guard for the accessibility Cypress plugin's afterEach hook.
+// Regression guard for the accessibility Cypress plugin's afterEach hook.
 //
 // IMPORTANT: this is a fast, cheap guard — the authoritative proof runs REAL Cypress
 // (see the repro under scripts/ / the PR description). Two things it guards:
@@ -52,7 +52,7 @@ function makeWin(mode) {
   };
 }
 
-describe('accessibility-automation/cypress afterEach (SDK-6463)', () => {
+describe('accessibility-automation/cypress afterEach', () => {
   let capturedAfterEach;
   let theWin;
   const unhandled = [];
@@ -131,7 +131,7 @@ describe('accessibility-automation/cypress afterEach (SDK-6463)', () => {
     expect(rej).to.have.length(0);
   });
 
-  // SDK-6463 hardening: any failure raised by the hook's own commands (cy.window on a
+  // Hardening: any failure raised by the hook's own commands (cy.window on a
   // cross-origin page, an unregistered cy.task, ...) must be suppressed via the per-test
   // 'fail' listener so it cannot fail the user's test or abort the spec.
   it('registers a per-test fail listener that suppresses hook failures (returns false)', async () => {
@@ -142,7 +142,7 @@ describe('accessibility-automation/cypress afterEach (SDK-6463)', () => {
     expect(result, 'fail handler must return false to suppress the failure').to.equal(false);
   });
 
-  // SDK-6463 hardening: after repeated scan/save timeouts, the circuit opens and the
+  // Hardening: after repeated scan/save timeouts, the circuit opens and the
   // plugin stops dispatching A11Y_SCAN entirely so later tests are not stalled.
   it('opens the circuit after repeated timeouts and stops dispatching scans', async () => {
     // happy path above reset the consecutive-timeout counter; two hang runs produce

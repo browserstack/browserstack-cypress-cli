@@ -98,7 +98,7 @@ function generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, c
         // the JS output. Without these overrides, base options such as
         // noEmit / emitDeclarationOnly / composite / noEmitOnError leave the
         // compiled cypress config missing, surfacing as
-        // "Cypress config file not found at: ...tmpBstackCompiledJs/..." (SDK-6463).
+        // "Cypress config file not found at: ...tmpBstackCompiledJs/...".
         "noEmit": false,
         "emitDeclarationOnly": false,
         "composite": false,
@@ -155,7 +155,7 @@ function generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, c
     // code on any type error (very common when a single config file is compiled out of
     // its normal monorepo project context), which with '&&' would skip tsc-alias and
     // leave path aliases (e.g. @org/lib) un-rewritten -> the compiled config fails to
-    // require -> "Cypress config file not found" (SDK-6463). convertTsConfig already
+    // require -> "Cypress config file not found". convertTsConfig already
     // tolerates tsc errors by parsing the emitted-files output.
     const tscCommand = `${setNodePath} && node "${typescript_path}" --project "${tempTsConfigPath}" & ${setNodePath} && node "${tsc_alias_path}" --project "${tempTsConfigPath}" --verbose`;
     logger.info(`TypeScript compilation command: ${tscCommand}`);
@@ -165,7 +165,7 @@ function generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, c
     // rewrite ALWAYS runs even when tsc exits non-zero (type errors are common when a
     // single config file is compiled out of its monorepo context). With '&&', a tsc
     // error would skip tsc-alias and leave path aliases (e.g. @org/lib) un-rewritten,
-    // making the compiled config impossible to require (SDK-6463). convertTsConfig
+    // making the compiled config impossible to require. convertTsConfig
     // already tolerates tsc errors by parsing the emitted-files output.
     const nodePathPrefix = `NODE_PATH=${bstack_node_modules_path}`;
     const tscCommand = `${nodePathPrefix} node "${typescript_path}" --project "${tempTsConfigPath}" ; ${nodePathPrefix} node "${tsc_alias_path}" --project "${tempTsConfigPath}" --verbose`;

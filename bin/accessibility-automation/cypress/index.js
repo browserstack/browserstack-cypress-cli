@@ -5,7 +5,7 @@ const browserStackLog = (message) => {
     cy.task('browserstack_log', message);
 }
 
-// SDK-6463: circuit breaker for a dead/unresponsive accessibility scanner.
+// Circuit breaker for a dead/unresponsive accessibility scanner.
 // Each hung scan/save costs up to ACCESSIBILITY_SCAN_TIMEOUT (default 25s). Without a
 // breaker, a scanner that never responds stalls EVERY test's afterEach (and every
 // wrapped command) by that much. After N consecutive timeouts we stop attempting
@@ -65,7 +65,7 @@ const performModifiedScan = (originalFn, Subject, stateType, ...args) => {
 
 const performScan = (win, payloadToSend) =>
 new Promise((resolve) => {
-    // SDK-6463: this promise MUST always settle (never hang, never reject). It runs inside the
+    // This promise MUST always settle (never hang, never reject). It runs inside the
     // global afterEach; if it hangs, cy.wrap()'s 30s timeout fails the hook and Cypress skips
     // the rest of the spec. Failure modes guarded here:
     //  - the injected scanner never dispatches A11Y_SCAN_FINISHED (page mid-navigation / slow scan)
@@ -245,7 +245,7 @@ new Promise((resolve) => {
 
 const saveTestResults = (win, payloadToSend) =>
 new Promise((resolve) => {
-    // SDK-6463: must always settle (see performScan note) so a slow/absent A11Y_RESULTS_SAVED
+    // Must always settle (see performScan note) so a slow/absent A11Y_RESULTS_SAVED
     // event or a cross-origin window cannot fail the afterEach hook.
     if (a11yCircuitOpen) {
         return resolve("Accessibility results save skipped: scanner unresponsive (circuit open)");
@@ -364,7 +364,7 @@ commandToOverwrite.forEach((command) => {
 });
 
 afterEach(() => {
-    // SDK-6463: nothing that happens inside this accessibility hook may fail the user's
+    // Nothing that happens inside this accessibility hook may fail the user's
     // test or abort the remaining tests in the spec. Cypress chains have no .catch, so
     // suppress any failure raised while this hook's commands run (e.g. cy.window() on a
     // cross-origin page after an SSO redirect, or a cy.task that is not registered) via
