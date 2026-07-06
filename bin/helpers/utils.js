@@ -1103,6 +1103,20 @@ exports.getFilesToIgnore = (runSettings, excludeFiles, logging = true) => {
   return ignoreFiles;
 }
 
+// Perf: derive directory-pruning patterns from the ignore list.
+// readdir-glob (used both by archiver.glob for tests.zip and by hashUtil for the
+// spec md5 check) applies `ignore` per-entry AFTER walking, so it still descends
+// into node_modules/.git/dist etc. On large monorepos that walk alone takes
+// minutes ("Creating tests.zip" stalls). Its `skip` option instead prevents
+// DESCENDING into matching directories. Any ignore pattern ending in '/**' is
+// safe to reuse as a skip: if a directory matches '<x>/**' then every descendant
+// also matches it, so pruning cannot change which files end up included.
+exports.getDirectorySkipPatterns = (ignoreFiles) => {
+  return (ignoreFiles || []).filter((pattern) =>
+    typeof pattern === 'string' && pattern.endsWith('/**')
+  );
+}
+
 // glob.sync can throw deep inside minimatch (e.g. "expand is not a function" /
 // "brace_expansion_1.default is not a function") when a project force-resolves an
 // incompatible 'brace-expansion'/'minimatch' major (e.g. brace-expansion@5) across the
@@ -1753,13 +1767,20 @@ exports.fetchZipSize = (fileName) => {
   }
 }
 
-const getDirectorySize = async function(dir) {
+const getDirectorySize = async function(dir, deadline) {
   try{
+    // Perf: this telemetry-only walk recursively stats every file (it is
+    // pointed at node_modules in runs.js). On large monorepos it blocked the pipeline
+    // between archiving and uploading for tens of seconds. Stop descending once the
+    // deadline passes — folder size is best-effort telemetry, never worth stalling a run.
+    if (deadline && Date.now() > deadline) {
+      return 0;
+    }
     const subdirs = (await readdir(dir));
     const files = await Promise.all(subdirs.map(async (subdir) => {
       const res = path.resolve(dir, subdir);
       const s = (await stat(res));
-      return s.isDirectory() ? getDirectorySize(res) : (s.size);
+      return s.isDirectory() ? getDirectorySize(res, deadline) : (s.size);
     }));
     return files.reduce((a, f) => a+f, 0);
   }catch(e){
@@ -1769,10 +1790,15 @@ const getDirectorySize = async function(dir) {
   }
 };
 
-exports.fetchFolderSize = async (dir) => {
+exports.fetchFolderSize = async (dir, timeoutMs = 5000) => {
   try {
     if(fs.existsSync(dir)){
-      return (await getDirectorySize(dir) / 1024 / 1024);
+      const deadline = Date.now() + timeoutMs;
+      const size = (await getDirectorySize(dir, deadline) / 1024 / 1024);
+      if (Date.now() > deadline) {
+        logger.debug(`Folder size calculation for ${dir} exceeded ${timeoutMs}ms; reporting partial size.`);
+      }
+      return size;
     }
     return 0;
   } catch (error) {

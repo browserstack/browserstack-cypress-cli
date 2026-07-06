@@ -770,6 +770,34 @@ describe('utils', () => {
     });
   });
 
+  // Perf: directory-shaped ignore patterns are reused as readdir-glob `skip`
+  // patterns so the zip/md5 walks prune excluded trees instead of descending into them.
+  describe('getDirectorySkipPatterns', () => {
+    it('keeps only patterns ending in /** (safe to prune)', () => {
+      const ignore = [
+        '**/node_modules/**',
+        'node_modules/**',
+        'dist/**',
+        'apps/admin-portal/**',
+        'package.json',        // file pattern — must NOT be used for pruning
+        '.env',
+        '**/README.md',
+      ];
+      chai.expect(utils.getDirectorySkipPatterns(ignore)).to.be.eql([
+        '**/node_modules/**',
+        'node_modules/**',
+        'dist/**',
+        'apps/admin-portal/**',
+      ]);
+    });
+
+    it('handles empty/undefined input and non-string entries', () => {
+      chai.expect(utils.getDirectorySkipPatterns(undefined)).to.be.eql([]);
+      chai.expect(utils.getDirectorySkipPatterns([])).to.be.eql([]);
+      chai.expect(utils.getDirectorySkipPatterns([null, 42, 'x/**'])).to.be.eql(['x/**']);
+    });
+  });
+
   describe('setTestEnvs', () => {
     it('set env only from args', () => {
       let argsEnv = 'env3=value3, env4=value4';
