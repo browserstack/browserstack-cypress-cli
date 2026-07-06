@@ -770,7 +770,7 @@ describe('utils', () => {
     });
   });
 
-  // SDK-6463 (perf): directory-shaped ignore patterns are reused as readdir-glob `skip`
+  // Perf: directory-shaped ignore patterns are reused as readdir-glob `skip`
   // patterns so the zip/md5 walks prune excluded trees instead of descending into them.
   describe('getDirectorySkipPatterns', () => {
     it('keeps only patterns ending in /** (safe to prune)', () => {

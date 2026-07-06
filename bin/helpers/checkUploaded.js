@@ -25,7 +25,7 @@ const checkSpecsMd5 = (runSettings, args, instrumentBlocks) => {
     let options = {
       cwd: cypressFolderPath,
       ignore: ignoreFiles,
-      // SDK-6463 (perf): prune ignored directories from the md5 walk instead of
+      // Perf: prune ignored directories from the md5 walk instead of
       // filtering entries after descending into them (see utils.getDirectorySkipPatterns).
       skip: utils.getDirectorySkipPatterns(ignoreFiles),
       pattern: `**/*.+(${Constants.allowedFileTypes.join("|")})`

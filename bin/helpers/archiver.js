@@ -58,7 +58,7 @@ const archiveSpecs = (runSettings, filePath, excludeFiles, md5data) => {
 
     let ignoreFiles = utils.getFilesToIgnore(runSettings, excludeFiles);
     logger.debug(`Patterns ignored during zip ${ignoreFiles}`);
-    // SDK-6463 (perf): `ignore` filters entries only AFTER the walk visits them, so the
+    // Perf: `ignore` filters entries only AFTER the walk visits them, so the
     // globber still descends into node_modules/.git/etc. `skip` prunes those directories
     // from the traversal entirely — on large monorepos this cuts zip creation from
     // minutes to seconds without changing the archive contents.

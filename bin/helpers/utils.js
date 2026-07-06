@@ -1103,7 +1103,7 @@ exports.getFilesToIgnore = (runSettings, excludeFiles, logging = true) => {
   return ignoreFiles;
 }
 
-// SDK-6463 (perf): derive directory-pruning patterns from the ignore list.
+// Perf: derive directory-pruning patterns from the ignore list.
 // readdir-glob (used both by archiver.glob for tests.zip and by hashUtil for the
 // spec md5 check) applies `ignore` per-entry AFTER walking, so it still descends
 // into node_modules/.git/dist etc. On large monorepos that walk alone takes
@@ -1738,7 +1738,7 @@ exports.fetchZipSize = (fileName) => {
 
 const getDirectorySize = async function(dir, deadline) {
   try{
-    // SDK-6463 (perf): this telemetry-only walk recursively stats every file (it is
+    // Perf: this telemetry-only walk recursively stats every file (it is
     // pointed at node_modules in runs.js). On large monorepos it blocked the pipeline
     // between archiving and uploading for tens of seconds. Stop descending once the
     // deadline passes — folder size is best-effort telemetry, never worth stalling a run.
