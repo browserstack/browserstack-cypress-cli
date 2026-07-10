@@ -279,7 +279,11 @@ module.exports = function run(args, rawArgs) {
 
             let test_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.fileName));
             let npm_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.packageFileName));
-            let node_modules_size = await utils.fetchFolderSize(path.join(process.cwd(), "node_modules"));
+            // Perf: node_modules size is instrumentation-only, so don't block the upload on
+            // walking the tree — start the walk here and await it only after the upload has
+            // completed (in the common case it resolves while the upload is in flight, adding
+            // zero wall-clock; fetchFolderSize never rejects, so the floating promise is safe).
+            let nodeModulesSizePromise = utils.fetchFolderSize(path.join(process.cwd(), "node_modules"));
 
             if (Constants.turboScaleObj.enabled) {
               // Note: Calculating md5 here for turboscale force-upload so that we don't need to re-calculate at hub         
@@ -305,6 +309,9 @@ module.exports = function run(args, rawArgs) {
               logger.debug("Completed uploading the node_module zip");
               markBlockEnd('zip.zipUpload');
               markBlockEnd('zip');
+
+              // Walk was started before the upload; usually already resolved by now.
+              let node_modules_size = await nodeModulesSizePromise;
 
               if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
                 supportFileCleanup();

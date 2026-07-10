@@ -889,7 +889,7 @@ exports.setLocalMode = (bsConfig, args) => {
     if (localModeInferred && localModeUndefined) {
       bsConfig.connection_settings.local_mode_inferred = local_mode;
     }
-    logger.debug(`local_mode set to ${bsConfig.connection_settings.local_mode_inferred}`);
+    logger.debug(`local_mode set to ${bsConfig.connection_settings.local_mode}`);
   }
 };
 
@@ -1103,7 +1103,43 @@ exports.getFilesToIgnore = (runSettings, excludeFiles, logging = true) => {
   return ignoreFiles;
 }
 
+// Perf: derive directory-pruning patterns from the ignore list.
+// readdir-glob (used both by archiver.glob for tests.zip and by hashUtil for the
+// spec md5 check) applies `ignore` per-entry AFTER walking, so it still descends
+// into node_modules/.git/dist etc. On large monorepos that walk alone takes
+// minutes ("Creating tests.zip" stalls). Its `skip` option instead prevents
+// DESCENDING into matching directories. Any ignore pattern ending in '/**' is
+// safe to reuse as a skip: if a directory matches '<x>/**' then every descendant
+// also matches it, so pruning cannot change which files end up included.
+exports.getDirectorySkipPatterns = (ignoreFiles) => {
+  return (ignoreFiles || []).filter((pattern) =>
+    typeof pattern === 'string' && pattern.endsWith('/**')
+  );
+}
+
+// glob.sync can throw deep inside minimatch (e.g. "expand is not a function" /
+// "brace_expansion_1.default is not a function") when a project force-resolves an
+// incompatible 'brace-expansion'/'minimatch' major (e.g. brace-expansion@5) across the
+// dependency tree via yarn resolutions / npm overrides. That crash used to abort spec
+// discovery in getNumberOfSpecFiles and produce a build with 0 executed tests (or crash the
+// run entirely). Degrade gracefully: log once and return no matches so the run still proceeds
+// (specs are resolved on BrowserStack regardless of the local count).
+let _loggedGlobFailure = false;
+const safeGlobSync = (pattern, options) => {
+  try {
+    return glob.sync(pattern, options);
+  } catch (err) {
+    if (!_loggedGlobFailure) {
+      _loggedGlobFailure = true;
+      logger.warn(`Could not enumerate spec files locally (glob failed: ${err && err.message}). This usually means an incompatible 'brace-expansion'/'minimatch' version was forced via package resolutions/overrides. Continuing — specs will be resolved on BrowserStack; local parallelisation may be reduced.`);
+    }
+    return [];
+  }
+};
+exports.safeGlobSync = safeGlobSync;
+
 exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession=false) => {
+  try {
   let defaultSpecFolder
   let testFolderPath
   let globCypressConfigSpecPatterns = []
@@ -1128,7 +1164,7 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
       const filesMatched = [];
       globCypressConfigSpecPatterns.forEach(specPattern => {
         filesMatched.push(
-          ...glob.sync(specPattern, {
+          ...safeGlobSync(specPattern, {
             cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles
           })
         );
@@ -1158,7 +1194,7 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
   let fileMatchedWithConfigSpecPattern = []
   globCypressConfigSpecPatterns.forEach(specPattern => {
     fileMatchedWithConfigSpecPattern.push(
-      ...glob.sync(specPattern, {
+      ...safeGlobSync(specPattern, {
         cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles
       })
     );
@@ -1167,7 +1203,7 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
 
   let files
   if (globSearchPattern) {
-    let fileMatchedWithBstackSpecPattern = glob.sync(globSearchPattern, {
+    let fileMatchedWithBstackSpecPattern = safeGlobSync(globSearchPattern, {
       cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles
     });
     fileMatchedWithBstackSpecPattern = fileMatchedWithBstackSpecPattern.map((file) => path.resolve(bsConfig.run_settings.cypressProjectDir, file))
@@ -1195,6 +1231,11 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
     bsConfig.run_settings.specs = files;
   }
   return files;
+  } catch (err) {
+    // Backstop: never let spec-counting crash the run. Proceed without a local count.
+    logger.warn(`Could not determine spec files locally: ${err && err.message}. Continuing; specs will be resolved on BrowserStack.`);
+    return [];
+  }
 };
 
 exports.sanitizeSpecsPattern = (pattern) => {
@@ -1349,6 +1390,10 @@ exports.isJSONInvalid = (err, args) => {
 }
 
 exports.deleteBaseUrlFromError = (err) => {
+  // Guard against non-string errors. This is called from the run's error handler
+  // (isJSONInvalid); if a real Error object reaches it, err.replace(...) throws a secondary
+  // TypeError that masks the original failure.
+  if (typeof err !== 'string') return err;
   return err.replace(/To test ([\s\S]*)on BrowserStack/g, 'To test on BrowserStack');
 }
 
@@ -1431,7 +1476,7 @@ exports.setEnforceSettingsConfig = (bsConfig, args) => {
       let specFilesMatched = [];
       specConfigs.forEach(specPattern => {
         specFilesMatched.push(
-          ...glob.sync(specPattern, {
+          ...safeGlobSync(specPattern, {
             cwd: bsConfig.run_settings.cypressProjectDir, matchBase: true, ignore: ignoreFiles
           })
         );
@@ -1722,13 +1767,20 @@ exports.fetchZipSize = (fileName) => {
   }
 }
 
-const getDirectorySize = async function(dir) {
+const getDirectorySize = async function(dir, deadline) {
   try{
+    // Perf: this telemetry-only walk recursively stats every file (it is
+    // pointed at node_modules in runs.js). On large monorepos it blocked the pipeline
+    // between archiving and uploading for tens of seconds. Stop descending once the
+    // deadline passes — folder size is best-effort telemetry, never worth stalling a run.
+    if (deadline && Date.now() > deadline) {
+      return 0;
+    }
     const subdirs = (await readdir(dir));
     const files = await Promise.all(subdirs.map(async (subdir) => {
       const res = path.resolve(dir, subdir);
       const s = (await stat(res));
-      return s.isDirectory() ? getDirectorySize(res) : (s.size);
+      return s.isDirectory() ? getDirectorySize(res, deadline) : (s.size);
     }));
     return files.reduce((a, f) => a+f, 0);
   }catch(e){
@@ -1738,10 +1790,15 @@ const getDirectorySize = async function(dir) {
   }
 };
 
-exports.fetchFolderSize = async (dir) => {
+exports.fetchFolderSize = async (dir, timeoutMs = 5000) => {
   try {
     if(fs.existsSync(dir)){
-      return (await getDirectorySize(dir) / 1024 / 1024);
+      const deadline = Date.now() + timeoutMs;
+      const size = (await getDirectorySize(dir, deadline) / 1024 / 1024);
+      if (Date.now() > deadline) {
+        logger.debug(`Folder size calculation for ${dir} exceeded ${timeoutMs}ms; reporting partial size.`);
+      }
+      return size;
     }
     return 0;
   } catch (error) {
