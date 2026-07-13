@@ -340,10 +340,7 @@ module.exports = function run(args, rawArgs) {
                 utils.setProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
                 if(isTestObservabilitySession) {
                   utils.setO11yProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
-                  // OB-10135: cache the automate build id so `stopBuildUpstream`
-                  // can include it on the obs-api buildStop payload. Enables the
-                  // synergy dashboard to call the railsApp resource-errors
-                  // endpoint in the automate id-space directly.
+                  // OB-10135: read by stopBuildUpstream in testObservability/helper/helper.js
                   process.env.BROWSERSTACK_AUTOMATION_BUILD_ID = data.build_id;
                 }
                 let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;

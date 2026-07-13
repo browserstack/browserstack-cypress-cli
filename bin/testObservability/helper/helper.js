@@ -685,10 +685,7 @@ exports.stopBuildUpstream = async () => {
     } else {
       const data = {
         'stop_time': (new Date()).toISOString(),
-        // OB-10135: propagate the automate build hashed_id (cached at
-        // build-create time in runs.js) so obs-api can persist it and the
-        // synergy dashboard can call the railsApp resource-errors endpoint
-        // in the automate id-space directly.
+        // OB-10135: cached in bin/commands/runs.js at build-create
         'automate_build_id': process.env.BROWSERSTACK_AUTOMATION_BUILD_ID
       };
       const config = {
