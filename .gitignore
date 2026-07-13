@@ -8,4 +8,12 @@ tests.zip
 log/*.log
 results/*
 coverage
-simple_test/
+# simple_test/ is a local smoke-test scaffold. The scaffolding files
+# (cypress config + spec + README) are tracked so teammates can reuse the
+# harness; the credential-bearing files (browserstack.json, .env.*) are
+# still ignored via the root patterns above.
+simple_test/log/
+simple_test/results/
+simple_test/node_modules/
+simple_test/tmpBstackPackages/
+simple_test/npm_install_debug.log
