@@ -8,3 +8,4 @@ tests.zip
 log/*.log
 results/*
 coverage
+simple_test/
