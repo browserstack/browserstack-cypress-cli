@@ -5,9 +5,9 @@ describe('o11y collector URL', () => {
     const c = require('../../../../bin/testObservability/helper/constants');
     expect(c.API_URL).to.equal('https://collector-observability.browserstack.com');
   });
-  it('expands for lower env', () => {
+  it('expands for lower env to collector-testhub', () => {
     process.env.BSTACK_ENV = 'k8s';
     const c = require('../../../../bin/testObservability/helper/constants');
-    expect(c.API_URL).to.equal('https://collector-observability-k8s.bsstag.com');
+    expect(c.API_URL).to.equal('https://collector-testhub-k8s.bsstag.com');
   });
 });

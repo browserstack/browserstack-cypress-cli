@@ -3,10 +3,12 @@ const path = require('path');
 exports.consoleHolder = Object.assign({},console);
 exports.BATCH_SIZE = 1000;
 exports.BATCH_INTERVAL = 2000;
+// Lower-env collector is collector-testhub-<env> (per a11y/sdk/scripts/setupOnDemandSDKRepo.sh),
+// NOT collector-observability-<env> (that host does not exist).
 const _env = process.env.BSTACK_ENV;
 const _host = (!_env || _env === 'prod')
   ? 'collector-observability.browserstack.com'
-  : `collector-observability-${_env}.bsstag.com`;
+  : `collector-testhub-${_env}.bsstag.com`;
 exports.API_URL = `https://${_host}`;
 
 exports.IPC_EVENTS = {
