@@ -3,7 +3,11 @@ const path = require('path');
 exports.consoleHolder = Object.assign({},console);
 exports.BATCH_SIZE = 1000;
 exports.BATCH_INTERVAL = 2000;
-exports.API_URL = 'https://collector-observability.browserstack.com';
+const _env = process.env.BSTACK_ENV;
+const _host = (!_env || _env === 'prod')
+  ? 'collector-observability.browserstack.com'
+  : `collector-observability-${_env}.bsstag.com`;
+exports.API_URL = `https://${_host}`;
 
 exports.IPC_EVENTS = {
   LOG: 'testObservability:cypressLog',
