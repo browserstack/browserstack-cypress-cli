@@ -102,7 +102,7 @@ exports.getGitMetaData = () => {
       if(!info.commonGitDir) {
         logger.debug(`Unable to find a Git directory`);
         exports.debug(`Unable to find a Git directory`);
-        resolve({});
+        return resolve({});
       }
       if(!info.author && exports.findGitConfig(process.cwd())) {
         /* commit objects are packed */
@@ -196,6 +196,16 @@ exports.getHostInfo = () => {
 exports.getCiInfo = () => {
   var env = process.env;
 
+  // GitHub Actions — checked before the presence-only providers (Jenkins,
+  // Bitbucket) so leftover env vars on self-hosted runners can't shadow it
+  if (env.GITHUB_ACTIONS === "true" || (env.CI === "true" && env.GITHUB_RUN_ID)) {
+    return {
+      name: "GitHub Actions",
+      build_url: `${env.GITHUB_SERVER_URL || 'https://github.com'}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`,
+      job_name: env.GITHUB_WORKFLOW || env.GITHUB_JOB,
+      build_number: env.GITHUB_RUN_ID
+    };
+  }
   // Jenkins
   if ((typeof env.JENKINS_URL === "string" && env.JENKINS_URL.length > 0) || (typeof env.JENKINS_HOME === "string" && env.JENKINS_HOME.length > 0)) {
     return {
@@ -266,15 +276,6 @@ exports.getCiInfo = () => {
       build_url: env.CI_JOB_URL,
       job_name: env.CI_JOB_NAME,
       build_number: env.CI_JOB_ID
-    };
-  }
-  // GitHub Actions
-  if (env.GITHUB_ACTIONS === "true" || env.CI === "true" && env.GITHUB_RUN_ID) {
-    return {
-      name: "GitHub Actions",
-      build_url: `${env.GITHUB_SERVER_URL || 'https://github.com'}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`,
-      job_name: env.GITHUB_WORKFLOW || env.GITHUB_JOB,
-      build_number: env.GITHUB_RUN_ID
     };
   }
   // Buildkite
