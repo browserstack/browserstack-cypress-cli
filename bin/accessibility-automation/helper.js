@@ -378,32 +378,29 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
     }
     
     const globPattern = process.cwd() + supportFilesData.supportFile;
-    glob(globPattern, {}, (err, files) => {
-      if(err) {
-        logger.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
-        return;
-      }
-      
-      files.forEach(file => {
-        try {
-          const fileName = path.basename(file);
-          if(['e2e.js', 'e2e.ts', 'component.ts', 'component.js'].includes(fileName) && !file.includes('node_modules')) {
-        
-            const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
-            let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
-            if(!defaultFileContent.includes(cypressCommandEventListener)) {
-              let newFileContent = defaultFileContent + 
-                                  '\n' +
-                                  cypressCommandEventListener +
-                                  '\n';
-              fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
-              supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
-            }
+    // Synchronous for the same reason as testObservability setEventListeners
+    // (SDK-7121): the caller archives the suite right after this returns, so an
+    // async glob callback would race the archive and ship un-instrumented specs.
+    const files = glob.sync(globPattern, {});
+    files.forEach(file => {
+      try {
+        const fileName = path.basename(file);
+        if(['e2e.js', 'e2e.ts', 'component.ts', 'component.js'].includes(fileName) && !file.includes('node_modules')) {
+
+          const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
+          let cypressCommandEventListener = getAccessibilityCypressCommandEventListener(path.extname(file));
+          if(!defaultFileContent.includes(cypressCommandEventListener)) {
+            let newFileContent = defaultFileContent +
+                                '\n' +
+                                cypressCommandEventListener +
+                                '\n';
+            fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
+            supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
           }
-        } catch(e) {
-          logger.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
         }
-      });
+      } catch(e) {
+        logger.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
+      }
     });
   } catch(e) {
     logger.debug(`Unable to parse support files to set event listeners with error ${e}`, true, e);
