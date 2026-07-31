@@ -381,7 +381,13 @@ exports.setAccessibilityEventListeners = (bsConfig) => {
     // Synchronous for the same reason as testObservability setEventListeners
     // (SDK-7121): the caller archives the suite right after this returns, so an
     // async glob callback would race the archive and ship un-instrumented specs.
-    const files = glob.sync(globPattern, {});
+    let files;
+    try {
+      files = glob.sync(globPattern, {});
+    } catch(err) {
+      logger.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files', true, err);
+      return;
+    }
     files.forEach(file => {
       try {
         const fileName = path.basename(file);
