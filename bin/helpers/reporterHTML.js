@@ -44,7 +44,7 @@ let reportGenerator = async (bsConfig, buildId, args, rawArgs, buildReportData, 
   setAxiosProxy(axiosConfig);
 
   try {
-    const response = await axios.get(options.url, axiosConfig);
+    let response = await axios.get(options.url, axiosConfig);
     logger.debug('Received reports data from upstream.');
     try {
       build = response.data;
