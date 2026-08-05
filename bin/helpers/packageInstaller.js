@@ -33,6 +33,18 @@ const setupPackageFolder = (runSettings, directoryPath) => {
 
         // Combine win and mac specific dependencies if present
         const combinedDependencies = combineMacWinNpmDependencies(runSettings);
+        // APS-19009: only allow standard npm package names + semver/dist-tag versions
+        // before writing them to package.json, so a browserstack.json cannot smuggle a
+        // git-url / file: / path / alternate-registry spec (dependency confusion or code
+        // execution) into `npm install`.
+        const NPM_NAME_RE = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
+        const NPM_VERSION_RE = /^[A-Za-z0-9.\-+~^><=|*\s]+$/;
+        for (const depName of Object.keys(combinedDependencies || {})) {
+          const depVersion = combinedDependencies[depName];
+          if (!NPM_NAME_RE.test(depName) || typeof depVersion !== 'string' || !NPM_VERSION_RE.test(depVersion)) {
+            return reject(`Invalid npm_dependencies entry "${depName}": only standard package names and semver/dist-tag versions are allowed.`);
+          }
+        }
         if (combinedDependencies && Object.keys(combinedDependencies).length > 0) {
           Object.assign(packageJSON, {
             devDependencies: combinedDependencies,
@@ -97,12 +109,18 @@ const packageInstall = (packageDir, bsConfig) => {
 
     // add --legacy-peer-deps flag while installing dependencies for npm v7+
     // For more info please read "Peer Dependencies" section here -> https://github.blog/2021-02-02-npm-7-is-now-generally-available/
+    // APS-19009: --ignore-scripts prevents a user-supplied npm_dependencies package from
+    // executing lifecycle scripts (postinstall etc.) during this install, which was an RCE
+    // on CI. npm_dependencies is documented as pure-JS only. shell:true is retained on
+    // purpose: the command line is fully static (package names live in package.json, never
+    // on the command line, so there is no injection surface) and it is required for the
+    // output redirection and for invoking npm.cmd on Windows.
     if (parseInt(npm_major_version) >= 7) {
-      logger.debug(`Running NPM install command: npm install --legacy-peer-deps --loglevel verbose > ../npm_install_debug.log`);
-      nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--legacy-peer-deps', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true});
+      logger.debug(`Running NPM install command: npm install --legacy-peer-deps --ignore-scripts --loglevel verbose > ../npm_install_debug.log`);
+      nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--legacy-peer-deps', '--ignore-scripts', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true});
     } else {
-      logger.debug(`Running NPM install command: 'npm install --loglevel verbose > ../npm_install_debug.log'`);
-      nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true});
+      logger.debug(`Running NPM install command: 'npm install --ignore-scripts --loglevel verbose > ../npm_install_debug.log'`);
+      nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--ignore-scripts', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true});
     }
     nodeProcess.on('close', nodeProcessCloseCallback);
     nodeProcess.on('error', nodeProcessErrorCallback);
