@@ -30,10 +30,11 @@ const {
   printBuildLink
 } = require('../testObservability/helper/helper');
 
-const { 
+const {
   createAccessibilityTestRun,
   setAccessibilityEventListeners,
   checkAccessibilityPlatform,
+  isAccessibilityPluginLoaded,
   supportFileCleanup
 } = require('../accessibility-automation/helper');
 const { isTurboScaleSession, getTurboScaleGridDetails, patchCypressConfigFileContent, atsFileCleanup } = require('../helpers/atsHelper');
@@ -42,6 +43,10 @@ const TestHubHandler = require('../testhub/testhubHandler');
 
 module.exports = function run(args, rawArgs) {
   utils.normalizeTestReportingEnvVars();
+  // Tracks the case where accessibility was requested but the plugin is not
+  // wired into the cypress config; surfaced in the end-of-session EDS event so
+  // such builds can be excluded from accessibility stability queries.
+  let accessibilityPluginNotLoaded = false;
   markBlockStart('preBuild');
   // set debug mode (--cli-debug)
   utils.setDebugMode(args);
@@ -69,7 +74,7 @@ module.exports = function run(args, rawArgs) {
     /* Set testObservability & browserstackAutomation flags */
     const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
     const checkAccessibility = checkAccessibilityPlatform(bsConfig);
-    const isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibility;
+    let isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibility;
     const turboScaleSession = isTurboScaleSession(bsConfig);
     Constants.turboScaleObj.enabled = turboScaleSession;
     
@@ -112,6 +117,15 @@ module.exports = function run(args, rawArgs) {
 
     // set build tag caps
     utils.setBuildTags(bsConfig, args);
+
+    // If accessibility is requested but the BrowserStack accessibility plugin is
+    // not loaded in the cypress config, explicitly disable accessibility before
+    // the build start event so the build is not treated as an accessibility build.
+    if (isAccessibilitySession && isBrowserstackInfra && !isAccessibilityPluginLoaded(bsConfig)) {
+      logger.warn(Constants.userMessages.ACCESSIBILITY_PLUGIN_NOT_LOADED);
+      accessibilityPluginNotLoaded = true;
+      isAccessibilitySession = false;
+    }
 
     checkAndSetAccessibility(bsConfig, isAccessibilitySession);
 
@@ -265,7 +279,11 @@ module.exports = function run(args, rawArgs) {
 
             let test_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.fileName));
             let npm_zip_size = utils.fetchZipSize(path.join(process.cwd(), config.packageFileName));
-            let node_modules_size = await utils.fetchFolderSize(path.join(process.cwd(), "node_modules"));
+            // Perf: node_modules size is instrumentation-only, so don't block the upload on
+            // walking the tree — start the walk here and await it only after the upload has
+            // completed (in the common case it resolves while the upload is in flight, adding
+            // zero wall-clock; fetchFolderSize never rejects, so the floating promise is safe).
+            let nodeModulesSizePromise = utils.fetchFolderSize(path.join(process.cwd(), "node_modules"));
 
             if (Constants.turboScaleObj.enabled) {
               // Note: Calculating md5 here for turboscale force-upload so that we don't need to re-calculate at hub         
@@ -291,6 +309,9 @@ module.exports = function run(args, rawArgs) {
               logger.debug("Completed uploading the node_module zip");
               markBlockEnd('zip.zipUpload');
               markBlockEnd('zip');
+
+              // Walk was started before the upload; usually already resolved by now.
+              let node_modules_size = await nodeModulesSizePromise;
 
               if (process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
                 supportFileCleanup();
@@ -326,6 +347,8 @@ module.exports = function run(args, rawArgs) {
                 utils.setProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
                 if(isTestObservabilitySession) {
                   utils.setO11yProcessHooks(data.build_id, bsConfig, bs_local, args, buildReportData);
+                  // OB-10135: read by stopBuildUpstream in testObservability/helper/helper.js
+                  process.env.BROWSERSTACK_AUTOMATION_BUILD_ID = data.build_id;
                 }
                 let message = `${data.message}! ${Constants.userMessages.BUILD_CREATED} with build id: ${data.build_id}`;
                 let dashboardLink = `${Constants.userMessages.VISIT_DASHBOARD} ${data.dashboard_url}`;
@@ -363,6 +386,15 @@ module.exports = function run(args, rawArgs) {
 
                     // stop the Local instance
                     if (!turboScaleSession) await utils.stopLocalBinary(bsConfig, bs_local, args, rawArgs, buildReportData);
+
+                    // SDK-6211: send the Test Observability build-stop now — polling has resolved, so
+                    // the build has finished running on BrowserStack. builds_th.finished_at is stamped
+                    // server-side when the collector receives this stop event, so firing it here (before
+                    // the 5s safety wait, artifact download and HTML report generation below) keeps the
+                    // TRA build "Duration" aligned with the test window instead of the full CLI wall-clock.
+                    // printBuildLink no-ops on non-observability runs and is idempotent (buildStopped
+                    // guard); the later handleSyncExit stop becomes a no-op that still honors the exit code.
+                    await printBuildLink(true);
 
                     // waiting for 5 secs for upload to complete (as a safety measure)
                     await new Promise(resolve => setTimeout(resolve, 5000));
@@ -413,6 +445,7 @@ module.exports = function run(args, rawArgs) {
                   unique_id: utils.generateUniqueHash(),
                   package_error: utils.checkError(packageData),
                   checkmd5_error: utils.checkError(md5data),
+                  accessibility_plugin_not_loaded: accessibilityPluginNotLoaded,
                   build_id: data.build_id,
                   test_zip_size: test_zip_size,
                   npm_zip_size: npm_zip_size,

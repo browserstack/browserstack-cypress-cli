@@ -8,6 +8,28 @@ const constants = require("./constants");
 const utils = require("./utils");
 const logger = require('./logger').winstonLogger;
 
+const parsedCypressConfigCache = new Map();
+
+// Defense-in-depth: reject file paths containing shell metacharacters.
+// This guards against command injection even if execFileSync is ever
+// replaced with a shell-based exec in the future.
+//
+// Note: backslash (\) is intentionally NOT included here because it is a
+// legitimate path separator on Windows (e.g. C:\Users\me\cypress.config.js).
+// The actual security boundary is execFileSync (no shell), not this regex.
+const DANGEROUS_PATH_CHARS = /[;"`$|&(){}]/;
+
+function validateFilePath(filepath) {
+    if (DANGEROUS_PATH_CHARS.test(filepath)) {
+        throw new Error(
+            `Invalid cypress config file path: "${filepath}" contains disallowed characters. ` +
+            'File paths must not include shell metacharacters such as ; " ` $ | & ( ) { }'
+        );
+    }
+}
+
+exports.validateFilePath = validateFilePath;
+
 exports.detectLanguage = (cypress_config_filename) => {
     const extension = cypress_config_filename.split('.').pop()
     return constants.CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS.includes(extension) ? extension : 'js'
@@ -70,7 +92,20 @@ function generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, c
         "listEmittedFiles": true,
         // Ensure these are always set regardless of base tsconfig
         "allowSyntheticDefaultImports": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        // Force a clean, self-contained JS emit even when the extended tsconfig
+        // (common in NX / monorepo setups) sets options that suppress or redirect
+        // the JS output. Without these overrides, base options such as
+        // noEmit / emitDeclarationOnly / composite / noEmitOnError leave the
+        // compiled cypress config missing, surfacing as
+        // "Cypress config file not found at: ...tmpBstackCompiledJs/...".
+        "noEmit": false,
+        "emitDeclarationOnly": false,
+        "composite": false,
+        "declaration": false,
+        "declarationMap": false,
+        "noEmitOnError": false,
+        "incremental": false
       },
       include: [cypress_config_filepath]
     };
@@ -115,13 +150,25 @@ function generateTscCommandAndTempTsConfig(bsConfig, bstack_node_modules_path, c
       ? `set NODE_PATH=${bstack_node_modules_path}`
       : `NODE_PATH="${bstack_node_modules_path}"`;
 
-    const tscCommand = `${setNodePath} && node "${typescript_path}" --project "${tempTsConfigPath}" && ${setNodePath} && node "${tsc_alias_path}" --project "${tempTsConfigPath}" --verbose`;
+    // Use '&' (unconditional) instead of '&&' between tsc and tsc-alias so the alias
+    // rewrite ALWAYS runs even when tsc exits non-zero. tsc returns a non-zero exit
+    // code on any type error (very common when a single config file is compiled out of
+    // its normal monorepo project context), which with '&&' would skip tsc-alias and
+    // leave path aliases (e.g. @org/lib) un-rewritten -> the compiled config fails to
+    // require -> "Cypress config file not found". convertTsConfig already
+    // tolerates tsc errors by parsing the emitted-files output.
+    const tscCommand = `${setNodePath} && node "${typescript_path}" --project "${tempTsConfigPath}" & ${setNodePath} && node "${tsc_alias_path}" --project "${tempTsConfigPath}" --verbose`;
     logger.info(`TypeScript compilation command: ${tscCommand}`);
     return { tscCommand, tempTsConfigPath };
   } else {
-    // Unix/Linux/macOS: Use ; to separate commands or && to chain
+    // Unix/Linux/macOS: Use ';' (unconditional) between tsc and tsc-alias so the alias
+    // rewrite ALWAYS runs even when tsc exits non-zero (type errors are common when a
+    // single config file is compiled out of its monorepo context). With '&&', a tsc
+    // error would skip tsc-alias and leave path aliases (e.g. @org/lib) un-rewritten,
+    // making the compiled config impossible to require. convertTsConfig
+    // already tolerates tsc errors by parsing the emitted-files output.
     const nodePathPrefix = `NODE_PATH=${bstack_node_modules_path}`;
-    const tscCommand = `${nodePathPrefix} node "${typescript_path}" --project "${tempTsConfigPath}" && ${nodePathPrefix} node "${tsc_alias_path}" --project "${tempTsConfigPath}" --verbose`;
+    const tscCommand = `${nodePathPrefix} node "${typescript_path}" --project "${tempTsConfigPath}" ; ${nodePathPrefix} node "${tsc_alias_path}" --project "${tempTsConfigPath}" --verbose`;
     logger.info(`TypeScript compilation command: ${tscCommand}`);
     return { tscCommand, tempTsConfigPath };
   }
@@ -186,22 +233,68 @@ exports.convertTsConfig = (bsConfig, cypress_config_filepath, bstack_node_module
 }
 
 exports.loadJsFile =  (cypress_config_filepath, bstack_node_modules_path) => {
-    const require_module_helper_path = path.join(__dirname, 'requireModule.js')
-    let load_command = `NODE_PATH="${bstack_node_modules_path}" node "${require_module_helper_path}" "${cypress_config_filepath}"`
-    if (/^win/.test(process.platform)) {
-        load_command = `set NODE_PATH=${bstack_node_modules_path}&& node "${require_module_helper_path}" "${cypress_config_filepath}"`
+    // Security: validate file path to reject shell metacharacters (defense-in-depth)
+    validateFilePath(cypress_config_filepath);
+
+    // UX: surface a clear error if the cypress config file is missing.
+    // (This is purely a UX check — the security boundary is execFileSync above
+    // plus the metacharacter regex; existsSync alone would NOT prevent injection.)
+    if (!fs.existsSync(cypress_config_filepath)) {
+        throw new Error(`Cypress config file not found at: ${cypress_config_filepath}`);
     }
-    logger.debug(`Running: ${load_command}`)
-    cp.execSync(load_command)
+
+    const require_module_helper_path = path.join(__dirname, 'requireModule.js')
+
+    // Security fix: use execFileSync instead of execSync to avoid shell interpolation.
+    // execFileSync spawns the process directly without a shell, so user-controlled
+    // values in cypress_config_filepath cannot break out into shell commands.
+    const execOptions = {
+        env: Object.assign({}, process.env, { NODE_PATH: bstack_node_modules_path })
+    };
+    const args = [require_module_helper_path, cypress_config_filepath];
+
+    // Remove any stale detection flag from a crashed prior run so we never read an
+    // outdated value if the child fails to write a fresh one.
+    if (fs.existsSync(config.accessibilityPluginFlagFileName)) {
+        try {
+            fs.unlinkSync(config.accessibilityPluginFlagFileName)
+        } catch (e) { /* best-effort */ }
+    }
+
+    logger.debug(`Running: node ${args.map(a => '"' + a + '"').join(' ')} (via execFileSync, NODE_PATH=${bstack_node_modules_path})`);
+    cp.execFileSync('node', args, execOptions);
+
     const cypress_config = JSON.parse(fs.readFileSync(config.configJsonFileName).toString())
     if (fs.existsSync(config.configJsonFileName)) {
         fs.unlinkSync(config.configJsonFileName)
     }
+
+    // Propagate accessibility-plugin detection (written by requireModule.js in the
+    // child process) back into the parent process via an env var. We set it
+    // explicitly to 'true'/'false' only when the config was actually required, so
+    // callers can distinguish a definitive result from "could not read".
+    try {
+        if (fs.existsSync(config.accessibilityPluginFlagFileName)) {
+            const flag = JSON.parse(fs.readFileSync(config.accessibilityPluginFlagFileName).toString());
+            process.env.BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED = (flag && flag.accessibilityPluginLoaded) ? 'true' : 'false';
+            fs.unlinkSync(config.accessibilityPluginFlagFileName);
+        }
+    } catch (err) {
+        logger.debug(`Unable to read accessibility plugin detection flag: ${err.message}`);
+    }
+
     return cypress_config
 }
 
 exports.readCypressConfigFile = (bsConfig) => {
     const cypress_config_filepath = path.resolve(bsConfig.run_settings.cypressConfigFilePath)
+
+    // Return the memoized parse if this exact config was already read in this run.
+    if (parsedCypressConfigCache.has(cypress_config_filepath)) {
+        logger.debug(`Using memoized cypress config for: ${cypress_config_filepath}`);
+        return parsedCypressConfigCache.get(cypress_config_filepath);
+    }
+
     try {
         const cypress_config_filename = bsConfig.run_settings.cypress_config_filename
         const bstack_node_modules_path = path.join(path.resolve(config.packageDirName), 'node_modules')
@@ -209,12 +302,19 @@ exports.readCypressConfigFile = (bsConfig) => {
 
         logger.debug(`cypress config path: ${cypress_config_filepath}`);
 
+        let parsedConfig;
         if (conf_lang == 'js' || conf_lang == 'cjs') {
-            return this.loadJsFile(cypress_config_filepath, bstack_node_modules_path)
+            parsedConfig = this.loadJsFile(cypress_config_filepath, bstack_node_modules_path)
         } else if (conf_lang === 'ts') {
             const compiled_cypress_config_filepath = this.convertTsConfig(bsConfig, cypress_config_filepath, bstack_node_modules_path)
-            return this.loadJsFile(compiled_cypress_config_filepath, bstack_node_modules_path)
+            parsedConfig = this.loadJsFile(compiled_cypress_config_filepath, bstack_node_modules_path)
         }
+
+        // Cache only successful parses so a later call can retry on failure.
+        if (parsedConfig !== undefined) {
+            parsedCypressConfigCache.set(cypress_config_filepath, parsedConfig);
+        }
+        return parsedConfig;
     } catch (error) {
         const errorMessage = `Error while reading cypress config: ${error.message}`
         const errorCode = 'cypress_config_file_read_failed'
@@ -233,6 +333,15 @@ exports.readCypressConfigFile = (bsConfig) => {
         const complied_js_dir = path.join(working_dir, config.compiledConfigJsDirName)
         if (fs.existsSync(complied_js_dir)) {
             fs.rmdirSync(complied_js_dir, { recursive: true })
+        }
+        // Guaranteed cleanup of the accessibility-plugin detection flag file, even
+        // if loadJsFile threw before its own read/unlink of the flag.
+        if (fs.existsSync(config.accessibilityPluginFlagFileName)) {
+            try {
+                fs.unlinkSync(config.accessibilityPluginFlagFileName)
+            } catch (cleanupErr) {
+                logger.debug(`Unable to remove accessibility plugin flag file: ${cleanupErr.message || cleanupErr}`);
+            }
         }
     }
 }

