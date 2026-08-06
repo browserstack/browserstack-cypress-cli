@@ -210,6 +210,41 @@ describe("packageInstaller", () => {
           chai.assert.fail("Promise error");
         });
     });
+
+    it("should reject a malicious npm_dependencies entry and not write package.json (APS-19009)", () => {
+      packageInstaller.__set__({
+        fileHelpers: {deletePackageArchieve: fileHelpersStub},
+        fs: {
+          mkdir: fsmkdirStub,
+          writeFileSync: fswriteFileSyncStub,
+          existsSync: fsexistsSyncStub,
+          copyFileSync: fscopyFileSyncStub
+        },
+        path: {
+          dirname: pathdirnameStub,
+          join: pathjoinStub
+        }
+      });
+      let setupPackageFolderrewire = packageInstaller.__get__('setupPackageFolder');
+      let runSettings = {
+        package_config_options: {
+          "name": "test"
+        },
+        npm_dependencies: {
+          // git-url version smuggles a non-registry spec into npm install -> must be rejected
+          "evil-pkg": "git+ssh://git@github.com/attacker/evil.git"
+        }
+      };
+      let directoryPath = "/random/path";
+      return setupPackageFolderrewire(runSettings, directoryPath)
+        .then((_data) => {
+          chai.assert.fail("expected rejection for malicious npm_dependencies entry");
+        })
+        .catch((error) => {
+          chai.assert.match(error, /Invalid npm_dependencies entry "evil-pkg"/);
+          sinon.assert.notCalled(fswriteFileSyncStub);
+        });
+    });
   });
 
   context("packageInstall", () => {
@@ -263,6 +298,35 @@ describe("packageInstaller", () => {
       .then((data) => {
         console.log(data);
         chai.assert.equal(data, "Packages were installed successfully.")
+        spawnStub.restore();
+        getMajorVersionStub.restore();
+      })
+      .catch((_error) => {
+        chai.assert.fail(`Promise error ${_error}`);
+      });
+    });
+
+    it("should pass --ignore-scripts to the npm install spawn (APS-19009 lifecycle-script RCE guard)", () => {
+      let spawnStub = sandbox.stub(cp, 'spawn').returns({
+        on: (_close, nodeProcessCloseCallback) => {
+          nodeProcessCloseCallback(0);
+        }
+      });
+      let getMajorVersionStub = sandbox.stub(utils, 'getMajorVersion').returns('7');
+      packageInstaller.__set__({
+        nodeProcess: {},
+        spawn: spawnStub,
+        utils: {
+          getMajorVersion: getMajorVersionStub
+        }
+      });
+      let packageInstallrewire = packageInstaller.__get__('packageInstall');
+      let directoryPath = "/random/path";
+      return packageInstallrewire(directoryPath)
+      .then((_data) => {
+        sinon.assert.calledOnce(spawnStub);
+        let spawnArgs = spawnStub.firstCall.args[1];
+        chai.assert.include(spawnArgs, '--ignore-scripts');
         spawnStub.restore();
         getMajorVersionStub.restore();
       })
