@@ -102,7 +102,7 @@ exports.getGitMetaData = () => {
       if(!info.commonGitDir) {
         logger.debug(`Unable to find a Git directory`);
         exports.debug(`Unable to find a Git directory`);
-        resolve({});
+        return resolve({});
       }
       if(!info.author && exports.findGitConfig(process.cwd())) {
         /* commit objects are packed */
@@ -195,6 +195,17 @@ exports.getHostInfo = () => {
 
 exports.getCiInfo = () => {
   var env = process.env;
+
+  // GitHub Actions — checked before the presence-only providers (Jenkins,
+  // Bitbucket) so leftover env vars on self-hosted runners can't shadow it
+  if (env.GITHUB_ACTIONS === "true" || (env.CI === "true" && env.GITHUB_RUN_ID)) {
+    return {
+      name: "GitHub Actions",
+      build_url: `${env.GITHUB_SERVER_URL || 'https://github.com'}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`,
+      job_name: env.GITHUB_WORKFLOW || env.GITHUB_JOB,
+      build_number: env.GITHUB_RUN_ID
+    };
+  }
   // Jenkins
   if ((typeof env.JENKINS_URL === "string" && env.JENKINS_URL.length > 0) || (typeof env.JENKINS_HOME === "string" && env.JENKINS_HOME.length > 0)) {
     return {
@@ -202,7 +213,7 @@ exports.getCiInfo = () => {
       build_url: env.BUILD_URL,
       job_name: env.JOB_NAME,
       build_number: env.BUILD_NUMBER
-    }
+    };
   }
   // CircleCI
   if (env.CI === "true" && env.CIRCLECI === "true") {
@@ -211,7 +222,7 @@ exports.getCiInfo = () => {
       build_url: env.CIRCLE_BUILD_URL,
       job_name: env.CIRCLE_JOB,
       build_number: env.CIRCLE_BUILD_NUM
-    }
+    };
   }
   // Travis CI
   if (env.CI === "true" && env.TRAVIS === "true") {
@@ -220,7 +231,7 @@ exports.getCiInfo = () => {
       build_url: env.TRAVIS_BUILD_WEB_URL,
       job_name: env.TRAVIS_JOB_NAME,
       build_number: env.TRAVIS_BUILD_NUMBER
-    }
+    };
   }
   // Codeship
   if (env.CI === "true" && env.CI_NAME === "codeship") {
@@ -229,7 +240,7 @@ exports.getCiInfo = () => {
       build_url: null,
       job_name: null,
       build_number: null
-    }
+    };
   }
   // Bitbucket
   if (env.BITBUCKET_BRANCH && env.BITBUCKET_COMMIT) {
@@ -238,7 +249,7 @@ exports.getCiInfo = () => {
       build_url: env.BITBUCKET_GIT_HTTP_ORIGIN,
       job_name: null,
       build_number: env.BITBUCKET_BUILD_NUMBER
-    }
+    };
   }
   // Drone
   if (env.CI === "true" && env.DRONE === "true") {
@@ -247,7 +258,7 @@ exports.getCiInfo = () => {
       build_url: env.DRONE_BUILD_LINK,
       job_name: null,
       build_number: env.DRONE_BUILD_NUMBER
-    }
+    };
   }
   // Semaphore
   if (env.CI === "true" && env.SEMAPHORE === "true") {
@@ -256,7 +267,7 @@ exports.getCiInfo = () => {
       build_url: env.SEMAPHORE_ORGANIZATION_URL,
       job_name: env.SEMAPHORE_JOB_NAME,
       build_number: env.SEMAPHORE_JOB_ID
-    }
+    };
   }
   // GitLab
   if (env.CI === "true" && env.GITLAB_CI === "true") {
@@ -265,7 +276,7 @@ exports.getCiInfo = () => {
       build_url: env.CI_JOB_URL,
       job_name: env.CI_JOB_NAME,
       build_number: env.CI_JOB_ID
-    }
+    };
   }
   // Buildkite
   if (env.CI === "true" && env.BUILDKITE === "true") {
@@ -274,7 +285,7 @@ exports.getCiInfo = () => {
       build_url: env.BUILDKITE_BUILD_URL,
       job_name: env.BUILDKITE_LABEL || env.BUILDKITE_PIPELINE_NAME,
       build_number: env.BUILDKITE_BUILD_NUMBER
-    }
+    };
   }
   // Visual Studio Team Services
   if (env.TF_BUILD === "True") {
@@ -283,7 +294,7 @@ exports.getCiInfo = () => {
       build_url: `${env.SYSTEM_TEAMFOUNDATIONSERVERURI}${env.SYSTEM_TEAMPROJECTID}`,
       job_name: env.SYSTEM_DEFINITIONID,
       build_number: env.BUILD_BUILDID
-    }
+    };
   }
   // if no matches, return null
   return null;

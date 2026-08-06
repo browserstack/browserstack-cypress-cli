@@ -93,7 +93,16 @@ const supportFileCleanup = () => {
 exports.buildStopped = false;
 
 exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
-  if(!this.isTestObservabilitySession() || exports.buildStopped) return;
+  if(!this.isTestObservabilitySession()) return;
+  // SDK-6211: the build-stop may be sent early (runs.js fires it at poll-resolution, before the
+  // post-test 5s wait + artifact download + report generation, so builds_th.finished_at — which
+  // the collector stamps at stop-event receipt — reflects the test window rather than the full CLI
+  // wall-clock). A later call here must therefore still honor the exit code instead of returning
+  // silently, preserving the original failing-build exit behaviour.
+  if(exports.buildStopped) {
+    if(exitCode) process.exit(exitCode);
+    return;
+  }
   exports.buildStopped = true;
   try {
     if(shouldStopSession) {
@@ -292,27 +301,29 @@ exports.setEventListeners = (bsConfig) => {
   try {
     const supportFilesData = helper.getSupportFiles(bsConfig, false);
     if(!supportFilesData.supportFile) return;
-    glob(process.cwd() + supportFilesData.supportFile, {}, (err, files) => {
-      if(err) return exports.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
-      files.forEach(file => {
-        try {
-          if (isE2ESupportFile(file) || !files.some(f => isE2ESupportFile(f))) {
-            const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
+    // Must be synchronous: runs.js proceeds to md5 hashing and zip archiving
+    // immediately after this returns. An async glob callback races the archive
+    // (SDK-7121) — a lost race ships an un-instrumented suite, and md5 caching
+    // makes it sticky, so TRA receives no test events.
+    const files = glob.sync(process.cwd() + supportFilesData.supportFile, {});
+    files.forEach(file => {
+      try {
+        if (isE2ESupportFile(file) || !files.some(f => isE2ESupportFile(f))) {
+          const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
 
-            let cypressCommandEventListener = getCypressCommandEventListener(file.includes('js'));
-            if(!defaultFileContent.includes(cypressCommandEventListener)) {
-              let newFileContent =  defaultFileContent + 
-                                  '\n' +
-                                  cypressCommandEventListener +
-                                  '\n'
-              fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
-              supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
-            }
+          let cypressCommandEventListener = getCypressCommandEventListener(file.includes('js'));
+          if(!defaultFileContent.includes(cypressCommandEventListener)) {
+            let newFileContent =  defaultFileContent +
+                                '\n' +
+                                cypressCommandEventListener +
+                                '\n'
+            fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
+            supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
           }
-        } catch(e) {
-          exports.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
         }
-      });
+      } catch(e) {
+        exports.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
+      }
     });
   } catch(e) {
     exports.debug(`Unable to parse support files to set event listeners with error ${e}`, true, e);
@@ -407,6 +418,7 @@ exports.launchTestSession = async (user_config, bsConfigPath) => {
           sdkVersion: helper.getAgentVersion()
         }
       };
+
       const config = {
         auth: {
           username: obsUserName,
@@ -674,7 +686,9 @@ exports.stopBuildUpstream = async () => {
       };
     } else {
       const data = {
-        'stop_time': (new Date()).toISOString()
+        'stop_time': (new Date()).toISOString(),
+        // OB-10135: cached in bin/commands/runs.js at build-create
+        'automate_build_id': process.env.BROWSERSTACK_AUTOMATION_BUILD_ID
       };
       const config = {
         headers: {
@@ -867,7 +881,10 @@ const getReRunSpecs = (rawArgs) => {
       }
     }
     if(startIdx != -1) rawArgs.splice(startIdx, numEle + 1);
-    finalArgs = [...rawArgs, '--spec', process.env.BROWSERSTACK_RERUN_TESTS];
+    // Normalise the comma+space separated rerun list ("a.ts, b.ts") to comma-only before
+    // handing it to cypress --spec; a leading space makes cypress miss every spec but the first.
+    const reRunSpecs = process.env.BROWSERSTACK_RERUN_TESTS.split(",").map(spec => spec.trim()).filter(Boolean).join(",");
+    finalArgs = [...rawArgs, '--spec', reRunSpecs];
   }
   return finalArgs.filter(item => item !== '--disable-test-observability' && item !== '--disable-browserstack-automation');
 }
@@ -927,9 +944,9 @@ exports.runCypressTestsLocally = (bsConfig, args, rawArgs) => {
     rawArgs = cleanupTestObservabilityFlags(rawArgs);
     logger.info(`Running npx cypress run ${getReRunSpecs(rawArgs.slice(1)).join(' ')} ${getLocalSessionReporter().join(' ')}`);
     const cypressProcess = spawn(
-      'npx',
+      /^win/.test(process.platform) ? 'npx.cmd' : 'npx',
       ['cypress', 'run', ...getReRunSpecs(rawArgs.slice(1)), ...getLocalSessionReporter()],
-      { stdio: 'inherit', cwd: process.cwd(), env: process.env, shell: true }
+      { stdio: 'inherit', cwd: process.cwd(), env: process.env, shell: false }
     );
     cypressProcess.on('close', async (code) => {
       logger.info(`Cypress process exited with code ${code}`);

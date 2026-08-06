@@ -19,6 +19,8 @@ const syncCLI = {
 };
 
 const userMessages = {
+  ACCESSIBILITY_PLUGIN_NOT_LOADED:
+    "BrowserStack Accessibility Automation plugin is not loaded in your cypress config file. Disabling accessibility for this build. Please follow https://www.browserstack.com/docs/accessibility/automated-tests/get-started/cypress to enable accessibility testing.",
   BUILD_FAILED: "Build creation failed.",
   BUILD_GENERATE_REPORT_FAILED:
     "Generating report for the build <build-id> failed.",
