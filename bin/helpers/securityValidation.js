@@ -58,7 +58,9 @@ function isPathInsideBase(candidatePath, baseDir) {
   if (typeof candidatePath !== 'string' || candidatePath === '') {
     return false;
   }
+  // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- these resolves ARE the traversal guard: the value is normalized here only so the containment check below can reject anything outside `base`.
   const base = path.resolve(baseDir || process.cwd());
+  // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- see above; resolved path is validated by the startsWith(base) check, not used to read the FS unchecked.
   const resolved = path.resolve(base, candidatePath);
   // Must be the base itself or a descendant (base + separator prefix).
   return resolved === base || resolved.startsWith(base + path.sep);

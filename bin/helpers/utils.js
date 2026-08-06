@@ -39,6 +39,7 @@ exports.validateBstackJson = (bsConfigPath) => {
       // PR-supplied .js config would run arbitrary code, APS-19008). Also require
       // a .json extension and that the file resolves inside the project root so a
       // crafted --config-file cannot point outside the project or at a script.
+      // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- this resolve IS the traversal guard: the path is normalized here so the .json-extension + isPathInsideBase() containment checks below can reject anything outside the project root.
       const resolvedPath = path.resolve(bsConfigPath);
       if (path.extname(resolvedPath).toLowerCase() !== ".json") {
         return reject(`Invalid browserstack.json file. Error : config file must be a .json file.`);
