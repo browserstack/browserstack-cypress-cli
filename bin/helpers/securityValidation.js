@@ -18,7 +18,8 @@ const path = require('path');
 // production, staging (bsstag.com) and local development. Anything else is
 // treated as attacker-controlled and rejected.
 const ALLOWED_HOST_SUFFIXES = ['.browserstack.com', '.bsstag.com'];
-const ALLOWED_EXACT_HOSTS = ['browserstack.com', 'bsstag.com', 'localhost', '127.0.0.1', '::1'];
+// Note: URL parsing yields '[::1]' (bracketed) as the hostname for IPv6 loopback.
+const ALLOWED_EXACT_HOSTS = ['browserstack.com', 'bsstag.com', 'localhost', '127.0.0.1', '[::1]'];
 
 /**
  * Returns true if the given URL points at a BrowserStack (prod/staging) host or
