@@ -245,6 +245,38 @@ describe("packageInstaller", () => {
           sinon.assert.notCalled(fswriteFileSyncStub);
         });
     });
+
+    it("should accept a legacy upper-case npm package name (e.g. JSONStream) (APS-19009)", () => {
+      packageInstaller.__set__({
+        fileHelpers: {deletePackageArchieve: fileHelpersStub},
+        fs: {
+          mkdir: fsmkdirStub,
+          writeFileSync: fswriteFileSyncStub,
+          existsSync: fsexistsSyncStub,
+          copyFileSync: fscopyFileSyncStub
+        },
+        path: {
+          dirname: pathdirnameStub,
+          join: pathjoinStub
+        }
+      });
+      let setupPackageFolderrewire = packageInstaller.__get__('setupPackageFolder');
+      let runSettings = {
+        npm_dependencies: {
+          "JSONStream": "1.3.5"
+        }
+      };
+      let directoryPath = "/random/path";
+      return setupPackageFolderrewire(runSettings, directoryPath)
+        .then((data) => {
+          sinon.assert.calledOnce(fswriteFileSyncStub);
+          chai.assert.equal(data, "Package file created");
+        })
+        .catch((_error) => {
+          console.log(_error);
+          chai.assert.fail("legacy upper-case package name should be accepted");
+        });
+    });
   });
 
   context("packageInstall", () => {

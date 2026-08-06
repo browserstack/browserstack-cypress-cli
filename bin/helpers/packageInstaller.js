@@ -37,7 +37,11 @@ const setupPackageFolder = (runSettings, directoryPath) => {
         // before writing them to package.json, so a browserstack.json cannot smuggle a
         // git-url / file: / path / alternate-registry spec (dependency confusion or code
         // execution) into `npm install`.
-        const NPM_NAME_RE = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
+        // Allow upper-case too: legacy registry packages (e.g. JSONStream) have
+        // capitals and must not be rejected. This still blocks git-url / file: /
+        // path / alternate-registry specs (those contain :, /, .. which are not in
+        // the class), which is the actual dependency-confusion / RCE guard.
+        const NPM_NAME_RE = /^(@[a-zA-Z0-9-~][a-zA-Z0-9-._~]*\/)?[a-zA-Z0-9-~][a-zA-Z0-9-._~]*$/;
         const NPM_VERSION_RE = /^[A-Za-z0-9.\-+~^><=|*\s]+$/;
         for (const depName of Object.keys(combinedDependencies || {})) {
           const depVersion = combinedDependencies[depName];
@@ -117,9 +121,11 @@ const packageInstall = (packageDir, bsConfig) => {
     // output redirection and for invoking npm.cmd on Windows.
     if (parseInt(npm_major_version) >= 7) {
       logger.debug(`Running NPM install command: npm install --legacy-peer-deps --ignore-scripts --loglevel verbose > ../npm_install_debug.log`);
+      // nosemgrep: javascript.lang.security.audit.spawn-shell-true.spawn-shell-true -- static argv (see comment above); shell:true needed for '>' redirection + npm.cmd on Windows, no user input on the command line.
       nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--legacy-peer-deps', '--ignore-scripts', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true});
     } else {
       logger.debug(`Running NPM install command: 'npm install --ignore-scripts --loglevel verbose > ../npm_install_debug.log'`);
+      // nosemgrep: javascript.lang.security.audit.spawn-shell-true.spawn-shell-true -- static argv (see comment above); shell:true needed for '>' redirection + npm.cmd on Windows, no user input on the command line.
       nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--ignore-scripts', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true});
     }
     nodeProcess.on('close', nodeProcessCloseCallback);
