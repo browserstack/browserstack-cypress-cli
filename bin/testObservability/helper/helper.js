@@ -881,7 +881,10 @@ const getReRunSpecs = (rawArgs) => {
       }
     }
     if(startIdx != -1) rawArgs.splice(startIdx, numEle + 1);
-    finalArgs = [...rawArgs, '--spec', process.env.BROWSERSTACK_RERUN_TESTS];
+    // Normalise the comma+space separated rerun list ("a.ts, b.ts") to comma-only before
+    // handing it to cypress --spec; a leading space makes cypress miss every spec but the first.
+    const reRunSpecs = process.env.BROWSERSTACK_RERUN_TESTS.split(",").map(spec => spec.trim()).filter(Boolean).join(",");
+    finalArgs = [...rawArgs, '--spec', reRunSpecs];
   }
   return finalArgs.filter(item => item !== '--disable-test-observability' && item !== '--disable-browserstack-automation');
 }
