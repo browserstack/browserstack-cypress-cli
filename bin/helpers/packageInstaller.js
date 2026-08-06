@@ -121,12 +121,10 @@ const packageInstall = (packageDir, bsConfig) => {
     // output redirection and for invoking npm.cmd on Windows.
     if (parseInt(npm_major_version) >= 7) {
       logger.debug(`Running NPM install command: npm install --legacy-peer-deps --ignore-scripts --loglevel verbose > ../npm_install_debug.log`);
-      // nosemgrep: javascript.lang.security.audit.spawn-shell-true.spawn-shell-true -- static argv (see comment above); shell:true needed for '>' redirection + npm.cmd on Windows, no user input on the command line.
-      nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--legacy-peer-deps', '--ignore-scripts', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true});
+      nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--legacy-peer-deps', '--ignore-scripts', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true}); // nosemgrep: javascript.lang.security.audit.spawn-shell-true.spawn-shell-true
     } else {
       logger.debug(`Running NPM install command: 'npm install --ignore-scripts --loglevel verbose > ../npm_install_debug.log'`);
-      // nosemgrep: javascript.lang.security.audit.spawn-shell-true.spawn-shell-true -- static argv (see comment above); shell:true needed for '>' redirection + npm.cmd on Windows, no user input on the command line.
-      nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--ignore-scripts', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true});
+      nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--ignore-scripts', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true}); // nosemgrep: javascript.lang.security.audit.spawn-shell-true.spawn-shell-true
     }
     nodeProcess.on('close', nodeProcessCloseCallback);
     nodeProcess.on('error', nodeProcessErrorCallback);
