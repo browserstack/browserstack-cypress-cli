@@ -495,7 +495,10 @@ exports.setNodeVersion = (bsConfig, args) => {
 // command line args takes precedence over config
 exports.setUserSpecs = (bsConfig, args) => {
   if(o11yHelpers.isBrowserstackInfra() && o11yHelpers.isTestObservabilitySession() && o11yHelpers.shouldReRunObservabilityTests()) {
-    bsConfig.run_settings.specs = process.env.BROWSERSTACK_RERUN_TESTS;
+    // BROWSERSTACK_RERUN_TESTS arrives comma+space separated (e.g. "a.ts, b.ts"); normalise
+    // like the other spec sources below, else sanitizeSpecsPattern builds "{a.ts, b.ts}" whose
+    // space-prefixed brace alternatives never match and the failed-spec filter collapses.
+    bsConfig.run_settings.specs = this.fixCommaSeparatedString(process.env.BROWSERSTACK_RERUN_TESTS);
     return;
   }
 

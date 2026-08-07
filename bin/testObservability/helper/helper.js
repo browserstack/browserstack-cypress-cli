@@ -301,27 +301,29 @@ exports.setEventListeners = (bsConfig) => {
   try {
     const supportFilesData = helper.getSupportFiles(bsConfig, false);
     if(!supportFilesData.supportFile) return;
-    glob(process.cwd() + supportFilesData.supportFile, {}, (err, files) => {
-      if(err) return exports.debug('EXCEPTION IN BUILD START EVENT : Unable to parse cypress support files');
-      files.forEach(file => {
-        try {
-          if (isE2ESupportFile(file) || !files.some(f => isE2ESupportFile(f))) {
-            const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
+    // Must be synchronous: runs.js proceeds to md5 hashing and zip archiving
+    // immediately after this returns. An async glob callback races the archive
+    // (SDK-7121) — a lost race ships an un-instrumented suite, and md5 caching
+    // makes it sticky, so TRA receives no test events.
+    const files = glob.sync(process.cwd() + supportFilesData.supportFile, {});
+    files.forEach(file => {
+      try {
+        if (isE2ESupportFile(file) || !files.some(f => isE2ESupportFile(f))) {
+          const defaultFileContent = fs.readFileSync(file, {encoding: 'utf-8'});
 
-            let cypressCommandEventListener = getCypressCommandEventListener(file.includes('js'));
-            if(!defaultFileContent.includes(cypressCommandEventListener)) {
-              let newFileContent =  defaultFileContent + 
-                                  '\n' +
-                                  cypressCommandEventListener +
-                                  '\n'
-              fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
-              supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
-            }
+          let cypressCommandEventListener = getCypressCommandEventListener(file.includes('js'));
+          if(!defaultFileContent.includes(cypressCommandEventListener)) {
+            let newFileContent =  defaultFileContent +
+                                '\n' +
+                                cypressCommandEventListener +
+                                '\n'
+            fs.writeFileSync(file, newFileContent, {encoding: 'utf-8'});
+            supportFileContentMap[file] = supportFilesData.cleanupParams ? supportFilesData.cleanupParams : defaultFileContent;
           }
-        } catch(e) {
-          exports.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
         }
-      });
+      } catch(e) {
+        exports.debug(`Unable to modify file contents for ${file} to set event listeners with error ${e}`, true, e);
+      }
     });
   } catch(e) {
     exports.debug(`Unable to parse support files to set event listeners with error ${e}`, true, e);
@@ -879,7 +881,10 @@ const getReRunSpecs = (rawArgs) => {
       }
     }
     if(startIdx != -1) rawArgs.splice(startIdx, numEle + 1);
-    finalArgs = [...rawArgs, '--spec', process.env.BROWSERSTACK_RERUN_TESTS];
+    // Normalise the comma+space separated rerun list ("a.ts, b.ts") to comma-only before
+    // handing it to cypress --spec; a leading space makes cypress miss every spec but the first.
+    const reRunSpecs = process.env.BROWSERSTACK_RERUN_TESTS.split(",").map(spec => spec.trim()).filter(Boolean).join(",");
+    finalArgs = [...rawArgs, '--spec', reRunSpecs];
   }
   return finalArgs.filter(item => item !== '--disable-test-observability' && item !== '--disable-browserstack-automation');
 }

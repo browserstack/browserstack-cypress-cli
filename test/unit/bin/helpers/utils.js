@@ -699,6 +699,33 @@ describe('utils', () => {
       expect(bsConfig.run_settings.specs).to.be.eq('spec1,spec2');
     });
 
+    context('when re-running observability failed tests (BROWSERSTACK_RERUN_TESTS)', () => {
+      let rerunStubs = [];
+      beforeEach(() => {
+        rerunStubs.push(sinon.stub(o11yHelpers, 'isBrowserstackInfra').returns(true));
+        rerunStubs.push(sinon.stub(o11yHelpers, 'isTestObservabilitySession').returns(true));
+        rerunStubs.push(sinon.stub(o11yHelpers, 'shouldReRunObservabilityTests').returns(true));
+      });
+      afterEach(() => {
+        rerunStubs.forEach((s) => s.restore());
+        rerunStubs = [];
+        delete process.env.BROWSERSTACK_RERUN_TESTS;
+      });
+
+      it('normalises the comma+space separated rerun spec list to comma-only (SDK-7124)', () => {
+        process.env.BROWSERSTACK_RERUN_TESTS =
+          'FO-E2E-05.ts, FO-E2E-02.ts, FO-E2E-06.ts, FO-E2E-07.ts, FO-E2E-03.ts';
+        let bsConfig = { run_settings: { specs: ['some/other/spec.js'] } };
+
+        utils.setUserSpecs(bsConfig, { specs: null });
+
+        expect(bsConfig.run_settings.specs).to.be.eq(
+          'FO-E2E-05.ts,FO-E2E-02.ts,FO-E2E-06.ts,FO-E2E-07.ts,FO-E2E-03.ts'
+        );
+        expect(bsConfig.run_settings.specs).to.not.contain(' ');
+      });
+    });
+
     it('does not set the specs list if no specs key specified', () => {
       let bsConfig = {
         run_settings: {},
