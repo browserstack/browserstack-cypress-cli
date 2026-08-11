@@ -491,10 +491,20 @@ exports.setNodeVersion = (bsConfig, args) => {
 }
 
 // specs can be passed from bstack configuration file
+// True when the spec list for this run comes from BROWSERSTACK_RERUN_TESTS rather than
+// the user's config/CLI args. Shared by setUserSpecs and getNumberOfSpecFiles so the two
+// cannot drift apart — getNumberOfSpecFiles rewrites specs only for runs setUserSpecs
+// actually sourced from the re-run env.
+exports.isReRunSpecsSession = () => {
+  return o11yHelpers.isBrowserstackInfra()
+    && o11yHelpers.isTestObservabilitySession()
+    && o11yHelpers.shouldReRunObservabilityTests();
+}
+
 // specs can be passed via command line args as a string
 // command line args takes precedence over config
 exports.setUserSpecs = (bsConfig, args) => {
-  if(o11yHelpers.isBrowserstackInfra() && o11yHelpers.isTestObservabilitySession() && o11yHelpers.shouldReRunObservabilityTests()) {
+  if(this.isReRunSpecsSession()) {
     // BROWSERSTACK_RERUN_TESTS arrives comma+space separated (e.g. "a.ts, b.ts"); normalise
     // like the other spec sources below, else sanitizeSpecsPattern builds "{a.ts, b.ts}" whose
     // space-prefixed brace alternatives never match and the failed-spec filter collapses.
@@ -1232,6 +1242,16 @@ exports.getNumberOfSpecFiles = (bsConfig, args, cypressConfig, turboScaleSession
     files = files.map((x) => { return x.replaceAll("\\", "/") })
     // setting specs for turboScale as we don't have patched API for turboscale so we will rely on info from CLI
     bsConfig.run_settings.specs = files;
+  } else if (this.isReRunSpecsSession() && files.length) {
+    // BROWSERSTACK_RERUN_TESTS arrives as bare filenames ("a.ts,b.ts"). run_settings is
+    // forwarded to the remote machines verbatim, and a bare filename does not resolve
+    // against the project root there, so Cypress exits having run no spec at all. The
+    // glob above already resolved them against cypressProjectDir — persist those
+    // project-relative paths so the remote receives something it can resolve.
+    bsConfig.run_settings.specs = files
+      .map((file) => path.relative(bsConfig.run_settings.cypressProjectDir, file).replaceAll("\\", "/"))
+      .join(",");
+    logger.debug(`Re-run specs resolved to project-relative paths: ${bsConfig.run_settings.specs}`);
   }
   return files;
   } catch (err) {
