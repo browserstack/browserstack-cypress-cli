@@ -5,7 +5,6 @@ all: true
 
 # check coverage percentage and fail test if below threshold
 check-coverage: true
-
 # thresholds
 branches: 80
 lines: 80
