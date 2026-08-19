@@ -46,7 +46,12 @@ const setupPackageFolder = (runSettings, directoryPath) => {
         for (const depName of Object.keys(combinedDependencies || {})) {
           const depVersion = combinedDependencies[depName];
           if (!NPM_NAME_RE.test(depName) || typeof depVersion !== 'string' || !NPM_VERSION_RE.test(depVersion)) {
-            return reject(`Invalid npm_dependencies entry "${depName}": only standard package names and semver/dist-tag versions are allowed.`);
+            // APS-19009: a malicious/invalid spec (git-url, file:, path, alternate-registry) must
+            // ABORT the run — it must never be downgraded to the runtime-install fallback. Mark the
+            // error so packageSetupAndInstaller re-rejects it instead of swallowing it as a perf warning.
+            const validationError = new Error(`Invalid npm_dependencies entry "${depName}": only standard package names and semver/dist-tag versions are allowed.`);
+            validationError.isNpmDependencyValidationError = true;
+            return reject(validationError);
           }
         }
         if (combinedDependencies && Object.keys(combinedDependencies).length > 0) {
@@ -166,7 +171,7 @@ const packageArchiver = (packageDir, packageFile) => {
 }
 
 const packageSetupAndInstaller = (bsConfig, packageDir, instrumentBlocks) => {
-  return new Promise(function (resolve) {
+  return new Promise(function (resolve, reject) {
     let obj = {
       packagesInstalled: false
     };
@@ -191,6 +196,12 @@ const packageSetupAndInstaller = (bsConfig, packageDir, instrumentBlocks) => {
       Object.assign(obj, { packagesInstalled: true });
       return resolve(obj);
     }).catch((err) => {
+      // APS-19009: an invalid/malicious npm_dependencies spec is a security abort, NOT a perf
+      // fallback — re-reject so runs.js stops the run before upload. Only genuine install
+      // failures (network, registry, peer-deps) fall back to runtime install below.
+      if (err && err.isNpmDependencyValidationError) {
+        return reject(err);
+      }
       logger.warn(`Error occured while installing npm dependencies. Dependencies will be installed in runtime. This will have a negative impact on performance. Reach out to browserstack.com/contact, if you persistantly face this issue.`);
       obj.error = err.stack ? err.stack.toString().substring(0,100) : err.toString().substring(0,100);
       return resolve(obj);

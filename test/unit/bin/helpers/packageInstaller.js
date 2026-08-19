@@ -552,6 +552,33 @@ describe("packageInstaller", () => {
           chai.assert.fail("Promise error");
         });
     });
+
+    it("should REJECT (not fall back to runtime install) when setupPackageFolder throws a dependency-validation error — APS-19009: a malicious/invalid npm_dependencies spec must abort the run before upload", () => {
+      const validationError = new Error('Invalid npm_dependencies entry "evil-pkg": only standard package names and semver/dist-tag versions are allowed.');
+      validationError.isNpmDependencyValidationError = true;
+      let setupPackageFolderValidationStub = sandbox.stub().returns(Promise.reject(validationError));
+      packageInstaller.__set__({
+        setupPackageFolder: setupPackageFolderValidationStub
+      });
+      let packageSetupAndInstallerrewire = packageInstaller.__get__('packageSetupAndInstaller');
+      let bsConfig = {
+        run_settings: {
+          cache_dependencies: true
+        }
+      };
+      let instrumentBlocks = {
+        markBlockStart: sinon.stub(),
+        markBlockEnd: sinon.stub()
+      }
+      return packageSetupAndInstallerrewire(bsConfig, packageDir, instrumentBlocks)
+        .then(() => {
+          chai.assert.fail("packageSetupAndInstaller resolved on a validation error — it must reject so runs.js aborts before upload (never silently defer a bad dep to runtime install)");
+        })
+        .catch((error) => {
+          chai.assert.isTrue(!!(error && error.isNpmDependencyValidationError), "the validation error must propagate (marked isNpmDependencyValidationError)");
+          chai.assert.match(error.message, /Invalid npm_dependencies entry "evil-pkg"/);
+        });
+    });
   });
 
   context("packageWrapper", () => {

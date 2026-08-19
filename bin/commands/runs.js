@@ -189,7 +189,21 @@ module.exports = function run(args, rawArgs) {
       }
     }
 
-    const { packagesInstalled } = !isBrowserstackInfra ? false : await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd});
+    let packagesInstalled;
+    if (isBrowserstackInfra) {
+      try {
+        ({ packagesInstalled } = await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd}));
+      } catch (err) {
+        // APS-19009: invalid/malicious npm_dependencies — abort before upload; never run it.
+        if (err && err.isNpmDependencyValidationError) {
+          logger.error(err.message);
+          utils.sendUsageReport(bsConfig, args, err.message, Constants.messageTypes.ERROR, 'npm_dependencies_validation_failed', buildReportData, rawArgs);
+          process.exitCode = Constants.ERROR_EXIT_CODE;
+          return;
+        }
+        throw err;
+      }
+    }
 
     if(isBrowserstackInfra) {
       // set node version
