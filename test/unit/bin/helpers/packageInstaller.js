@@ -211,7 +211,10 @@ describe("packageInstaller", () => {
         });
     });
 
-    it("should reject a malicious npm_dependencies entry and not write package.json (APS-19009)", () => {
+    it("should ALLOW a non-registry version spec (git/file/tarball are legitimate) and still write package.json (APS-19009)", () => {
+      // APS-19009: git / file: / tarball-url specs are legitimate and widely used (BrowserStack's own
+      // SDK CI and real customers rely on them). They must NOT abort the run — the RCE is closed by
+      // --ignore-scripts, not by rejecting the spec.
       packageInstaller.__set__({
         fileHelpers: {deletePackageArchieve: fileHelpersStub},
         fs: {
@@ -227,22 +230,63 @@ describe("packageInstaller", () => {
       });
       let setupPackageFolderrewire = packageInstaller.__get__('setupPackageFolder');
       let runSettings = {
-        package_config_options: {
-          "name": "test"
-        },
         npm_dependencies: {
-          // git-url version smuggles a non-registry spec into npm install -> must be rejected
-          "evil-pkg": "git+ssh://git@github.com/attacker/evil.git"
+          "browserstack-cypress-cli": "https://github.com/browserstack/browserstack-cypress-cli.git#master"
         }
       };
       let directoryPath = "/random/path";
       return setupPackageFolderrewire(runSettings, directoryPath)
-        .then((_data) => {
-          chai.assert.fail("expected rejection for malicious npm_dependencies entry");
+        .then((data) => {
+          chai.assert.equal(data, "Package file created");
+          sinon.assert.calledOnce(fswriteFileSyncStub);
+          let written = fswriteFileSyncStub.getCall(0).args[1];
+          chai.assert.include(written, "browserstack-cypress-cli");
+          chai.assert.include(written, "github.com/browserstack");
         })
-        .catch((error) => {
-          chai.assert.match(error, /Invalid npm_dependencies entry "evil-pkg"/);
-          sinon.assert.notCalled(fswriteFileSyncStub);
+        .catch((_error) => {
+          console.log(_error);
+          chai.assert.fail("a git-url version spec must be accepted, not rejected");
+        });
+    });
+
+    it("should SKIP an invalid package name (shell-metacharacter payload) but keep valid deps and NOT abort the run (APS-19009)", () => {
+      // APS-19009: a poisoned browserstack.json name like "left-pad; cat /flag" must be dropped from
+      // the generated package.json (defence-in-depth on top of --ignore-scripts), but the session must
+      // still run with the remaining valid dependencies — never a hard abort.
+      packageInstaller.__set__({
+        fileHelpers: {deletePackageArchieve: fileHelpersStub},
+        fs: {
+          mkdir: fsmkdirStub,
+          writeFileSync: fswriteFileSyncStub,
+          existsSync: fsexistsSyncStub,
+          copyFileSync: fscopyFileSyncStub
+        },
+        path: {
+          dirname: pathdirnameStub,
+          join: pathjoinStub
+        }
+      });
+      let setupPackageFolderrewire = packageInstaller.__get__('setupPackageFolder');
+      let runSettings = {
+        npm_dependencies: {
+          "left-pad; cat /flag": "1.0.0",
+          "$(sleep 6)": "1.0.0",
+          "lodash": "^4.17.21"
+        }
+      };
+      let directoryPath = "/random/path";
+      return setupPackageFolderrewire(runSettings, directoryPath)
+        .then((data) => {
+          chai.assert.equal(data, "Package file created");
+          sinon.assert.calledOnce(fswriteFileSyncStub);
+          let written = fswriteFileSyncStub.getCall(0).args[1];
+          chai.assert.include(written, "lodash");
+          chai.assert.notInclude(written, "cat /flag");
+          chai.assert.notInclude(written, "sleep 6");
+        })
+        .catch((_error) => {
+          console.log(_error);
+          chai.assert.fail("a bad package name must be skipped, not abort the run");
         });
     });
 
@@ -553,12 +597,15 @@ describe("packageInstaller", () => {
         });
     });
 
-    it("should REJECT (not fall back to runtime install) when setupPackageFolder throws a dependency-validation error — APS-19009: a malicious/invalid npm_dependencies spec must abort the run before upload", () => {
-      const validationError = new Error('Invalid npm_dependencies entry "evil-pkg": only standard package names and semver/dist-tag versions are allowed.');
-      validationError.isNpmDependencyValidationError = true;
-      let setupPackageFolderValidationStub = sandbox.stub().returns(Promise.reject(validationError));
+    it("should RESOLVE (fall back to runtime install), never reject, when setupPackageFolder throws — APS-19009: a folder/setup failure must never block a customer session", () => {
+      // APS-19009 regression guard: the earlier fix hard-aborted the run on a rejected dependency
+      // spec. BQ analysis showed that broke ~7.3k legitimate builds/90d (our own SDK CI + real
+      // customers using git/file/private-registry specs). packageSetupAndInstaller must therefore
+      // always resolve — the security control is dep-level skipping + --ignore-scripts, not a run abort.
+      const setupError = new Error('some setup failure');
+      let setupPackageFolderErrorStub = sandbox.stub().returns(Promise.reject(setupError));
       packageInstaller.__set__({
-        setupPackageFolder: setupPackageFolderValidationStub
+        setupPackageFolder: setupPackageFolderErrorStub
       });
       let packageSetupAndInstallerrewire = packageInstaller.__get__('packageSetupAndInstaller');
       let bsConfig = {
@@ -571,12 +618,11 @@ describe("packageInstaller", () => {
         markBlockEnd: sinon.stub()
       }
       return packageSetupAndInstallerrewire(bsConfig, packageDir, instrumentBlocks)
-        .then(() => {
-          chai.assert.fail("packageSetupAndInstaller resolved on a validation error — it must reject so runs.js aborts before upload (never silently defer a bad dep to runtime install)");
+        .then((obj) => {
+          chai.assert.isFalse(obj.packagesInstalled, "should report packages not installed and defer to runtime, not abort");
         })
-        .catch((error) => {
-          chai.assert.isTrue(!!(error && error.isNpmDependencyValidationError), "the validation error must propagate (marked isNpmDependencyValidationError)");
-          chai.assert.match(error.message, /Invalid npm_dependencies entry "evil-pkg"/);
+        .catch(() => {
+          chai.assert.fail("packageSetupAndInstaller must never reject — it must resolve so the customer session still runs");
         });
     });
   });
