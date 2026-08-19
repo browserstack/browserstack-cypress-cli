@@ -212,9 +212,7 @@ describe("packageInstaller", () => {
     });
 
     it("should ALLOW a non-registry version spec (git/file/tarball are legitimate) and still write package.json (APS-19009)", () => {
-      // APS-19009: git / file: / tarball-url specs are legitimate and widely used (BrowserStack's own
-      // SDK CI and real customers rely on them). They must NOT abort the run — the RCE is closed by
-      // --ignore-scripts, not by rejecting the spec.
+      // APS-19009: git / file: / tarball-url specs are legitimate — must be written, not rejected.
       packageInstaller.__set__({
         fileHelpers: {deletePackageArchieve: fileHelpersStub},
         fs: {
@@ -250,9 +248,7 @@ describe("packageInstaller", () => {
     });
 
     it("should SKIP an invalid package name (shell-metacharacter payload) but keep valid deps and NOT abort the run (APS-19009)", () => {
-      // APS-19009: a poisoned browserstack.json name like "left-pad; cat /flag" must be dropped from
-      // the generated package.json (defence-in-depth on top of --ignore-scripts), but the session must
-      // still run with the remaining valid dependencies — never a hard abort.
+      // APS-19009: a bad name like "left-pad; cat /flag" is dropped, valid deps kept, run continues.
       packageInstaller.__set__({
         fileHelpers: {deletePackageArchieve: fileHelpersStub},
         fs: {
@@ -598,10 +594,7 @@ describe("packageInstaller", () => {
     });
 
     it("should RESOLVE (fall back to runtime install), never reject, when setupPackageFolder throws — APS-19009: a folder/setup failure must never block a customer session", () => {
-      // APS-19009 regression guard: the earlier fix hard-aborted the run on a rejected dependency
-      // spec. BQ analysis showed that broke ~7.3k legitimate builds/90d (our own SDK CI + real
-      // customers using git/file/private-registry specs). packageSetupAndInstaller must therefore
-      // always resolve — the security control is dep-level skipping + --ignore-scripts, not a run abort.
+      // APS-19009: a setup failure must never block a session — always resolve, defer to runtime.
       const setupError = new Error('some setup failure');
       let setupPackageFolderErrorStub = sandbox.stub().returns(Promise.reject(setupError));
       packageInstaller.__set__({

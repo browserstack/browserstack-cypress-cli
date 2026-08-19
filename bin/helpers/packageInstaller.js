@@ -33,20 +33,10 @@ const setupPackageFolder = (runSettings, directoryPath) => {
 
         // Combine win and mac specific dependencies if present
         const combinedDependencies = combineMacWinNpmDependencies(runSettings);
-        // APS-19009: the primary RCE fix is `--ignore-scripts` at install time (see packageInstall
-        // below), which neutralises lifecycle-script (postinstall etc.) execution for EVERY
-        // dependency spec — registry, git, file: or tarball-url alike. That closes the documented
-        // vulnerability without affecting any legitimate flow.
-        //
-        // As defence-in-depth we additionally drop any dependency whose *name* is not a valid npm
-        // package name. This strips shell-metacharacter / command-injection payloads (e.g.
-        // "left-pad; cat /flag", "$(sleep 6)") that a poisoned browserstack.json could try to smuggle.
-        //
-        // We deliberately DO NOT validate the version spec, and we SKIP a bad entry rather than
-        // aborting the run: git / file: / tarball-url / private-registry version specs are legitimate
-        // and widely used (BrowserStack's own SDK CI and real enterprise customers depend on them —
-        // rejecting them would have broken ~7.3k legitimate builds over 90 days per BQ analysis). A
-        // genuine customer session must never be blocked by this control.
+        // APS-19009: drop any dependency whose name is not a valid npm package name (strips
+        // shell-metacharacter payloads like "left-pad; cat /flag"). Version specs are NOT validated
+        // (git / file: / tarball-url are legitimate), and a bad entry is skipped, not aborted, so a
+        // customer session is never blocked. RCE itself is closed by --ignore-scripts (see below).
         const NPM_NAME_RE = /^(@[a-zA-Z0-9-~][a-zA-Z0-9-._~]*\/)?[a-zA-Z0-9-~][a-zA-Z0-9-._~]*$/;
         const safeDependencies = {};
         for (const depName of Object.keys(combinedDependencies || {})) {
@@ -121,12 +111,9 @@ const packageInstall = (packageDir, bsConfig) => {
 
     // add --legacy-peer-deps flag while installing dependencies for npm v7+
     // For more info please read "Peer Dependencies" section here -> https://github.blog/2021-02-02-npm-7-is-now-generally-available/
-    // APS-19009: --ignore-scripts prevents a user-supplied npm_dependencies package from
-    // executing lifecycle scripts (postinstall etc.) during this install, which was an RCE
-    // on CI. npm_dependencies is documented as pure-JS only. shell:true is retained on
-    // purpose: the command line is fully static (package names live in package.json, never
-    // on the command line, so there is no injection surface) and it is required for the
-    // output redirection and for invoking npm.cmd on Windows.
+    // APS-19009: --ignore-scripts blocks lifecycle-script (postinstall) RCE. shell:true is kept
+    // on purpose — the command line is static (package names live in package.json, not on the CLI)
+    // and shell:true is needed for the output redirection and for npm.cmd on Windows.
     if (parseInt(npm_major_version) >= 7) {
       logger.debug(`Running NPM install command: npm install --legacy-peer-deps --ignore-scripts --loglevel verbose > ../npm_install_debug.log`);
       nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--legacy-peer-deps', '--ignore-scripts', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true}); // nosemgrep: javascript.lang.security.audit.spawn-shell-true.spawn-shell-true
