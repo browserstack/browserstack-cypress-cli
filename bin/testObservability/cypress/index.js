@@ -339,6 +339,50 @@ Cypress.Commands.add('fatal', (message, file) => {
   });
 });
 
+/*
+ * [SDK-7399] Drain eventsQueue without ever being able to fail the customer's suite.
+ *
+ * These flush sites run inside mocha `beforeEach`/`afterEach`. Up to v1.32.8 the same
+ * events were dispatched from `Cypress.on(...)` listeners — i.e. OUTSIDE any mocha hook —
+ * and every dispatch was additionally wrapped in `.catch()`, so an instrumentation
+ * failure could not affect the run. v1.33.0 moved the dispatch INTO these hooks and
+ * dropped all error handling, which makes instrumentation errors fatal to the customer:
+ * a throw inside a hook fails that hook, and mocha then SKIPS EVERY REMAINING TEST in
+ * the suite. That is the reported symptom — tests reported as skipped that the customer
+ * never skipped.
+ *
+ * Two independent guards are required, because both failure modes were observed:
+ *   1. SYNCHRONOUS throw — `cy.task`/`cy.now` can throw straight out of the call
+ *      (`TypeError: Cannot read properties of null (reading 'get')` raised inside
+ *      Cypress' own `runPrivilegedCommand`). A promise `.catch()` never runs for this,
+ *      so a real try/catch is needed.
+ *   2. ASYNCHRONOUS rejection — handled by the promise `.catch()`.
+ *
+ * `cy.now('task', ...)` is used rather than `cy.task(...)`: `cy.task` enqueues a Cypress
+ * command, so a failure surfaces later while the queue drains and fails the hook no
+ * matter what guard wraps the enqueue call. `cy.now` executes immediately and returns a
+ * promise, which is exactly what v1.32.8 did and is therefore containable here.
+ */
+const flushEventsQueue = () => {
+  try {
+    const queued = eventsQueue;
+    eventsQueue = [];
+    queued.forEach(event => {
+      try {
+        const payload = sanitizeForTask(event.data);
+        if (payload === null) return;
+        const result = cy.now('task', event.task, payload, event.options);
+        if (result && typeof result.catch === 'function') result.catch(() => {});
+      } catch (e) {
+        /* one bad event must not stop the remaining events, and must not fail the hook */
+      }
+    });
+  } catch (e) {
+    /* instrumentation must never break the customer's test run */
+    eventsQueue = [];
+  }
+};
+
 beforeEach(() => {
   /* browserstack internal helper hook */
 
@@ -346,13 +390,7 @@ beforeEach(() => {
     return;
   }
 
-  if (eventsQueue.length > 0) {
-    eventsQueue.forEach(event => {
-      const payload = sanitizeForTask(event.data);
-      if (payload !== null) cy.task(event.task, payload, event.options);
-    });
-  }
-  eventsQueue = [];
+  flushEventsQueue();
   testRunStarted = true;
 });
 
@@ -362,13 +400,6 @@ afterEach(function() {
     return;
   }
 
-  if (eventsQueue.length > 0) {
-    eventsQueue.forEach(event => {
-      const payload = sanitizeForTask(event.data);
-      if (payload !== null) cy.task(event.task, payload, event.options);
-    });
-  }
-  
-  eventsQueue = [];
+  flushEventsQueue();
   testRunStarted = false;
 });
