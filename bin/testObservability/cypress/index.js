@@ -31,7 +31,6 @@ const getCircularReplacer = () => {
  * `null` is a "skip this event" sentinel — callers must NOT forward it to cy.task, because
  * the Node o11y handler expects a structured event payload, not an error stub. Skipping keeps
  * graceful degradation total: no crash, and no malformed event reaches the collector.
- *
  */
 const sanitizeForTask = (data) => {
   try {
@@ -351,18 +350,29 @@ const warnFlushFailure = (stage, err) => {
 };
 
 /*
- * [SDK-7399] These flush sites run inside mocha beforeEach/afterEach, so a failing
- * dispatch here fails the hook and mocha then SKIPS every remaining test in the spec.
- * Dispatch stays on cy.task (cy.now('task')
- * throws on Cypress 14 in every context — test body, hook and listener — so switching to
- * it silently drops all browser-side telemetry). Because cy.task enqueues, its failure
- * surfaces after this function returns and cannot be caught here; the protection is
- * therefore to never build a payload that fails — see sanitizeForTask's size cap. The
- * try/catch below remains as a backstop for anything raised synchronously while building
- * or enqueuing an event.
+ * [SDK-7399] Send the whole drain as ONE cy.task instead of one cy.task per event.
+ *
+ * Each cy.task round-trip costs roughly 0.8s on a remote terminal. Measured there, with
+ * N events queued per afterEach: N=10 -> 114s, N=100 -> 581s, N=1000 -> the session was
+ * killed. A command-heavy test queues hundreds of events, so the old per-event flush ran
+ * for minutes inside the hook, the spec exceeded spec_timeout, and every test that had not
+ * run yet was reported as SKIPPED. Nothing throws in that failure — build-info on a
+ * reproducing build shows failed:0 with the sessions killed at the timeout. Locally the
+ * same dispatch is effectively free, which is why local runs never reproduced it.
+ *
+ * Batching is what fixes it: the same 600 events sent as one call took 109s versus 581s.
+ *
+ * Dispatch deliberately stays on cy.task. cy.now('task', ...) throws on Cypress 14 in
+ * every context — test body, hook and listener — so using it stops the skipping only by
+ * never delivering anything, which silently empties the dashboard.
+ *
+ * The try/catch here is a backstop for anything raised synchronously while building or
+ * enqueuing. It cannot catch a cy.task failure, which surfaces later while the command
+ * queue drains — hence fixing the cost rather than trying to contain the symptom.
  */
-/* Keep each batch comfortably under the ~1MB per-cy.task ceiling measured on a remote
- * terminal (768KB succeeds, 1MB fails), so a large flush is split rather than dropped. */
+
+/* Split each batch under the ~1MB per-cy.task ceiling measured on a remote terminal
+ * (768KB succeeds, 1MB fails), so a large flush is split rather than lost. */
 const MAX_BATCH_CHARS = 512 * 1024;
 
 const flushEventsQueue = () => {
@@ -390,7 +400,7 @@ const flushEventsQueue = () => {
       try {
         const payload = sanitizeForTask(event.data);
         if (payload === null) {
-          warnFlushFailure(`oversized or unserializable payload for '${event.task}'`,
+          warnFlushFailure(`unserializable payload for '${event.task}'`,
             new Error('event skipped'));
           return;
         }
