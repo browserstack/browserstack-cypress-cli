@@ -339,47 +339,28 @@ Cypress.Commands.add('fatal', (message, file) => {
   });
 });
 
-/*
- * [SDK-7399] Drain eventsQueue without ever being able to fail the customer's suite.
- *
- * These flush sites run inside mocha `beforeEach`/`afterEach`. Up to v1.32.8 the same
- * events were dispatched from `Cypress.on(...)` listeners — i.e. OUTSIDE any mocha hook —
- * and every dispatch was additionally wrapped in `.catch()`, so an instrumentation
- * failure could not affect the run. v1.33.0 moved the dispatch INTO these hooks and
- * dropped all error handling, which makes instrumentation errors fatal to the customer:
- * a throw inside a hook fails that hook, and mocha then SKIPS EVERY REMAINING TEST in
- * the suite. That is the reported symptom — tests reported as skipped that the customer
- * never skipped.
- *
- * Two independent guards are required, because both failure modes were observed:
- *   1. SYNCHRONOUS throw — `cy.task`/`cy.now` can throw straight out of the call
- *      (`TypeError: Cannot read properties of null (reading 'get')` raised inside
- *      Cypress' own `runPrivilegedCommand`). A promise `.catch()` never runs for this,
- *      so a real try/catch is needed.
- *   2. ASYNCHRONOUS rejection — handled by the promise `.catch()`.
- *
- * `cy.now('task', ...)` is used rather than `cy.task(...)`: `cy.task` enqueues a Cypress
- * command, so a failure surfaces later while the queue drains and fails the hook no
- * matter what guard wraps the enqueue call. `cy.now` executes immediately and returns a
- * promise, which is exactly what v1.32.8 did and is therefore containable here.
- */
-/*
- * Every suppression below must leave a trace. A dropped event is invisible to the
- * customer's run by design, but it must not be invisible to us — otherwise a future
- * flush failure only shows up as data quietly missing from the dashboard. `console.warn`
- * is used deliberately rather than `browserStackLog`/`cy.task`: routing a diagnostic
- * through another Cypress command would reintroduce exactly the failure being contained.
- */
+/* console.warn, not browserStackLog/cy.task — routing a diagnostic through another
+ * Cypress command would reintroduce the failure this boundary contains. [SDK-7399] */
 const warnFlushFailure = (stage, err) => {
   try {
     console.warn(`BrowserStack Test Observability: suppressed ${stage} error, event(s) dropped: ${err && err.message ? err.message : err}`);
   } catch (e) { /* logging must never throw either */ }
 };
 
+/*
+ * [SDK-7399] These flush sites run inside mocha beforeEach/afterEach, so a throw here
+ * fails the hook and mocha then SKIPS every remaining test in the spec. Before v1.33.0
+ * the same events were dispatched from Cypress.on(...) listeners — outside any hook,
+ * each wrapped in .catch() — so a failure was harmless. Keep this boundary intact:
+ *   - cy.now, not cy.task: cy.task enqueues, so its failure surfaces later during queue
+ *     drain and fails the hook regardless of any guard here. cy.now runs immediately.
+ *   - try/catch AND .catch: cy.now can throw synchronously out of Cypress'
+ *     runPrivilegedCommand, which a promise .catch() never sees.
+ */
 const flushEventsQueue = () => {
   try {
     const queued = eventsQueue;
-    eventsQueue = [];
+    eventsQueue = []; /* cleared before dispatch so a throw cannot replay these events */
     queued.forEach(event => {
       try {
         const payload = sanitizeForTask(event.data);
@@ -389,12 +370,10 @@ const flushEventsQueue = () => {
           result.catch(err => warnFlushFailure(`async dispatch of '${event.task}'`, err));
         }
       } catch (e) {
-        /* one bad event must not stop the remaining events, and must not fail the hook */
-        warnFlushFailure(`dispatch of '${event.task}'`, e);
+        warnFlushFailure(`dispatch of '${event.task}'`, e); /* skip one event, not the rest */
       }
     });
   } catch (e) {
-    /* instrumentation must never break the customer's test run */
     warnFlushFailure('queue flush', e);
     eventsQueue = [];
   }
