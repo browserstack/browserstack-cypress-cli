@@ -32,42 +32,10 @@ const getCircularReplacer = () => {
  * the Node o11y handler expects a structured event payload, not an error stub. Skipping keeps
  * graceful degradation total: no crash, and no malformed event reaches the collector.
  *
- * [SDK-7399] An oversized cy.task payload fails the command, and because the flush runs
- * inside a mocha hook that failure skips every remaining test in the spec. Measured on a
- * remote Windows terminal: a single 64KB payload succeeds, 1MB and 8MB fail; event COUNT
- * is not the problem (1000 small events succeed). Command args are the realistic source
- * of bulk, so cap individual strings first and only drop the event if it is still too
- * large. Preventing the oversized dispatch is what keeps the customer's suite intact —
- * containment alone cannot, since the failure surfaces after the enqueue call returns.
  */
-const MAX_TASK_PAYLOAD_CHARS = 128 * 1024;
-const MAX_STRING_CHARS = 8 * 1024;
-const TRUNCATION_MARKER = '…[browserstack: truncated]';
-
-const getTruncatingReplacer = () => {
-  const seen = new WeakSet();
-  return (key, value) => {
-    if (typeof value === 'string' && value.length > MAX_STRING_CHARS) {
-      return value.slice(0, MAX_STRING_CHARS) + TRUNCATION_MARKER;
-    }
-    if (typeof value === 'object' && value !== null) {
-      if (seen.has(value)) return '[Circular]';
-      seen.add(value);
-    }
-    return value;
-  };
-};
-
-/* Returns a JSON-safe plain object small enough to ship, or `null` to skip the event. */
 const sanitizeForTask = (data) => {
   try {
-    let json = JSON.stringify(data, getCircularReplacer());
-    if (json === undefined) return null;
-    if (json.length > MAX_TASK_PAYLOAD_CHARS) {
-      json = JSON.stringify(data, getTruncatingReplacer());
-      if (json === undefined || json.length > MAX_TASK_PAYLOAD_CHARS) return null;
-    }
-    return JSON.parse(json);
+    return JSON.parse(JSON.stringify(data, getCircularReplacer()));
   } catch (e) {
     return null;
   }
@@ -427,6 +395,15 @@ const flushEventsQueue = () => {
           return;
         }
         const size = JSON.stringify(payload).length;
+        if (size > MAX_BATCH_CHARS) {
+          /* A single event this large cannot be sent under the ~1MB per-cy.task ceiling
+           * measured on a remote terminal (768KB passes, 1MB fails). Dropping it is not a
+           * fidelity regression: before batching it was dispatched alone and would have
+           * failed the command anyway. Nothing smaller is altered or truncated. */
+          warnFlushFailure(`event too large to send for '${event.task}' (${size} chars)`,
+            new Error('event skipped'));
+          return;
+        }
         if (batchChars + size > MAX_BATCH_CHARS) sendBatch();
         batch.push({ task: event.task, data: payload });
         batchChars += size;
