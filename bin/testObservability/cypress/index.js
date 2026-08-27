@@ -32,9 +32,43 @@ const getCircularReplacer = () => {
  * the Node o11y handler expects a structured event payload, not an error stub. Skipping keeps
  * graceful degradation total: no crash, and no malformed event reaches the collector.
  */
+/*
+ * [SDK-7399] An oversized cy.task payload fails the command, and because the flush runs
+ * inside a mocha hook that failure skips every remaining test in the spec. Measured on a
+ * remote Windows terminal: a single 64KB payload succeeds, 1MB and 8MB fail; event COUNT
+ * is not the problem (1000 small events succeed). Command args are the realistic source
+ * of bulk, so cap individual strings first and only drop the event if it is still too
+ * large. Preventing the oversized dispatch is what keeps the customer's suite intact —
+ * containment alone cannot, since the failure surfaces after the enqueue call returns.
+ */
+const MAX_TASK_PAYLOAD_CHARS = 128 * 1024;
+const MAX_STRING_CHARS = 8 * 1024;
+const TRUNCATION_MARKER = '…[browserstack: truncated]';
+
+const getTruncatingReplacer = () => {
+  const seen = new WeakSet();
+  return (key, value) => {
+    if (typeof value === 'string' && value.length > MAX_STRING_CHARS) {
+      return value.slice(0, MAX_STRING_CHARS) + TRUNCATION_MARKER;
+    }
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) return '[Circular]';
+      seen.add(value);
+    }
+    return value;
+  };
+};
+
+/* Returns a JSON-safe plain object small enough to ship, or `null` to skip the event. */
 const sanitizeForTask = (data) => {
   try {
-    return JSON.parse(JSON.stringify(data, getCircularReplacer()));
+    let json = JSON.stringify(data, getCircularReplacer());
+    if (json === undefined) return null;
+    if (json.length > MAX_TASK_PAYLOAD_CHARS) {
+      json = JSON.stringify(data, getTruncatingReplacer());
+      if (json === undefined || json.length > MAX_TASK_PAYLOAD_CHARS) return null;
+    }
+    return JSON.parse(json);
   } catch (e) {
     return null;
   }
@@ -348,14 +382,15 @@ const warnFlushFailure = (stage, err) => {
 };
 
 /*
- * [SDK-7399] These flush sites run inside mocha beforeEach/afterEach, so a throw here
- * fails the hook and mocha then SKIPS every remaining test in the spec. Before v1.33.0
- * the same events were dispatched from Cypress.on(...) listeners — outside any hook,
- * each wrapped in .catch() — so a failure was harmless. Keep this boundary intact:
- *   - cy.now, not cy.task: cy.task enqueues, so its failure surfaces later during queue
- *     drain and fails the hook regardless of any guard here. cy.now runs immediately.
- *   - try/catch AND .catch: cy.now can throw synchronously out of Cypress'
- *     runPrivilegedCommand, which a promise .catch() never sees.
+ * [SDK-7399] These flush sites run inside mocha beforeEach/afterEach, so a failing
+ * dispatch here fails the hook and mocha then SKIPS every remaining test in the spec.
+ * Dispatch stays on cy.task: it is the only form that actually delivers (cy.now('task')
+ * throws on Cypress 14 in every context — test body, hook and listener — so switching to
+ * it silently drops all browser-side telemetry). Because cy.task enqueues, its failure
+ * surfaces after this function returns and cannot be caught here; the protection is
+ * therefore to never build a payload that fails — see sanitizeForTask's size cap. The
+ * try/catch below remains as a backstop for anything raised synchronously while building
+ * or enqueuing an event.
  */
 const flushEventsQueue = () => {
   try {
@@ -364,11 +399,12 @@ const flushEventsQueue = () => {
     queued.forEach(event => {
       try {
         const payload = sanitizeForTask(event.data);
-        if (payload === null) return;
-        const result = cy.now('task', event.task, payload, event.options);
-        if (result && typeof result.catch === 'function') {
-          result.catch(err => warnFlushFailure(`async dispatch of '${event.task}'`, err));
+        if (payload === null) {
+          warnFlushFailure(`oversized or unserializable payload for '${event.task}'`,
+            new Error('event skipped'));
+          return;
         }
+        cy.task(event.task, payload, event.options);
       } catch (e) {
         warnFlushFailure(`dispatch of '${event.task}'`, e); /* skip one event, not the rest */
       }
