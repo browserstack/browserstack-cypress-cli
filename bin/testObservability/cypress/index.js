@@ -363,6 +363,19 @@ Cypress.Commands.add('fatal', (message, file) => {
  * matter what guard wraps the enqueue call. `cy.now` executes immediately and returns a
  * promise, which is exactly what v1.32.8 did and is therefore containable here.
  */
+/*
+ * Every suppression below must leave a trace. A dropped event is invisible to the
+ * customer's run by design, but it must not be invisible to us — otherwise a future
+ * flush failure only shows up as data quietly missing from the dashboard. `console.warn`
+ * is used deliberately rather than `browserStackLog`/`cy.task`: routing a diagnostic
+ * through another Cypress command would reintroduce exactly the failure being contained.
+ */
+const warnFlushFailure = (stage, err) => {
+  try {
+    console.warn(`BrowserStack Test Observability: suppressed ${stage} error, event(s) dropped: ${err && err.message ? err.message : err}`);
+  } catch (e) { /* logging must never throw either */ }
+};
+
 const flushEventsQueue = () => {
   try {
     const queued = eventsQueue;
@@ -372,13 +385,17 @@ const flushEventsQueue = () => {
         const payload = sanitizeForTask(event.data);
         if (payload === null) return;
         const result = cy.now('task', event.task, payload, event.options);
-        if (result && typeof result.catch === 'function') result.catch(() => {});
+        if (result && typeof result.catch === 'function') {
+          result.catch(err => warnFlushFailure(`async dispatch of '${event.task}'`, err));
+        }
       } catch (e) {
         /* one bad event must not stop the remaining events, and must not fail the hook */
+        warnFlushFailure(`dispatch of '${event.task}'`, e);
       }
     });
   } catch (e) {
     /* instrumentation must never break the customer's test run */
+    warnFlushFailure('queue flush', e);
     eventsQueue = [];
   }
 };
