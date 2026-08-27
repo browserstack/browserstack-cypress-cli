@@ -31,8 +31,7 @@ const getCircularReplacer = () => {
  * `null` is a "skip this event" sentinel — callers must NOT forward it to cy.task, because
  * the Node o11y handler expects a structured event payload, not an error stub. Skipping keeps
  * graceful degradation total: no crash, and no malformed event reaches the collector.
- */
-/*
+ *
  * [SDK-7399] An oversized cy.task payload fails the command, and because the flush runs
  * inside a mocha hook that failure skips every remaining test in the spec. Measured on a
  * remote Windows terminal: a single 64KB payload succeeds, 1MB and 8MB fail; event COUNT
@@ -84,7 +83,9 @@ const shouldSkipCommand = (command) => {
   if (!Cypress.env('BROWSERSTACK_O11Y_LOGS')) {
     return true;
   }
-  return command.attributes.name == 'log' || (command.attributes.name == 'task' && (['test_observability_platform_details', 'test_observability_step', 'test_observability_command', 'browserstack_log', 'test_observability_log'].some(event => command.attributes.args.includes(event))));
+  /* test_observability_batch must be filtered here too, or each batch dispatch would
+   * itself be captured as a command event and refill the queue. [SDK-7399] */
+  return command.attributes.name == 'log' || (command.attributes.name == 'task' && (['test_observability_platform_details', 'test_observability_step', 'test_observability_command', 'test_observability_batch', 'browserstack_log', 'test_observability_log'].some(event => command.attributes.args.includes(event))));
 }
 
 Cypress.on('log:changed', (attrs) => {
@@ -384,7 +385,7 @@ const warnFlushFailure = (stage, err) => {
 /*
  * [SDK-7399] These flush sites run inside mocha beforeEach/afterEach, so a failing
  * dispatch here fails the hook and mocha then SKIPS every remaining test in the spec.
- * Dispatch stays on cy.task: it is the only form that actually delivers (cy.now('task')
+ * Dispatch stays on cy.task (cy.now('task')
  * throws on Cypress 14 in every context — test body, hook and listener — so switching to
  * it silently drops all browser-side telemetry). Because cy.task enqueues, its failure
  * surfaces after this function returns and cannot be caught here; the protection is
@@ -392,10 +393,31 @@ const warnFlushFailure = (stage, err) => {
  * try/catch below remains as a backstop for anything raised synchronously while building
  * or enqueuing an event.
  */
+/* Keep each batch comfortably under the ~1MB per-cy.task ceiling measured on a remote
+ * terminal (768KB succeeds, 1MB fails), so a large flush is split rather than dropped. */
+const MAX_BATCH_CHARS = 512 * 1024;
+
 const flushEventsQueue = () => {
   try {
     const queued = eventsQueue;
     eventsQueue = []; /* cleared before dispatch so a throw cannot replay these events */
+    if (queued.length === 0) return;
+
+    let batch = [];
+    let batchChars = 0;
+
+    const sendBatch = () => {
+      if (batch.length === 0) return;
+      const toSend = batch;
+      batch = [];
+      batchChars = 0;
+      try {
+        cy.task('test_observability_batch', toSend, { log: false });
+      } catch (e) {
+        warnFlushFailure(`batch dispatch of ${toSend.length} event(s)`, e);
+      }
+    };
+
     queued.forEach(event => {
       try {
         const payload = sanitizeForTask(event.data);
@@ -404,11 +426,16 @@ const flushEventsQueue = () => {
             new Error('event skipped'));
           return;
         }
-        cy.task(event.task, payload, event.options);
+        const size = JSON.stringify(payload).length;
+        if (batchChars + size > MAX_BATCH_CHARS) sendBatch();
+        batch.push({ task: event.task, data: payload });
+        batchChars += size;
       } catch (e) {
-        warnFlushFailure(`dispatch of '${event.task}'`, e); /* skip one event, not the rest */
+        warnFlushFailure(`preparing '${event.task}'`, e); /* skip one event, not the rest */
       }
     });
+
+    sendBatch();
   } catch (e) {
     warnFlushFailure('queue flush', e);
     eventsQueue = [];
