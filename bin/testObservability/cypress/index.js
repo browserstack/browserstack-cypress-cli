@@ -395,7 +395,7 @@ const flushEventsQueue = () => {
         }
         const size = JSON.stringify(payload).length;
         if (size > MAX_EVENT_CHARS) {
-          /* unsendable at any size; the per-event flush could not deliver it either */
+          /* past the largest size measured to send; 768KB-1MB is untested, so skip */
           warnFlushFailure(`event too large to send for '${event.task}' (${size} chars)`,
             new Error('event skipped'));
           return;
