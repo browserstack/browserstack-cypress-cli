@@ -35,16 +35,8 @@ const browserstackTestObservabilityPlugin = (on, config, callbacks) => {
       ipc.of.browserstackTestObservability.emit(IPC_EVENTS.CUCUMBER, log);
       return null;
     },
-    /*
-     * [SDK-7399] Accepts a whole flush as ONE task so the browser side issues one
-     * Cypress command per flush instead of one per event. Each cy.task round-trip costs
-     * roughly 0.8s on a remote terminal, so a command-heavy test used to spend minutes
-     * in its afterEach and the spec was killed at spec_timeout, reporting every test that
-     * had not run yet as skipped. Measured: 600 events as 600 calls = 581s; the same 600
-     * events as 1 call = 109s, i.e. baseline.
-     * Fans out to exactly the same IPC events as the individual tasks above, which stay
-     * registered for backward compatibility.
-     */
+    /* [SDK-7399] One task per flush instead of one per event — see cypress/index.js.
+     * Fans out to the same IPC events; the per-event tasks stay for back-compat. */
     test_observability_batch(events) {
       if (!Array.isArray(events)) return null;
       events.forEach((event) => {
@@ -53,7 +45,7 @@ const browserstackTestObservabilityPlugin = (on, config, callbacks) => {
           if (!ipcEvent) return;
           ipc.of.browserstackTestObservability.emit(ipcEvent, event.data);
         } catch (e) {
-          /* one malformed event must not drop the rest of the batch */
+          /* one bad entry must not drop the rest */
         }
       });
       return null;
