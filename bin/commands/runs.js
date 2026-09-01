@@ -189,7 +189,10 @@ module.exports = function run(args, rawArgs) {
       }
     }
 
-    const { packagesInstalled } = !isBrowserstackInfra ? false : await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd});
+    let packagesInstalled;
+    if (isBrowserstackInfra) {
+      ({ packagesInstalled } = await packageInstaller.packageSetupAndInstaller(bsConfig, config.packageDirName, {markBlockStart, markBlockEnd}));
+    }
 
     if(isBrowserstackInfra) {
       // set node version

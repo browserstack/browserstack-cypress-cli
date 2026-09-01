@@ -33,9 +33,23 @@ const setupPackageFolder = (runSettings, directoryPath) => {
 
         // Combine win and mac specific dependencies if present
         const combinedDependencies = combineMacWinNpmDependencies(runSettings);
-        if (combinedDependencies && Object.keys(combinedDependencies).length > 0) {
+        // APS-19009: drop any dependency whose name is not a valid npm package name (strips
+        // shell-metacharacter payloads like "left-pad; cat /flag"). Version specs are NOT validated
+        // (git / file: / tarball-url are legitimate), and a bad entry is skipped, not aborted, so a
+        // customer session is never blocked. RCE itself is closed by --ignore-scripts (see below).
+        const NPM_NAME_RE = /^(@[a-zA-Z0-9-~][a-zA-Z0-9-._~]*\/)?[a-zA-Z0-9-~][a-zA-Z0-9-._~]*$/;
+        const safeDependencies = {};
+        for (const depName of Object.keys(combinedDependencies || {})) {
+          const depVersion = combinedDependencies[depName];
+          if (!NPM_NAME_RE.test(depName) || typeof depVersion !== 'string') {
+            logger.warn(`Skipping npm_dependencies entry "${depName}": not a valid npm package name. This dependency will not be installed.`);
+            continue;
+          }
+          safeDependencies[depName] = depVersion;
+        }
+        if (Object.keys(safeDependencies).length > 0) {
           Object.assign(packageJSON, {
-            devDependencies: combinedDependencies,
+            devDependencies: safeDependencies,
           });
         }
 
@@ -97,12 +111,15 @@ const packageInstall = (packageDir, bsConfig) => {
 
     // add --legacy-peer-deps flag while installing dependencies for npm v7+
     // For more info please read "Peer Dependencies" section here -> https://github.blog/2021-02-02-npm-7-is-now-generally-available/
+    // APS-19009: --ignore-scripts blocks lifecycle-script (postinstall) RCE. shell:true is kept
+    // on purpose — the command line is static (package names live in package.json, not on the CLI)
+    // and shell:true is needed for the output redirection and for npm.cmd on Windows.
     if (parseInt(npm_major_version) >= 7) {
-      logger.debug(`Running NPM install command: npm install --legacy-peer-deps --loglevel verbose > ../npm_install_debug.log`);
-      nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--legacy-peer-deps', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true});
+      logger.debug(`Running NPM install command: npm install --legacy-peer-deps --ignore-scripts --loglevel verbose > ../npm_install_debug.log`);
+      nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--legacy-peer-deps', '--ignore-scripts', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true}); // nosemgrep: javascript.lang.security.audit.spawn-shell-true.spawn-shell-true
     } else {
-      logger.debug(`Running NPM install command: 'npm install --loglevel verbose > ../npm_install_debug.log'`);
-      nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true});
+      logger.debug(`Running NPM install command: 'npm install --ignore-scripts --loglevel verbose > ../npm_install_debug.log'`);
+      nodeProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['install', '--ignore-scripts', '--loglevel', 'verbose', '>', '../npm_install_debug.log', '2>&1'], {cwd: packageDir, shell: true}); // nosemgrep: javascript.lang.security.audit.spawn-shell-true.spawn-shell-true
     }
     nodeProcess.on('close', nodeProcessCloseCallback);
     nodeProcess.on('error', nodeProcessErrorCallback);
