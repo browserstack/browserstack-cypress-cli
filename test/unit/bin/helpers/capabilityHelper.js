@@ -5,6 +5,7 @@ const chai = require("chai"),
 
 const capabilityHelper = require("../../../../bin/helpers/capabilityHelper"),
   Constants = require("../../../../bin/helpers/constants"),
+  testhubUtils = require("../../../../bin/testhub/utils"),
   logger = require("../../../../bin/helpers/logger").winstonLogger;
 
 chai.use(chaiAsPromised);
@@ -559,6 +560,70 @@ describe("capabilityHelper.js", () => {
           })
           .catch((error) => {
             chai.assert.fail("Promise error");
+          });
+      });
+    });
+
+    context("testhub build attribution", () => {
+      const bsConfig = {
+        auth: {
+          username: "random",
+          access_key: "random",
+        },
+        browsers: [
+          {
+            browser: "chrome",
+            os: "Windows 10",
+            versions: ["78"],
+          },
+        ],
+        run_settings: {},
+      };
+      const productMap = {
+        observability: true,
+        accessibility: false,
+        percy: false,
+        automate: true,
+        app_automate: false,
+      };
+      let productMapStub;
+      let originalTesthubUuid;
+
+      beforeEach(() => {
+        originalTesthubUuid = process.env.BROWSERSTACK_TESTHUB_UUID;
+        productMapStub = sinon.stub(testhubUtils, "getProductMap").returns(productMap);
+      });
+
+      afterEach(() => {
+        productMapStub.restore();
+        if (originalTesthubUuid === undefined) {
+          delete process.env.BROWSERSTACK_TESTHUB_UUID;
+        } else {
+          process.env.BROWSERSTACK_TESTHUB_UUID = originalTesthubUuid;
+        }
+      });
+
+      it("stamps the testhub build uuid and the product map on the caps", () => {
+        process.env.BROWSERSTACK_TESTHUB_UUID = "some-testhub-build-uuid";
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: "bs://<random>" })
+          .then(function (data) {
+            let parsed_data = JSON.parse(data);
+            chai.assert.equal(parsed_data.testhubBuildUuid, "some-testhub-build-uuid");
+            chai.assert.deepEqual(parsed_data.buildProductMap, productMap);
+            sinon.assert.calledWith(productMapStub, bsConfig);
+          });
+      });
+
+      it("stamps an empty testhub build uuid when build start produced none", () => {
+        delete process.env.BROWSERSTACK_TESTHUB_UUID;
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: "bs://<random>" })
+          .then(function (data) {
+            let parsed_data = JSON.parse(data);
+            chai.assert.equal(parsed_data.testhubBuildUuid, "");
+            chai.assert.isTrue(Object.prototype.hasOwnProperty.call(parsed_data, "testhubBuildUuid"));
+            chai.assert.deepEqual(parsed_data.buildProductMap, productMap);
           });
       });
     });
