@@ -50,7 +50,8 @@ const shouldSkipCommand = (command) => {
   if (!Cypress.env('BROWSERSTACK_O11Y_LOGS')) {
     return true;
   }
-  return command.attributes.name == 'log' || (command.attributes.name == 'task' && (['test_observability_platform_details', 'test_observability_step', 'test_observability_command', 'browserstack_log', 'test_observability_log'].some(event => command.attributes.args.includes(event))));
+  /* the batch task is filtered too, else each dispatch refills the queue */
+  return command.attributes.name == 'log' || (command.attributes.name == 'task' && (['test_observability_platform_details', 'test_observability_step', 'test_observability_command', 'test_observability_batch', 'browserstack_log', 'test_observability_log'].some(event => command.attributes.args.includes(event))));
 }
 
 Cypress.on('log:changed', (attrs) => {
@@ -339,6 +340,83 @@ Cypress.Commands.add('fatal', (message, file) => {
   });
 });
 
+/* console.warn, not cy.task — a diagnostic must not use the mechanism it reports on */
+const warnFlushFailure = (stage, err) => {
+  try {
+    console.warn(`BrowserStack Test Observability: suppressed ${stage} error, event(s) dropped: ${err && err.message ? err.message : err}`);
+  } catch (e) { /* logging must never throw either */ }
+};
+
+/*
+ * [SDK-7399] One cy.task per drain, not per event. Each round-trip costs ~0.8s on a
+ * remote terminal, so a command-heavy spec spent minutes in afterEach, exceeded
+ * spec_timeout and was killed — unrun tests then reported as skipped, with nothing
+ * thrown. 600 events: 581s as 600 calls, 109s as one.
+ * Stays on cy.task: cy.now('task') throws on Cypress 14, so it would "fix" this by
+ * delivering nothing. The try/catch is only a backstop for synchronous throws — a
+ * cy.task failure surfaces later, while the command queue drains.
+ */
+
+/* Remote terminal: a single cy.task payload of 768KB succeeds, 1MB fails.
+ * Split well under that; drop only what cannot be sent at all. The two must stay
+ * distinct — an event between them still sends on its own. */
+const MAX_BATCH_CHARS = 512 * 1024;
+const MAX_EVENT_CHARS = 768 * 1024;
+
+const flushEventsQueue = () => {
+  try {
+    const queued = eventsQueue;
+    eventsQueue = []; /* cleared before dispatch so a throw cannot replay these events */
+    if (queued.length === 0) return;
+
+    let batch = [];
+    let batchChars = 0;
+
+    const sendBatch = () => {
+      if (batch.length === 0) return;
+      const toSend = batch;
+      batch = [];
+      batchChars = 0;
+      try {
+        /* every push site uses { log: false }, so per-event options are not forwarded */
+        cy.task('test_observability_batch', toSend, { log: false });
+      } catch (e) {
+        warnFlushFailure(`batch dispatch of ${toSend.length} event(s)`, e);
+      }
+    };
+
+    queued.forEach(event => {
+      try {
+        const payload = sanitizeForTask(event.data);
+        if (payload === null) {
+          warnFlushFailure(`unserializable payload for '${event.task}'`,
+            new Error('event skipped'));
+          return;
+        }
+        const size = JSON.stringify(payload).length;
+        if (size > MAX_EVENT_CHARS) {
+          /* past the largest size measured to send; 768KB-1MB is untested, so skip */
+          warnFlushFailure(`event too large to send for '${event.task}' (${size} chars)`,
+            new Error('event skipped'));
+          return;
+        }
+        /* oversized-but-sendable: let it travel alone */
+        if (batch.length > 0 && batchChars + size > MAX_BATCH_CHARS) sendBatch();
+        batch.push({ task: event.task, data: payload });
+        batchChars += size;
+        if (batchChars >= MAX_BATCH_CHARS) sendBatch();
+      } catch (e) {
+        warnFlushFailure(`preparing '${event.task}'`, e); /* skip one event, not the rest */
+      }
+    });
+
+    sendBatch();
+  } catch (e) {
+    warnFlushFailure('queue flush', e);
+    eventsQueue = [];
+  }
+};
+
 beforeEach(() => {
   /* browserstack internal helper hook */
 
@@ -346,13 +424,7 @@ beforeEach(() => {
     return;
   }
 
-  if (eventsQueue.length > 0) {
-    eventsQueue.forEach(event => {
-      const payload = sanitizeForTask(event.data);
-      if (payload !== null) cy.task(event.task, payload, event.options);
-    });
-  }
-  eventsQueue = [];
+  flushEventsQueue();
   testRunStarted = true;
 });
 
@@ -362,13 +434,6 @@ afterEach(function() {
     return;
   }
 
-  if (eventsQueue.length > 0) {
-    eventsQueue.forEach(event => {
-      const payload = sanitizeForTask(event.data);
-      if (payload !== null) cy.task(event.task, payload, event.options);
-    });
-  }
-  
-  eventsQueue = [];
+  flushEventsQueue();
   testRunStarted = false;
 });
