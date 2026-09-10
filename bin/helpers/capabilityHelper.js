@@ -135,7 +135,11 @@ const caps = (bsConfig, zip) => {
     // The only route by which a cypress session can name its TestHub build: every session
     // this build spawns inherits these caps. Written unconditionally so an empty uuid records
     // that build start ran and had nothing to name, which an absent key cannot express.
-    obj.testhubBuildUuid = process.env.BROWSERSTACK_TESTHUB_UUID || "";
+    // "null" is the sentinel a failed build start leaves behind, not a uuid.
+    const testhubBuildUuid = process.env.BROWSERSTACK_TESTHUB_UUID;
+    obj.testhubBuildUuid = Utils.isUndefined(testhubBuildUuid) || testhubBuildUuid === "null"
+      ? ""
+      : testhubBuildUuid;
     obj.buildProductMap = testhubUtils.getProductMap(bsConfig);
 
     logger.debug(`TestHub build uuid stamped on caps: ${obj.testhubBuildUuid || "<empty>"}`);
