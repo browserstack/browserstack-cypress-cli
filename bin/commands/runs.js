@@ -212,7 +212,7 @@ module.exports = function run(args, rawArgs) {
     logger.debug("Completed setting the configs");
 
     if(!isBrowserstackInfra) {
-      if(process.env.BS_TESTOPS_BUILD_COMPLETED) {
+      if(process.env.BS_TESTOPS_BUILD_COMPLETED === "true") {
         setEventListeners(bsConfig);
       }
 
@@ -226,7 +226,7 @@ module.exports = function run(args, rawArgs) {
       if(process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true') {
         setAccessibilityEventListeners(bsConfig);
       }
-      if(process.env.BS_TESTOPS_BUILD_COMPLETED) {
+      if(process.env.BS_TESTOPS_BUILD_COMPLETED === "true") {
         setEventListeners(bsConfig);
       }
       markBlockEnd('validateConfig');
