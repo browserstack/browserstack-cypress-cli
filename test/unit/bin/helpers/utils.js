@@ -699,6 +699,33 @@ describe('utils', () => {
       expect(bsConfig.run_settings.specs).to.be.eq('spec1,spec2');
     });
 
+    context('when re-running observability failed tests (BROWSERSTACK_RERUN_TESTS)', () => {
+      let rerunStubs = [];
+      beforeEach(() => {
+        rerunStubs.push(sinon.stub(o11yHelpers, 'isBrowserstackInfra').returns(true));
+        rerunStubs.push(sinon.stub(o11yHelpers, 'isTestObservabilitySession').returns(true));
+        rerunStubs.push(sinon.stub(o11yHelpers, 'shouldReRunObservabilityTests').returns(true));
+      });
+      afterEach(() => {
+        rerunStubs.forEach((s) => s.restore());
+        rerunStubs = [];
+        delete process.env.BROWSERSTACK_RERUN_TESTS;
+      });
+
+      it('normalises the comma+space separated rerun spec list to comma-only (SDK-7124)', () => {
+        process.env.BROWSERSTACK_RERUN_TESTS =
+          'FO-E2E-05.ts, FO-E2E-02.ts, FO-E2E-06.ts, FO-E2E-07.ts, FO-E2E-03.ts';
+        let bsConfig = { run_settings: { specs: ['some/other/spec.js'] } };
+
+        utils.setUserSpecs(bsConfig, { specs: null });
+
+        expect(bsConfig.run_settings.specs).to.be.eq(
+          'FO-E2E-05.ts,FO-E2E-02.ts,FO-E2E-06.ts,FO-E2E-07.ts,FO-E2E-03.ts'
+        );
+        expect(bsConfig.run_settings.specs).to.not.contain(' ');
+      });
+    });
+
     it('does not set the specs list if no specs key specified', () => {
       let bsConfig = {
         run_settings: {},
@@ -767,6 +794,34 @@ describe('utils', () => {
         .to.be.eql(
           constant.filesToIgnoreWhileUploading.concat(runSettings.exclude)
         );
+    });
+  });
+
+  // Perf: directory-shaped ignore patterns are reused as readdir-glob `skip`
+  // patterns so the zip/md5 walks prune excluded trees instead of descending into them.
+  describe('getDirectorySkipPatterns', () => {
+    it('keeps only patterns ending in /** (safe to prune)', () => {
+      const ignore = [
+        '**/node_modules/**',
+        'node_modules/**',
+        'dist/**',
+        'apps/admin-portal/**',
+        'package.json',        // file pattern — must NOT be used for pruning
+        '.env',
+        '**/README.md',
+      ];
+      chai.expect(utils.getDirectorySkipPatterns(ignore)).to.be.eql([
+        '**/node_modules/**',
+        'node_modules/**',
+        'dist/**',
+        'apps/admin-portal/**',
+      ]);
+    });
+
+    it('handles empty/undefined input and non-string entries', () => {
+      chai.expect(utils.getDirectorySkipPatterns(undefined)).to.be.eql([]);
+      chai.expect(utils.getDirectorySkipPatterns([])).to.be.eql([]);
+      chai.expect(utils.getDirectorySkipPatterns([null, 42, 'x/**'])).to.be.eql(['x/**']);
     });
   });
 
@@ -2272,6 +2327,76 @@ describe('utils', () => {
   });
 
   describe('getNumberOfSpecFiles', () => {
+    context('when re-running observability failed tests (SDK-7124)', () => {
+      let rerunStubs = [];
+      const specPattern = `cypress/e2e/**/*.+(${constant.specFileTypes.join('|')})`;
+
+      const stubGlob = () => {
+        const globStub = sinon.stub(glob, 'sync');
+        globStub.withArgs(specPattern).returns([
+          'cypress/e2e/FlightOffer/FO-E2E-02.ts',
+          'cypress/e2e/FlightOffer/FO-E2E-05.ts',
+          'cypress/e2e/FlightOffer/FO-E2E-09.ts',
+        ]);
+        globStub.withArgs('{FO-E2E-02.ts,FO-E2E-05.ts}').returns([
+          'cypress/e2e/FlightOffer/FO-E2E-02.ts',
+          'cypress/e2e/FlightOffer/FO-E2E-05.ts',
+        ]);
+        return globStub;
+      };
+
+      const buildConfig = (specs) => ({
+        run_settings: {
+          cypressTestSuiteType: CYPRESS_V10_AND_ABOVE_TYPE,
+          specs: specs,
+          cypressProjectDir: '/repo',
+        },
+      });
+
+      beforeEach(() => {
+        rerunStubs.push(sinon.stub(o11yHelpers, 'isBrowserstackInfra').returns(true));
+        rerunStubs.push(sinon.stub(o11yHelpers, 'isTestObservabilitySession').returns(true));
+        rerunStubs.push(sinon.stub(o11yHelpers, 'shouldReRunObservabilityTests').returns(true));
+      });
+
+      afterEach(() => {
+        rerunStubs.forEach((s) => s.restore());
+        rerunStubs = [];
+        if (glob.sync.restore) glob.sync.restore();
+      });
+
+      it('rewrites the bare rerun filenames to project-relative paths for the remote machines', () => {
+        stubGlob();
+        // shape setUserSpecs leaves behind for a rerun: bare filenames, comma separated
+        let bsConfig = buildConfig('FO-E2E-02.ts,FO-E2E-05.ts');
+
+        const result = utils.getNumberOfSpecFiles(bsConfig, {}, {});
+
+        expect(result.length).to.eql(2);
+        // run_settings is forwarded to the remote verbatim, so it must carry resolvable paths
+        expect(bsConfig.run_settings.specs).to.be.eq(
+          'cypress/e2e/FlightOffer/FO-E2E-02.ts,cypress/e2e/FlightOffer/FO-E2E-05.ts'
+        );
+      });
+
+      it('leaves specs untouched when this is not a rerun session', () => {
+        rerunStubs.forEach((s) => s.restore());
+        rerunStubs = [];
+        sinon.stub(o11yHelpers, 'isBrowserstackInfra').returns(false);
+        sinon.stub(o11yHelpers, 'isTestObservabilitySession').returns(false);
+        sinon.stub(o11yHelpers, 'shouldReRunObservabilityTests').returns(false);
+        rerunStubs.push(o11yHelpers.isBrowserstackInfra);
+        rerunStubs.push(o11yHelpers.isTestObservabilitySession);
+        rerunStubs.push(o11yHelpers.shouldReRunObservabilityTests);
+        stubGlob();
+        let bsConfig = buildConfig('FO-E2E-02.ts,FO-E2E-05.ts');
+
+        utils.getNumberOfSpecFiles(bsConfig, {}, {});
+
+        expect(bsConfig.run_settings.specs).to.be.eq('FO-E2E-02.ts,FO-E2E-05.ts');
+      });
+    });
+
     it('should return files matching with run_settings.specs and under default folder if cypress v <= 9 and no integration/testFiles patterm provided', () => {
       let globStub = sinon.stub(glob, 'sync')
       globStub.withArgs('cypress/integration/foo*.js')
@@ -5590,6 +5715,36 @@ describe('utils', () => {
 
       expect(npmDependencies).to.have.property('browserstack-cypress-cli', 'latest');
       sinon.assert.calledWith(loggerWarnStub, 'Missing browserstack-cypress-cli not found in npm_dependencies');
+    });
+  });
+
+  // glob.sync can crash inside minimatch when a project force-resolves an
+  // incompatible brace-expansion/minimatch (e.g. brace-expansion@5) via resolutions/overrides.
+  // That must not abort spec discovery / crash the run.
+  describe('glob resilience', () => {
+    afterEach(() => { if (glob.sync.restore) glob.sync.restore(); });
+
+    it('safeGlobSync returns [] and does not throw when glob.sync throws', () => {
+      sinon.stub(glob, 'sync').throws(new TypeError('expand is not a function'));
+      let result;
+      expect(() => { result = utils.safeGlobSync('**/*.{js,ts}', {}); }).to.not.throw();
+      expect(result).to.eql([]);
+    });
+
+    it('getNumberOfSpecFiles does not throw and returns [] when glob.sync crashes', () => {
+      sinon.stub(glob, 'sync').throws(new TypeError('expand is not a function'));
+      const bsConfig = { run_settings: { cypressProjectDir: '.', cypressTestSuiteType: CYPRESS_V10_AND_ABOVE_TYPE }, browsers: [] };
+      let result;
+      expect(() => { result = utils.getNumberOfSpecFiles(bsConfig, {}, { e2e: { specPattern: '**/*.cy.{js,ts}' } }); }).to.not.throw();
+      expect(result).to.eql([]);
+    });
+
+    it('deleteBaseUrlFromError returns non-string errors unchanged (no err.replace crash)', () => {
+      const errObj = new TypeError('some object error');
+      expect(() => utils.deleteBaseUrlFromError(errObj)).to.not.throw();
+      expect(utils.deleteBaseUrlFromError(errObj)).to.equal(errObj);
+      // strings are still transformed as before
+      expect(utils.deleteBaseUrlFromError('To test foo on BrowserStack')).to.equal('To test on BrowserStack');
     });
   });
 

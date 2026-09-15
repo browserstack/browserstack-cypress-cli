@@ -12,3 +12,17 @@ if (fs.existsSync(config.configJsonFileName)) {
 
 // write module in temporary json file
 fs.writeFileSync(config.configJsonFileName, JSON.stringify(mod))
+
+// Requiring the cypress config above executes its top-level requires, which
+// includes the BrowserStack accessibility plugin when the user has wired it in.
+// The plugin sets BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED on load; surface that
+// back to the parent CLI process via a temp flag file.
+try {
+    const accessibilityPluginLoaded = process.env.BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED === 'true';
+    fs.writeFileSync(
+        config.accessibilityPluginFlagFileName,
+        JSON.stringify({ accessibilityPluginLoaded })
+    );
+} catch (err) {
+    // best-effort: detection falls back to "not loaded" if this fails
+}

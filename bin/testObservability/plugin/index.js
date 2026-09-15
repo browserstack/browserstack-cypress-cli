@@ -11,6 +11,13 @@ const browserstackTestObservabilityPlugin = (on, config, callbacks) => {
 
   connectIPCClient(config);
 
+  const IPC_EVENT_FOR_TASK = {
+    test_observability_log: IPC_EVENTS.LOG,
+    test_observability_command: IPC_EVENTS.COMMAND,
+    test_observability_platform_details: IPC_EVENTS.PLATFORM_DETAILS,
+    test_observability_step: IPC_EVENTS.CUCUMBER,
+  };
+
   on('task', {
     test_observability_log(log) {
       ipc.of.browserstackTestObservability.emit(IPC_EVENTS.LOG, log);
@@ -26,6 +33,21 @@ const browserstackTestObservabilityPlugin = (on, config, callbacks) => {
     },
     test_observability_step(log) {
       ipc.of.browserstackTestObservability.emit(IPC_EVENTS.CUCUMBER, log);
+      return null;
+    },
+    /* [SDK-7399] One task per flush instead of one per event — see cypress/index.js.
+     * Fans out to the same IPC events; the per-event tasks stay for back-compat. */
+    test_observability_batch(events) {
+      if (!Array.isArray(events)) return null;
+      events.forEach((event) => {
+        try {
+          const ipcEvent = event && IPC_EVENT_FOR_TASK[event.task];
+          if (!ipcEvent) return;
+          ipc.of.browserstackTestObservability.emit(ipcEvent, event.data);
+        } catch (e) {
+          /* one bad entry must not drop the rest */
+        }
+      });
       return null;
     }
   });

@@ -26,6 +26,9 @@ config.retries = 5;
 config.networkErrorExitCode = 2;
 config.compiledConfigJsDirName = 'tmpBstackCompiledJs';
 config.configJsonFileName = 'tmpCypressConfig.json';
+// Temp file used to surface, from the child process that requires the cypress
+// config, whether the BrowserStack accessibility plugin was loaded by it.
+config.accessibilityPluginFlagFileName = 'tmpA11yPluginLoaded.json';
 
 // turboScale
 config.turboScaleMd5Sum = `${config.turboScaleUrl}/md5sumcheck`;

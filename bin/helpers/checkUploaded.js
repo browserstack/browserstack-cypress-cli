@@ -25,6 +25,9 @@ const checkSpecsMd5 = (runSettings, args, instrumentBlocks) => {
     let options = {
       cwd: cypressFolderPath,
       ignore: ignoreFiles,
+      // Perf: prune ignored directories from the md5 walk instead of
+      // filtering entries after descending into them (see utils.getDirectorySkipPatterns).
+      skip: utils.getDirectorySkipPatterns(ignoreFiles),
       pattern: `**/*.+(${Constants.allowedFileTypes.join("|")})`
     };
     hashHelper.hashWrapper(options, instrumentBlocks).then(function (data) {

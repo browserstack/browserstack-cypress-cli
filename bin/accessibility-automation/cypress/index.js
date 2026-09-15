@@ -4,7 +4,27 @@ const browserStackLog = (message) => {
     if (!Cypress.env('BROWSERSTACK_LOGS')) return;
     cy.task('browserstack_log', message);
 }
-  
+
+// Circuit breaker for a dead/unresponsive accessibility scanner.
+// Each hung scan/save costs up to ACCESSIBILITY_SCAN_TIMEOUT (default 25s). Without a
+// breaker, a scanner that never responds stalls EVERY test's afterEach (and every
+// wrapped command) by that much. After N consecutive timeouts we stop attempting
+// accessibility work for the remainder of this spec file (module state resets per spec).
+let consecutiveA11yTimeouts = 0;
+let a11yCircuitOpen = false;
+let a11yCircuitLogged = false;
+const getA11yCircuitLimit = () => parseInt(Cypress.env('ACCESSIBILITY_SCAN_CIRCUIT_LIMIT')) || 3;
+const noteA11yTimeout = () => {
+    consecutiveA11yTimeouts += 1;
+    if (!a11yCircuitOpen && consecutiveA11yTimeouts >= getA11yCircuitLimit()) {
+        a11yCircuitOpen = true;
+        // eslint-disable-next-line no-console
+        console.warn('BrowserStack Accessibility: scanner did not respond ' + consecutiveA11yTimeouts + ' consecutive times; skipping accessibility scans for the remaining tests in this spec.');
+    }
+};
+const noteA11ySuccess = () => { consecutiveA11yTimeouts = 0; };
+
+
 const commandsToWrap = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scroll', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
 // scroll is not a default function in cypress.
 const commandToOverwrite = ['visit', 'click', 'type', 'request', 'dblclick', 'rightclick', 'clear', 'check', 'uncheck', 'select', 'trigger', 'selectFile', 'scrollIntoView', 'scrollTo', 'blur', 'focus', 'go', 'reload', 'submit', 'viewport', 'origin'];
@@ -44,56 +64,74 @@ const performModifiedScan = (originalFn, Subject, stateType, ...args) => {
 }
 
 const performScan = (win, payloadToSend) =>
-new Promise(async (resolve, reject) => {
-    const isHttpOrHttps = /^(http|https):$/.test(win.location.protocol);
-    if (!isHttpOrHttps) {
-        return resolve();
+new Promise((resolve) => {
+    // This promise MUST always settle (never hang, never reject). It runs inside the
+    // global afterEach; if it hangs, cy.wrap()'s 30s timeout fails the hook and Cypress skips
+    // the rest of the spec. Failure modes guarded here:
+    //  - the injected scanner never dispatches A11Y_SCAN_FINISHED (page mid-navigation / slow scan)
+    //  - win is cross-origin (e.g. an SSO redirect) so win.location / win.document throw synchronously
+    if (a11yCircuitOpen) {
+        // Scanner has repeatedly not responded in this spec — don't stall this test too.
+        return resolve("Accessibility scan skipped: scanner unresponsive (circuit open)");
     }
+    let settled = false;
+    const finish = (val) => { if (!settled) { settled = true; clearTimeout(overallTimer); resolve(val); } };
+    const overallTimeout = parseInt(Cypress.env('ACCESSIBILITY_SCAN_TIMEOUT')) || 25000;
+    const overallTimer = setTimeout(() => { noteA11yTimeout(); finish("Accessibility scan timed out"); }, overallTimeout);
 
-    function findAccessibilityAutomationElement() {
-        return win.document.querySelector("#accessibility-automation-element");
-    }
-
-    function waitForScannerReadiness(retryCount = 100, retryInterval = 100) {
-    return new Promise(async (resolve, reject) => {
-        let count = 0;
-        const intervalID = setInterval(async () => {
-            if (count > retryCount) {
-                clearInterval(intervalID);
-                return reject(
-                new Error(
-                    "Accessibility Automation Scanner is not ready on the page."
-                )
-                );
-            } else if (findAccessibilityAutomationElement()) {
-                clearInterval(intervalID);
-                return resolve("Scanner set");
-            } else {
-                count += 1;
-            }
-        }, retryInterval);
-    });
-    }
-
-    function startScan() {
-        function onScanComplete() {
-            win.removeEventListener("A11Y_SCAN_FINISHED", onScanComplete);
-            return resolve();
+    try {
+        const isHttpOrHttps = /^(http|https):$/.test(win.location.protocol);
+        if (!isHttpOrHttps) {
+            return finish();
         }
 
-        win.addEventListener("A11Y_SCAN_FINISHED", onScanComplete);
-        const e = new CustomEvent("A11Y_SCAN", { detail: payloadToSend });
-        win.dispatchEvent(e);
-    }
+        function findAccessibilityAutomationElement() {
+            return win.document.querySelector("#accessibility-automation-element");
+        }
 
-    if (findAccessibilityAutomationElement()) {
-        startScan();
-    } else {
-        waitForScannerReadiness()
-            .then(startScan)
-            .catch(async (err) => {
-            return resolve("Scanner is not ready on the page after multiple retries. performscan");
+        function waitForScannerReadiness(retryCount = 100, retryInterval = 100) {
+        return new Promise((resolve, reject) => {
+            let count = 0;
+            const intervalID = setInterval(() => {
+                if (count > retryCount) {
+                    clearInterval(intervalID);
+                    return reject(
+                    new Error(
+                        "Accessibility Automation Scanner is not ready on the page."
+                    )
+                    );
+                } else if (findAccessibilityAutomationElement()) {
+                    clearInterval(intervalID);
+                    return resolve("Scanner set");
+                } else {
+                    count += 1;
+                }
+            }, retryInterval);
         });
+        }
+
+        function startScan() {
+            function onScanComplete() {
+                win.removeEventListener("A11Y_SCAN_FINISHED", onScanComplete);
+                if (!settled) noteA11ySuccess();
+                return finish();
+            }
+
+            win.addEventListener("A11Y_SCAN_FINISHED", onScanComplete);
+            const e = new CustomEvent("A11Y_SCAN", { detail: payloadToSend });
+            win.dispatchEvent(e);
+        }
+
+        if (findAccessibilityAutomationElement()) {
+            startScan();
+        } else {
+            waitForScannerReadiness()
+                .then(startScan)
+                .catch(() => finish("Scanner is not ready on the page after multiple retries. performscan"));
+        }
+    } catch (err) {
+        // cross-origin window access or any unexpected error must not fail the hook
+        finish();
     }
 })
 
@@ -206,11 +244,20 @@ new Promise((resolve) => {
 });
 
 const saveTestResults = (win, payloadToSend) =>
-new Promise( (resolve, reject) => {
+new Promise((resolve) => {
+    // Must always settle (see performScan note) so a slow/absent A11Y_RESULTS_SAVED
+    // event or a cross-origin window cannot fail the afterEach hook.
+    if (a11yCircuitOpen) {
+        return resolve("Accessibility results save skipped: scanner unresponsive (circuit open)");
+    }
+    let settled = false;
+    const finish = (val) => { if (!settled) { settled = true; clearTimeout(overallTimer); resolve(val); } };
+    const overallTimeout = parseInt(Cypress.env('ACCESSIBILITY_SCAN_TIMEOUT')) || 25000;
+    const overallTimer = setTimeout(() => { noteA11yTimeout(); finish("Accessibility results save timed out"); }, overallTimeout);
     try {
         const isHttpOrHttps = /^(http|https):$/.test(win.location.protocol);
         if (!isHttpOrHttps) {
-            resolve("Unable to save accessibility results, Invalid URL.");
+            finish("Unable to save accessibility results, Invalid URL.");
 			return;
         }
 
@@ -241,7 +288,9 @@ new Promise( (resolve, reject) => {
 
         function saveResults() {
             function onResultsSaved(event) {
-                return resolve();
+                win.removeEventListener("A11Y_RESULTS_SAVED", onResultsSaved);
+                if (!settled) noteA11ySuccess();
+                return finish();
             }
             win.addEventListener("A11Y_RESULTS_SAVED", onResultsSaved);
             const e = new CustomEvent("A11Y_SAVE_RESULTS", {
@@ -255,13 +304,11 @@ new Promise( (resolve, reject) => {
         } else {
             waitForScannerReadiness()
             .then(saveResults)
-            .catch(async (err) => {
-                return resolve("Scanner is not ready on the page after multiple retries. after run");
-            });
+            .catch(() => finish("Scanner is not ready on the page after multiple retries. after run"));
         }
     } catch(error) {
-		browserStackLog(`Error in saving results with error: ${error.message}`);
-        return resolve();
+        browserStackLog(`Error in saving results with error: ${error.message}`);
+        finish();
     }
 
 })
@@ -317,6 +364,17 @@ commandToOverwrite.forEach((command) => {
 });
 
 afterEach(() => {
+    // Nothing that happens inside this accessibility hook may fail the user's
+    // test or abort the remaining tests in the spec. Cypress chains have no .catch, so
+    // suppress any failure raised while this hook's commands run (e.g. cy.window() on a
+    // cross-origin page after an SSO redirect, or a cy.task that is not registered) via
+    // the per-test 'fail' listener. Returning false prevents Cypress from failing the
+    // test; the listener is scoped to the current test and auto-removed afterwards.
+    cy.on('fail', (err) => {
+        // eslint-disable-next-line no-console
+        console.warn(`BrowserStack Accessibility: suppressed afterEach error: ${err && err.message}`);
+        return false;
+    });
     const attributes = Cypress.mocha.getRunner().suite.ctx.currentTest;
     cy.window().then(async (win) => {
         let shouldScanTestForAccessibility = shouldScanForAccessibility(attributes);
