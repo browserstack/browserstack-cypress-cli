@@ -4,7 +4,8 @@ const { readCypressConfigFile } = require('./readCypressConfigUtil');
 
 const logger = require("./logger").winstonLogger,
   Constants = require("./constants"),
-  Utils = require("./utils");
+  Utils = require("./utils"),
+  testhubUtils = require("../testhub/utils");
 
 const caps = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
@@ -130,6 +131,18 @@ const caps = (bsConfig, zip) => {
       // send run_settings as is for other capabilities
       obj.run_settings = JSON.stringify(bsConfig.run_settings);
     }
+
+    // The only route by which a cypress session can name its TestHub build: every session
+    // this build spawns inherits these caps. Written unconditionally so an empty uuid records
+    // that build start ran and had nothing to name, which an absent key cannot express.
+    // "null" is the sentinel a failed build start leaves behind, not a uuid.
+    const testhubBuildUuid = process.env.BROWSERSTACK_TESTHUB_UUID;
+    obj.testhubBuildUuid = Utils.isUndefined(testhubBuildUuid) || testhubBuildUuid === "null"
+      ? ""
+      : testhubBuildUuid;
+    obj.buildProductMap = testhubUtils.getProductMap(bsConfig);
+
+    logger.debug(`TestHub build uuid stamped on caps: ${obj.testhubBuildUuid || "<empty>"}`);
 
     obj.cypress_cli_user_agent = Utils.getUserAgent();
 
