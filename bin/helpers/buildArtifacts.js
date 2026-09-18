@@ -11,7 +11,7 @@ const logger = require('./logger').winstonLogger,
 const { default: axios } = require('axios');
 const { HttpsProxyAgent = require('https-proxy-agent') } = require('https-proxy-agent');
 const FormData = require('form-data');
-const decompress = require('decompress');
+const AdmZip = require('adm-zip');
 const unzipper = require("unzipper");
 const { setAxiosProxy } = require('./helper');
 
@@ -154,10 +154,11 @@ const downloadAndUnzip = async (filePath, fileName, url) => {
 const unzipFile = async (filePath, fileName) => {
   return new Promise( async (resolve, reject) => {
     try {
-      await decompress(path.join(filePath, fileName), filePath);
+      const zip = new AdmZip(path.join(filePath, fileName));
+      await zip.extractAllToAsync(filePath, /* overwrite */ true);
       resolve();
     } catch (error) {
-      logger.debug(`Error unzipping with decompress, trying with unzipper. Stacktrace: ${error}.`);
+      logger.debug(`Error unzipping with adm-zip, trying with unzipper. Stacktrace: ${error}.`);
       try {
         fs.createReadStream(path.join(filePath, fileName))
           .pipe(unzipper.Extract({ path: filePath }))
