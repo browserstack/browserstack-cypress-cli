@@ -6,7 +6,7 @@ const fs = require('fs'),
       utils = require("./utils"),
       Constants = require('./constants'),
       config = require("./config"),
-      decompress = require('decompress');
+      extractZip = require('extract-zip');
 const { isTurboScaleSession } = require('../helpers/atsHelper');
 
 const { setAxiosProxy } = require('./helper');
@@ -171,8 +171,8 @@ function getReportResponse(filePath, fileName, reportJsonUrl) {
 
 const unzipFile = async (filePath, fileName) => {
   return new Promise( async (resolve, reject) => {
-    await decompress(path.join(filePath, fileName), filePath)
-    .then((files) => {
+    await extractZip(path.join(filePath, fileName), { dir: path.resolve(filePath) })
+    .then(() => {
       let message = "Unzipped the json and html successfully."
       resolve(message);
     })
