@@ -242,9 +242,10 @@ describe("unzipFile", () => {
   it("calls unzip and resolves with success message", () => {
     let pathStub = sinon.stub(path, 'join');
     pathStub.calledOnceWith('abc','efg.txt');
-    let decompressStub = sandbox.stub().returns(Promise.resolve("Unzipped the json and html successfully."));
+    let extractAllToAsyncStub = sandbox.stub().resolves();
+    let AdmZipStub = sandbox.stub().returns({ extractAllToAsync: extractAllToAsyncStub });
     let rewireReporterHTML = rewire('../../../../bin/helpers/reporterHTML');
-    rewireReporterHTML.__set__('decompress', decompressStub);
+    rewireReporterHTML.__set__('AdmZip', AdmZipStub);
     let unzipFile = rewireReporterHTML.__get__('unzipFile')
     unzipFile('abc', 'efg');
   });
@@ -254,9 +255,10 @@ describe("unzipFile", () => {
     pathStub.calledOnceWith('abc','efg.txt');
     let processStub = sinon.stub(process, 'exit');
     processStub.returns(Constants.ERROR_EXIT_CODE)
-    let decompressStub = sandbox.stub().returns(Promise.reject("Error"));
+    let extractAllToAsyncStub = sandbox.stub().rejects("Error");
+    let AdmZipStub = sandbox.stub().returns({ extractAllToAsync: extractAllToAsyncStub });
     let rewireReporterHTML = rewire('../../../../bin/helpers/reporterHTML');
-    rewireReporterHTML.__set__('decompress', decompressStub);
+    rewireReporterHTML.__set__('AdmZip', AdmZipStub);
     let unzipFile = rewireReporterHTML.__get__('unzipFile')
     unzipFile('abc', 'efg');
   });
