@@ -1001,6 +1001,12 @@ exports.setLocalArgs = (bsConfig, args) => {
   if (bsConfig["connection_settings"]["useCaCertificate"])
     local_args['useCaCertificate'] = bsConfig["connection_settings"]["useCaCertificate"];
 
+  // browserstack-local only recognises the all-lowercase binarypath key; any other casing is
+  // forwarded to the binary as an unknown CLI flag and the binary gets downloaded anyway
+  const localBinaryPath = bsConfig["connection_settings"]["binaryPath"] || bsConfig["connection_settings"]["binarypath"];
+  if (localBinaryPath)
+    local_args['binarypath'] = localBinaryPath;
+
   local_args['daemon'] = true;
   local_args['enable-logging-for-api'] = true
   local_args['source'] = `cypress:${usageReporting.cli_version_and_path(bsConfig).version}`;

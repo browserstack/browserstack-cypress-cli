@@ -13,7 +13,6 @@ const chai = require('chai'),
   crypto = require('crypto'),
   fs = require('fs');
 const getmac = require('getmac').default;
-const usageReporting = require('../../../../bin/helpers/usageReporting');
 const utils = require('../../../../bin/helpers/utils'),
   constant = require('../../../../bin/helpers/constants'),
   logger = require('../../../../bin/helpers/logger').winstonLogger,
@@ -23,6 +22,10 @@ const utils = require('../../../../bin/helpers/utils'),
   syncLogger = require('../../../../bin/helpers/logger').syncCliLogger,
   Contants = require('../../../../bin/helpers/constants'),
   o11yHelpers = require('../../../../bin/testObservability/helper/helper');
+// utils must be required first: usageReporting reassigns module.exports after its own circular
+// require('./utils'), so loading it first leaves utils holding a stale, empty exports object and
+// nothing stubbed here is visible to the code under test.
+const usageReporting = require('../../../../bin/helpers/usageReporting');
 const browserstack = require('browserstack-local');
 const { CYPRESS_V10_AND_ABOVE_TYPE, CYPRESS_V9_AND_OLDER_TYPE } = require('../../../../bin/helpers/constants');
 const { winstonLogger, syncCliLogger } = require('../../../../bin/helpers/logger');
@@ -1438,6 +1441,57 @@ describe('utils', () => {
       expect(local_args['daemon']).to.be.eq(true);
       expect(local_args['enable-logging-for-api']).to.be.eq(true);
       expect(local_args['config-file']).to.be.eq(path.resolve('./local.yml'));
+      sinon.restore();
+    });
+
+    it('forwards a configured binaryPath as the lowercase binarypath key', () => {
+      let bsConfig = {
+        auth: { access_key: 'xyz' },
+        connection_settings: {
+          local: true,
+          local_identifier: 'on-demand',
+          binaryPath: '/tmp/BrowserStackLocal',
+        },
+      };
+      let cliVersionPathStub = sinon
+        .stub(usageReporting, 'cli_version_and_path')
+        .withArgs(bsConfig);
+      cliVersionPathStub.returns('abc');
+      let local_args = utils.setLocalArgs(bsConfig, {});
+      expect(local_args['binarypath']).to.be.eq('/tmp/BrowserStackLocal');
+      expect(local_args['binaryPath']).to.be.eq(undefined);
+      sinon.restore();
+    });
+
+    it('also accepts the lowercase binarypath config key', () => {
+      let bsConfig = {
+        auth: { access_key: 'xyz' },
+        connection_settings: {
+          local: true,
+          local_identifier: 'on-demand',
+          binarypath: '/tmp/BrowserStackLocal',
+        },
+      };
+      let cliVersionPathStub = sinon
+        .stub(usageReporting, 'cli_version_and_path')
+        .withArgs(bsConfig);
+      cliVersionPathStub.returns('abc');
+      let local_args = utils.setLocalArgs(bsConfig, {});
+      expect(local_args['binarypath']).to.be.eq('/tmp/BrowserStackLocal');
+      sinon.restore();
+    });
+
+    it('omits binarypath when none is configured', () => {
+      let bsConfig = {
+        auth: { access_key: 'xyz' },
+        connection_settings: { local: true, local_identifier: 'on-demand' },
+      };
+      let cliVersionPathStub = sinon
+        .stub(usageReporting, 'cli_version_and_path')
+        .withArgs(bsConfig);
+      cliVersionPathStub.returns('abc');
+      let local_args = utils.setLocalArgs(bsConfig, {});
+      expect(Object.keys(local_args)).to.not.include('binarypath');
       sinon.restore();
     });
   });
