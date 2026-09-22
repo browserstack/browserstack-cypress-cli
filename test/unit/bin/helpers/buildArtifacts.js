@@ -11,7 +11,8 @@ logger.transports["console.info"].silent = true;
 
 describe.skip('unzipFile', () => {
   let unzipFile;
-  let decompressStub;
+  let AdmZipStub;
+  let extractAllToAsyncStub;
   let createReadStreamStub;
   let unzipperStub;
   let loggerStub;
@@ -24,7 +25,8 @@ describe.skip('unzipFile', () => {
   beforeEach(() => {
     const unzipFileModule = rewire('../../../../bin/helpers/buildArtifacts');
 
-    decompressStub = sinon.stub();
+    extractAllToAsyncStub = sinon.stub().resolves();
+    AdmZipStub = sinon.stub().returns({ extractAllToAsync: extractAllToAsyncStub });
     createReadStreamStub = sinon.stub();
     unzipperStub = {
       Extract: sinon.stub(),
@@ -39,7 +41,7 @@ describe.skip('unzipFile', () => {
     };
 
     // Injecting the dependencies
-    unzipFileModule.__set__('decompress', decompressStub);
+    unzipFileModule.__set__('AdmZip', AdmZipStub);
     unzipFileModule.__set__('fs.createReadStream', createReadStreamStub);
     unzipFileModule.__set__('unzipper', unzipperStub);
     unzipFileModule.__set__('logger', loggerStub);
@@ -49,12 +51,11 @@ describe.skip('unzipFile', () => {
     unzipFile = unzipFileModule.__get__('unzipFile');
   });
 
-  it('should successfully unzip using decompress', async () => {
-    decompressStub.resolves();
-
+  it('should successfully unzip using adm-zip', async () => {
     await unzipFile(filePath, fileName);
 
-    expect(decompressStub.calledWith(`${filePath}/${fileName}`, filePath)).to.be.true;
+    expect(AdmZipStub.calledWith(`${filePath}/${fileName}`)).to.be.true;
+    expect(extractAllToAsyncStub.calledWith(filePath, true)).to.be.true;
   });
 
 });
