@@ -6,7 +6,7 @@ const fs = require('fs'),
       utils = require("./utils"),
       Constants = require('./constants'),
       config = require("./config"),
-      decompress = require('decompress');
+      AdmZip = require('adm-zip');
 const { isTurboScaleSession } = require('../helpers/atsHelper');
 
 const { setAxiosProxy } = require('./helper');
@@ -171,15 +171,14 @@ function getReportResponse(filePath, fileName, reportJsonUrl) {
 
 const unzipFile = async (filePath, fileName) => {
   return new Promise( async (resolve, reject) => {
-    await decompress(path.join(filePath, fileName), filePath)
-    .then((files) => {
-      let message = "Unzipped the json and html successfully."
-      resolve(message);
-    })
-    .catch((error) => {
+    try {
+      const zip = new AdmZip(path.join(filePath, fileName));
+      await zip.extractAllToAsync(filePath, /* overwrite */ true);
+      resolve("Unzipped the json and html successfully.");
+    } catch (error) {
       reject(error);
       process.exitCode = Constants.ERROR_EXIT_CODE;
-    });
+    }
   });
 }
 
