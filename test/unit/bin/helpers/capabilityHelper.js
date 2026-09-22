@@ -5,6 +5,8 @@ const chai = require("chai"),
 
 const capabilityHelper = require("../../../../bin/helpers/capabilityHelper"),
   Constants = require("../../../../bin/helpers/constants"),
+  testhubUtils = require("../../../../bin/testhub/utils"),
+  o11yHelper = require("../../../../bin/testObservability/helper/helper"),
   logger = require("../../../../bin/helpers/logger").winstonLogger;
 
 chai.use(chaiAsPromised);
@@ -559,6 +561,151 @@ describe("capabilityHelper.js", () => {
           })
           .catch((error) => {
             chai.assert.fail("Promise error");
+          });
+      });
+    });
+
+    context("testhub build attribution", () => {
+      const bsConfig = {
+        auth: {
+          username: "random",
+          access_key: "random",
+        },
+        browsers: [
+          {
+            browser: "chrome",
+            os: "Windows 10",
+            versions: ["78"],
+          },
+        ],
+        run_settings: {},
+      };
+      const productMap = {
+        observability: true,
+        accessibility: false,
+        percy: false,
+        automate: true,
+        app_automate: false,
+      };
+      let productMapStub;
+      let originalTesthubUuid;
+
+      beforeEach(() => {
+        originalTesthubUuid = process.env.BROWSERSTACK_TESTHUB_UUID;
+        productMapStub = sinon.stub(testhubUtils, "getProductMap").returns(productMap);
+      });
+
+      afterEach(() => {
+        productMapStub.restore();
+        if (originalTesthubUuid === undefined) {
+          delete process.env.BROWSERSTACK_TESTHUB_UUID;
+        } else {
+          process.env.BROWSERSTACK_TESTHUB_UUID = originalTesthubUuid;
+        }
+      });
+
+      it("stamps the testhub build uuid and the product map on the caps", () => {
+        process.env.BROWSERSTACK_TESTHUB_UUID = "some-testhub-build-uuid";
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: "bs://<random>" })
+          .then(function (data) {
+            let parsed_data = JSON.parse(data);
+            chai.assert.equal(parsed_data.testhubBuildUuid, "some-testhub-build-uuid");
+            chai.assert.deepEqual(parsed_data.buildProductMap, productMap);
+            sinon.assert.calledWith(productMapStub, bsConfig);
+          });
+      });
+
+      it("stamps an empty testhub build uuid when build start produced none", () => {
+        delete process.env.BROWSERSTACK_TESTHUB_UUID;
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: "bs://<random>" })
+          .then(function (data) {
+            let parsed_data = JSON.parse(data);
+            chai.assert.equal(parsed_data.testhubBuildUuid, "");
+            chai.assert.isTrue(Object.prototype.hasOwnProperty.call(parsed_data, "testhubBuildUuid"));
+            chai.assert.deepEqual(parsed_data.buildProductMap, productMap);
+          });
+      });
+    });
+
+    // These exercise the REAL getProductMap rather than a stub, because the thing under test is
+    // what the map SAYS, not that it is attached.
+    context("testhub build attribution — product map reflects reality", () => {
+      const ENV = ["BROWSERSTACK_TEST_OBSERVABILITY", "BROWSERSTACK_TESTHUB_UUID",
+                   "BROWSERSTACK_TEST_ACCESSIBILITY", "BROWSERSTACK_AUTOMATION"];
+      let saved;
+
+      const bsConfigFor = (testObservability) => ({
+        auth: { username: "random", access_key: "random" },
+        browsers: [{ browser: "chrome", os: "Windows 10", versions: ["78"] }],
+        run_settings: { cypress_config_file: "./cypress.config.js" },
+        testObservability,
+      });
+
+      beforeEach(() => {
+        saved = {};
+        ENV.forEach((k) => { saved[k] = process.env[k]; });
+        delete process.env.BROWSERSTACK_TEST_OBSERVABILITY;
+        process.env.BROWSERSTACK_TEST_ACCESSIBILITY = "false";
+        process.env.BROWSERSTACK_AUTOMATION = "true";
+      });
+
+      afterEach(() => {
+        ENV.forEach((k) => {
+          if (saved[k] === undefined) delete process.env[k];
+          else process.env[k] = saved[k];
+        });
+      });
+
+      it("carries observability:false when the user explicitly disabled it in config", () => {
+        const bsConfig = bsConfigFor(false);
+        o11yHelper.setTestObservabilityFlags(bsConfig);
+        chai.assert.equal(process.env.BROWSERSTACK_TEST_OBSERVABILITY, "false", "precondition");
+
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: "bs://<random>" })
+          .then(function (data) {
+            const parsed_data = JSON.parse(data);
+            chai.assert.isFalse(parsed_data.buildProductMap.observability);
+            chai.assert.equal(parsed_data.testhubBuildUuid, "");
+          });
+      });
+
+      it("carries observability:true when the user asked for it and build start succeeded", () => {
+        const bsConfig = bsConfigFor(true);
+        o11yHelper.setTestObservabilityFlags(bsConfig);
+        process.env.BROWSERSTACK_TESTHUB_UUID = "a-real-build-uuid";
+
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: "bs://<random>" })
+          .then(function (data) {
+            const parsed_data = JSON.parse(data);
+            chai.assert.isTrue(parsed_data.buildProductMap.observability);
+            chai.assert.equal(parsed_data.testhubBuildUuid, "a-real-build-uuid");
+          });
+      });
+
+      it("flips observability to false and drops the null sentinel when build start failed", () => {
+        const bsConfig = bsConfigFor(true);
+        o11yHelper.setTestObservabilityFlags(bsConfig);
+        chai.assert.equal(process.env.BROWSERSTACK_TEST_OBSERVABILITY, "true", "precondition");
+
+        const errorStub = sinon.stub(logger, "error");
+        try {
+          testhubUtils.handleErrorForObservability();
+        } finally {
+          errorStub.restore();
+        }
+        chai.assert.equal(process.env.BROWSERSTACK_TESTHUB_UUID, "null", "sentinel is what we guard against");
+
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: "bs://<random>" })
+          .then(function (data) {
+            const parsed_data = JSON.parse(data);
+            chai.assert.isFalse(parsed_data.buildProductMap.observability);
+            chai.assert.equal(parsed_data.testhubBuildUuid, "",
+              'the "null" sentinel must never be stamped as a uuid');
           });
       });
     });

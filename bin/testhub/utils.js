@@ -88,6 +88,10 @@ exports.setTestObservabilityVariables = (
 };
 
 exports.handleErrorForObservability = (error = null) => {
+  // Downstream reads isTestObservabilitySession(), not these ids, to decide whether
+  // observability is live. extractDataFromResponse clears it inline for a 2xx carrying
+  // success=false; this covers the paths that never get a usable response at all.
+  process.env.BROWSERSTACK_TEST_OBSERVABILITY = "false";
   process.env.BROWSERSTACK_TESTHUB_UUID = "null";
   process.env.BROWSERSTACK_TESTHUB_JWT = "null";
   process.env.BS_TESTOPS_BUILD_COMPLETED = "false";
@@ -164,7 +168,7 @@ exports.handleErrorForAccessibility = (user_config, error = null) => {
 };
 
 exports.logBuildError = (error, product = "") => {
-  if (error === undefined) {
+  if (isUndefined(error)) {
     logger.error(`${product.toUpperCase()} Build creation failed`);
 
     return;
