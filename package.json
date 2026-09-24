@@ -50,11 +50,7 @@
     "url": "https://github.com/browserstack/browserstack-cypress-cli/issues"
   },
   "overrides": {
-    "serialize-javascript": ">=7.0.5",
-    "js-yaml@3": "3.15.2",
-    "js-yaml@4": "4.3.2",
-    "brace-expansion@1": "1.1.18",
-    "brace-expansion@2": "2.1.4"
+    "serialize-javascript": ">=7.0.5"
   },
   "devDependencies": {
     "chai": "4.3.6",
