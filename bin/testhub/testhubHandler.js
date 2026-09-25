@@ -41,9 +41,9 @@ class TestHubHandler {
       const response = await nodeRequest( "POST", TESTHUB_CONSTANTS.TESTHUB_BUILD_API, data, config);
       const launchData = this.extractDataFromResponse(user_config, data, response, config);
     } catch (error) {
-        console.log(error);
+        logger.debug(`EXCEPTION IN BUILD START EVENT : ${error}`);
+        testhubUtils.handleErrorForObservability(error.success === false ? error : null);
         if (error.success === false) { // non 200 response
-            testhubUtils.logBuildError(error);
             return;
         }
 

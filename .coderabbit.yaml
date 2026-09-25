@@ -1,0 +1,15 @@
+inheritance: true
+reviews:
+  review_details: true
+  request_changes_workflow: true
+  auto_review:
+    enabled: true
+knowledge_base:
+  code_guidelines:
+    filePatterns:
+      - "browserstack/browserstack-ai-harness:stacks/stack-domain-browserstack-cypress-cli/rules/**/*.md"
+      - "browserstack/browserstack-ai-harness:stacks/stack-domain-browserstack-cypress-cli/agents/*review*.md"
+      - "browserstack/browserstack-ai-harness:stacks/stack-domain-browserstack-cypress-cli/skills/*review*/**/*.md"
+      - "browserstack/browserstack-ai-harness:stacks/stack-domain-browserstack-cypress-cli/knowledge/*.md"
+      - "browserstack/browserstack-ai-harness:stacks/stack-domain-browserstack-cypress-cli/knowledge/automate/**/*.md"
+      - "browserstack/browserstack-ai-harness:stacks/stack-domain-browserstack-cypress-cli/knowledge/docs/**/*.md"
