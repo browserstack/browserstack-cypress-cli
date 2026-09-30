@@ -92,8 +92,16 @@ const supportFileCleanup = () => {
 
 exports.buildStopped = false;
 
+const isValidTestHubValue = (value) => !!value && value !== "null" && value !== "undefined";
+
+// A build started at TestHub for any product (e.g. accessibility with observability off)
+// must also be stopped at TestHub, otherwise TestHub never finalises it downstream.
+exports.isTestHubBuildLaunched = () => {
+  return isValidTestHubValue(process.env.BROWSERSTACK_TESTHUB_UUID) && isValidTestHubValue(process.env.BROWSERSTACK_TESTHUB_JWT);
+}
+
 exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
-  if(!this.isTestObservabilitySession()) return;
+  if(!this.isTestObservabilitySession() && !this.isTestHubBuildLaunched()) return;
   // SDK-6211: the build-stop may be sent early (runs.js fires it at poll-resolution, before the
   // post-test 5s wait + artifact download + report generation, so builds_th.finished_at — which
   // the collector stamps at stop-event receipt — reflects the test window rather than the full CLI
@@ -677,8 +685,11 @@ exports.shouldReRunObservabilityTests = () => {
 }
 
 exports.stopBuildUpstream = async () => {
-  if (process.env.BS_TESTOPS_BUILD_COMPLETED === "true") {
-    if(process.env.BS_TESTOPS_JWT == "null" || process.env.BS_TESTOPS_BUILD_HASHED_ID == "null") {
+  const observabilityBuildLaunched = process.env.BS_TESTOPS_BUILD_COMPLETED === "true";
+  if (observabilityBuildLaunched || exports.isTestHubBuildLaunched()) {
+    const jwt = observabilityBuildLaunched ? process.env.BS_TESTOPS_JWT : process.env.BROWSERSTACK_TESTHUB_JWT;
+    const buildHashedId = observabilityBuildLaunched ? process.env.BS_TESTOPS_BUILD_HASHED_ID : process.env.BROWSERSTACK_TESTHUB_UUID;
+    if(!isValidTestHubValue(jwt) || !isValidTestHubValue(buildHashedId)) {
       exports.debug(`EXCEPTION IN stopBuildUpstream REQUEST TO ${TEST_REPORTING_ANALYTICS} : Missing authentication token`);
       return {
         status: 'error',
@@ -692,14 +703,14 @@ exports.stopBuildUpstream = async () => {
       };
       const config = {
         headers: {
-          'Authorization': `Bearer ${process.env.BS_TESTOPS_JWT}`,
+          'Authorization': `Bearer ${jwt}`,
           'Content-Type': 'application/json',
           'X-BSTACK-TESTOPS': 'true'
         }
       };
 
       try {
-        const response = await exports.nodeRequest('PUT',`api/v1/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID}/stop`,data,config);
+        const response = await exports.nodeRequest('PUT',`api/v1/builds/${buildHashedId}/stop`,data,config);
         if(response.data && response.data.error) {
           throw({message: response.data.error});
         } else {
