@@ -6,6 +6,7 @@ const logger = require('./logger').winstonLogger,
       Constants = require('./constants');
 
 const { setAxiosProxy } = require('./helper');
+const { isAllowedBrowserstackUrl } = require('./securityValidation');
 
 exports.getInitialDetails = (bsConfig, args, rawArgs) => {
   return new Promise(async (resolve, reject) => {
@@ -40,7 +41,16 @@ exports.getInitialDetails = (bsConfig, args, rawArgs) => {
         resolve({});
       } else {
         if (!utils.isUndefined(responseData.grr) && responseData.grr.enabled && !utils.isUndefined(responseData.grr.urls)) {
-          config.uploadUrl = responseData.grr.urls.upload_url;
+          // Validate the API-supplied upload_url before trusting it: a MITM /
+          // proxy could rewrite it to redirect the tests.zip upload to an
+          // attacker host (APS-19011). Only accept BrowserStack hosts; otherwise
+          // keep the default uploadUrl.
+          const grrUploadUrl = responseData.grr.urls.upload_url;
+          if (isAllowedBrowserstackUrl(grrUploadUrl)) {
+            config.uploadUrl = grrUploadUrl;
+          } else {
+            logger.warn(`Ignoring upload_url from API response (not a BrowserStack host): ${grrUploadUrl}`);
+          }
         }
         resolve(responseData);
       }
