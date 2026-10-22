@@ -1,6 +1,10 @@
 "use strict";
 // Installed here rather than in runner.js: the CLI and the reporter/plugins that run inside the customer's Cypress all load this file.
-require('./distrustedCaCheck').installDistrustedCaCheck();
+try {
+  require('./distrustedCaCheck').installDistrustedCaCheck();
+} catch (err) {
+  require('./logger').winstonLogger.debug(`Distrusted CA check failed to install: ${err && err.message}`);
+}
 
 const os = require("os");
 const path = require("path");
