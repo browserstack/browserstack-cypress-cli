@@ -3,6 +3,17 @@ const { decodeJWTToken } = require("../../helpers/utils");
 const utils = require('../../helpers/utils');
 const http = require('http');
 
+// Cypress 16 removed Cypress.env() from the browser. Values the support file needs are
+// written to config.expose (read by Cypress.expose(), Cypress >= 15.10) as well as config.env
+// (read by Cypress.env(), Cypress <= 15.x). Unknown config.expose is accepted by Cypress 15.8+
+// without error. [APS-22894]
+const exposeToBrowser = (config, key, value) => {
+  config.env = config.env || {};
+  config.env[key] = value;
+  config.expose = config.expose || {};
+  config.expose[key] = value;
+};
+
 process.env.BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED = 'true';
 
 const browserstackAccessibility = (on, config) => {
@@ -11,7 +22,7 @@ const browserstackAccessibility = (on, config) => {
   process.env.BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED = 'true';
   let browser_validation = true;
   if (process.env.BROWSERSTACK_ACCESSIBILITY_DEBUG === 'true') {
-    config.env.BROWSERSTACK_LOGS = 'true';
+    exposeToBrowser(config, 'BROWSERSTACK_LOGS', 'true');
     process.env.BROWSERSTACK_LOGS = 'true';
   }
   on('task', {
@@ -99,18 +110,18 @@ const browserstackAccessibility = (on, config) => {
     } catch(err) {}
 
   })
-  config.env.ACCESSIBILITY_EXTENSION_PATH = process.env.ACCESSIBILITY_EXTENSION_PATH
-  config.env.OS_VERSION = process.env.OS_VERSION
-  config.env.OS = process.env.OS
-  config.env.BROWSERSTACK_TESTHUB_UUID = process.env.BROWSERSTACK_TESTHUB_UUID
-  config.env.BROWSERSTACK_TESTHUB_JWT = process.env.BROWSERSTACK_TESTHUB_JWT
-  config.env.BROWSERSTACK_TESTHUB_API_PORT = process.env.BROWSERSTACK_TESTHUB_API_PORT
-  config.env.REPORTER_API_PORT_NO = process.env.REPORTER_API_PORT_NO
+  exposeToBrowser(config, 'ACCESSIBILITY_EXTENSION_PATH', process.env.ACCESSIBILITY_EXTENSION_PATH)
+  exposeToBrowser(config, 'OS_VERSION', process.env.OS_VERSION)
+  exposeToBrowser(config, 'OS', process.env.OS)
+  exposeToBrowser(config, 'BROWSERSTACK_TESTHUB_UUID', process.env.BROWSERSTACK_TESTHUB_UUID)
+  exposeToBrowser(config, 'BROWSERSTACK_TESTHUB_JWT', process.env.BROWSERSTACK_TESTHUB_JWT)
+  exposeToBrowser(config, 'BROWSERSTACK_TESTHUB_API_PORT', process.env.BROWSERSTACK_TESTHUB_API_PORT)
+  exposeToBrowser(config, 'REPORTER_API_PORT_NO', process.env.REPORTER_API_PORT_NO)
 
-  config.env.IS_ACCESSIBILITY_EXTENSION_LOADED = browser_validation.toString()
+  exposeToBrowser(config, 'IS_ACCESSIBILITY_EXTENSION_LOADED', browser_validation.toString())
 
-  config.env.INCLUDE_TAGS_FOR_ACCESSIBILITY = process.env.ACCESSIBILITY_INCLUDETAGSINTESTINGSCOPE
-  config.env.EXCLUDE_TAGS_FOR_ACCESSIBILITY = process.env.ACCESSIBILITY_EXCLUDETAGSINTESTINGSCOPE
+  exposeToBrowser(config, 'INCLUDE_TAGS_FOR_ACCESSIBILITY', process.env.ACCESSIBILITY_INCLUDETAGSINTESTINGSCOPE)
+  exposeToBrowser(config, 'EXCLUDE_TAGS_FOR_ACCESSIBILITY', process.env.ACCESSIBILITY_EXCLUDETAGSINTESTINGSCOPE)
 
   return config;
 }
