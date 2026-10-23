@@ -19,6 +19,8 @@ const syncCLI = {
 };
 
 const userMessages = {
+  TESTHUB_A11Y_NOT_SUPPORTED_ON_CYPRESS_MAJOR:
+    "TestHub (Test Observability) and Accessibility are not yet supported on Cypress <cypressMajor>. Disabling both for this build; your tests will still run. Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions",
   ACCESSIBILITY_PLUGIN_NOT_LOADED:
     "BrowserStack Accessibility Automation plugin is not loaded in your cypress config file. Disabling accessibility for this build. Please follow https://www.browserstack.com/docs/accessibility/automated-tests/get-started/cypress to enable accessibility testing.",
   BUILD_FAILED: "Build creation failed.",
@@ -469,6 +471,11 @@ const CYPRESS_CONFIG_FILE_MAPPING = {
 
 const CYPRESS_CONFIG_FILE_NAMES = Object.keys(CYPRESS_CONFIG_FILE_MAPPING);
 
+// APS-22894: the TestHub and Accessibility support-file hooks read Cypress.env(), which
+// Cypress 16 removed from the browser. Both are disabled from this major until the hooks
+// move to Cypress.expose().
+const TESTHUB_A11Y_UNSUPPORTED_FROM_CYPRESS_MAJOR = 16;
+
 const CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS = ['js', 'ts', 'cjs', 'mjs']
 
 // Maximum size of VCS info which is allowed
@@ -514,6 +521,7 @@ module.exports = Object.freeze({
   CYPRESS_CONFIG_FILE_MAPPING,
   CYPRESS_CONFIG_FILE_NAMES,
   CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS,
+  TESTHUB_A11Y_UNSUPPORTED_FROM_CYPRESS_MAJOR,
   MAX_GIT_META_DATA_SIZE_IN_BYTES,
   GIT_META_DATA_TRUNCATED
 });
