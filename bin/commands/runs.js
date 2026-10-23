@@ -72,7 +72,7 @@ module.exports = function run(args, rawArgs) {
     utils.setCypressConfigFilename(bsConfig, args);
 
     /* Set testObservability & browserstackAutomation flags */
-    const [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
+    let [isTestObservabilitySession, isBrowserstackInfra] = setTestObservabilityFlags(bsConfig);
     const checkAccessibility = checkAccessibilityPlatform(bsConfig);
     let isAccessibilitySession = bsConfig.run_settings.accessibility || checkAccessibility;
     const turboScaleSession = isTurboScaleSession(bsConfig);
@@ -90,6 +90,19 @@ module.exports = function run(args, rawArgs) {
     utils.setAccessKey(bsConfig, args);
 
     let buildReportData = (turboScaleSession || !isBrowserstackInfra) ? null : await getInitialDetails(bsConfig, args, rawArgs);
+
+    // APS-22894: the TestHub and Accessibility hooks injected into the support file call
+    // Cypress.env(), which Cypress 16 removed from the browser, so neither can run there yet.
+    // Decided here, before the support file is patched and the suite is zipped.
+    const cypressMajorVersion = utils.getCypressMajorVersion(bsConfig, buildReportData);
+    if (isBrowserstackInfra && (isTestObservabilitySession || isAccessibilitySession)
+        && cypressMajorVersion >= Constants.TESTHUB_A11Y_UNSUPPORTED_FROM_CYPRESS_MAJOR) {
+      logger.warn(Constants.userMessages.TESTHUB_A11Y_NOT_SUPPORTED_ON_CYPRESS_MAJOR.replace('<cypressMajor>', cypressMajorVersion));
+      isTestObservabilitySession = false;
+      isAccessibilitySession = false;
+      bsConfig["testObservability"] = false;
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY = 'false';
+    }
 
     // accept the build name from command line if provided
     utils.setBuildName(bsConfig, args);

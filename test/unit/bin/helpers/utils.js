@@ -5748,4 +5748,29 @@ describe('utils', () => {
     });
   });
 
+  describe('getCypressMajorVersion', () => {
+    it('reads the major from an exact requested version', () => {
+      expect(utils.getCypressMajorVersion({ run_settings: { cypress_version: '16.2.0' } }, {})).to.eql(16);
+    });
+    it('reads the major from the <major>.latest syntax', () => {
+      expect(utils.getCypressMajorVersion({ run_settings: { cypress_version: '16.latest' } }, {})).to.eql(16);
+    });
+    it('reads the major from a bare major, including numeric values', () => {
+      expect(utils.getCypressMajorVersion({ run_settings: { cypress_version: 15 } }, {})).to.eql(15);
+    });
+    it('falls back to the server default when no version is requested', () => {
+      expect(utils.getCypressMajorVersion({ run_settings: {} }, { default_cypress_version: '16.2.0' })).to.eql(16);
+    });
+    it('prefers the requested version over the server default', () => {
+      expect(utils.getCypressMajorVersion({ run_settings: { cypress_version: '13.15.0' } }, { default_cypress_version: '16.2.0' })).to.eql(13);
+    });
+    it('is undefined when neither a requested nor a default version is known', () => {
+      expect(utils.getCypressMajorVersion({ run_settings: {} }, {})).to.be.undefined;
+      expect(utils.getCypressMajorVersion({ run_settings: {} }, null)).to.be.undefined;
+    });
+    it('is undefined when the version does not start with a number', () => {
+      expect(utils.getCypressMajorVersion({ run_settings: { cypress_version: 'latest' } }, {})).to.be.undefined;
+    });
+  });
+
 });
