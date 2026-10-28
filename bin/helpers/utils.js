@@ -1459,6 +1459,20 @@ exports.setConfig = (bsConfig, args) => {
   }
 }
 
+// Major of the Cypress version this run will get: the requested cypress_version when
+// browserstack.json sets one ("16", "16.latest", "16.2.0"), else the default the server
+// applies (default_cypress_version from get_initial_details). undefined when neither parses.
+exports.getCypressMajorVersion = (bsConfig, buildReportData) => {
+  const requested = (bsConfig && bsConfig.run_settings && bsConfig.run_settings.cypress_version)
+    ? bsConfig.run_settings.cypress_version.toString() : undefined;
+  const fallback = (buildReportData && buildReportData.default_cypress_version)
+    ? buildReportData.default_cypress_version.toString() : undefined;
+  const version = requested || fallback;
+  if (this.isUndefined(version)) return undefined;
+  const match = version.match(/^(\d+)/);
+  return match ? parseInt(match[1], 10) : undefined;
+}
+
 exports.setVideoCliConfig = (bsConfig, videoConfig) => {
   // set cli config for video for cypress 13 and above to attain default value of true.
   if(this.isUndefined(videoConfig) || this.isUndefined(videoConfig.video) || this.isUndefined(videoConfig.videoUploadOnPasses) || this.isUndefined(bsConfig)) return;
