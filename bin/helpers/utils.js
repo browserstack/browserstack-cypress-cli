@@ -31,7 +31,7 @@ const usageReporting = require("./usageReporting"),
   pkg = require('../../package.json'),
   transports = require('./logger').transports,
   o11yHelpers = require('../testObservability/helper/helper'),
-  { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER } = require('../testObservability/helper/constants');
+  { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER, remoteReporterApiUrl } = require('../testObservability/helper/constants');
 
 const { default: axios } = require("axios");
 const { shouldProcessEventForTesthub } = require("../testhub/utils");
@@ -609,6 +609,10 @@ exports.setSystemEnvs = (bsConfig) => {
   } catch (error) {
    logger.error(`Error in adding accessibility configs ${error}`)
   }
+
+  // Remote reporter must post to this build's collector, not its package default. Kept out of the
+  // try below, which swallows errors: a rejected override must fail rather than fall back silently.
+  envKeys['BROWSERSTACK_TEST_OBSERVABILITY_API_URL'] = remoteReporterApiUrl();
 
   try {
     OBSERVABILITY_ENV_VARS.forEach(key => {
