@@ -962,6 +962,29 @@ describe('utils', () => {
       delete process.env.cypress_test_2;
     });
 
+    const URL_ENV_VARS = [
+      'BROWSERSTACK_TEST_OBSERVABILITY_API_URL',
+      'BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL',
+    ];
+    let savedUrlEnvs = {};
+
+    beforeEach(() => {
+      URL_ENV_VARS.forEach((key) => {
+        savedUrlEnvs[key] = process.env[key];
+        delete process.env[key];
+      });
+    });
+
+    afterEach(() => {
+      URL_ENV_VARS.forEach((key) => {
+        if (savedUrlEnvs[key] === undefined) {
+          delete process.env[key];
+        } else {
+          process.env[key] = savedUrlEnvs[key];
+        }
+      });
+    });
+
     it('forwards the observability collector url for the remote reporter', () => {
       let bsConfig = { run_settings: { env: null } };
 
@@ -975,14 +998,10 @@ describe('utils', () => {
       process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL = 'https://collector-example.bsstag.com';
       let bsConfig = { run_settings: { env: null } };
 
-      try {
-        utils.setSystemEnvs(bsConfig);
-        expect(bsConfig.run_settings.system_env_vars)
-          .to.be.an('array')
-          .that.includes('BROWSERSTACK_TEST_OBSERVABILITY_API_URL=https://collector-example.bsstag.com');
-      } finally {
-        delete process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL;
-      }
+      utils.setSystemEnvs(bsConfig);
+      expect(bsConfig.run_settings.system_env_vars)
+        .to.be.an('array')
+        .that.includes('BROWSERSTACK_TEST_OBSERVABILITY_API_URL=https://collector-example.bsstag.com');
     });
 
     it('prefers a separate remote collector url for the remote reporter', () => {
@@ -990,15 +1009,17 @@ describe('utils', () => {
       process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com';
       let bsConfig = { run_settings: { env: null } };
 
-      try {
-        utils.setSystemEnvs(bsConfig);
-        expect(bsConfig.run_settings.system_env_vars)
-          .to.be.an('array')
-          .that.includes('BROWSERSTACK_TEST_OBSERVABILITY_API_URL=https://collector-public.bsstag.com');
-      } finally {
-        delete process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL;
-        delete process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL;
-      }
+      utils.setSystemEnvs(bsConfig);
+      expect(bsConfig.run_settings.system_env_vars)
+        .to.be.an('array')
+        .that.includes('BROWSERSTACK_TEST_OBSERVABILITY_API_URL=https://collector-public.bsstag.com');
+    });
+
+    it('rejects a collector url that is not https', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'http://collector-public.bsstag.com';
+      let bsConfig = { run_settings: { env: null } };
+
+      expect(() => utils.setSystemEnvs(bsConfig)).to.throw(/must be an https:\/\/ URL/);
     });
   });
 

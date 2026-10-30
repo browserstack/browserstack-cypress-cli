@@ -4,11 +4,23 @@ exports.consoleHolder = Object.assign({},console);
 exports.BATCH_SIZE = 1000;
 exports.BATCH_INTERVAL = 2000;
 const DEFAULT_API_URL = 'https://collector-observability.browserstack.com';
+
+// Requests to the collector carry BS_TESTOPS_JWT, so an http:// override would put the build's token
+// on the wire in cleartext. Reject it instead of quietly using the default collector.
+const httpsOverride = (name) => {
+  const value = process.env[name];
+  if (!value) return undefined;
+  if (!value.startsWith('https://')) {
+    throw new Error(`${name} must be an https:// URL, got "${value}"`);
+  }
+  return value;
+};
+
 // Overridable so the remote reporter (own install of this package) can target the launching cli's collector
-exports.API_URL = process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL || DEFAULT_API_URL;
+exports.API_URL = httpsOverride('BROWSERSTACK_TEST_OBSERVABILITY_API_URL') || DEFAULT_API_URL;
 // Collector handed to the reporter on the remote machine; separate override for when it cannot reach API_URL
-exports.remoteReporterApiUrl = () => process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL
-  || process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL || DEFAULT_API_URL;
+exports.remoteReporterApiUrl = () => httpsOverride('BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL')
+  || httpsOverride('BROWSERSTACK_TEST_OBSERVABILITY_API_URL') || DEFAULT_API_URL;
 
 exports.IPC_EVENTS = {
   LOG: 'testObservability:cypressLog',

@@ -610,12 +610,14 @@ exports.setSystemEnvs = (bsConfig) => {
    logger.error(`Error in adding accessibility configs ${error}`)
   }
 
+  // Remote reporter must post to this build's collector, not its package default. Kept out of the
+  // try below, which swallows errors: a rejected override must fail rather than fall back silently.
+  envKeys['BROWSERSTACK_TEST_OBSERVABILITY_API_URL'] = remoteReporterApiUrl();
+
   try {
     OBSERVABILITY_ENV_VARS.forEach(key => {
       envKeys[key] = process.env[key];
     });
-    // Remote reporter must post to this build's collector, not its package default
-    envKeys['BROWSERSTACK_TEST_OBSERVABILITY_API_URL'] = remoteReporterApiUrl();
 
     let gitConfigPath = o11yHelpers.findGitConfig(process.cwd());
     if(!o11yHelpers.isBrowserstackInfra()) process.env.OBSERVABILITY_GIT_CONFIG_PATH_LOCAL = gitConfigPath;
