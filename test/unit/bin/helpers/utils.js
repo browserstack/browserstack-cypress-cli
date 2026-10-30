@@ -1021,6 +1021,23 @@ describe('utils', () => {
 
       expect(() => utils.setSystemEnvs(bsConfig)).to.throw(/must be an https:\/\/ URL/);
     });
+
+    it('rejects a collector url carrying a query or fragment', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com/#staging';
+      let bsConfig = { run_settings: { env: null } };
+
+      expect(() => utils.setSystemEnvs(bsConfig)).to.throw(/must not contain a query or fragment/);
+    });
+
+    it('trims a trailing slash so endpoint paths are not doubled', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com/';
+      let bsConfig = { run_settings: { env: null } };
+
+      utils.setSystemEnvs(bsConfig);
+      expect(bsConfig.run_settings.system_env_vars)
+        .to.be.an('array')
+        .that.includes('BROWSERSTACK_TEST_OBSERVABILITY_API_URL=https://collector-public.bsstag.com');
+    });
   });
 
   describe('fixCommaSeparatedString', () => {

@@ -6,14 +6,24 @@ exports.BATCH_INTERVAL = 2000;
 const DEFAULT_API_URL = 'https://collector-observability.browserstack.com';
 
 // Requests to the collector carry BS_TESTOPS_JWT, so an http:// override would put the build's token
-// on the wire in cleartext. Reject it instead of quietly using the default collector.
+// on the wire in cleartext. Request urls are also built as `${base}/${path}`, so a query or fragment
+// would swallow the endpoint. Reject such values instead of quietly using the default collector.
 const httpsOverride = (name) => {
   const value = process.env[name];
   if (!value) return undefined;
-  if (!value.startsWith('https://')) {
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch (err) {
+    throw new Error(`${name} must be a valid https:// URL, got "${value}"`);
+  }
+  if (parsed.protocol !== 'https:' || !parsed.hostname) {
     throw new Error(`${name} must be an https:// URL, got "${value}"`);
   }
-  return value;
+  if (parsed.search || parsed.hash) {
+    throw new Error(`${name} must not contain a query or fragment, got "${value}"`);
+  }
+  return value.replace(/\/+$/, '');
 };
 
 // Overridable so the remote reporter (own install of this package) can target the launching cli's collector
