@@ -2,10 +2,21 @@ const ipc = require('node-ipc');
 const { connectIPCClient } = require('./ipcClient');
 const { IPC_EVENTS } = require('../helper/constants');
 
+// Cypress 16 removed Cypress.env() from the browser. Values the support file needs are
+// written to config.expose (read by Cypress.expose(), Cypress >= 15.10) as well as config.env
+// (read by Cypress.env(), Cypress <= 15.x). Unknown config.expose is accepted by Cypress 15.8+
+// without error. [APS-22894]
+const exposeToBrowser = (config, key, value) => {
+  config.env = config.env || {};
+  config.env[key] = value;
+  config.expose = config.expose || {};
+  config.expose[key] = value;
+};
+
 const browserstackTestObservabilityPlugin = (on, config, callbacks) => {
 
   try {
-    config.env.BROWSERSTACK_O11Y_LOGS = 'true';
+    exposeToBrowser(config, 'BROWSERSTACK_O11Y_LOGS', 'true');
     process.env.BROWSERSTACK_O11Y_LOGS = 'true';
   } catch (err) {}
 
