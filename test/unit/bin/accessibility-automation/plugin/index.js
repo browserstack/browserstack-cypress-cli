@@ -47,4 +47,21 @@ describe('accessibility plugin exposes browser values', () => {
     expect(config.env.BROWSERSTACK_LOGS).to.eql('true');
     expect(config.expose.BROWSERSTACK_LOGS).to.eql('true');
   });
+
+  it('forwards customer-set scan timeout and circuit limit from config.env to config.expose', () => {
+    const config = run({ env: { ACCESSIBILITY_SCAN_TIMEOUT: 1234, ACCESSIBILITY_SCAN_CIRCUIT_LIMIT: 5 } });
+    expect(config.expose.ACCESSIBILITY_SCAN_TIMEOUT).to.eql(1234);
+    expect(config.expose.ACCESSIBILITY_SCAN_CIRCUIT_LIMIT).to.eql(5);
+  });
+
+  it('does not override scan values the customer already set in config.expose', () => {
+    const config = run({ env: { ACCESSIBILITY_SCAN_TIMEOUT: 1234 }, expose: { ACCESSIBILITY_SCAN_TIMEOUT: 9999 } });
+    expect(config.expose.ACCESSIBILITY_SCAN_TIMEOUT).to.eql(9999);
+  });
+
+  it('leaves scan keys out of config.expose when the customer did not set them', () => {
+    const config = run({ env: {} });
+    expect(config.expose).to.not.have.property('ACCESSIBILITY_SCAN_TIMEOUT');
+    expect(config.expose).to.not.have.property('ACCESSIBILITY_SCAN_CIRCUIT_LIMIT');
+  });
 });

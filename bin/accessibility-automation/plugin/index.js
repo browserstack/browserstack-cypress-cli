@@ -123,6 +123,14 @@ const browserstackAccessibility = (on, config) => {
   exposeToBrowser(config, 'INCLUDE_TAGS_FOR_ACCESSIBILITY', process.env.ACCESSIBILITY_INCLUDETAGSINTESTINGSCOPE)
   exposeToBrowser(config, 'EXCLUDE_TAGS_FOR_ACCESSIBILITY', process.env.ACCESSIBILITY_EXCLUDETAGSINTESTINGSCOPE)
 
+  // Customer-tunable keys arrive via config.env, which Cypress 16 no longer passes to the browser.
+  const customerScanKeys = ['ACCESSIBILITY_SCAN_TIMEOUT', 'ACCESSIBILITY_SCAN_CIRCUIT_LIMIT'];
+  customerScanKeys.forEach((key) => {
+    if (config.env[key] !== undefined && config.expose[key] === undefined) {
+      config.expose[key] = config.env[key];
+    }
+  });
+
   return config;
 }
 
