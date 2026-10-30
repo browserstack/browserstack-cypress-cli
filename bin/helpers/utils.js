@@ -31,7 +31,7 @@ const usageReporting = require("./usageReporting"),
   pkg = require('../../package.json'),
   transports = require('./logger').transports,
   o11yHelpers = require('../testObservability/helper/helper'),
-  { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER, API_URL: OBSERVABILITY_API_URL } = require('../testObservability/helper/constants');
+  { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER, remoteReporterApiUrl } = require('../testObservability/helper/constants');
 
 const { default: axios } = require("axios");
 const { shouldProcessEventForTesthub } = require("../testhub/utils");
@@ -614,8 +614,8 @@ exports.setSystemEnvs = (bsConfig) => {
     OBSERVABILITY_ENV_VARS.forEach(key => {
       envKeys[key] = process.env[key];
     });
-    // Remote reporter must post to the collector this build was created on, not its package default
-    envKeys['BROWSERSTACK_TEST_OBSERVABILITY_API_URL'] = OBSERVABILITY_API_URL;
+    // Remote reporter must post to this build's collector, not its package default
+    envKeys['BROWSERSTACK_TEST_OBSERVABILITY_API_URL'] = remoteReporterApiUrl();
 
     let gitConfigPath = o11yHelpers.findGitConfig(process.cwd());
     if(!o11yHelpers.isBrowserstackInfra()) process.env.OBSERVABILITY_GIT_CONFIG_PATH_LOCAL = gitConfigPath;

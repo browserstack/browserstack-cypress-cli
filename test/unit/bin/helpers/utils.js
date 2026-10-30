@@ -972,23 +972,32 @@ describe('utils', () => {
     });
 
     it('forwards an overridden observability collector url', () => {
-      const constantsPath = require.resolve('../../../../bin/testObservability/helper/constants');
-      const utilsPath = require.resolve('../../../../bin/helpers/utils');
       process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL = 'https://collector-example.bsstag.com';
-      delete require.cache[constantsPath];
-      delete require.cache[utilsPath];
+      let bsConfig = { run_settings: { env: null } };
+
       try {
-        const freshUtils = require('../../../../bin/helpers/utils');
-        let bsConfig = { run_settings: { env: null } };
-        freshUtils.setSystemEnvs(bsConfig);
-        expect(require(constantsPath).API_URL).to.equal('https://collector-example.bsstag.com');
+        utils.setSystemEnvs(bsConfig);
         expect(bsConfig.run_settings.system_env_vars)
           .to.be.an('array')
           .that.includes('BROWSERSTACK_TEST_OBSERVABILITY_API_URL=https://collector-example.bsstag.com');
       } finally {
         delete process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL;
-        delete require.cache[constantsPath];
-        delete require.cache[utilsPath];
+      }
+    });
+
+    it('prefers a separate remote collector url for the remote reporter', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL = 'https://collector-private.bsstag.com';
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com';
+      let bsConfig = { run_settings: { env: null } };
+
+      try {
+        utils.setSystemEnvs(bsConfig);
+        expect(bsConfig.run_settings.system_env_vars)
+          .to.be.an('array')
+          .that.includes('BROWSERSTACK_TEST_OBSERVABILITY_API_URL=https://collector-public.bsstag.com');
+      } finally {
+        delete process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL;
+        delete process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL;
       }
     });
   });
