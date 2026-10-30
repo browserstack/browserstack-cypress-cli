@@ -3,7 +3,8 @@ const path = require('path');
 exports.consoleHolder = Object.assign({},console);
 exports.BATCH_SIZE = 1000;
 exports.BATCH_INTERVAL = 2000;
-exports.API_URL = 'https://collector-observability.browserstack.com';
+// Overridable so the remote reporter (own install of this package) can target the launching cli's collector
+exports.API_URL = process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL || 'https://collector-observability.browserstack.com';
 
 exports.IPC_EVENTS = {
   LOG: 'testObservability:cypressLog',

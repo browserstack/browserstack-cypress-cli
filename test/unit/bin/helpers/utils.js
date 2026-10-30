@@ -961,6 +961,36 @@ describe('utils', () => {
       delete process.env.CYPRESS_TEST_1;
       delete process.env.cypress_test_2;
     });
+
+    it('forwards the observability collector url for the remote reporter', () => {
+      let bsConfig = { run_settings: { env: null } };
+
+      utils.setSystemEnvs(bsConfig);
+      expect(bsConfig.run_settings.system_env_vars)
+        .to.be.an('array')
+        .that.includes('BROWSERSTACK_TEST_OBSERVABILITY_API_URL=https://collector-observability.browserstack.com');
+    });
+
+    it('forwards an overridden observability collector url', () => {
+      const constantsPath = require.resolve('../../../../bin/testObservability/helper/constants');
+      const utilsPath = require.resolve('../../../../bin/helpers/utils');
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL = 'https://collector-example.bsstag.com';
+      delete require.cache[constantsPath];
+      delete require.cache[utilsPath];
+      try {
+        const freshUtils = require('../../../../bin/helpers/utils');
+        let bsConfig = { run_settings: { env: null } };
+        freshUtils.setSystemEnvs(bsConfig);
+        expect(require(constantsPath).API_URL).to.equal('https://collector-example.bsstag.com');
+        expect(bsConfig.run_settings.system_env_vars)
+          .to.be.an('array')
+          .that.includes('BROWSERSTACK_TEST_OBSERVABILITY_API_URL=https://collector-example.bsstag.com');
+      } finally {
+        delete process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL;
+        delete require.cache[constantsPath];
+        delete require.cache[utilsPath];
+      }
+    });
   });
 
   describe('fixCommaSeparatedString', () => {
