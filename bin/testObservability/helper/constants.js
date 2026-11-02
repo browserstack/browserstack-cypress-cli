@@ -26,10 +26,14 @@ const httpsOverride = (name) => {
   return `${parsed.origin}${parsed.pathname}`.replace(/\/+$/, '');
 };
 
-exports.apiUrl = () => httpsOverride('BROWSERSTACK_TEST_OBSERVABILITY_API_URL') || DEFAULT_API_URL;
+const API_URL_ENV = 'BROWSERSTACK_TEST_OBSERVABILITY_API_URL';
 // Separate override for when the remote machine cannot reach the cli's own collector.
-exports.remoteReporterApiUrl = () => httpsOverride('BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL')
-  || exports.apiUrl();
+const REMOTE_API_URL_ENV = 'BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL';
+exports.API_URL_ENV = API_URL_ENV;
+exports.REMOTE_API_URL_ENV = REMOTE_API_URL_ENV;
+
+exports.apiUrl = () => httpsOverride(API_URL_ENV) || DEFAULT_API_URL;
+exports.remoteReporterApiUrl = () => httpsOverride(REMOTE_API_URL_ENV) || exports.apiUrl();
 
 exports.IPC_EVENTS = {
   LOG: 'testObservability:cypressLog',

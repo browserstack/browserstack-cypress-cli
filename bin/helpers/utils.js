@@ -31,7 +31,7 @@ const usageReporting = require("./usageReporting"),
   pkg = require('../../package.json'),
   transports = require('./logger').transports,
   o11yHelpers = require('../testObservability/helper/helper'),
-  { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER, apiUrl, remoteReporterApiUrl } = require('../testObservability/helper/constants');
+  { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER, API_URL_ENV, REMOTE_API_URL_ENV, apiUrl, remoteReporterApiUrl } = require('../testObservability/helper/constants');
 
 const { default: axios } = require("axios");
 const { shouldProcessEventForTesthub } = require("../testhub/utils");
@@ -579,6 +579,12 @@ exports.validateCollectorUrls = () => {
   // is set, which would leave a malformed general override unchecked until the first request.
   apiUrl();
   remoteReporterApiUrl();
+  // Remote-only means this process keeps its built-in collector while the machine reports to
+  // another one. That is correct when the built-in default has been pointed at the same
+  // environment, and a silently split build when it has not.
+  if (process.env[REMOTE_API_URL_ENV] && !process.env[API_URL_ENV]) {
+    logger.warn(`${REMOTE_API_URL_ENV} is set without ${API_URL_ENV}: this run will create its build on the built-in collector and the remote reporter will post test results to ${process.env[REMOTE_API_URL_ENV]}. Both must be the same environment.`);
+  }
 };
 
 exports.setSystemEnvs = (bsConfig) => {

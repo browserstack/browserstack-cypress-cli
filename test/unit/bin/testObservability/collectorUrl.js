@@ -6,6 +6,8 @@ const proxyquire = require('proxyquire').noPreserveCache();
 
 const API_URL_ENV = 'BROWSERSTACK_TEST_OBSERVABILITY_API_URL';
 const DEFAULT_API_URL = 'https://collector-observability.browserstack.com';
+const HELPER_PATH = '../../../../bin/testObservability/helper/helper';
+const CONSTANTS_PATH = '../../../../bin/testObservability/helper/constants';
 
 // A11Y-13909: the reporter runs on the BrowserStack machine from its own install of this package,
 // so the collector it posts to has to come from the environment the launching cli forwards. These
@@ -29,7 +31,11 @@ describe('observability collector url', () => {
   const loadHelperWithAxios = () => {
     const axiosStub = sinon.stub().resolves({ status: 200, data: '{}' });
     axiosStub['@noCallThru'] = true;
-    const helper = proxyquire('../../../../bin/testObservability/helper/helper', { axios: axiosStub });
+    // proxyquire clears only the proxied module and its stubs, and the url is resolved in
+    // constants.js, so without this the url code is a cache hit and a module-load-time
+    // regression there would never turn these red.
+    delete require.cache[require.resolve(CONSTANTS_PATH)];
+    const helper = proxyquire(HELPER_PATH, { axios: axiosStub });
     return { helper, axiosStub };
   };
 
@@ -55,7 +61,9 @@ describe('observability collector url', () => {
   it('does not reject an invalid collector url until a request is made', async () => {
     process.env[API_URL_ENV] = 'http://collector-example.bsstag.com';
 
-    const { helper } = loadHelperWithAxios();
+    let loaded;
+    expect(() => { loaded = loadHelperWithAxios(); }).to.not.throw();
+    const { helper } = loaded;
 
     let thrown;
     await helper.nodeRequest('POST', 'api/v1/batch', {}, { headers: {} }).catch((err) => { thrown = err; });

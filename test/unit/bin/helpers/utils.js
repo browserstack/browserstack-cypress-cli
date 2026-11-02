@@ -1015,6 +1015,33 @@ describe('utils', () => {
         .that.includes('BROWSERSTACK_TEST_OBSERVABILITY_API_URL=https://collector-public.bsstag.com');
     });
 
+    it('warns when only the remote collector is overridden', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com';
+      const warn = sinon.stub(logger, 'warn');
+
+      try {
+        utils.validateCollectorUrls();
+        sinon.assert.calledOnce(warn);
+        expect(warn.firstCall.args[0]).to.match(/collector-public\.bsstag\.com/);
+        expect(warn.firstCall.args[0]).to.match(/same environment/);
+      } finally {
+        warn.restore();
+      }
+    });
+
+    it('does not warn when both collector urls are set', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL = 'https://collector-private.bsstag.com';
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com';
+      const warn = sinon.stub(logger, 'warn');
+
+      try {
+        utils.validateCollectorUrls();
+        sinon.assert.notCalled(warn);
+      } finally {
+        warn.restore();
+      }
+    });
+
     it('validates both overrides, even when the remote one is valid', () => {
       process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL = 'http://collector-private.bsstag.com';
       process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com';
