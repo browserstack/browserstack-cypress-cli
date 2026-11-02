@@ -4,7 +4,6 @@ const expect = chai.expect;
 const sinon = require('sinon');
 const proxyquire = require('proxyquire').noPreserveCache();
 
-const CONSTANTS_PATH = require.resolve('../../../../bin/testObservability/helper/constants');
 const API_URL_ENV = 'BROWSERSTACK_TEST_OBSERVABILITY_API_URL';
 const DEFAULT_API_URL = 'https://collector-observability.browserstack.com';
 
@@ -12,14 +11,11 @@ const DEFAULT_API_URL = 'https://collector-observability.browserstack.com';
 // so the collector it posts to has to come from the environment the launching cli forwards. These
 // pin the request destination itself, not just the forwarding done by setSystemEnvs.
 describe('observability collector url', () => {
-  let savedApiUrl, cachedConstants;
+  let savedApiUrl;
 
   beforeEach(() => {
     savedApiUrl = process.env[API_URL_ENV];
     delete process.env[API_URL_ENV];
-    // constants.js reads the override at load, so it must be re-evaluated per case.
-    cachedConstants = require.cache[CONSTANTS_PATH];
-    delete require.cache[CONSTANTS_PATH];
   });
 
   afterEach(() => {
@@ -27,10 +23,6 @@ describe('observability collector url', () => {
       delete process.env[API_URL_ENV];
     } else {
       process.env[API_URL_ENV] = savedApiUrl;
-    }
-    delete require.cache[CONSTANTS_PATH];
-    if (cachedConstants) {
-      require.cache[CONSTANTS_PATH] = cachedConstants;
     }
   });
 
@@ -42,8 +34,8 @@ describe('observability collector url', () => {
   };
 
   it('sends requests to the overridden collector', async () => {
-    process.env[API_URL_ENV] = 'https://collector-example.bsstag.com';
     const { helper, axiosStub } = loadHelperWithAxios();
+    process.env[API_URL_ENV] = 'https://collector-example.bsstag.com';
 
     await helper.nodeRequest('POST', 'api/v1/batch', {}, { headers: {} });
 
@@ -56,5 +48,17 @@ describe('observability collector url', () => {
     await helper.nodeRequest('POST', 'api/v1/batch', {}, { headers: {} });
 
     expect(axiosStub.firstCall.args[0].url).to.equal(`${DEFAULT_API_URL}/api/v1/batch`);
+  });
+
+  // Loading this module must never throw on a bad value: every command loads it through
+  // bin/helpers/utils.js, so init, info and stop would die at startup, as would the reporter.
+  it('does not reject an invalid collector url until a request is made', async () => {
+    process.env[API_URL_ENV] = 'http://collector-example.bsstag.com';
+
+    const { helper } = loadHelperWithAxios();
+
+    let thrown;
+    await helper.nodeRequest('POST', 'api/v1/batch', {}, { headers: {} }).catch((err) => { thrown = err; });
+    expect(String(thrown)).to.match(/must be an https:\/\/ URL/);
   });
 });

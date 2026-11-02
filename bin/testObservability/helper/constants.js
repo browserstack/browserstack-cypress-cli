@@ -5,14 +5,12 @@ exports.BATCH_SIZE = 1000;
 exports.BATCH_INTERVAL = 2000;
 const DEFAULT_API_URL = 'https://collector-observability.browserstack.com';
 
-// Requests to the collector carry BS_TESTOPS_JWT, so an http:// override would put the build's token
-// on the wire in cleartext. Request urls are also built as `${base}/${path}`, so a query or fragment
-// would swallow the endpoint. Reject such values instead of quietly using the default collector.
+// Overridable so the reporter on the remote machine posts to the collector the build was created
+// on. Errors never echo the value: it can carry credentials and callers log them.
 const httpsOverride = (name) => {
   const value = process.env[name];
   if (!value) return undefined;
   let parsed;
-  // The value can carry credentials, and callers log the error, so never echo it back.
   try {
     parsed = new URL(value);
   } catch (err) {
@@ -24,16 +22,14 @@ const httpsOverride = (name) => {
   if (parsed.search || parsed.hash) {
     throw new Error(`${name} must not contain a query or fragment`);
   }
-  // Normalise to origin + path with no trailing separator: a stray `/`, `?` or `#` would otherwise
-  // turn the appended endpoint into a query or fragment.
+  // Endpoints are appended as `${base}/${path}`.
   return `${parsed.origin}${parsed.pathname}`.replace(/\/+$/, '');
 };
 
-// Overridable so the remote reporter (own install of this package) can target the launching cli's collector
-exports.API_URL = httpsOverride('BROWSERSTACK_TEST_OBSERVABILITY_API_URL') || DEFAULT_API_URL;
-// Collector handed to the reporter on the remote machine; separate override for when it cannot reach API_URL
+exports.apiUrl = () => httpsOverride('BROWSERSTACK_TEST_OBSERVABILITY_API_URL') || DEFAULT_API_URL;
+// Separate override for when the remote machine cannot reach the cli's own collector.
 exports.remoteReporterApiUrl = () => httpsOverride('BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL')
-  || httpsOverride('BROWSERSTACK_TEST_OBSERVABILITY_API_URL') || DEFAULT_API_URL;
+  || exports.apiUrl();
 
 exports.IPC_EVENTS = {
   LOG: 'testObservability:cypressLog',

@@ -572,6 +572,12 @@ exports.setBuildTags = (bsConfig, args) => {
   logger.debug(`Setting the build tag =  ${bsConfig.run_settings.build_tag}`);
 };
 
+// Called before anything is created server-side: setSystemEnvs runs after the TestHub build
+// exists, so a malformed collector override would otherwise fail with a build already open.
+exports.validateCollectorUrls = () => {
+  remoteReporterApiUrl();
+};
+
 exports.setSystemEnvs = (bsConfig) => {
   let envKeys = {};
 
