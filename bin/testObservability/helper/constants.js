@@ -12,18 +12,21 @@ const httpsOverride = (name) => {
   const value = process.env[name];
   if (!value) return undefined;
   let parsed;
+  // The value can carry credentials, and callers log the error, so never echo it back.
   try {
     parsed = new URL(value);
   } catch (err) {
-    throw new Error(`${name} must be a valid https:// URL, got "${value}"`);
+    throw new Error(`${name} must be a valid https:// URL`);
   }
   if (parsed.protocol !== 'https:' || !parsed.hostname) {
-    throw new Error(`${name} must be an https:// URL, got "${value}"`);
+    throw new Error(`${name} must be an https:// URL`);
   }
   if (parsed.search || parsed.hash) {
-    throw new Error(`${name} must not contain a query or fragment, got "${value}"`);
+    throw new Error(`${name} must not contain a query or fragment`);
   }
-  return value.replace(/\/+$/, '');
+  // Normalise to origin + path with no trailing separator: a stray `/`, `?` or `#` would otherwise
+  // turn the appended endpoint into a query or fragment.
+  return `${parsed.origin}${parsed.pathname}`.replace(/\/+$/, '');
 };
 
 // Overridable so the remote reporter (own install of this package) can target the launching cli's collector
