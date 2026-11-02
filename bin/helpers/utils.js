@@ -31,7 +31,7 @@ const usageReporting = require("./usageReporting"),
   pkg = require('../../package.json'),
   transports = require('./logger').transports,
   o11yHelpers = require('../testObservability/helper/helper'),
-  { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER, remoteReporterApiUrl } = require('../testObservability/helper/constants');
+  { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER, apiUrl, remoteReporterApiUrl } = require('../testObservability/helper/constants');
 
 const { default: axios } = require("axios");
 const { shouldProcessEventForTesthub } = require("../testhub/utils");
@@ -575,6 +575,9 @@ exports.setBuildTags = (bsConfig, args) => {
 // Called before anything is created server-side: setSystemEnvs runs after the TestHub build
 // exists, so a malformed collector override would otherwise fail with a build already open.
 exports.validateCollectorUrls = () => {
+  // Both, because remoteReporterApiUrl() short-circuits past apiUrl() when the remote override
+  // is set, which would leave a malformed general override unchecked until the first request.
+  apiUrl();
   remoteReporterApiUrl();
 };
 

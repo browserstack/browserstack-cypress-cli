@@ -1015,6 +1015,13 @@ describe('utils', () => {
         .that.includes('BROWSERSTACK_TEST_OBSERVABILITY_API_URL=https://collector-public.bsstag.com');
     });
 
+    it('validates both overrides, even when the remote one is valid', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL = 'http://collector-private.bsstag.com';
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com';
+
+      expect(() => utils.validateCollectorUrls()).to.throw(/BROWSERSTACK_TEST_OBSERVABILITY_API_URL must be an https/);
+    });
+
     it('rejects a collector url that is not https', () => {
       process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'http://collector-public.bsstag.com';
       let bsConfig = { run_settings: { env: null } };
