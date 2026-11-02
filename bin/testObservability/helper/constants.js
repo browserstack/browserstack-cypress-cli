@@ -22,6 +22,11 @@ const httpsOverride = (name) => {
   if (parsed.search || parsed.hash) {
     throw new Error(`${name} must not contain a query or fragment`);
   }
+  // URL.origin drops userinfo, so accepting it would silently discard a credential the
+  // caller believes it is sending.
+  if (parsed.username || parsed.password) {
+    throw new Error(`${name} must not contain a username or password`);
+  }
   // Endpoints are appended as `${base}/${path}`.
   return `${parsed.origin}${parsed.pathname}`.replace(/\/+$/, '');
 };

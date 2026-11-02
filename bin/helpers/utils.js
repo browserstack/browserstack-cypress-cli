@@ -583,7 +583,7 @@ exports.validateCollectorUrls = () => {
   // another one. That is correct when the built-in default has been pointed at the same
   // environment, and a silently split build when it has not.
   if (process.env[REMOTE_API_URL_ENV] && !process.env[API_URL_ENV]) {
-    logger.warn(`${REMOTE_API_URL_ENV} is set without ${API_URL_ENV}: this run will create its build on the built-in collector and the remote reporter will post test results to ${process.env[REMOTE_API_URL_ENV]}. Both must be the same environment.`);
+    logger.warn(`${REMOTE_API_URL_ENV} is set without ${API_URL_ENV}: this run will create its build on the built-in collector and the remote reporter will post test results to ${remoteReporterApiUrl()}. Both must be the same environment.`);
   }
 };
 
@@ -627,7 +627,7 @@ exports.setSystemEnvs = (bsConfig) => {
 
   // Remote reporter must post to this build's collector, not its package default. Kept out of the
   // try below, which swallows errors: a rejected override must fail rather than fall back silently.
-  envKeys['BROWSERSTACK_TEST_OBSERVABILITY_API_URL'] = remoteReporterApiUrl();
+  envKeys[API_URL_ENV] = remoteReporterApiUrl();
 
   try {
     OBSERVABILITY_ENV_VARS.forEach(key => {

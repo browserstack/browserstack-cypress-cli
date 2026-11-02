@@ -1022,7 +1022,7 @@ describe('utils', () => {
       try {
         utils.validateCollectorUrls();
         sinon.assert.calledOnce(warn);
-        expect(warn.firstCall.args[0]).to.match(/collector-public\.bsstag\.com/);
+        expect(warn.firstCall.args[0]).to.match(/https:\/\/collector-public\.bsstag\.com/);
         expect(warn.firstCall.args[0]).to.match(/same environment/);
       } finally {
         warn.restore();
@@ -1040,6 +1040,23 @@ describe('utils', () => {
       } finally {
         warn.restore();
       }
+    });
+
+    it('neither warns nor throws when no collector url is overridden', () => {
+      const warn = sinon.stub(logger, 'warn');
+
+      try {
+        expect(() => utils.validateCollectorUrls()).to.not.throw();
+        sinon.assert.notCalled(warn);
+      } finally {
+        warn.restore();
+      }
+    });
+
+    it('rejects a collector url carrying a username or password', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://user:secret@collector-public.bsstag.com';
+
+      expect(() => utils.validateCollectorUrls()).to.throw(/must not contain a username or password/);
     });
 
     it('validates both overrides, even when the remote one is valid', () => {
