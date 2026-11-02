@@ -581,9 +581,10 @@ exports.validateCollectorUrls = () => {
   remoteReporterApiUrl();
   // Remote-only means this process keeps its built-in collector while the machine reports to
   // another one. That is correct when the built-in default has been pointed at the same
-  // environment, and a silently split build when it has not.
+  // environment, and a silently split build when it has not. Only the host is named: the
+  // path survives normalization and can carry a token.
   if (process.env[REMOTE_API_URL_ENV] && !process.env[API_URL_ENV]) {
-    logger.warn(`${REMOTE_API_URL_ENV} is set without ${API_URL_ENV}: this run will create its build on the built-in collector and the remote reporter will post test results to ${remoteReporterApiUrl()}. Both must be the same environment.`);
+    logger.warn(`${REMOTE_API_URL_ENV} is set without ${API_URL_ENV}: this run will create its build on the built-in collector and the remote reporter will post test results to ${new URL(remoteReporterApiUrl()).host}. Both must be the same environment.`);
   }
 };
 

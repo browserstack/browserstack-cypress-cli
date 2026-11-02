@@ -1022,8 +1022,20 @@ describe('utils', () => {
       try {
         utils.validateCollectorUrls();
         sinon.assert.calledOnce(warn);
-        expect(warn.firstCall.args[0]).to.match(/https:\/\/collector-public\.bsstag\.com/);
+        expect(warn.firstCall.args[0]).to.match(/collector-public\.bsstag\.com/);
         expect(warn.firstCall.args[0]).to.match(/same environment/);
+      } finally {
+        warn.restore();
+      }
+    });
+
+    it('names only the host in that warning, never the path', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com/t0ken';
+      const warn = sinon.stub(logger, 'warn');
+
+      try {
+        utils.validateCollectorUrls();
+        expect(warn.firstCall.args[0]).to.not.match(/t0ken/);
       } finally {
         warn.restore();
       }
