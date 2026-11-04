@@ -27,7 +27,7 @@ const GLOBAL_MODULE_PATH = execSync('npm root -g').toString().trim();
 const { name, version } = require('../../../package.json');
 
 const { CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS } = require('../../helpers/constants');
-const { consoleHolder, API_URL, TEST_OBSERVABILITY_REPORTER, TEST_OBSERVABILITY_REPORTER_LOCAL, TEST_REPORTING_ANALYTICS } = require('./constants');
+const { consoleHolder, apiUrl, TEST_OBSERVABILITY_REPORTER, TEST_OBSERVABILITY_REPORTER_LOCAL, TEST_REPORTING_ANALYTICS } = require('./constants');
 
 const ALLOWED_MODULES = [
   'cypress/package.json',
@@ -128,10 +128,18 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
 exports.nodeRequest = (type, url, data, config) => {
   const requestQueueHandler = require('./requestQueueHandler');
     return new Promise(async (resolve, reject) => {
+      // Rejected rather than thrown: this executor is async, so a throw here would never reach
+      // the returned promise and the caller would hang.
+      let collectorUrl;
+      try {
+        collectorUrl = apiUrl();
+      } catch (err) {
+        return reject(err);
+      }
       const options = {
         ...config,
         method: type,
-        url: `${API_URL}/${url}`,
+        url: `${collectorUrl}/${url}`,
         data: data,
         httpsAgent: this.httpsKeepAliveAgent,  
         maxAttempts: 2,

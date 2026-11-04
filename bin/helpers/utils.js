@@ -31,7 +31,7 @@ const usageReporting = require("./usageReporting"),
   pkg = require('../../package.json'),
   transports = require('./logger').transports,
   o11yHelpers = require('../testObservability/helper/helper'),
-  { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER } = require('../testObservability/helper/constants');
+  { OBSERVABILITY_ENV_VARS, TEST_OBSERVABILITY_REPORTER, API_URL_ENV, REMOTE_API_URL_ENV, apiUrl, remoteReporterApiUrl } = require('../testObservability/helper/constants');
 
 const { default: axios } = require("axios");
 const { shouldProcessEventForTesthub } = require("../testhub/utils");
@@ -572,6 +572,22 @@ exports.setBuildTags = (bsConfig, args) => {
   logger.debug(`Setting the build tag =  ${bsConfig.run_settings.build_tag}`);
 };
 
+// Called before anything is created server-side: setSystemEnvs runs after the TestHub build
+// exists, so a malformed collector override would otherwise fail with a build already open.
+exports.validateCollectorUrls = () => {
+  // Both, because remoteReporterApiUrl() short-circuits past apiUrl() when the remote override
+  // is set, which would leave a malformed general override unchecked until the first request.
+  apiUrl();
+  remoteReporterApiUrl();
+  // Remote-only means this process keeps its built-in collector while the machine reports to
+  // another one. That is correct when the built-in default has been pointed at the same
+  // environment, and a silently split build when it has not. Only the host is named: the
+  // path survives normalization and can carry a token.
+  if (process.env[REMOTE_API_URL_ENV] && !process.env[API_URL_ENV]) {
+    logger.warn(`${REMOTE_API_URL_ENV} is set without ${API_URL_ENV}: this run will create its build on the built-in collector and the remote reporter will post test results to ${new URL(remoteReporterApiUrl()).host}. Both must be the same environment.`);
+  }
+};
+
 exports.setSystemEnvs = (bsConfig) => {
   let envKeys = {};
 
@@ -609,6 +625,10 @@ exports.setSystemEnvs = (bsConfig) => {
   } catch (error) {
    logger.error(`Error in adding accessibility configs ${error}`)
   }
+
+  // Remote reporter must post to this build's collector, not its package default. Kept out of the
+  // try below, which swallows errors: a rejected override must fail rather than fall back silently.
+  envKeys[API_URL_ENV] = remoteReporterApiUrl();
 
   try {
     OBSERVABILITY_ENV_VARS.forEach(key => {
