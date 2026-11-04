@@ -3,7 +3,42 @@ const path = require('path');
 exports.consoleHolder = Object.assign({},console);
 exports.BATCH_SIZE = 1000;
 exports.BATCH_INTERVAL = 2000;
-exports.API_URL = 'https://collector-observability.browserstack.com';
+const DEFAULT_API_URL = 'https://collector-observability.browserstack.com';
+
+// Overridable so the reporter on the remote machine posts to the collector the build was created
+// on. Errors never echo the value: it can carry credentials and callers log them.
+const httpsOverride = (name) => {
+  const value = process.env[name];
+  if (!value) return undefined;
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch (err) {
+    throw new Error(`${name} must be a valid https:// URL`);
+  }
+  if (parsed.protocol !== 'https:' || !parsed.hostname) {
+    throw new Error(`${name} must be an https:// URL`);
+  }
+  if (parsed.search || parsed.hash) {
+    throw new Error(`${name} must not contain a query or fragment`);
+  }
+  // URL.origin drops userinfo, so accepting it would silently discard a credential the
+  // caller believes it is sending.
+  if (parsed.username || parsed.password) {
+    throw new Error(`${name} must not contain a username or password`);
+  }
+  // Endpoints are appended as `${base}/${path}`.
+  return `${parsed.origin}${parsed.pathname}`.replace(/\/+$/, '');
+};
+
+const API_URL_ENV = 'BROWSERSTACK_TEST_OBSERVABILITY_API_URL';
+// Separate override for when the remote machine cannot reach the cli's own collector.
+const REMOTE_API_URL_ENV = 'BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL';
+exports.API_URL_ENV = API_URL_ENV;
+exports.REMOTE_API_URL_ENV = REMOTE_API_URL_ENV;
+
+exports.apiUrl = () => httpsOverride(API_URL_ENV) || DEFAULT_API_URL;
+exports.remoteReporterApiUrl = () => httpsOverride(REMOTE_API_URL_ENV) || exports.apiUrl();
 
 exports.IPC_EVENTS = {
   LOG: 'testObservability:cypressLog',
