@@ -961,6 +961,156 @@ describe('utils', () => {
       delete process.env.CYPRESS_TEST_1;
       delete process.env.cypress_test_2;
     });
+
+    const URL_ENV_VARS = [
+      'BROWSERSTACK_TEST_OBSERVABILITY_API_URL',
+      'BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL',
+    ];
+    let savedUrlEnvs = {};
+
+    beforeEach(() => {
+      URL_ENV_VARS.forEach((key) => {
+        savedUrlEnvs[key] = process.env[key];
+        delete process.env[key];
+      });
+    });
+
+    afterEach(() => {
+      URL_ENV_VARS.forEach((key) => {
+        if (savedUrlEnvs[key] === undefined) {
+          delete process.env[key];
+        } else {
+          process.env[key] = savedUrlEnvs[key];
+        }
+      });
+    });
+
+    it('forwards the observability collector url for the remote reporter', () => {
+      let bsConfig = { run_settings: { env: null } };
+
+      utils.setSystemEnvs(bsConfig);
+      expect(bsConfig.run_settings.system_env_vars)
+        .to.be.an('array')
+        .that.includes('BROWSERSTACK_TEST_OBSERVABILITY_API_URL=https://collector-observability.browserstack.com');
+    });
+
+    it('forwards an overridden observability collector url', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL = 'https://collector-example.bsstag.com';
+      let bsConfig = { run_settings: { env: null } };
+
+      utils.setSystemEnvs(bsConfig);
+      expect(bsConfig.run_settings.system_env_vars)
+        .to.be.an('array')
+        .that.includes('BROWSERSTACK_TEST_OBSERVABILITY_API_URL=https://collector-example.bsstag.com');
+    });
+
+    it('prefers a separate remote collector url for the remote reporter', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL = 'https://collector-private.bsstag.com';
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com';
+      let bsConfig = { run_settings: { env: null } };
+
+      utils.setSystemEnvs(bsConfig);
+      expect(bsConfig.run_settings.system_env_vars)
+        .to.be.an('array')
+        .that.includes('BROWSERSTACK_TEST_OBSERVABILITY_API_URL=https://collector-public.bsstag.com');
+    });
+
+    it('warns when only the remote collector is overridden', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com';
+      const warn = sinon.stub(logger, 'warn');
+
+      try {
+        utils.validateCollectorUrls();
+        sinon.assert.calledOnce(warn);
+        expect(warn.firstCall.args[0]).to.match(/collector-public\.bsstag\.com/);
+        expect(warn.firstCall.args[0]).to.match(/same environment/);
+      } finally {
+        warn.restore();
+      }
+    });
+
+    it('names only the host in that warning, never the path', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com/t0ken';
+      const warn = sinon.stub(logger, 'warn');
+
+      try {
+        utils.validateCollectorUrls();
+        expect(warn.firstCall.args[0]).to.not.match(/t0ken/);
+      } finally {
+        warn.restore();
+      }
+    });
+
+    it('does not warn when both collector urls are set', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL = 'https://collector-private.bsstag.com';
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com';
+      const warn = sinon.stub(logger, 'warn');
+
+      try {
+        utils.validateCollectorUrls();
+        sinon.assert.notCalled(warn);
+      } finally {
+        warn.restore();
+      }
+    });
+
+    it('neither warns nor throws when no collector url is overridden', () => {
+      const warn = sinon.stub(logger, 'warn');
+
+      try {
+        expect(() => utils.validateCollectorUrls()).to.not.throw();
+        sinon.assert.notCalled(warn);
+      } finally {
+        warn.restore();
+      }
+    });
+
+    it('rejects a collector url carrying a username or password', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://user:secret@collector-public.bsstag.com';
+
+      expect(() => utils.validateCollectorUrls()).to.throw(/must not contain a username or password/);
+    });
+
+    it('validates both overrides, even when the remote one is valid', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_API_URL = 'http://collector-private.bsstag.com';
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com';
+
+      expect(() => utils.validateCollectorUrls()).to.throw(/BROWSERSTACK_TEST_OBSERVABILITY_API_URL must be an https/);
+    });
+
+    it('rejects a collector url that is not https', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'http://collector-public.bsstag.com';
+      let bsConfig = { run_settings: { env: null } };
+
+      expect(() => utils.setSystemEnvs(bsConfig)).to.throw(/must be an https:\/\/ URL/);
+    });
+
+    it('rejects a collector url carrying a query or fragment', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com/#staging';
+      let bsConfig = { run_settings: { env: null } };
+
+      expect(() => utils.setSystemEnvs(bsConfig)).to.throw(/must not contain a query or fragment/);
+    });
+
+    it('normalises a bare query or fragment delimiter', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com?';
+      let bsConfig = { run_settings: { env: null } };
+
+      utils.setSystemEnvs(bsConfig);
+      expect(bsConfig.run_settings.system_env_vars)
+        .to.be.an('array')
+        .that.includes('BROWSERSTACK_TEST_OBSERVABILITY_API_URL=https://collector-public.bsstag.com');
+    });
+
+    it('trims a trailing slash so endpoint paths are not doubled', () => {
+      process.env.BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL = 'https://collector-public.bsstag.com/';
+      let bsConfig = { run_settings: { env: null } };
+
+      utils.setSystemEnvs(bsConfig);
+      expect(bsConfig.run_settings.system_env_vars)
+        .to.be.an('array')
+        .that.includes('BROWSERSTACK_TEST_OBSERVABILITY_API_URL=https://collector-public.bsstag.com');
+    });
   });
 
   describe('fixCommaSeparatedString', () => {
