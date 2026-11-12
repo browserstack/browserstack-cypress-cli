@@ -1,5 +1,25 @@
 /* Event listeners + custom commands for Cypress */
 
+/*
+ * Cypress 16 removed Cypress.env() from the browser; values set by the Node plugin now reach
+ * the browser through config.expose / Cypress.expose() (available from Cypress 15.10). The
+ * plugin writes every value to both config.env and config.expose, so read expose first and
+ * fall back to Cypress.env() for Cypress <= 15.x, where expose does not exist yet. [APS-22894]
+ */
+const bstackBrowserValue = (key) => {
+  try {
+    if (typeof Cypress.expose === 'function') {
+      const exposed = Cypress.expose(key);
+      if (exposed !== undefined && exposed !== null) return exposed;
+    }
+  } catch (e) {}
+  try {
+    return Cypress.env(key);
+  } catch (e) {
+    return undefined;
+  }
+};
+
 /* Used to detect Gherkin steps */
 const STEP_KEYWORDS = ['given', 'when', 'then', 'and', 'but', '*'];
 
@@ -42,12 +62,12 @@ const sanitizeForTask = (data) => {
 
 const browserStackLog = (message) => {
 
-  if (!Cypress.env('BROWSERSTACK_LOGS')) return;
+  if (!bstackBrowserValue('BROWSERSTACK_LOGS')) return;
   cy.task('browserstack_log', message);
 }
 
 const shouldSkipCommand = (command) => {
-  if (!Cypress.env('BROWSERSTACK_O11Y_LOGS')) {
+  if (!bstackBrowserValue('BROWSERSTACK_O11Y_LOGS')) {
     return true;
   }
   /* the batch task is filtered too, else each dispatch refills the queue */
@@ -55,7 +75,7 @@ const shouldSkipCommand = (command) => {
 }
 
 Cypress.on('log:changed', (attrs) => {
-  if (!Cypress.env('BROWSERSTACK_O11Y_LOGS')) return;
+  if (!bstackBrowserValue('BROWSERSTACK_O11Y_LOGS')) return;
   if (!attrs) return;
   if (!attrs.createdAtTimestamp || !attrs.updatedAtTimestamp) return;
   if (attrs.state !== 'passed' && attrs.state !== 'failed') return;
@@ -237,7 +257,7 @@ Cypress.on('command:end', (command) => {
 });
 
 Cypress.on('command:enqueued', (attrs) => {
-  if (!Cypress.env('BROWSERSTACK_O11Y_LOGS')) return;
+  if (!bstackBrowserValue('BROWSERSTACK_O11Y_LOGS')) return;
   if (!attrs || attrs.name !== 'log') return;
   const args = attrs.args || [];
   if (args.includes('test_observability_log') || args.includes('test_observability_command')) return;
@@ -420,7 +440,7 @@ const flushEventsQueue = () => {
 beforeEach(() => {
   /* browserstack internal helper hook */
 
-  if (!Cypress.env('BROWSERSTACK_O11Y_LOGS')) {
+  if (!bstackBrowserValue('BROWSERSTACK_O11Y_LOGS')) {
     return;
   }
 
@@ -430,7 +450,7 @@ beforeEach(() => {
 
 afterEach(function() {
   /* browserstack internal helper hook */
-  if (!Cypress.env('BROWSERSTACK_O11Y_LOGS')) {
+  if (!bstackBrowserValue('BROWSERSTACK_O11Y_LOGS')) {
     return;
   }
 
