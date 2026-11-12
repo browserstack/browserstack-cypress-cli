@@ -1,4 +1,5 @@
 var config = require('./config.json');
+const { getEnvironmentUrl } = require('./environmentUrl');
 
 config.env = process.env.BSTACK_CYPRESS_NODE_ENV || "production";
 
@@ -10,6 +11,11 @@ if(config.env !== "production") {
   config.rails_host = process.env.RAILS_HOST;
   config.dashboardUrl = process.env.DASHBOARD_URL;
   config.usageReportingUrl = process.env.USAGE_REPORTING_URL;
+} else {
+  // BROWSERSTACK_ENV=preprod|staging (internal only); a no-op when unset.
+  ['uploadUrl', 'rails_host', 'dashboardUrl', 'turboScaleUrl', 'turboScaleAPIUrl'].forEach((key) => {
+    config[key] = getEnvironmentUrl(config[key]);
+  });
 }
 
 config.cypress_v1 = `${config.rails_host}/automate/cypress/v1`;

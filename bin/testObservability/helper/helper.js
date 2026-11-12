@@ -15,6 +15,7 @@ const { runOptions } = require('../../helpers/runnerArgs')
 
 const pGitconfig = promisify(gitconfig);
 
+const { getEnvironmentUrl } = require('../../helpers/environmentUrl');
 const logger = require("../../helpers/logger").winstonLogger;
 const utils = require('../../helpers/utils');
 const helper = require('../../helpers/helper');
@@ -114,7 +115,7 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
         && process.env.BS_TESTOPS_BUILD_HASHED_ID != "null" 
         && process.env.BS_TESTOPS_BUILD_HASHED_ID != "undefined") {
           console.log();
-          logger.info(`Visit https://automation.browserstack.com/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID} to view build report, insights, and many more debugging information all at one place!\n`);
+          logger.info(`Visit ${getEnvironmentUrl('https://automation.browserstack.com')}/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID} to view build report, insights, and many more debugging information all at one place!\n`);
       }
     } catch(err) {
       exports.debug('Build Not Found');

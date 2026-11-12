@@ -1,4 +1,5 @@
 const path = require('path');
+const { getEnvironmentUrl } = require('../../helpers/environmentUrl');
 
 exports.consoleHolder = Object.assign({},console);
 exports.BATCH_SIZE = 1000;
@@ -37,7 +38,9 @@ const REMOTE_API_URL_ENV = 'BROWSERSTACK_TEST_OBSERVABILITY_REMOTE_API_URL';
 exports.API_URL_ENV = API_URL_ENV;
 exports.REMOTE_API_URL_ENV = REMOTE_API_URL_ENV;
 
-exports.apiUrl = () => httpsOverride(API_URL_ENV) || DEFAULT_API_URL;
+// An explicit override wins; otherwise BROWSERSTACK_ENV=preprod|staging picks that environment's
+// collector. setSystemEnvs forwards the result to the remote reporter, so both sides agree.
+exports.apiUrl = () => httpsOverride(API_URL_ENV) || getEnvironmentUrl(DEFAULT_API_URL);
 exports.remoteReporterApiUrl = () => httpsOverride(REMOTE_API_URL_ENV) || exports.apiUrl();
 
 exports.IPC_EVENTS = {
