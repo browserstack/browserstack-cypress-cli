@@ -210,6 +210,113 @@ describe("packageInstaller", () => {
           chai.assert.fail("Promise error");
         });
     });
+
+    it("should ALLOW a non-registry version spec (git/file/tarball are legitimate) and still write package.json (APS-19009)", () => {
+      // APS-19009: git / file: / tarball-url specs are legitimate — must be written, not rejected.
+      packageInstaller.__set__({
+        fileHelpers: {deletePackageArchieve: fileHelpersStub},
+        fs: {
+          mkdir: fsmkdirStub,
+          writeFileSync: fswriteFileSyncStub,
+          existsSync: fsexistsSyncStub,
+          copyFileSync: fscopyFileSyncStub
+        },
+        path: {
+          dirname: pathdirnameStub,
+          join: pathjoinStub
+        }
+      });
+      let setupPackageFolderrewire = packageInstaller.__get__('setupPackageFolder');
+      let runSettings = {
+        npm_dependencies: {
+          "browserstack-cypress-cli": "https://github.com/browserstack/browserstack-cypress-cli.git#master"
+        }
+      };
+      let directoryPath = "/random/path";
+      return setupPackageFolderrewire(runSettings, directoryPath)
+        .then((data) => {
+          chai.assert.equal(data, "Package file created");
+          sinon.assert.calledOnce(fswriteFileSyncStub);
+          let written = fswriteFileSyncStub.getCall(0).args[1];
+          chai.assert.include(written, "browserstack-cypress-cli");
+          chai.assert.include(written, "github.com/browserstack");
+        })
+        .catch((_error) => {
+          console.log(_error);
+          chai.assert.fail("a git-url version spec must be accepted, not rejected");
+        });
+    });
+
+    it("should SKIP an invalid package name (shell-metacharacter payload) but keep valid deps and NOT abort the run (APS-19009)", () => {
+      // APS-19009: a bad name like "left-pad; cat /flag" is dropped, valid deps kept, run continues.
+      packageInstaller.__set__({
+        fileHelpers: {deletePackageArchieve: fileHelpersStub},
+        fs: {
+          mkdir: fsmkdirStub,
+          writeFileSync: fswriteFileSyncStub,
+          existsSync: fsexistsSyncStub,
+          copyFileSync: fscopyFileSyncStub
+        },
+        path: {
+          dirname: pathdirnameStub,
+          join: pathjoinStub
+        }
+      });
+      let setupPackageFolderrewire = packageInstaller.__get__('setupPackageFolder');
+      let runSettings = {
+        npm_dependencies: {
+          "left-pad; cat /flag": "1.0.0",
+          "$(sleep 6)": "1.0.0",
+          "lodash": "^4.17.21"
+        }
+      };
+      let directoryPath = "/random/path";
+      return setupPackageFolderrewire(runSettings, directoryPath)
+        .then((data) => {
+          chai.assert.equal(data, "Package file created");
+          sinon.assert.calledOnce(fswriteFileSyncStub);
+          let written = fswriteFileSyncStub.getCall(0).args[1];
+          chai.assert.include(written, "lodash");
+          chai.assert.notInclude(written, "cat /flag");
+          chai.assert.notInclude(written, "sleep 6");
+        })
+        .catch((_error) => {
+          console.log(_error);
+          chai.assert.fail("a bad package name must be skipped, not abort the run");
+        });
+    });
+
+    it("should accept a legacy upper-case npm package name (e.g. JSONStream) (APS-19009)", () => {
+      packageInstaller.__set__({
+        fileHelpers: {deletePackageArchieve: fileHelpersStub},
+        fs: {
+          mkdir: fsmkdirStub,
+          writeFileSync: fswriteFileSyncStub,
+          existsSync: fsexistsSyncStub,
+          copyFileSync: fscopyFileSyncStub
+        },
+        path: {
+          dirname: pathdirnameStub,
+          join: pathjoinStub
+        }
+      });
+      let setupPackageFolderrewire = packageInstaller.__get__('setupPackageFolder');
+      let runSettings = {
+        npm_dependencies: {
+          "JSONStream": "1.3.5"
+        }
+      };
+      let directoryPath = "/random/path";
+      return setupPackageFolderrewire(runSettings, directoryPath)
+        .then((data) => {
+          sinon.assert.calledOnce(fswriteFileSyncStub);
+          chai.assert.equal(data, "Package file created");
+        })
+        .catch((_error) => {
+          console.log(_error);
+          chai.assert.fail("legacy upper-case package name should be accepted");
+        });
+    });
   });
 
   context("packageInstall", () => {
@@ -263,6 +370,35 @@ describe("packageInstaller", () => {
       .then((data) => {
         console.log(data);
         chai.assert.equal(data, "Packages were installed successfully.")
+        spawnStub.restore();
+        getMajorVersionStub.restore();
+      })
+      .catch((_error) => {
+        chai.assert.fail(`Promise error ${_error}`);
+      });
+    });
+
+    it("should pass --ignore-scripts to the npm install spawn (APS-19009 lifecycle-script RCE guard)", () => {
+      let spawnStub = sandbox.stub(cp, 'spawn').returns({
+        on: (_close, nodeProcessCloseCallback) => {
+          nodeProcessCloseCallback(0);
+        }
+      });
+      let getMajorVersionStub = sandbox.stub(utils, 'getMajorVersion').returns('7');
+      packageInstaller.__set__({
+        nodeProcess: {},
+        spawn: spawnStub,
+        utils: {
+          getMajorVersion: getMajorVersionStub
+        }
+      });
+      let packageInstallrewire = packageInstaller.__get__('packageInstall');
+      let directoryPath = "/random/path";
+      return packageInstallrewire(directoryPath)
+      .then((_data) => {
+        sinon.assert.calledOnce(spawnStub);
+        let spawnArgs = spawnStub.firstCall.args[1];
+        chai.assert.include(spawnArgs, '--ignore-scripts');
         spawnStub.restore();
         getMajorVersionStub.restore();
       })
@@ -454,6 +590,32 @@ describe("packageInstaller", () => {
         })
         .catch((_error) => {
           chai.assert.fail("Promise error");
+        });
+    });
+
+    it("should RESOLVE (fall back to runtime install), never reject, when setupPackageFolder throws — APS-19009: a folder/setup failure must never block a customer session", () => {
+      // APS-19009: a setup failure must never block a session — always resolve, defer to runtime.
+      const setupError = new Error('some setup failure');
+      let setupPackageFolderErrorStub = sandbox.stub().returns(Promise.reject(setupError));
+      packageInstaller.__set__({
+        setupPackageFolder: setupPackageFolderErrorStub
+      });
+      let packageSetupAndInstallerrewire = packageInstaller.__get__('packageSetupAndInstaller');
+      let bsConfig = {
+        run_settings: {
+          cache_dependencies: true
+        }
+      };
+      let instrumentBlocks = {
+        markBlockStart: sinon.stub(),
+        markBlockEnd: sinon.stub()
+      }
+      return packageSetupAndInstallerrewire(bsConfig, packageDir, instrumentBlocks)
+        .then((obj) => {
+          chai.assert.isFalse(obj.packagesInstalled, "should report packages not installed and defer to runtime, not abort");
+        })
+        .catch(() => {
+          chai.assert.fail("packageSetupAndInstaller must never reject — it must resolve so the customer session still runs");
         });
     });
   });
