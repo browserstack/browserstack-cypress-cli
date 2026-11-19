@@ -78,6 +78,37 @@ describe("capabilityHelper.js", () => {
         });
     });
 
+    it("tells Rails it supports Cypress.expose()", () => {
+      let zip_url = "bs://<random>";
+      let bsConfig = {
+        auth: {
+          username: "random",
+          access_key: "random",
+        },
+        browsers: [
+          {
+            browser: "chrome",
+            os: "Windows 10",
+            versions: ["78"],
+          },
+        ],
+        run_settings: {
+          cypress_version: "16"
+        },
+        connection_settings: {
+          local: false
+        }
+      };
+      return capabilityHelper
+        .caps(bsConfig, { zip_url: zip_url })
+        .then(function (data) {
+          chai.assert.equal(JSON.parse(JSON.parse(data).run_settings).cypressExposeSupport, true);
+        })
+        .catch((error) => {
+          chai.assert.fail("Promise error");
+        });
+    });
+
     it("handle empty test_suite", () => {
       let zip_url = undefined;
       let incorrectBsConfig = {
