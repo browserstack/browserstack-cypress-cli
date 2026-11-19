@@ -109,6 +109,39 @@ describe("capabilityHelper.js", () => {
         });
     });
 
+    describe("cypress_version sent with accessibility", () => {
+      const sentRunSettings = (runSettings) => {
+        let bsConfig = {
+          auth: { username: "random", access_key: "random" },
+          browsers: [{ browser: "chrome", os: "Windows 10", versions: ["78"] }],
+          run_settings: runSettings,
+          connection_settings: { local: false }
+        };
+        return capabilityHelper
+          .caps(bsConfig, { zip_url: "bs://<random>" })
+          .then((data) => ({ sent: JSON.parse(JSON.parse(data).run_settings), bsConfig }));
+      };
+
+      it("asks for Cypress 15 when accessibility is on and no version is given", () => {
+        return sentRunSettings({ accessibility: true }).then(({ sent, bsConfig }) => {
+          chai.assert.equal(sent.cypress_version, "15");
+          chai.assert.isUndefined(bsConfig.run_settings.cypress_version);
+        });
+      });
+
+      it("keeps the user's version when accessibility is on", () => {
+        return sentRunSettings({ accessibility: true, cypress_version: "15.10.0" }).then(({ sent }) => {
+          chai.assert.equal(sent.cypress_version, "15.10.0");
+        });
+      });
+
+      it("sends no version when accessibility is off and none is given", () => {
+        return sentRunSettings({ accessibility: false }).then(({ sent }) => {
+          chai.assert.isUndefined(sent.cypress_version);
+        });
+      });
+    });
+
     it("handle empty test_suite", () => {
       let zip_url = undefined;
       let incorrectBsConfig = {
@@ -754,6 +787,55 @@ describe("capabilityHelper.js", () => {
   });
 
   describe("validate", () => {
+
+    describe("validate cypress_version when accessibility is on", () => {
+      let savedA11yEnv;
+      const a11yConfig = (runSettings) => ({
+        auth: {},
+        browsers: [{ browser: "chrome", os: "Windows 10", versions: ["78"] }],
+        run_settings: runSettings,
+      });
+      const validateError = (bsConfig) =>
+        capabilityHelper.validate(bsConfig, { parallels: undefined }).then(() => undefined, (error) => error);
+
+      beforeEach(() => {
+        savedA11yEnv = process.env.BROWSERSTACK_TEST_ACCESSIBILITY;
+        delete process.env.BROWSERSTACK_TEST_ACCESSIBILITY;
+      });
+
+      afterEach(() => {
+        if (savedA11yEnv === undefined) delete process.env.BROWSERSTACK_TEST_ACCESSIBILITY;
+        else process.env.BROWSERSTACK_TEST_ACCESSIBILITY = savedA11yEnv;
+      });
+
+      ["16", "16.2.0", "16.latest", 17].forEach((version) => {
+        it(`rejects cypress_version ${version} with accessibility on`, () => {
+          return validateError(a11yConfig({ accessibility: true, cypress_version: version })).then((error) => {
+            chai.assert.equal(error, Constants.validationMessages.ACCESSIBILITY_CYPRESS_VERSION_UNSUPPORTED);
+          });
+        });
+      });
+
+      it("rejects cypress_version 16 when accessibility is on through BROWSERSTACK_TEST_ACCESSIBILITY", () => {
+        process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'true';
+        return validateError(a11yConfig({ cypress_version: "16" })).then((error) => {
+          chai.assert.equal(error, Constants.validationMessages.ACCESSIBILITY_CYPRESS_VERSION_UNSUPPORTED);
+        });
+      });
+
+      [
+        ["cypress_version 15 with accessibility on", { accessibility: true, cypress_version: "15" }],
+        ["no cypress_version with accessibility on", { accessibility: "true" }],
+        ["cypress_version 16 with accessibility off", { accessibility: false, cypress_version: "16" }],
+        ["cypress_version 16 without accessibility", { cypress_version: "16" }],
+      ].forEach(([name, runSettings]) => {
+        it(`does not reject ${name} for accessibility`, () => {
+          return validateError(a11yConfig(runSettings)).then((error) => {
+            chai.assert.notEqual(error, Constants.validationMessages.ACCESSIBILITY_CYPRESS_VERSION_UNSUPPORTED);
+          });
+        });
+      });
+    });
 
     describe("validate parallels specified in bsconfig and arguments", () => {
       beforeEach(() => {
