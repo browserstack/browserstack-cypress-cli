@@ -128,6 +128,9 @@ const caps = (bsConfig, zip) => {
         bsConfig.run_settings["accessibilityPlatforms"] = getAccessibilityPlatforms(bsConfig);
       }
 
+      // Tells Rails this CLI's support files read Cypress.expose(), so it may run Cypress 16+.
+      bsConfig.run_settings["cypressExposeSupport"] = true;
+
       // send run_settings as is for other capabilities
       obj.run_settings = JSON.stringify(bsConfig.run_settings);
     }
