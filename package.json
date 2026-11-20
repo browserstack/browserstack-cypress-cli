@@ -36,7 +36,7 @@
     "tsc-alias": "^1.8.16",
     "unzipper": "^0.12.3",
     "update-notifier": "7.0.0",
-    "uuid": "8.3.2",
+    "uuid": "14.0.0",
     "windows-release": "^5.1.0",
     "winston": "2.4.4",
     "yargs": "14.2.3"
