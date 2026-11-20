@@ -10,9 +10,22 @@ const logger = require("./logger").winstonLogger,
 const isAccessibilityOn = (bsConfig) =>
   process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true' || String(bsConfig.run_settings.accessibility) === 'true';
 
-const isAboveAccessibilityCypressMajor = (cypressVersion) => {
+const cypressMajor = (cypressVersion) => {
   const major = String(cypressVersion).match(/^(\d+)/);
-  return !!major && Number(major[1]) > Constants.MAX_CYPRESS_MAJOR_FOR_ACCESSIBILITY;
+  return major ? Number(major[1]) : undefined;
+};
+
+const isAboveAccessibilityCypressMajor = (cypressVersion) => {
+  const major = cypressMajor(cypressVersion);
+  return major !== undefined && major > Constants.MAX_CYPRESS_MAJOR_FOR_ACCESSIBILITY;
+};
+
+// Adds forceHttp1=true to the run's Cypress config unless the user already set forceHttp1
+// (either way), keeping every other key they passed.
+const withForceHttp1 = (config) => {
+  const current = Utils.isUndefined(config) ? '' : String(config).trim();
+  if (/(^|,)\s*forceHttp1\s*=/.test(current)) return config;
+  return current ? `${current},forceHttp1=true` : 'forceHttp1=true';
 };
 
 const caps = (bsConfig, zip) => {
@@ -144,8 +157,18 @@ const caps = (bsConfig, zip) => {
       // Rails defaults to its newest Cypress, which accessibility does not support yet, so an
       // accessibility build without a version asks for the newest major accessibility supports.
       if (isAccessibilityOn(bsConfig) && Utils.isUndefined(runSettings.cypress_version)) {
-        runSettings = Object.assign({}, runSettings, { cypress_version: String(Constants.MAX_CYPRESS_MAJOR_FOR_ACCESSIBILITY) });
+        runSettings = Object.assign({}, runSettings, { cypress_version: String(Constants.DEFAULT_CYPRESS_MAJOR_FOR_ACCESSIBILITY) });
         logger.info(Constants.userMessages.ACCESSIBILITY_CYPRESS_VERSION_PINNED);
+      }
+      // Accessibility scans on Cypress 16 only complete with forceHttp1 (see the constant).
+      const requestedMajor = cypressMajor(runSettings.cypress_version);
+      if (isAccessibilityOn(bsConfig) && requestedMajor !== undefined
+          && requestedMajor >= Constants.MIN_CYPRESS_MAJOR_NEEDING_FORCE_HTTP1_FOR_ACCESSIBILITY) {
+        const config = withForceHttp1(runSettings.config);
+        if (config !== runSettings.config) {
+          runSettings = Object.assign({}, runSettings, { config });
+          logger.info(Constants.userMessages.ACCESSIBILITY_FORCE_HTTP1_SET);
+        }
       }
       obj.run_settings = JSON.stringify(runSettings);
     }
