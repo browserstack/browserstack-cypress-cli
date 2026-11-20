@@ -20,6 +20,28 @@ const isAboveAccessibilityCypressMajor = (cypressVersion) => {
   return major !== undefined && major > Constants.MAX_CYPRESS_MAJOR_FOR_ACCESSIBILITY;
 };
 
+const versionParts = (version) => String(version).split('.').map((n) => Number(n));
+
+const isBefore = (version, other) => {
+  const a = versionParts(version), b = versionParts(other);
+  for (let i = 0; i < 3; i++) {
+    if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) < (b[i] || 0);
+  }
+  return false;
+};
+
+// True for an accessibility build whose Cypress has the extension service-worker bug.
+// "16" and "16.latest" name no minor, so Rails picks it: they count while 16.2.0 is the only
+// Cypress 16 Rails offers. Once Rails offers 16.2.1+, drop that branch.
+const needsForceHttp1ForAccessibility = (cypressVersion) => {
+  const [firstAffected, firstFixed] = Constants.ACCESSIBILITY_FORCE_HTTP1_CYPRESS_RANGE;
+  const value = String(cypressVersion).trim().toLowerCase();
+  const exact = value.match(/^(\d+)\.(\d+)\.(\d+)$/);
+  if (exact) return !isBefore(value, firstAffected) && isBefore(value, firstFixed);
+  const majorOnly = value.match(/^(\d+)(\.latest)?$/);
+  return !!majorOnly && Number(majorOnly[1]) === versionParts(firstAffected)[0];
+};
+
 // Adds forceHttp1=true to the run's Cypress config unless the user already set forceHttp1
 // (either way), keeping every other key they passed.
 const withForceHttp1 = (config) => {
@@ -160,10 +182,9 @@ const caps = (bsConfig, zip) => {
         runSettings = Object.assign({}, runSettings, { cypress_version: String(Constants.DEFAULT_CYPRESS_MAJOR_FOR_ACCESSIBILITY) });
         logger.info(Constants.userMessages.ACCESSIBILITY_CYPRESS_VERSION_PINNED);
       }
-      // Accessibility scans on Cypress 16 only complete with forceHttp1 (see the constant).
-      const requestedMajor = cypressMajor(runSettings.cypress_version);
-      if (isAccessibilityOn(bsConfig) && requestedMajor !== undefined
-          && requestedMajor >= Constants.MIN_CYPRESS_MAJOR_NEEDING_FORCE_HTTP1_FOR_ACCESSIBILITY) {
+      // Accessibility scans on the affected Cypress 16 versions only complete with forceHttp1.
+      if (isAccessibilityOn(bsConfig) && !Utils.isUndefined(runSettings.cypress_version)
+          && needsForceHttp1ForAccessibility(runSettings.cypress_version)) {
         const config = withForceHttp1(runSettings.config);
         if (config !== runSettings.config) {
           runSettings = Object.assign({}, runSettings, { config });

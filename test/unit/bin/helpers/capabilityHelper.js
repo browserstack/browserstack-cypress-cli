@@ -141,7 +141,7 @@ describe("capabilityHelper.js", () => {
         });
       });
 
-      ["16", "16.2.0", "16.latest"].forEach((version) => {
+      ["16", "16.latest", "16.1.0", "16.1.1", "16.2.0"].forEach((version) => {
         it(`adds forceHttp1=true for accessibility on cypress_version ${version}`, () => {
           return sentRunSettings({ accessibility: true, cypress_version: version }).then(({ sent, bsConfig }) => {
             chai.assert.equal(sent.config, "forceHttp1=true");
@@ -169,6 +169,9 @@ describe("capabilityHelper.js", () => {
         ["accessibility on, no version (pinned to 15)", { accessibility: true }],
         ["accessibility off, Cypress 16", { accessibility: false, cypress_version: "16.2.0" }],
         ["accessibility on, cypress_version latest", { accessibility: true, cypress_version: "latest" }],
+        ["accessibility on, Cypress 16.2.1 (fixed)", { accessibility: true, cypress_version: "16.2.1" }],
+        ["accessibility on, Cypress 16.3.0 (fixed)", { accessibility: true, cypress_version: "16.3.0" }],
+        ["accessibility on, Cypress 16.0.0 (before the regression)", { accessibility: true, cypress_version: "16.0.0" }],
       ].forEach(([name, runSettings]) => {
         it(`does not add forceHttp1 for ${name}`, () => {
           return sentRunSettings(runSettings).then(({ sent }) => {

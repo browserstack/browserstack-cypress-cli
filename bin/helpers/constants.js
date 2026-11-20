@@ -89,7 +89,7 @@ const userMessages = {
   ACCESSIBILITY_CYPRESS_VERSION_PINNED:
     "Accessibility builds without a cypress_version run on the latest Cypress 15.",
   ACCESSIBILITY_FORCE_HTTP1_SET:
-    "Accessibility on Cypress 16 needs Cypress's HTTP/1.1 proxy, so this build runs with forceHttp1=true.",
+    "Accessibility on Cypress 16.1.0-16.2.0 needs Cypress's HTTP/1.1 proxy, so this build runs with forceHttp1=true.",
   CYPRESS_VERSION_CHANGED:
     "Your build will run using Cypress <actualVersion> instead of Cypress <preferredVersion>.<frameworkUpgradeMessage> Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions",
   LOCAL_START_FAILED: "Local Testing setup failed.",
@@ -454,10 +454,11 @@ const MAX_CYPRESS_MAJOR_FOR_ACCESSIBILITY = 16;
 // Major an accessibility build asks for when it names no cypress_version. Stays on 15 while
 // Rails' own default does, so an unpinned build keeps today's Cypress.
 const DEFAULT_CYPRESS_MAJOR_FOR_ACCESSIBILITY = 15;
-// From this major the a11y extension's service worker never starts in Cypress's default network
-// mode (cypress-io/cypress#35127, fixed in 16.2.1), so scans time out unless forceHttp1 is on.
-// SDK-8048 preprod A/B on 16.2.0: scan step 25.6s without it, 4.2s with it.
-const MIN_CYPRESS_MAJOR_NEEDING_FORCE_HTTP1_FOR_ACCESSIBILITY = 16;
+// Cypress versions where the a11y extension's service worker never starts, so every scan times
+// out unless forceHttp1 is on: [first affected, first fixed). Regression from cypress-io/cypress#34762
+// (16.1.0), reported as cypress-io/cypress#35127, fixed by #34958 in 16.2.1.
+// SDK-8048 preprod A/B on 16.2.0: scan step 25.6s without forceHttp1, 4.2s with it.
+const ACCESSIBILITY_FORCE_HTTP1_CYPRESS_RANGE = ['16.1.0', '16.2.1'];
 
 const CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY = "custom_errors_to_print";
 
@@ -526,7 +527,7 @@ module.exports = Object.freeze({
   SPEC_TIMEOUT_LIMIT,
   MAX_CYPRESS_MAJOR_FOR_ACCESSIBILITY,
   DEFAULT_CYPRESS_MAJOR_FOR_ACCESSIBILITY,
-  MIN_CYPRESS_MAJOR_NEEDING_FORCE_HTTP1_FOR_ACCESSIBILITY,
+  ACCESSIBILITY_FORCE_HTTP1_CYPRESS_RANGE,
   CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY,
   CYPRESS_V9_AND_OLDER_TYPE,
   CYPRESS_V10_AND_ABOVE_TYPE,
