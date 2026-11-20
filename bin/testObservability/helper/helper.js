@@ -15,6 +15,7 @@ const { runOptions } = require('../../helpers/runnerArgs')
 
 const pGitconfig = promisify(gitconfig);
 
+const { getEnvironmentUrl } = require('../../helpers/environmentUrl');
 const logger = require("../../helpers/logger").winstonLogger;
 const utils = require('../../helpers/utils');
 const helper = require('../../helpers/helper');
@@ -27,7 +28,7 @@ const GLOBAL_MODULE_PATH = execSync('npm root -g').toString().trim();
 const { name, version } = require('../../../package.json');
 
 const { CYPRESS_V10_AND_ABOVE_CONFIG_FILE_EXTENSIONS } = require('../../helpers/constants');
-const { consoleHolder, API_URL, TEST_OBSERVABILITY_REPORTER, TEST_OBSERVABILITY_REPORTER_LOCAL, TEST_REPORTING_ANALYTICS } = require('./constants');
+const { consoleHolder, apiUrl, TEST_OBSERVABILITY_REPORTER, TEST_OBSERVABILITY_REPORTER_LOCAL, TEST_REPORTING_ANALYTICS } = require('./constants');
 
 const ALLOWED_MODULES = [
   'cypress/package.json',
@@ -114,7 +115,7 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
         && process.env.BS_TESTOPS_BUILD_HASHED_ID != "null" 
         && process.env.BS_TESTOPS_BUILD_HASHED_ID != "undefined") {
           console.log();
-          logger.info(`Visit https://automation.browserstack.com/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID} to view build report, insights, and many more debugging information all at one place!\n`);
+          logger.info(`Visit ${getEnvironmentUrl('https://automation.browserstack.com')}/builds/${process.env.BS_TESTOPS_BUILD_HASHED_ID} to view build report, insights, and many more debugging information all at one place!\n`);
       }
     } catch(err) {
       exports.debug('Build Not Found');
@@ -128,10 +129,18 @@ exports.printBuildLink = async (shouldStopSession, exitCode = null) => {
 exports.nodeRequest = (type, url, data, config) => {
   const requestQueueHandler = require('./requestQueueHandler');
     return new Promise(async (resolve, reject) => {
+      // Rejected rather than thrown: this executor is async, so a throw here would never reach
+      // the returned promise and the caller would hang.
+      let collectorUrl;
+      try {
+        collectorUrl = apiUrl();
+      } catch (err) {
+        return reject(err);
+      }
       const options = {
         ...config,
         method: type,
-        url: `${API_URL}/${url}`,
+        url: `${collectorUrl}/${url}`,
         data: data,
         httpsAgent: this.httpsKeepAliveAgent,  
         maxAttempts: 2,
