@@ -1,7 +1,27 @@
 /* Event listeners + custom commands for Cypress */
 
+/*
+ * Cypress 16 removed Cypress.env() from the browser; values set by the Node plugin now reach
+ * the browser through config.expose / Cypress.expose() (available from Cypress 15.10). The
+ * plugin writes every value to both config.env and config.expose, so read expose first and
+ * fall back to Cypress.env() for Cypress <= 15.x, where expose does not exist yet. [APS-22894]
+ */
+const bstackBrowserValue = (key) => {
+  try {
+    if (typeof Cypress.expose === 'function') {
+      const exposed = Cypress.expose(key);
+      if (exposed !== undefined && exposed !== null) return exposed;
+    }
+  } catch (e) {}
+  try {
+    return Cypress.env(key);
+  } catch (e) {
+    return undefined;
+  }
+};
+
 const browserStackLog = (message) => {
-    if (!Cypress.env('BROWSERSTACK_LOGS')) return;
+    if (!bstackBrowserValue('BROWSERSTACK_LOGS')) return;
     cy.task('browserstack_log', message);
 }
 
@@ -13,7 +33,7 @@ const browserStackLog = (message) => {
 let consecutiveA11yTimeouts = 0;
 let a11yCircuitOpen = false;
 let a11yCircuitLogged = false;
-const getA11yCircuitLimit = () => parseInt(Cypress.env('ACCESSIBILITY_SCAN_CIRCUIT_LIMIT')) || 3;
+const getA11yCircuitLimit = () => parseInt(bstackBrowserValue('ACCESSIBILITY_SCAN_CIRCUIT_LIMIT')) || 3;
 const noteA11yTimeout = () => {
     consecutiveA11yTimeouts += 1;
     if (!a11yCircuitOpen && consecutiveA11yTimeouts >= getA11yCircuitLimit()) {
@@ -76,7 +96,7 @@ new Promise((resolve) => {
     }
     let settled = false;
     const finish = (val) => { if (!settled) { settled = true; clearTimeout(overallTimer); resolve(val); } };
-    const overallTimeout = parseInt(Cypress.env('ACCESSIBILITY_SCAN_TIMEOUT')) || 25000;
+    const overallTimeout = parseInt(bstackBrowserValue('ACCESSIBILITY_SCAN_TIMEOUT')) || 25000;
     const overallTimer = setTimeout(() => { noteA11yTimeout(); finish("Accessibility scan timed out"); }, overallTimeout);
 
     try {
@@ -252,7 +272,7 @@ new Promise((resolve) => {
     }
     let settled = false;
     const finish = (val) => { if (!settled) { settled = true; clearTimeout(overallTimer); resolve(val); } };
-    const overallTimeout = parseInt(Cypress.env('ACCESSIBILITY_SCAN_TIMEOUT')) || 25000;
+    const overallTimeout = parseInt(bstackBrowserValue('ACCESSIBILITY_SCAN_TIMEOUT')) || 25000;
     const overallTimer = setTimeout(() => { noteA11yTimeout(); finish("Accessibility results save timed out"); }, overallTimeout);
     try {
         const isHttpOrHttps = /^(http|https):$/.test(win.location.protocol);
@@ -314,24 +334,24 @@ new Promise((resolve) => {
 })
 
 const shouldScanForAccessibility = (attributes) => {
-    if (Cypress.env("IS_ACCESSIBILITY_EXTENSION_LOADED") !== "true") return false;
+    if (bstackBrowserValue("IS_ACCESSIBILITY_EXTENSION_LOADED") !== "true") return false;
 
-    const extensionPath = Cypress.env("ACCESSIBILITY_EXTENSION_PATH");
+    const extensionPath = bstackBrowserValue("ACCESSIBILITY_EXTENSION_PATH");
     const isHeaded = Cypress.browser.isHeaded;
 
     if (!isHeaded || (extensionPath === undefined)) return false;
 
     let shouldScanTestForAccessibility = true;
 
-    if (Cypress.env("INCLUDE_TAGS_FOR_ACCESSIBILITY") || Cypress.env("EXCLUDE_TAGS_FOR_ACCESSIBILITY")) {
+    if (bstackBrowserValue("INCLUDE_TAGS_FOR_ACCESSIBILITY") || bstackBrowserValue("EXCLUDE_TAGS_FOR_ACCESSIBILITY")) {
         try {
             let includeTagArray = [];
             let excludeTagArray = [];
-            if (Cypress.env("INCLUDE_TAGS_FOR_ACCESSIBILITY")) {
-                includeTagArray = Cypress.env("INCLUDE_TAGS_FOR_ACCESSIBILITY").split(";")
+            if (bstackBrowserValue("INCLUDE_TAGS_FOR_ACCESSIBILITY")) {
+                includeTagArray = bstackBrowserValue("INCLUDE_TAGS_FOR_ACCESSIBILITY").split(";")
             }
-            if (Cypress.env("EXCLUDE_TAGS_FOR_ACCESSIBILITY")) {
-                excludeTagArray = Cypress.env("EXCLUDE_TAGS_FOR_ACCESSIBILITY").split(";")
+            if (bstackBrowserValue("EXCLUDE_TAGS_FOR_ACCESSIBILITY")) {
+                excludeTagArray = bstackBrowserValue("EXCLUDE_TAGS_FOR_ACCESSIBILITY").split(";")
             }
 
             const fullTestName = attributes.title;
@@ -383,8 +403,8 @@ afterEach(() => {
         cy.wrap(performScan(win), {timeout: 30000}).then(() => {
         try {
             let os_data;
-            if (Cypress.env("OS")) {
-                os_data = Cypress.env("OS");
+            if (bstackBrowserValue("OS")) {
+                os_data = bstackBrowserValue("OS");
             } else {
                 os_data = Cypress.platform === 'linux' ? 'mac' : "win"
             }
@@ -404,8 +424,8 @@ afterEach(() => {
 
                 const payloadToSend = {
                     "thTestRunUuid": testRunUuid,
-                    "thBuildUuid": Cypress.env("BROWSERSTACK_TESTHUB_UUID"),
-                    "thJwtToken": Cypress.env("BROWSERSTACK_TESTHUB_JWT")
+                    "thBuildUuid": bstackBrowserValue("BROWSERSTACK_TESTHUB_UUID"),
+                    "thJwtToken": bstackBrowserValue("BROWSERSTACK_TESTHUB_JWT")
                 };
                 browserStackLog(`Payload to send: ${JSON.stringify(payloadToSend)}`);
 

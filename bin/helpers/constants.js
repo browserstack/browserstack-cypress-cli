@@ -86,6 +86,8 @@ const userMessages = {
   FATAL_NETWORK_ERROR: `fatal: unable to access '${config.buildUrl}': Could not resolve host: ${config.rails_host}`,
   RETRY_LIMIT_EXCEEDED: `Max retries exceeded trying to connect to the host (retries: ${config.retries})`,
   CHECK_DASHBOARD_AT: "Please check the build status at: ",
+  ACCESSIBILITY_CYPRESS_VERSION_PINNED:
+    "Accessibility Testing supports Cypress up to version 15, so this build runs on the latest Cypress 15.",
   CYPRESS_VERSION_CHANGED:
     "Your build will run using Cypress <actualVersion> instead of Cypress <preferredVersion>.<frameworkUpgradeMessage> Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions",
   LOCAL_START_FAILED: "Local Testing setup failed.",
@@ -198,6 +200,8 @@ const validationMessages = {
     "You have specified '--record' flag but you've not provided the '--record-key' and we could not find any value in 'CYPRESS_RECORD_KEY' environment variable. Your record functionality on cypress.io dashboard might not work as it needs the key and projectId",
   NODE_VERSION_PARSING_ERROR:
     "We weren't able to successfully parse the specified nodeVersion. We will be using the default nodeVersion to run your tests.",
+  ACCESSIBILITY_CYPRESS_VERSION_UNSUPPORTED:
+    "Accessibility Testing supports Cypress up to version 15. Set cypress_version to 15 in browserstack.json, or turn off accessibility to run Cypress 16 or later.",
   AUTO_IMPORT_CONFLICT_ERROR:
     "Cannot use both 'auto_import_dev_dependencies' and manual npm dependency configuration. Please either set 'auto_import_dev_dependencies' to false or remove manual 'npm_dependencies', 'win_npm_dependencies', and 'mac_npm_dependencies' configurations.",
   AUTO_IMPORT_INVALID_TYPE:
@@ -443,6 +447,9 @@ const REDACTED_AUTH = `auth: { "username": ${REDACTED}, "access_key": ${REDACTED
 
 const SPEC_TIMEOUT_LIMIT = 120; // IN MINS
 
+// Accessibility does not support Cypress 16 yet (APS-22894). Raising this needs no Rails change.
+const MAX_CYPRESS_MAJOR_FOR_ACCESSIBILITY = 15;
+
 const CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY = "custom_errors_to_print";
 
 const CYPRESS_V9_AND_OLDER_TYPE = "CYPRESS_V9_AND_OLDER_TYPE";
@@ -508,6 +515,7 @@ module.exports = Object.freeze({
   REDACTED,
   BUILD_FAILED_EXIT_CODE,
   SPEC_TIMEOUT_LIMIT,
+  MAX_CYPRESS_MAJOR_FOR_ACCESSIBILITY,
   CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY,
   CYPRESS_V9_AND_OLDER_TYPE,
   CYPRESS_V10_AND_ABOVE_TYPE,
