@@ -140,6 +140,45 @@ describe("capabilityHelper.js", () => {
           chai.assert.isUndefined(sent.cypress_version);
         });
       });
+
+      ["16", "16.latest", "16.1.0", "16.1.1", "16.2.0"].forEach((version) => {
+        it(`adds forceHttp1=true for accessibility on cypress_version ${version}`, () => {
+          return sentRunSettings({ accessibility: true, cypress_version: version }).then(({ sent, bsConfig }) => {
+            chai.assert.equal(sent.config, "forceHttp1=true");
+            chai.assert.isUndefined(bsConfig.run_settings.config);
+          });
+        });
+      });
+
+      it("keeps the user's other config keys when adding forceHttp1", () => {
+        return sentRunSettings({ accessibility: true, cypress_version: "16.2.0", config: "video=false,baseUrl=https://x.test" }).then(({ sent }) => {
+          chai.assert.equal(sent.config, "video=false,baseUrl=https://x.test,forceHttp1=true");
+        });
+      });
+
+      ["forceHttp1=false", "video=true, forceHttp1 = false"].forEach((config) => {
+        it(`does not override a forceHttp1 the user set (${config})`, () => {
+          return sentRunSettings({ accessibility: true, cypress_version: "16", config }).then(({ sent }) => {
+            chai.assert.equal(sent.config, config);
+          });
+        });
+      });
+
+      [
+        ["accessibility on, Cypress 15", { accessibility: true, cypress_version: "15.21.1" }],
+        ["accessibility on, no version (pinned to 15)", { accessibility: true }],
+        ["accessibility off, Cypress 16", { accessibility: false, cypress_version: "16.2.0" }],
+        ["accessibility on, cypress_version latest", { accessibility: true, cypress_version: "latest" }],
+        ["accessibility on, Cypress 16.2.1 (fixed)", { accessibility: true, cypress_version: "16.2.1" }],
+        ["accessibility on, Cypress 16.3.0 (fixed)", { accessibility: true, cypress_version: "16.3.0" }],
+        ["accessibility on, Cypress 16.0.0 (before the regression)", { accessibility: true, cypress_version: "16.0.0" }],
+      ].forEach(([name, runSettings]) => {
+        it(`does not add forceHttp1 for ${name}`, () => {
+          return sentRunSettings(runSettings).then(({ sent }) => {
+            chai.assert.isUndefined(sent.config);
+          });
+        });
+      });
     });
 
     it("handle empty test_suite", () => {
@@ -808,7 +847,7 @@ describe("capabilityHelper.js", () => {
         else process.env.BROWSERSTACK_TEST_ACCESSIBILITY = savedA11yEnv;
       });
 
-      ["16", "16.2.0", "16.latest", 17].forEach((version) => {
+      ["17", "17.0.0", "17.latest", 18].forEach((version) => {
         it(`rejects cypress_version ${version} with accessibility on`, () => {
           return validateError(a11yConfig({ accessibility: true, cypress_version: version })).then((error) => {
             chai.assert.equal(error, Constants.validationMessages.ACCESSIBILITY_CYPRESS_VERSION_UNSUPPORTED);
@@ -816,18 +855,20 @@ describe("capabilityHelper.js", () => {
         });
       });
 
-      it("rejects cypress_version 16 when accessibility is on through BROWSERSTACK_TEST_ACCESSIBILITY", () => {
+      it("rejects cypress_version 17 when accessibility is on through BROWSERSTACK_TEST_ACCESSIBILITY", () => {
         process.env.BROWSERSTACK_TEST_ACCESSIBILITY = 'true';
-        return validateError(a11yConfig({ cypress_version: "16" })).then((error) => {
+        return validateError(a11yConfig({ cypress_version: "17" })).then((error) => {
           chai.assert.equal(error, Constants.validationMessages.ACCESSIBILITY_CYPRESS_VERSION_UNSUPPORTED);
         });
       });
 
       [
         ["cypress_version 15 with accessibility on", { accessibility: true, cypress_version: "15" }],
+        ["cypress_version 16 with accessibility on", { accessibility: true, cypress_version: "16" }],
+        ["cypress_version 16.2.0 with accessibility on", { accessibility: true, cypress_version: "16.2.0" }],
         ["no cypress_version with accessibility on", { accessibility: "true" }],
-        ["cypress_version 16 with accessibility off", { accessibility: false, cypress_version: "16" }],
-        ["cypress_version 16 without accessibility", { cypress_version: "16" }],
+        ["cypress_version 17 with accessibility off", { accessibility: false, cypress_version: "17" }],
+        ["cypress_version 17 without accessibility", { cypress_version: "17" }],
       ].forEach(([name, runSettings]) => {
         it(`does not reject ${name} for accessibility`, () => {
           return validateError(a11yConfig(runSettings)).then((error) => {
