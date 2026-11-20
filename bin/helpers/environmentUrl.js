@@ -1,6 +1,6 @@
 'use strict';
 
-// Internal, non-production only: BROWSERSTACK_ENV=preprod|staging points the cli at that
+// Internal, non-production only: BROWSERSTACK_ENV=preprod|staging|k8s points the cli at that
 // environment's hosts, the same switch browserstack-binary (core/utils/environment-url.js) and
 // browserstack-node-agent use. Unset, or any other value, keeps the production hosts.
 const ENV_VAR = 'BROWSERSTACK_ENV';
@@ -25,10 +25,20 @@ const STAGING_HOSTS = [
   ['grid.browserstack.com', 'grid-devhst.bsstag.com'],
 ];
 
+const K8S_HOSTS = [
+  ['api-cloud.browserstack.com', 'api-cloud-k8s.bsstag.com'],
+  ['api.browserstack.com', 'apik8s.bsstag.com'],
+  ['automate.browserstack.com', 'automate-k8s.bsstag.com'],
+  ['automation.browserstack.com', 'automation-k8s.bsstag.com'],
+  ['collector-observability.browserstack.com', 'collector-observability-k8s.bsstag.com'],
+  ['accessibility.browserstack.com', 'accessibility-k8s.bsstag.com'],
+];
+
 const getEnvironment = () => {
   const value = (process.env[ENV_VAR] || '').trim().toLowerCase();
   if (value === 'preprod' || value === 'pre-prod') return 'preprod';
   if (value === 'staging' || value === 'stag') return 'staging';
+  if (value === 'k8s') return 'k8s';
   return undefined;
 };
 
@@ -37,7 +47,7 @@ const getEnvironment = () => {
 const getEnvironmentUrl = (url) => {
   const env = getEnvironment();
   if (!env || typeof url !== 'string') return url;
-  const hosts = env === 'preprod' ? PREPROD_HOSTS : STAGING_HOSTS;
+  const hosts = env === 'preprod' ? PREPROD_HOSTS : env === 'k8s' ? K8S_HOSTS : STAGING_HOSTS;
   let parsed;
   try {
     parsed = new URL(url);
