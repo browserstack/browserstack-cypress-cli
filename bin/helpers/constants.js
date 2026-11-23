@@ -87,7 +87,9 @@ const userMessages = {
   RETRY_LIMIT_EXCEEDED: `Max retries exceeded trying to connect to the host (retries: ${config.retries})`,
   CHECK_DASHBOARD_AT: "Please check the build status at: ",
   ACCESSIBILITY_CYPRESS_VERSION_PINNED:
-    "Accessibility Testing supports Cypress up to version 15, so this build runs on the latest Cypress 15.",
+    "Accessibility builds without a cypress_version run on the latest Cypress 15.",
+  ACCESSIBILITY_FORCE_HTTP1_SET:
+    "Accessibility on Cypress 16.1.0-16.2.0 needs Cypress's HTTP/1.1 proxy, so this build runs with forceHttp1=true.",
   CYPRESS_VERSION_CHANGED:
     "Your build will run using Cypress <actualVersion> instead of Cypress <preferredVersion>.<frameworkUpgradeMessage> Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions",
   LOCAL_START_FAILED: "Local Testing setup failed.",
@@ -201,7 +203,7 @@ const validationMessages = {
   NODE_VERSION_PARSING_ERROR:
     "We weren't able to successfully parse the specified nodeVersion. We will be using the default nodeVersion to run your tests.",
   ACCESSIBILITY_CYPRESS_VERSION_UNSUPPORTED:
-    "Accessibility Testing supports Cypress up to version 15. Set cypress_version to 15 in browserstack.json, or turn off accessibility to run Cypress 16 or later.",
+    "Accessibility Testing supports Cypress up to version 16. Set cypress_version to 16 or lower in browserstack.json, or turn off accessibility to run a later Cypress.",
   AUTO_IMPORT_CONFLICT_ERROR:
     "Cannot use both 'auto_import_dev_dependencies' and manual npm dependency configuration. Please either set 'auto_import_dev_dependencies' to false or remove manual 'npm_dependencies', 'win_npm_dependencies', and 'mac_npm_dependencies' configurations.",
   AUTO_IMPORT_INVALID_TYPE:
@@ -447,8 +449,16 @@ const REDACTED_AUTH = `auth: { "username": ${REDACTED}, "access_key": ${REDACTED
 
 const SPEC_TIMEOUT_LIMIT = 120; // IN MINS
 
-// Accessibility does not support Cypress 16 yet (APS-22894). Raising this needs no Rails change.
-const MAX_CYPRESS_MAJOR_FOR_ACCESSIBILITY = 15;
+// Newest Cypress major accessibility runs on (APS-22894). Raising this needs no Rails change.
+const MAX_CYPRESS_MAJOR_FOR_ACCESSIBILITY = 16;
+// Major an accessibility build asks for when it names no cypress_version. Stays on 15 while
+// Rails' own default does, so an unpinned build keeps today's Cypress.
+const DEFAULT_CYPRESS_MAJOR_FOR_ACCESSIBILITY = 15;
+// Cypress versions where the a11y extension's service worker never starts, so every scan times
+// out unless forceHttp1 is on: [first affected, first fixed). Regression from cypress-io/cypress#34762
+// (16.1.0), reported as cypress-io/cypress#35127, fixed by #34958 in 16.2.1.
+// SDK-8048 preprod A/B on 16.2.0: scan step 25.6s without forceHttp1, 4.2s with it.
+const ACCESSIBILITY_FORCE_HTTP1_CYPRESS_RANGE = ['16.1.0', '16.2.1'];
 
 const CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY = "custom_errors_to_print";
 
@@ -516,6 +526,8 @@ module.exports = Object.freeze({
   BUILD_FAILED_EXIT_CODE,
   SPEC_TIMEOUT_LIMIT,
   MAX_CYPRESS_MAJOR_FOR_ACCESSIBILITY,
+  DEFAULT_CYPRESS_MAJOR_FOR_ACCESSIBILITY,
+  ACCESSIBILITY_FORCE_HTTP1_CYPRESS_RANGE,
   CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY,
   CYPRESS_V9_AND_OLDER_TYPE,
   CYPRESS_V10_AND_ABOVE_TYPE,
