@@ -19,11 +19,16 @@ describe('accessibility plugin exposes browser values', () => {
     BROWSERSTACK_ACCESSIBILITY_DEBUG: 'true',
   };
 
+  // The plugin itself sets these, so they are restored too.
+  const SET_BY_PLUGIN = ['BROWSERSTACK_LOGS', 'BROWSERSTACK_ACCESSIBILITY_PLUGIN_LOADED'];
+  const RESTORED = Object.keys(ENV).concat(SET_BY_PLUGIN);
+
   beforeEach(() => {
-    Object.keys(ENV).forEach((k) => { saved[k] = process.env[k]; process.env[k] = ENV[k]; });
+    RESTORED.forEach((k) => { saved[k] = process.env[k]; });
+    Object.keys(ENV).forEach((k) => { process.env[k] = ENV[k]; });
   });
   afterEach(() => {
-    Object.keys(ENV).forEach((k) => { if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k]; });
+    RESTORED.forEach((k) => { if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k]; });
   });
 
   const run = (config) => {
