@@ -89,7 +89,7 @@ const userMessages = {
   ACCESSIBILITY_CYPRESS_VERSION_PINNED:
     "Accessibility builds without a cypress_version run on the latest Cypress 15.",
   ACCESSIBILITY_FORCE_HTTP1_SET:
-    "Accessibility on Cypress 16.1.0-16.2.0 needs Cypress's HTTP/1.1 proxy, so this build runs with forceHttp1=true.",
+    "Accessibility on Cypress 16 runs on Cypress 16.2.0, which needs Cypress's HTTP/1.1 proxy, so this build runs with forceHttp1=true.",
   CYPRESS_VERSION_CHANGED:
     "Your build will run using Cypress <actualVersion> instead of Cypress <preferredVersion>.<frameworkUpgradeMessage> Read more about supported versions here: http://browserstack.com/docs/automate/cypress/supported-versions",
   LOCAL_START_FAILED: "Local Testing setup failed.",
@@ -451,14 +451,16 @@ const SPEC_TIMEOUT_LIMIT = 120; // IN MINS
 
 // Newest Cypress major accessibility runs on (APS-22894). Raising this needs no Rails change.
 const MAX_CYPRESS_MAJOR_FOR_ACCESSIBILITY = 16;
-// Major an accessibility build asks for when it names no cypress_version. Stays on 15 while
-// Rails' own default does, so an unpinned build keeps today's Cypress.
+// Major an accessibility build asks for when it names no cypress_version. This CLI's choice, not
+// Rails': for a CLI that sends cypressExposeSupport, Rails defaults to its newest Cypress (16).
+// Kept on 15 so unpinned accessibility builds stay off the Cypress 16 forceHttp1 path.
 const DEFAULT_CYPRESS_MAJOR_FOR_ACCESSIBILITY = 15;
-// Cypress versions where the a11y extension's service worker never starts, so every scan times
-// out unless forceHttp1 is on: [first affected, first fixed). Regression from cypress-io/cypress#34762
-// (16.1.0), reported as cypress-io/cypress#35127, fixed by #34958 in 16.2.1.
+// Cypress major whose accessibility builds get forceHttp1. On 16.1.0-16.2.0 the a11y extension's
+// service worker never starts, so every scan times out unless forceHttp1 is on. Regression from
+// cypress-io/cypress#34762 (16.1.0), reported as cypress-io/cypress#35127, fixed by #34958 in 16.2.1.
+// Whole major, because Rails runs 16.2.0 for every 16.x request while it is the only 16 it offers.
 // SDK-8048 preprod A/B on 16.2.0: scan step 25.6s without forceHttp1, 4.2s with it.
-const ACCESSIBILITY_FORCE_HTTP1_CYPRESS_RANGE = ['16.1.0', '16.2.1'];
+const ACCESSIBILITY_FORCE_HTTP1_CYPRESS_MAJOR = 16;
 
 const CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY = "custom_errors_to_print";
 
@@ -527,7 +529,7 @@ module.exports = Object.freeze({
   SPEC_TIMEOUT_LIMIT,
   MAX_CYPRESS_MAJOR_FOR_ACCESSIBILITY,
   DEFAULT_CYPRESS_MAJOR_FOR_ACCESSIBILITY,
-  ACCESSIBILITY_FORCE_HTTP1_CYPRESS_RANGE,
+  ACCESSIBILITY_FORCE_HTTP1_CYPRESS_MAJOR,
   CYPRESS_CUSTOM_ERRORS_TO_PRINT_KEY,
   CYPRESS_V9_AND_OLDER_TYPE,
   CYPRESS_V10_AND_ABOVE_TYPE,
