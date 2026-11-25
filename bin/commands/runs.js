@@ -133,6 +133,8 @@ module.exports = function run(args, rawArgs) {
     const port = await findAvailablePort(preferredPort);
     process.env.REPORTER_API_PORT_NO = port
 
+    utils.validateCollectorUrls();
+
     // Send build start to TEST REPORTING AND ANALYTICS
     if(shouldProcessEventForTesthub()) {
       await TestHubHandler.launchBuild(bsConfig, bsConfigPath);

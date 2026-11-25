@@ -7,7 +7,7 @@ const { HttpsProxyAgent = require('https-proxy-agent') } = require('https-proxy-
 const logger = require("../../helpers/logger").winstonLogger;
 const utils = require('../../helpers/utils');
 
-const { API_URL, consoleHolder, TEST_REPORTING_ANALYTICS } = require('../helper/constants');
+const { apiUrl, consoleHolder, TEST_REPORTING_ANALYTICS } = require('../helper/constants');
 
 /* Below global methods are added here to remove cyclic dependency with helper.js, refactor later */
 const httpsKeepAliveAgent = new https.Agent({
@@ -148,7 +148,7 @@ class CrashReporter {
           'X-BSTACK-TESTOPS': 'true'
         },
         method: 'POST',
-        url: `${API_URL}/api/v1/analytics`,
+        url: `${apiUrl()}/api/v1/analytics`,
         data: data,
         json: true,
         agent: httpsKeepAliveAgent
