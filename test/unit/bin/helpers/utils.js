@@ -43,6 +43,11 @@ describe('utils', () => {
       ).to.eq('bstack_json_invalid_empty');
       expect(
         utils.getErrorCodeFromMsg(
+          constant.validationMessages.ACCESSIBILITY_CYPRESS_VERSION_UNSUPPORTED
+        )
+      ).to.eq('accessibility_cypress_version_unsupported');
+      expect(
+        utils.getErrorCodeFromMsg(
           constant.validationMessages.INCORRECT_AUTH_PARAMS
         )
       ).to.eq('bstack_json_invalid_missing_keys');

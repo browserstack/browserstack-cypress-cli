@@ -7,6 +7,35 @@ const logger = require("./logger").winstonLogger,
   Utils = require("./utils"),
   testhubUtils = require("../testhub/utils");
 
+const isAccessibilityOn = (bsConfig) =>
+  process.env.BROWSERSTACK_TEST_ACCESSIBILITY === 'true' || String(bsConfig.run_settings.accessibility) === 'true';
+
+const cypressMajor = (cypressVersion) => {
+  const major = String(cypressVersion).match(/^(\d+)/);
+  return major ? Number(major[1]) : undefined;
+};
+
+const isAboveAccessibilityCypressMajor = (cypressVersion) => {
+  const major = cypressMajor(cypressVersion);
+  return major !== undefined && major > Constants.MAX_CYPRESS_MAJOR_FOR_ACCESSIBILITY;
+};
+
+// True for an accessibility build on Cypress 16. Keyed on the major, not the requested version:
+// Rails runs the newest 16 it offers for any 16.x it doesn't list (e.g. 16.2.1, 16.3.0, "16.2"),
+// and that is 16.2.0 today, which has the extension service-worker bug (fixed in 16.2.1).
+// The version that actually runs is only known server-side, so this should move there
+// (terminalDeploy, next to the Cypress 16 network-logs/Local forceHttp1 rule) and be removed here.
+const needsForceHttp1ForAccessibility = (cypressVersion) =>
+  cypressMajor(String(cypressVersion).trim()) === Constants.ACCESSIBILITY_FORCE_HTTP1_CYPRESS_MAJOR;
+
+// Adds forceHttp1=true to the run's Cypress config unless the user already set forceHttp1
+// (either way), keeping every other key they passed.
+const withForceHttp1 = (config) => {
+  const current = Utils.isUndefined(config) ? '' : String(config).trim();
+  if (/(^|,)\s*forceHttp1\s*=/.test(current)) return config;
+  return current ? `${current},forceHttp1=true` : 'forceHttp1=true';
+};
+
 const caps = (bsConfig, zip) => {
   return new Promise(function (resolve, reject) {
     let user = undefined;
@@ -128,8 +157,27 @@ const caps = (bsConfig, zip) => {
         bsConfig.run_settings["accessibilityPlatforms"] = getAccessibilityPlatforms(bsConfig);
       }
 
+      // Tells Rails this CLI's support files read Cypress.expose(), so it may run Cypress 16+.
+      bsConfig.run_settings["cypressExposeSupport"] = true;
+
       // send run_settings as is for other capabilities
-      obj.run_settings = JSON.stringify(bsConfig.run_settings);
+      let runSettings = bsConfig.run_settings;
+      // An accessibility build without a version asks for DEFAULT_CYPRESS_MAJOR_FOR_ACCESSIBILITY,
+      // which keeps unpinned builds off the Cypress 16 forceHttp1 path (see constants.js).
+      if (isAccessibilityOn(bsConfig) && Utils.isUndefined(runSettings.cypress_version)) {
+        runSettings = Object.assign({}, runSettings, { cypress_version: String(Constants.DEFAULT_CYPRESS_MAJOR_FOR_ACCESSIBILITY) });
+        logger.info(Constants.userMessages.ACCESSIBILITY_CYPRESS_VERSION_PINNED);
+      }
+      // Accessibility scans on the Cypress 16 that Rails runs today (16.2.0) only complete with forceHttp1.
+      if (isAccessibilityOn(bsConfig) && !Utils.isUndefined(runSettings.cypress_version)
+          && needsForceHttp1ForAccessibility(runSettings.cypress_version)) {
+        const config = withForceHttp1(runSettings.config);
+        if (config !== runSettings.config) {
+          runSettings = Object.assign({}, runSettings, { config });
+          logger.info(Constants.userMessages.ACCESSIBILITY_FORCE_HTTP1_SET);
+        }
+      }
+      obj.run_settings = JSON.stringify(runSettings);
     }
 
     // The only route by which a cypress session can name its TestHub build: every session
@@ -219,6 +267,10 @@ const validate = (bsConfig, args) => {
     if (!bsConfig.browsers || bsConfig.browsers.length === 0) reject(Constants.validationMessages.EMPTY_BROWSER_LIST);
 
     if (!bsConfig.run_settings) reject(Constants.validationMessages.EMPTY_RUN_SETTINGS);
+
+    if (bsConfig.run_settings && isAccessibilityOn(bsConfig) && isAboveAccessibilityCypressMajor(bsConfig.run_settings.cypress_version)) {
+      reject(Constants.validationMessages.ACCESSIBILITY_CYPRESS_VERSION_UNSUPPORTED);
+    }
 
     if (!bsConfig.run_settings.cypressConfigFilePath && !bsConfig.run_settings.userProvidedCypessConfigFile) {
       reject(Constants.validationMessages.EMPTY_CYPRESS_CONFIG_FILE);
