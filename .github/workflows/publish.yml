@@ -12,6 +12,10 @@ on:
         required: true
         default: latest
         type: string
+      release_notes:
+        description: GitHub release notes (markdown). The release is created only for the latest dist-tag
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -28,10 +32,12 @@ jobs:
     steps:
       - name: Validate inputs
         run: |
+          num='(0|[1-9][0-9]*)'
+          id='(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)'
           if [ "$NPM_TAG" = latest ]; then
-            pattern='^[0-9]+\.[0-9]+\.[0-9]+$'
+            pattern="^$num\\.$num\\.$num\$"
           else
-            pattern='^[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z.-]+$'
+            pattern="^$num\\.$num\\.$num-$id(\\.$id)*\$"
           fi
           if ! [[ "$VERSION" =~ $pattern ]]; then
             echo "::error::version '$VERSION' does not match $pattern for dist-tag '$NPM_TAG'"
@@ -68,3 +74,10 @@ jobs:
           branch="release-$(date +%s)"
           git push --follow-tags origin "HEAD:refs/heads/$branch"
           echo "Open the version bump PR: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/$GITHUB_REF_NAME...$branch?expand=1" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Create GitHub release
+        if: inputs.npm_tag == 'latest' && inputs.release_notes != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_NOTES: ${{ inputs.release_notes }}
+        run: gh release create "v$VERSION" --verify-tag --title "Public Beta v$VERSION" --notes "$RELEASE_NOTES"
