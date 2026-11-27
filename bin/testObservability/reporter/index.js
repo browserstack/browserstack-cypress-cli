@@ -451,6 +451,10 @@ class MyReporter {
         }
       };
 
+      if(eventType.match(/TestRun/)) {
+        testData.tags = this.tags(test);
+      }
+
       debugOnConsole(`${eventType} for uuid: ${testData.uuid}`);
 
       this.mapTestId(testData, eventType);
@@ -873,6 +877,29 @@ class MyReporter {
   scopes(test) {
     const titlePath = test.titlePath()
     return titlePath.slice(0, titlePath.length - 1)
+  }
+
+  // Tags come from the it()/describe() config. Newer Cypress sends it resolved as
+  // { testConfigList: [{ overrides }, ...] }, one entry per level; older versions send the raw overrides.
+  tags(test) {
+    try {
+      const testConfig = test && test._testConfig;
+      if (!testConfig) return [];
+      const overridesList = Array.isArray(testConfig.testConfigList)
+        ? testConfig.testConfigList.map((entry) => entry && entry.overrides)
+        : [testConfig];
+      const tags = [];
+      overridesList.forEach((overrides) => {
+        const value = overrides && overrides.tags;
+        (Array.isArray(value) ? value : [value]).forEach((tag) => {
+          const name = typeof tag === 'string' ? tag.trim() : '';
+          if (name && !tags.includes(name)) tags.push(name);
+        });
+      });
+      return tags;
+    } catch (e) {
+      return [];
+    }
   }
 
   // Recursively find the root parent, and return the parents file
